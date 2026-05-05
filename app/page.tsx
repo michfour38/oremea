@@ -50,14 +50,6 @@ export default function Home() {
             relational clarity, and self-led recognition.
           </p>
 
-          <div className="mt-8">
-            <Link
-              href="/oremea/enter?source=oremea_home"
-              className="inline-flex rounded-xl border border-[#c8a96a]/60 px-6 py-3 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/10"
-            >
-              Enter Reso<span className="italic text-[#c8a96a]">nance</span>
-            </Link>
-          </div>
         </div>
 
         <div className="mt-16 flex flex-col gap-4">
