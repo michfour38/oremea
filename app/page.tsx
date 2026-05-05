@@ -37,9 +37,11 @@ export default function Home() {
     <main className="min-h-screen bg-[#090806] text-white">
       <section className="mx-auto flex min-h-screen max-w-4xl flex-col justify-center px-6 py-16">
         <div className="max-w-3xl">
-          <p className="text-xs uppercase tracking-[0.35em] text-[#c8a96a]">
-            Oremea
-          </p>
+          <img
+  src="/oremea-logo.png"
+  alt="Oremea"
+  className="h-8 w-auto opacity-90"
+/>
 
           <h1 className="mt-6 text-5xl font-semibold tracking-tight md:text-7xl">
             Return to what is already within you.
@@ -74,9 +76,6 @@ export default function Home() {
                     )}
                   </h2>
 
-                  <span className="text-xs uppercase tracking-[0.18em] text-[#c8a96a]/80">
-                    {product.label}
-                  </span>
                 </div>
 
                 <p className="mt-4 text-sm leading-7 text-zinc-400">
@@ -84,7 +83,7 @@ export default function Home() {
                 </p>
 
                 {product.active ? (
-                  <p className="mt-5 text-sm text-[#f1dfb4]">
+                  <p className="mt-5 text-sm text-[#c8a96a]">
                     Enter Reso
                     <span className="italic text-[#c8a96a]">nance</span> →
                   </p>
