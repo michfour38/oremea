@@ -95,46 +95,34 @@ export async function markIntroCompleted(input?: { email?: string }) {
   });
 }
 
-export async function getEntryResumeState(input?: { email?: string }) {
-  const signedInEmail = await getSignedInEmail();
-  const fallbackEmail = normalizeEmail(input?.email);
-  const email = signedInEmail || fallbackEmail;
-
+export async function getEntryResumeState({
+  email,
+}: {
+  email: string;
+}) {
   if (!email) {
-    return {
-      email: null as string | null,
-      hasAccess: false,
-      destination: "sign-in" as const,
-    };
+    return { destination: "enter" as const };
   }
 
   const lead = await prisma.entry_leads.findUnique({
     where: { email },
-    select: {
-      journey_access_granted: true,
-      intro_completed_at: true,
-    },
   });
 
-  if (lead?.journey_access_granted && !lead.intro_completed_at) {
-    return {
-      email,
-      hasAccess: true,
-      destination: "begin" as const,
-    };
+  // ❌ No record → treat as new
+  if (!lead) {
+    return { destination: "enter" as const };
   }
 
-  if (lead?.journey_access_granted && lead.intro_completed_at) {
-    return {
-      email,
-      hasAccess: true,
-      destination: "journey" as const,
-    };
+  // ❌ Not paid yet
+  if (!lead.journey_access_granted) {
+    return { destination: "enter" as const };
   }
 
-  return {
-    email,
-    hasAccess: false,
-    destination: "pay" as const,
-  };
+  // 🔥 Paid but NOT completed /begin
+  if (!lead.intro_completed_at) {
+    return { destination: "begin" as const };
+  }
+
+  // ✅ Paid + completed /begin
+  return { destination: "journey" as const };
 }
