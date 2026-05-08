@@ -95,7 +95,7 @@ export default function Home() {
   </div>
 
   <Link
-    href="/sign-in?redirect_url=/oremea/enter"
+    href="/sign-in?redirect_url=/oremea/resume"
     className="absolute right-6 top-0 text-sm text-[#c8a96a] underline underline-offset-4 transition hover:text-[#f1dfb4]"
   >
     Login
