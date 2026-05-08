@@ -78,6 +78,7 @@ export default function OremeaBeginPage() {
   const [savedReflection, setSavedReflection] = useState("");
 const [isSaving, setIsSaving] = useState(false);
   const [isEntering, setIsEntering] = useState(false);
+const [isCompletingIntro, setIsCompletingIntro] = useState(false);
   const [accessResolved, setAccessResolved] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
 
@@ -200,16 +201,16 @@ This is the beginning point Resonance will carry forward.`;
 }
 
   async function handleEnterResonance() {
-    if (isEntering || !hasAccess) return;
+  if (!signedInEmail || isCompletingIntro) return;
 
-    setIsEntering(true);
+  setIsCompletingIntro(true);
 
-    await markIntroCompleted({
-      email: signedInEmail,
-    });
+  await markIntroCompleted({
+    email: signedInEmail,
+  });
 
-    window.location.href = "/journey";
-  }
+  window.location.href = "/journey";
+}
 
   const panels = [
     <PanelShell
@@ -292,14 +293,14 @@ What is actually there.`}
         <button
           type="button"
           onClick={handleEnterResonance}
-          disabled={isEntering || !hasAccess}
+          disabled={isCompletingIntro || !hasAccess}
           className={`inline-flex min-w-[170px] items-center justify-center rounded-xl border px-5 py-3 text-sm transition ${
             !isEntering && hasAccess
               ? "border-[#c8a96a]/60 bg-transparent text-[#f1dfb4] hover:bg-[#c8a96a]/10"
               : "border-white/15 bg-transparent text-white/35"
           }`}
         >
-          {isEntering ? <LoadingDots /> : "Enter Resonance"}
+          {isCompletingIntro ? <LoadingDots /> : "Enter Resonance"}
         </button>
 
         {accessResolved && !hasAccess ? (

@@ -6,7 +6,7 @@ import Link from "next/link";
 const products = [
   {
     name: "Resonance",
-    href: "/sign-in?redirect_url=/oremea/enter",
+    href: "/sign-in?redirect_url=/oremea/resume",
     active: true,
     short:
       "A 10-week guided journey for people who want to understand the patterns they carry into connection.",
