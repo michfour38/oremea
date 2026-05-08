@@ -478,28 +478,81 @@ model prewave_responses {
 }
 
 model entry_leads {
-  id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email                   String    @unique
+  id                      String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                   String                  @unique
   first_name              String?
   source                  String?
   pathway                 Pathway?
-  intro_started_at        DateTime? @db.Timestamptz(6)
+  intro_started_at        DateTime?               @db.Timestamptz(6)
   last_seen_panel         Int?
   last_seen_panel_key     String?
-  last_seen_panel_at      DateTime? @db.Timestamptz(6)
-  intro_completed_at      DateTime? @db.Timestamptz(6)
-  entered_journey_at      DateTime? @db.Timestamptz(6)
-  created_at              DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at              DateTime  @updatedAt @db.Timestamptz(6)
-  entry_paid_at           DateTime? @db.Timestamptz(6)
-  entry_access_expires_at DateTime? @db.Timestamptz(6)
-  journey_paid_at         DateTime? @db.Timestamptz(6)
-  journey_access_granted  Boolean   @default(false)
+  last_seen_panel_at      DateTime?               @db.Timestamptz(6)
+  intro_completed_at      DateTime?               @db.Timestamptz(6)
+  entered_journey_at      DateTime?               @db.Timestamptz(6)
+  created_at              DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime                @updatedAt @db.Timestamptz(6)
+  entry_paid_at           DateTime?               @db.Timestamptz(6)
+  entry_access_expires_at DateTime?               @db.Timestamptz(6)
+  journey_paid_at         DateTime?               @db.Timestamptz(6)
+  journey_access_granted  Boolean                 @default(false)
+  entry_mirror_sessions   entry_mirror_sessions[]
 
   @@index([email])
   @@index([source])
   @@index([pathway])
   @@index([last_seen_panel])
+}
+
+model entry_mirror_sessions {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lead_id             String    @db.Uuid
+  entry_type          String
+  status              String    @default("active")
+  started_at          DateTime  @default(now()) @db.Timestamptz(6)
+  completed_at        DateTime? @db.Timestamptz(6)
+  mirror_generated_at DateTime? @db.Timestamptz(6)
+  created_at          DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime  @updatedAt @db.Timestamptz(6)
+
+  entry_leads entry_leads @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+
+  entry_mirror_responses entry_mirror_responses[]
+  entry_mirror_outputs   entry_mirror_outputs[]
+
+  @@index([lead_id])
+  @@index([entry_type])
+  @@index([status])
+}
+
+model entry_mirror_responses {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id     String   @db.Uuid
+  question_key   String
+  question_text  String
+  response       String
+  response_order Int
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+
+  entry_mirror_sessions entry_mirror_sessions @relation(fields: [session_id], references: [id], onDelete: Cascade)
+
+  @@unique([session_id, question_key])
+  @@index([session_id])
+  @@index([response_order])
+}
+
+model entry_mirror_outputs {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id        String   @db.Uuid
+  output            String
+  questions         String[] @default([])
+  themes_detected   String[] @default([])
+  tensions_detected String[] @default([])
+  input_snapshot    Json     @default("{}")
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+
+  entry_mirror_sessions entry_mirror_sessions @relation(fields: [session_id], references: [id], onDelete: Cascade)
+
+  @@index([session_id])
 }
 
 enum AnalysisStatus {
