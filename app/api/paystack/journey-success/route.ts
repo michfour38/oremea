@@ -1,4 +1,3 @@
-import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -8,38 +7,36 @@ function normalizeEmail(email?: string | null) {
   return email?.trim().toLowerCase() || "";
 }
 
-async function getSignedInEmail() {
-  const user = await currentUser();
+export async function GET(request: Request) {
+  const url = new URL(request.url);
 
-  const primaryEmail =
-    user?.emailAddresses.find(
-      (email) => email.id === user.primaryEmailAddressId
-    )?.emailAddress ?? user?.emailAddresses[0]?.emailAddress ?? "";
-
-  return normalizeEmail(primaryEmail);
-}
-
-export async function GET() {
-  const email = await getSignedInEmail();
+  const email = normalizeEmail(url.searchParams.get("email"));
+  const plan = url.searchParams.get("plan")?.trim() || "resonance";
 
   if (email) {
     try {
       await prisma.entry_leads.upsert({
-        where: { email },
-        update: {
-          journey_paid_at: new Date(),
-          journey_access_granted: true,
-        },
-        create: {
-          email,
-          journey_paid_at: new Date(),
-          journey_access_granted: true,
-        },
-      });
+  where: { email },
+  update: {
+    journey_paid_at: new Date(),
+    journey_access_granted: true,
+    pathway: plan === "mirror" ? "relate" : "discover",
+  },
+  create: {
+    email,
+    journey_paid_at: new Date(),
+    journey_access_granted: true,
+    pathway: plan === "mirror" ? "relate" : "discover",
+  },
+});
     } catch (error) {
       console.error("Journey access grant failed:", error);
     }
   }
 
-  return NextResponse.redirect(`${APP_URL}/journey?payment=success`);
+  return NextResponse.redirect(
+    `${APP_URL}/oremea/begin?payment=success&plan=${plan}${
+      email ? `&email=${encodeURIComponent(email)}` : ""
+    }`
+  );
 }

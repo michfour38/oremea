@@ -1,45 +1,42 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { getMemberWaveContext } from "@/src/lib/wave/wave.service";
-import { getCurrentDayContent } from "@/src/lib/journey/getCurrentDayContent";
-import { unlockMirrorTier } from "@/app/(member)/mirror/mirror-unlock.service";
+import { prisma } from "@/lib/prisma";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://app.oremea.com";
 
+function normalizeEmail(email?: string | null) {
+  return email?.trim().toLowerCase() || "";
+}
+
 export async function GET(request: Request) {
-  const { userId } = await auth();
+  const url = new URL(request.url);
 
-  if (!userId) {
-    return NextResponse.redirect(new URL("/sign-in", request.url));
+  const email = normalizeEmail(url.searchParams.get("email"));
+  const plan = url.searchParams.get("plan")?.trim() || "resonance";
+
+  if (email) {
+    try {
+      await prisma.entry_leads.upsert({
+  where: { email },
+  update: {
+    journey_paid_at: new Date(),
+    journey_access_granted: true,
+    pathway: "relate",
+  },
+  create: {
+    email,
+    journey_paid_at: new Date(),
+    journey_access_granted: true,
+    pathway: "relate",
+  },
+});
+    } catch (error) {
+      console.error("Journey access grant failed:", error);
+    }
   }
 
-  const context = await getMemberWaveContext(userId);
-
-  let weekNumber = 1;
-  let dayNumber = 1;
-
-  if (
-    context.progression.phase === "CORE" ||
-    context.progression.phase === "INTEGRATION"
-  ) {
-    const content = await getCurrentDayContent({
-      phase: context.progression.phase,
-      weekNumber: context.progression.weekNumber!,
-      dayNumber: context.progression.dayNumber!,
-      userId,
-    });
-
-    weekNumber = content.weekNumber;
-    dayNumber = content.dayNumber;
-  }
-
-  await unlockMirrorTier({
-    userId,
-    weekNumber,
-    dayNumber,
-    tier: "full",
-    isPaid: true,
-  });
-
-  return NextResponse.redirect(`${APP_URL}/journey?mirror=success#mirror`);
+  return NextResponse.redirect(
+    `${APP_URL}/oremea/begin?payment=success&plan=${plan}${
+      email ? `&email=${encodeURIComponent(email)}` : ""
+    }`
+  );
 }

@@ -91,6 +91,16 @@ export default function EntryMirrorPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [mirrorOutput, setMirrorOutput] = useState("");
   const [error, setError] = useState("");
+const loadingLines = [
+  "Noticing repeated language…",
+  "Looking for emotional patterns…",
+  "Separating attraction from clarity…",
+  "Listening for tension beneath the answers…",
+  "Building your Entry Mirror…",
+];
+
+const loadingLine =
+  loadingLines[Math.floor(Date.now() / 2200) % loadingLines.length];
 
   const panels = useMemo<Panel[]>(() => {
     const questions = QUESTIONS[entryType];
@@ -215,7 +225,7 @@ export default function EntryMirrorPage() {
     return (
       <main className="min-h-screen bg-[#0A0A0A] px-6 py-12 text-[#EAEAEA]">
         <section className="mx-auto max-w-3xl">
-          <p className="mb-16 text-sm tracking-[0.35em] text-[#BFBFBF]">BY OREMEA</p>
+          <p className="mb-16 text-sm tracking-[0.35em] text-[#BFBFBF]">OREMEA</p>
 
           <h1 className="mb-10 font-serif text-4xl leading-tight md:text-6xl">
             Your Entry Mirror
@@ -251,7 +261,7 @@ export default function EntryMirrorPage() {
     <main className="min-h-screen bg-[#0A0A0A] px-6 py-10 text-[#EAEAEA]">
       <section className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-3xl flex-col justify-center">
         <div className="mb-10 flex items-center justify-between">
-          <p className="text-sm tracking-[0.35em] text-[#BFBFBF]">BY OREMEA</p>
+          <p className="text-sm tracking-[0.35em] text-[#BFBFBF]">OREMEA</p>
           <p className="text-sm tracking-[0.25em] text-[#C6A96B]">{progress}%</p>
         </div>
 
@@ -346,14 +356,24 @@ export default function EntryMirrorPage() {
               Your reflection will be generated from your actual answers — not a category, not a quiz result, not a generic summary.
             </p>
 
-            <button
-              type="button"
-              disabled={isGenerating}
-              onClick={submitAndGenerate}
-              className="mt-12 rounded-full bg-[#C6A96B] px-8 py-4 font-serif text-xl text-[#0A0A0A] transition disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {isGenerating ? "Listening..." : "Generate my Entry Mirror"}
-            </button>
+            {isGenerating ? (
+  <div className="mt-12 rounded-3xl border border-[#2A2418] bg-[#0A0A0A] p-6">
+    <p className="font-serif text-2xl text-[#EAEAEA]">
+      {loadingLine}
+    </p>
+    <p className="mt-4 font-serif text-lg leading-relaxed text-[#BFBFBF]">
+      This is being generated from your actual answers.
+    </p>
+  </div>
+) : (
+  <button
+    type="button"
+    onClick={submitAndGenerate}
+    className="mt-12 rounded-full bg-[#C6A96B] px-8 py-4 font-serif text-xl text-[#0A0A0A] transition"
+  >
+    Generate my Entry Mirror
+  </button>
+)}
           </div>
         )}
 

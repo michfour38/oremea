@@ -47,10 +47,14 @@ export async function upsertEntryLead(input: UpsertEntryLeadInput) {
   });
 }
 
-export async function grantJourneyAccess(input?: { email?: string }) {
-  const signedInEmail = await getSignedInEmail();
+export async function grantJourneyAccess(input?: { email?: string; plan?: string }) {
   const fallbackEmail = normalizeEmail(input?.email);
-  const email = signedInEmail || fallbackEmail;
+  const signedInEmail = await getSignedInEmail();
+
+  // IMPORTANT:
+  // Payment success must attach to the payment email first.
+  // Only fall back to Clerk email if no payment email was passed.
+  const email = fallbackEmail || signedInEmail;
 
   if (!email) {
     return {
@@ -60,19 +64,19 @@ export async function grantJourneyAccess(input?: { email?: string }) {
   }
 
   await prisma.entry_leads.upsert({
-    where: { email },
-    update: {
-      journey_access_granted: true,
-      journey_paid_at: new Date(),
-      pathway: "discover",
-    },
-    create: {
-      email,
-      journey_access_granted: true,
-      journey_paid_at: new Date(),
-      pathway: "discover",
-    },
-  });
+  where: { email },
+  update: {
+    journey_access_granted: true,
+    journey_paid_at: new Date(),
+    pathway: input?.plan === "mirror" ? "relate" : "discover",
+  },
+  create: {
+    email,
+    journey_access_granted: true,
+    journey_paid_at: new Date(),
+    pathway: input?.plan === "mirror" ? "relate" : "discover",
+  },
+});
 
   return {
     hasAccess: true,
