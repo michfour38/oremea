@@ -1,4 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
+import { getMirrorAccess } from "@/app/(member)/mirror/mirror-access";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
@@ -67,6 +68,21 @@ const archiveOverlayStyle = {
 export default async function ArchivePage({ searchParams }: Props) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
+
+const user = await currentUser();
+
+const signedInEmail =
+  user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ||
+  user?.emailAddresses?.[0]?.emailAddress?.trim().toLowerCase() ||
+  "";
+
+const mirrorAccess = signedInEmail
+  ? await getMirrorAccess(signedInEmail)
+  : {
+      pathway: "discover",
+      hasFullMirror: false,
+      has2QOnly: true,
+    };
 
   const reflections = (await getReflectionArchive(userId)) as ArchiveItem[];
 
@@ -256,26 +272,30 @@ export default async function ArchivePage({ searchParams }: Props) {
                             </summary>
 
                             <div className="mt-5 border-t border-[#6d5b2b]/30 pt-5">
-                              {dayMirror ? (
-                                <div className="space-y-4">
-                                  {dayMirror.output
-                                    .split("\n\n")
-                                    .filter(Boolean)
-                                    .map((paragraph, index) => (
-                                      <p
-                                        key={index}
-                                        className="whitespace-pre-wrap text-sm leading-7 text-[#efe4c6]"
-                                      >
-                                        {paragraph}
-                                      </p>
-                                    ))}
-                                </div>
-                              ) : (
-                                <p className="text-sm leading-7 text-zinc-400">
-                                  Mirror guidance has not been created for this
-                                  day yet.
-                                </p>
-                              )}
+                              {mirrorAccess.hasFullMirror && dayMirror ? (
+  <div className="space-y-4">
+    {dayMirror.output
+      .split("\n\n")
+      .filter(Boolean)
+      .map((paragraph, index) => (
+        <p
+          key={index}
+          className="whitespace-pre-wrap text-sm leading-7 text-[#efe4c6]"
+        >
+          {paragraph}
+        </p>
+      ))}
+  </div>
+) : mirrorAccess.hasFullMirror ? (
+  <p className="text-sm leading-7 text-zinc-400">
+    Mirror has not been generated for this day yet.
+  </p>
+) : (
+  <p className="text-sm leading-7 text-zinc-400">
+    This archive currently holds your prompts and reflections. Your 2 guiding
+    questions are not archived as Mirror synthesis.
+  </p>
+)}
                             </div>
                           </details>
                         </section>
