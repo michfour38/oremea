@@ -181,33 +181,111 @@ export default function MirrorOutput({
   }
 
   if (fullMirrorEligible && !fullMirrorUnlocked) {
-    return (
-      <div className="rounded-3xl border border-[#7a6426]/40 bg-[#17130a] px-6 py-6 space-y-4">
-        <div className="space-y-1">
-          <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#b6a36a]">
-            Full Mirror
-          </p>
-          <p className="text-sm text-[#f1e7c8]">
-            A deeper Mirror is now available.
-          </p>
-          <p className="text-sm leading-7 text-[#ddd1ad]">
-            You’ve reached a deeper integration point in your journey.
-          </p>
-          <p className="text-xs text-[#aa9d79]">
-            Unlock Full Mirror to enter a fuller synthesis of what your journey
-            has been revealing.
-          </p>
-        </div>
+  return (
+    <div className="rounded-3xl border border-[#6d5b2b]/35 bg-[#17130d] px-6 py-6 space-y-5">
+      <div className="space-y-2">
+        <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#b6a36a]">
+          Reflection Questions
+        </p>
 
-        <a
-          href={`/mirror/unlock?weekNumber=${weekNumber}&dayNumber=${dayNumber}&tier=full`}
-          className="inline-block rounded-xl border border-[#8a7331]/50 bg-[#2a2210] px-4 py-2 text-sm text-[#f3e7bf] transition-colors hover:bg-[#352b15]"
-        >
-          Unlock Full Mirror
-        </a>
+        {questions.length > 0 ? (
+          <div className="space-y-3 text-sm leading-7 text-[#efe4c6]">
+            {questions.map((question, index) => (
+              <p key={index}>{question}</p>
+            ))}
+          </div>
+        ) : (
+          <>
+            <p className="text-sm leading-7 text-[#ddd1ad]">
+              Generate your two guiding questions for today.
+            </p>
+
+            <button
+              type="button"
+              onClick={generateQuestions}
+              disabled={questionsLoading}
+              className="inline-block rounded-xl border border-[#8a7331]/50 bg-[#2a2210] px-4 py-2 text-sm text-[#f3e7bf] transition-colors hover:bg-[#352b15] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {questionsLoading
+                ? "Preparing your questions..."
+                : "Generate my 2 guiding questions"}
+            </button>
+          </>
+        )}
+
+        {questionsError && (
+          <p className="text-xs text-red-400">
+            Couldn’t generate questions. Try again.
+          </p>
+        )}
       </div>
-    );
-  }
+
+      {questions.length > 0 && (
+        <>
+          <div className="rounded-2xl border border-[#6d5b2b]/35 bg-black/25 p-5">
+            <div className="space-y-4">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-[#c8a96a]">
+                Mirror preview
+              </p>
+
+              <div className="relative overflow-hidden rounded-2xl border border-[#6d5b2b]/25 bg-black/30 p-5">
+                <div className="pointer-events-none select-none space-y-3 blur-[3px]">
+                  <p className="text-sm leading-7 text-[#efe4c6]">
+                    There is a deeper pattern forming across the way you are
+                    describing closeness, protection, and what becomes difficult
+                    to name.
+                  </p>
+
+                  <p className="text-sm leading-7 text-[#efe4c6]">
+                    The Mirror would look across your reflections to track
+                    repetition, contradiction, emotional movement, and
+                    relational meaning over time.
+                  </p>
+
+                  <p className="text-sm leading-7 text-[#efe4c6]">
+                    This is where your answers begin to become a map, not just
+                    separate moments.
+                  </p>
+                </div>
+
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#17130d]/55 to-[#17130d]" />
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="text-lg text-[#f4e7c2]">
+                  Unlock the full Mirror
+                </h3>
+
+                <p className="text-sm leading-7 text-zinc-300">
+                  Your 2 questions point to the next layer. Mirror follows the
+                  deeper continuity across your reflections and reveals the
+                  pattern forming over time.
+                </p>
+
+                <a
+                  href={`/mirror/unlock?weekNumber=${weekNumber}&dayNumber=${dayNumber}&tier=full`}
+                  className="inline-flex items-center justify-center rounded-xl border border-[#8b6b2f]/60 bg-[#241b10] px-5 py-3 text-sm text-[#f1dfb4] transition hover:bg-[#2f2314]"
+                >
+                  Unlock Mirror — R720
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <form
+            action={continueJourneyDayAction}
+            className="mt-5 flex justify-end"
+          >
+            <input type="hidden" name="weekNumber" value={weekNumber} />
+            <input type="hidden" name="dayNumber" value={dayNumber} />
+
+            <ContinueDayButton />
+          </form>
+        </>
+      )}
+    </div>
+  );
+}
 
   if (liteMirrorEligible && !liteMirrorUnlocked) {
     return (
