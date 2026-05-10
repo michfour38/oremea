@@ -1,49 +1,46 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { unlockMirrorTier } from "./mirror-unlock.service";
 
-export async function unlockLiteMirrorAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
+const MIRROR_UPGRADE_PAYSTACK_URL = "https://paystack.shop/pay/3utxqlehqj";
 
-  const weekNumber = Number(formData.get("weekNumber"));
-  const dayNumber = Number(formData.get("dayNumber"));
+function normalizeEmail(email?: string | null) {
+  return email?.trim().toLowerCase() || "";
+}
 
-  if (!weekNumber || !dayNumber) {
-    redirect("/journey");
-  }
+async function getSignedInEmail() {
+  const user = await currentUser();
 
-  await unlockMirrorTier({
-    userId,
-    weekNumber,
-    dayNumber,
-    tier: "lite",
-    isPaid: true,
-  });
+  const primaryEmail =
+    user?.emailAddresses.find(
+      (email) => email.id === user.primaryEmailAddressId
+    )?.emailAddress ?? user?.emailAddresses[0]?.emailAddress ?? "";
 
-  redirect("/journey");
+  return normalizeEmail(primaryEmail);
 }
 
 export async function unlockFullMirrorAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
+  const email = await getSignedInEmail();
 
-  const weekNumber = Number(formData.get("weekNumber"));
-  const dayNumber = Number(formData.get("dayNumber"));
-
-  if (!weekNumber || !dayNumber) {
-    redirect("/journey");
+  if (!email) {
+    redirect("/sign-in?redirect_url=/mirror/unlock");
   }
 
-  await unlockMirrorTier({
-    userId,
-    weekNumber,
-    dayNumber,
-    tier: "full",
-    isPaid: true,
-  });
+  const weekNumber = Number(formData.get("weekNumber")) || 1;
+  const dayNumber = Number(formData.get("dayNumber")) || 1;
 
+  const params = new URLSearchParams();
+
+  params.set("email", email);
+  params.set("plan", "mirror");
+  params.set("upgrade", "true");
+  params.set("weekNumber", String(weekNumber));
+  params.set("dayNumber", String(dayNumber));
+
+  redirect(`${MIRROR_UPGRADE_PAYSTACK_URL}?${params.toString()}`);
+}
+
+export async function unlockLiteMirrorAction() {
   redirect("/journey");
 }
