@@ -382,12 +382,15 @@ liteMirrorUnlocked = mirrorAccess.has2QOnly;
 fullMirrorUnlocked = mirrorAccess.hasFullMirror;
 
       const mirrorHistory = await getMirrorHistory(userId);
-      currentMirror =
-        mirrorHistory.find(
-          (entry) =>
-            entry.weekNumber === content.weekNumber &&
-            entry.dayNumber === content.dayNumber
-        ) ?? null;
+
+const foundMirror =
+  mirrorHistory.find(
+    (entry) =>
+      entry.weekNumber === content.weekNumber &&
+      entry.dayNumber === content.dayNumber
+  ) ?? null;
+
+currentMirror = mirrorAccess.hasFullMirror ? foundMirror : null;
     } catch (error) {
       console.error("Mirror state failed:", error);
     }
