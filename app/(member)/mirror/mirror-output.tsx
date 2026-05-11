@@ -319,16 +319,14 @@ export default function MirrorOutput({
       <div className="rounded-3xl border border-[#6d5b2b]/35 bg-[#15120c] px-6 py-6 space-y-5">
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#b6a36a]">
-            {activeTier === "full" ? "Full Mirror" : "Lite Mirror"}
-          </p>
+  {activeTier === "full" ? "Full Mirror" : "Lite Mirror"}
+</p>
         </div>
 
         {!isGenerating ? (
           <>
             <p className="text-sm leading-7 text-[#f1e7c8]">
-              {activeTier === "full"
-                ? "Your Full Mirror is ready to open."
-                : "Your Lite Mirror is ready to open."}
+              Your reflection has finished processing.
             </p>
 
             <button
@@ -336,9 +334,7 @@ export default function MirrorOutput({
               onClick={startGenerate}
               className="inline-block rounded-xl border border-[#8a7331]/50 bg-[#2a2210] px-4 py-2 text-sm text-[#f3e7bf] transition-colors hover:bg-[#352b15]"
             >
-              {activeTier === "full"
-                ? "See what the Full Mirror sees"
-                : "See what the Lite Mirror sees"}
+              Enter
             </button>
           </>
         ) : (
