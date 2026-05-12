@@ -44,8 +44,6 @@ await unlockMirrorTier({
   }
 
   return NextResponse.redirect(
-    `${APP_URL}/oremea/begin?payment=success&plan=${plan}${
-      email ? `&email=${encodeURIComponent(email)}` : ""
-    }`
-  );
+  `${APP_URL}/journey#mirror`
+);
 }
