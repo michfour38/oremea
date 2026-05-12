@@ -407,6 +407,7 @@ fullMirrorUnlocked = mirrorAccess.hasFullMirror;
     user_id: userId,
     week_number: content.weekNumber,
     day_number: content.dayNumber,
+    tier: "full",
   },
   orderBy: {
     created_at: "desc",
