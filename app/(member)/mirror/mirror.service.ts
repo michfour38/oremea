@@ -287,31 +287,49 @@ export async function runMirrorSynthesis(
     return null;
   }
 
-  const saved = await prisma.mirror_responses.create({
-    data: {
+  const saved = await prisma.mirror_responses.upsert({
+  where: {
+    user_id_week_number_day_number: {
       user_id: userId,
       week_number: weekNumber,
       day_number: dayNumber,
-      output,
-      patterns_detected: [],
-      contradictions: [],
-      input_snapshot: {
-        prewaveCount: prewaveTexts.length,
-        priorJourneyCount: priorJourneyResponses.length,
-        currentDayCount: currentDayResponses.length,
-      },
-      tier: mode,
     },
-    select: {
-      id: true,
-      user_id: true,
-      week_number: true,
-      day_number: true,
-      output: true,
-      tier: true,
-      created_at: true,
+  },
+  update: {
+    output,
+    tier: mode,
+    patterns_detected: [],
+    contradictions: [],
+    input_snapshot: {
+      prewaveCount: prewaveTexts.length,
+      priorJourneyCount: priorJourneyResponses.length,
+      currentDayCount: currentDayResponses.length,
     },
-  });
+  },
+  create: {
+    user_id: userId,
+    week_number: weekNumber,
+    day_number: dayNumber,
+    output,
+    patterns_detected: [],
+    contradictions: [],
+    input_snapshot: {
+      prewaveCount: prewaveTexts.length,
+      priorJourneyCount: priorJourneyResponses.length,
+      currentDayCount: currentDayResponses.length,
+    },
+    tier: mode,
+  },
+  select: {
+    id: true,
+    user_id: true,
+    week_number: true,
+    day_number: true,
+    output: true,
+    tier: true,
+    created_at: true,
+  },
+});
 
   return {
     id: saved.id,
