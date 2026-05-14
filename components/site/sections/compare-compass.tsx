@@ -5,7 +5,7 @@ export function CompareCompass() {
         <div className="grid gap-14 md:grid-cols-[0.95fr_1.05fr]">
           <div>
             <p className="mb-5 text-xs uppercase tracking-[0.28em] text-amber-200/70">
-              Execution & Alignment
+              Direction & Execution
             </p>
 
             <h2 className="text-4xl font-light leading-tight text-zinc-100">
@@ -13,7 +13,8 @@ export function CompareCompass() {
             </h2>
 
             <p className="mt-6 text-lg leading-8 text-zinc-400">
-              Direction, execution, and aligned next steps.
+              Structured goalsetting, execution clarity,
+              and aligned next steps.
             </p>
           </div>
 
@@ -26,9 +27,9 @@ export function CompareCompass() {
 
                 <p className="text-base leading-8 text-zinc-300">
                   Compass is designed to help individuals and groups
-                  transform awareness into executable action through
-                  structured goal systems, alignment frameworks,
-                  and reflective direction tools.
+                  transform awareness into executable direction through
+                  structured goalsetting systems, alignment frameworks,
+                  behavioral consistency tools, and next-step clarity.
                 </p>
               </div>
 
@@ -38,10 +39,10 @@ export function CompareCompass() {
                 </p>
 
                 <ul className="grid gap-3 text-base leading-7 text-zinc-400 md:grid-cols-2">
-                  <li>• individuals</li>
-                  <li>• couples</li>
-                  <li>• families</li>
-                  <li>• aligned group dynamics</li>
+                  <li>• personal goalsetting</li>
+                  <li>• couples alignment</li>
+                  <li>• family direction systems</li>
+                  <li>• shared execution structures</li>
                 </ul>
               </div>
 
@@ -52,9 +53,9 @@ export function CompareCompass() {
 
                 <ul className="grid gap-3 text-base leading-7 text-zinc-400 md:grid-cols-2">
                   <li>• structured goal frameworks</li>
-                  <li>• alignment systems</li>
-                  <li>• reflective direction tools</li>
-                  <li>• execution pathways</li>
+                  <li>• state / action mapping</li>
+                  <li>• execution pathway systems</li>
+                  <li>• alignment tracking</li>
                   <li>• next-step synthesis</li>
                   <li>• behavioral consistency support</li>
                 </ul>
@@ -62,16 +63,20 @@ export function CompareCompass() {
 
               <div className="rounded-2xl border border-white/10 bg-black/20 p-6">
                 <p className="text-sm leading-7 text-zinc-400">
-                  Compass extends awareness into action, helping users
-                  create clearer direction, stronger alignment,
-                  and executable movement across personal and shared goals.
+                  Compass helps users move from reflection into
+                  executable action by creating clearer direction,
+                  stronger alignment, and measurable forward movement.
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-4 pt-2">
-                <div className="rounded-full border border-white/10 px-5 py-2 text-sm text-zinc-300">
-                  Entry Experiences — R49 / ~$3
-                </div>
+              <div className="rounded-2xl border border-amber-200/10 bg-amber-100/[0.03] p-6">
+                <p className="text-sm leading-7 text-zinc-400">
+                  Creator entry experiences priced around R49 / ~$3
+                  act as focused introductions into the broader
+                  Oremea ecosystem. Compass itself is a standalone
+                  structured product layer positioned after
+                  foundational awareness work.
+                </p>
               </div>
             </div>
           </div>

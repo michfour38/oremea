@@ -45,7 +45,7 @@ export function CompareFinalGuidance() {
 
         <div className="mt-16 flex justify-center">
           <a
-            href="/enter"
+            href="/oremea/enter"
             className="rounded-full border border-amber-200/30 bg-amber-100/10 px-7 py-3 text-sm uppercase tracking-[0.18em] text-amber-100 transition hover:border-amber-100/60 hover:bg-amber-100/15"
           >
             Begin with Resonance
