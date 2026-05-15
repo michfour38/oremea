@@ -232,20 +232,16 @@ setIsCheckingState(false);
           </p>
 
           <h1
-            className={`${playfair.className} mt-4 text-4xl font-semibold leading-[1.02] tracking-tight md:text-6xl`}
-          >
-            See what keeps repeating — one day at a time.
-          </h1>
+  className={`${playfair.className} mt-4 text-4xl font-semibold leading-[0.95] tracking-tight md:text-6xl md:leading-[0.95]`}
+>
+  See what keeps repeating — one day at a time.
+</h1>
 
           <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-zinc-200 md:text-lg">
             Resonance is a structured reflection system designed to help your
             patterns become visible over time.
           </p>
 
-          <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-zinc-400">
-            You are signed in as {signedInEmail}. Choose your Resonance access
-            below.
-          </p>
         </header>
 
         <section className="mt-10 grid gap-5 md:grid-cols-2">
