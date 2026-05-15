@@ -9,27 +9,23 @@ interface SiteShellProps {
 
 export function SiteShell({ children }: SiteShellProps) {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-zinc-950 text-zinc-100">
-      {/* Desktop Background */}
+    <div id="top" className="relative min-h-screen bg-zinc-950 text-zinc-100">
       <div
-        className="absolute inset-0 hidden bg-cover bg-center bg-no-repeat md:block"
+        className="fixed inset-0 hidden bg-cover bg-center bg-no-repeat md:block"
         style={{
           backgroundImage: "url('/images/desktop/bg-home.webp')",
         }}
       />
 
-      {/* Mobile Background */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat md:hidden"
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat md:hidden"
         style={{
           backgroundImage: "url('/images/mobile/bg-home.webp')",
         }}
       />
 
-      {/* Dark Overlay */}
-      <div className="absolute inset-0 bg-black/55" />
+      <div className="fixed inset-0 bg-black/55" />
 
-      {/* Content */}
       <div className="relative z-10">
         <SiteNav />
 
@@ -37,6 +33,14 @@ export function SiteShell({ children }: SiteShellProps) {
 
         <SiteFooter />
       </div>
+
+      <a
+        href="#top"
+        className="fixed bottom-5 right-5 z-50 flex h-11 w-11 items-center justify-center rounded-full border border-[#c8a96a]/50 bg-black/55 text-lg text-[#f1dfb4] shadow-[0_0_24px_rgba(0,0,0,0.35)] backdrop-blur transition hover:border-[#f1dfb4] hover:bg-black/75"
+        aria-label="Return to top"
+      >
+        ↑
+      </a>
     </div>
   );
 }
