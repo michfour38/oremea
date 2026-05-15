@@ -190,7 +190,9 @@ setIsCheckingState(false);
             </a>
           </div>
         </div>
-<SiteFooter />
+<div className="relative z-10">
+  <SiteFooter />
+</div>
       </main>
     );
   }
@@ -416,7 +418,9 @@ Choose how deeply you want to see.
 </div>
 
       </div>
-<SiteFooter />
+<div className="relative z-10">
+  <SiteFooter />
+</div>
     </main>
   );
 }
