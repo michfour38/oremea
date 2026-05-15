@@ -36,7 +36,7 @@ export function SiteShell({ children }: SiteShellProps) {
 
       <a
         href="#top"
-        className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full border border-[#c8a96a]/50 bg-black/55 text-2xl text-[#f1dfb4] shadow-[0_0_24px_rgba(0,0,0,0.35)] backdrop-blur transition hover:border-[#f1dfb4] hover:bg-black/75"
+        className="fixed bottom-24 right-5 md:bottom-5 z-50 flex h-14 w-14 items-center justify-center rounded-full border border-[#c8a96a]/50 bg-black/55 text-2xl text-[#f1dfb4] shadow-[0_0_24px_rgba(0,0,0,0.35)] backdrop-blur transition hover:border-[#f1dfb4] hover:bg-black/75"
         aria-label="Return to top"
       >
         ↟

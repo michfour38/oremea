@@ -1,3 +1,4 @@
+import Link from "next/link";
 export function CompareResonance() {
   return (
     <section className="border-b border-white/5">
@@ -71,13 +72,19 @@ export function CompareResonance() {
               </div>
 
               <div className="flex flex-wrap gap-4 pt-2">
-                <div className="rounded-full border border-white/10 px-5 py-2 text-sm text-zinc-300">
-                  Resonance — R520
-                </div>
+                <Link
+  href="/oremea/enter"
+  className="rounded-full border border-white/10 px-5 py-2 text-sm text-zinc-300 transition hover:border-amber-200/30 hover:text-amber-100"
+>
+  Resonance — R520
+</Link>
 
-                <div className="rounded-full border border-amber-200/20 bg-amber-100/[0.05] px-5 py-2 text-sm text-amber-100">
-                  Resonance + Mirror — R1240
-                </div>
+                <Link
+  href="/oremea/enter"
+  className="rounded-full border border-amber-200/20 bg-amber-100/[0.05] px-5 py-2 text-sm text-amber-100 transition hover:border-amber-100/50 hover:bg-amber-100/[0.08]"
+>
+  Resonance + Mirror — R1240
+</Link>
               </div>
             </div>
           </div>

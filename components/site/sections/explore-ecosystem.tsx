@@ -1,3 +1,4 @@
+import Link from "next/link";
 export function ExploreEcosystem() {
   return (
     <section className="border-b border-white/5 bg-zinc-950/60">
@@ -34,9 +35,12 @@ export function ExploreEcosystem() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-3 text-sm tracking-[0.16em] text-amber-100">
-                Recommended First
-              </div>
+              <Link
+  href="/oremea/enter"
+  className="rounded-2xl border border-white/10 bg-black/20 px-5 py-3 text-sm tracking-[0.16em] text-amber-100 transition hover:border-amber-100/40 hover:bg-black/35"
+>
+  Recommended First
+</Link>
             </div>
           </div>
 
