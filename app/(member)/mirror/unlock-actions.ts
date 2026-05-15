@@ -33,10 +33,16 @@ export async function unlockFullMirrorAction(formData: FormData) {
   const params = new URLSearchParams();
 
   params.set("email", email);
-  params.set("plan", "mirror");
-  params.set("upgrade", "true");
-  params.set("weekNumber", String(weekNumber));
-  params.set("dayNumber", String(dayNumber));
+params.set("plan", "mirror");
+params.set("upgrade", "true");
+params.set("weekNumber", String(weekNumber));
+params.set("dayNumber", String(dayNumber));
+params.set(
+  "redirect_url",
+  `/api/mirror/unlock?weekNumber=${weekNumber}&dayNumber=${dayNumber}&tier=full`
+);
+
+redirect(`${MIRROR_UPGRADE_PAYSTACK_URL}?${params.toString()}`);
 
   redirect(`${MIRROR_UPGRADE_PAYSTACK_URL}?${params.toString()}`);
 }

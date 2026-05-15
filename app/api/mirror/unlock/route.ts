@@ -1,13 +1,23 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-async function writeUnlock(
-  userId: string,
-  weekNumber: number,
-  dayNumber: number,
-  tier: string
-) {
+function normalizeEmail(email?: string | null) {
+  return email?.trim().toLowerCase() || "";
+}
+
+async function getSignedInEmail() {
+  const user = await currentUser();
+
+  const primaryEmail =
+    user?.emailAddresses.find(
+      (email) => email.id === user.primaryEmailAddressId
+    )?.emailAddress ?? user?.emailAddresses[0]?.emailAddress ?? "";
+
+  return normalizeEmail(primaryEmail);
+}
+
+async function writeUnlock(userId: string, weekNumber: number, dayNumber: number, tier: string) {
   const now = new Date();
 
   return prisma.mirror_unlocks.upsert({
@@ -41,63 +51,33 @@ export async function GET(request: Request) {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json(
-        { ok: false, error: "Not signed in." },
-        { status: 401 }
-      );
-    }
-
-    const url = new URL(request.url);
-    const weekNumber = Number(url.searchParams.get("weekNumber") ?? "1");
-    const dayNumber = Number(url.searchParams.get("dayNumber") ?? "2");
-    const tier = String(url.searchParams.get("tier") ?? "lite");
-
-    const row = await writeUnlock(userId, weekNumber, dayNumber, tier);
-
-   return NextResponse.redirect(new URL("/journey", request.url));
-  } catch (error) {
-    console.error("GET /api/mirror/unlock failed:", error);
-    return NextResponse.json(
-      {
-        ok: false,
-        error:
-          error instanceof Error ? error.message : "Unknown unlock error",
-      },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request: Request) {
-  try {
-    const { userId } = await auth();
-
-    if (!userId) {
       return NextResponse.redirect(new URL("/sign-in", request.url));
     }
 
-    const formData = await request.formData();
+    const signedInEmail = await getSignedInEmail();
 
-    const weekNumber = Number(formData.get("weekNumber"));
-    const dayNumber = Number(formData.get("dayNumber"));
-    const tier = String(formData.get("tier") ?? "lite");
-
-    if (!weekNumber || !dayNumber || !tier) {
-      return NextResponse.redirect(new URL("/journey", request.url));
-    }
+    const url = new URL(request.url);
+    const weekNumber = Number(url.searchParams.get("weekNumber") ?? "1");
+    const dayNumber = Number(url.searchParams.get("dayNumber") ?? "1");
+    const tier = String(url.searchParams.get("tier") ?? "full");
 
     await writeUnlock(userId, weekNumber, dayNumber, tier);
 
-    return NextResponse.redirect(new URL("/journey", request.url));
+    if (signedInEmail) {
+      await prisma.entry_leads.updateMany({
+        where: { email: signedInEmail },
+        data: {
+          pathway: "relate",
+          journey_access_granted: true,
+          updated_at: new Date(),
+        },
+      });
+    }
+
+    return NextResponse.redirect(new URL("/journey?mirror=success#mirror", request.url));
   } catch (error) {
-    console.error("POST /api/mirror/unlock failed:", error);
-    return NextResponse.json(
-      {
-        ok: false,
-        error:
-          error instanceof Error ? error.message : "Unknown unlock error",
-      },
-      { status: 500 }
-    );
+    console.error("GET /api/mirror/unlock failed:", error);
+
+    return NextResponse.redirect(new URL("/journey?mirror=error", request.url));
   }
 }
