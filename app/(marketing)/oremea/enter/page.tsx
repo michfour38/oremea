@@ -129,16 +129,16 @@ setIsCheckingState(false);
   const signUpHref = `/sign-up?redirect_url=${encodeURIComponent(returnToSelf)}`;
 
   if (!isLoaded) {
-    return (
-      <main className="relative flex min-h-screen items-center justify-center overflow-x-hidden bg-black text-white">
-        <LoadingDots />
-      </main>
-    );
-  }
+  return (
+    <main className="relative flex min-h-screen items-center justify-center overflow-x-hidden bg-black text-white">
+      <LoadingDots />
+    </main>
+  );
+}
 
   if (!user) {
     return (
-      <main className="relative min-h-screen overflow-x-hidden overflow-y-auto text-white">
+      <main id="top" className="relative min-h-screen overflow-x-hidden overflow-y-auto text-white">
 <SiteNav />
         <div className="fixed inset-0 z-0">
           <div
@@ -193,6 +193,13 @@ setIsCheckingState(false);
 <div className="relative z-10">
   <SiteFooter />
 </div>
+<a
+  href="#top"
+  className="fixed bottom-24 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full border border-[#c8a96a]/50 bg-black/55 text-2xl text-[#f1dfb4] shadow-[0_0_24px_rgba(0,0,0,0.35)] backdrop-blur transition hover:border-[#f1dfb4] hover:bg-black/75 md:bottom-5"
+  aria-label="Return to top"
+>
+  ↟
+</a>
       </main>
     );
   }
@@ -206,7 +213,7 @@ setIsCheckingState(false);
   }
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden text-white">
+    <main id="top" className="relative min-h-screen overflow-x-hidden text-white">
 <SiteNav />
 
       <div className="fixed inset-0 z-0">
@@ -421,6 +428,13 @@ Choose how deeply you want to see.
 <div className="relative z-10">
   <SiteFooter />
 </div>
+<a
+  href="#top"
+  className="fixed bottom-24 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full border border-[#c8a96a]/50 bg-black/55 text-2xl text-[#f1dfb4] shadow-[0_0_24px_rgba(0,0,0,0.35)] backdrop-blur transition hover:border-[#f1dfb4] hover:bg-black/75 md:bottom-5"
+  aria-label="Return to top"
+>
+  ↟
+</a>
     </main>
   );
 }
