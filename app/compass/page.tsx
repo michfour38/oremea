@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   COMPASS_AREA_QUESTIONS,
@@ -9,6 +9,7 @@ import {
   buildAdaptiveRecursiveQuestion,
   buildAreaMirrorReflection,
   calibrateExecutionStep,
+  continueCompassDiscussion,
   createRecursiveLayer,
   evaluateResonanceBridge,
   generateNextStep,
@@ -17,12 +18,15 @@ import {
   reflectCoreValues,
   reflectPrimaryArea,
   type CompassAreaResponse,
+  type CompassDiscussionMessage,
   type CompassGoalArea,
   type CompassRecursiveLayer,
   type CompassResistanceMap,
 } from "@/src/lib/compass/session";
 
 type CompassPhase =
+  | "loading"
+  | "resume"
   | "intro"
   | "area"
   | "analyzing"
@@ -35,6 +39,17 @@ type CompassPhase =
   | "discussion"
   | "execution_check"
   | "complete";
+
+type StoredCompassSession = {
+  phase?: string | null;
+  selected_area?: string | null;
+  area_responses?: unknown;
+  recursive_layers?: unknown;
+  resistance_map?: unknown;
+  discussion_messages?: unknown;
+  proposed_step?: string | null;
+  final_step?: string | null;
+};
 
 const AREA_LABELS: Record<CompassGoalArea, string> = {
   relationships: "Relationships",
@@ -50,10 +65,13 @@ const AREA_LABELS: Record<CompassGoalArea, string> = {
 const BODY_TEXT = "text-zinc-400";
 
 export default function CompassPage() {
-  const [phase, setPhase] = useState<CompassPhase>("intro");
+  const [phase, setPhase] = useState<CompassPhase>("loading");
+  const [savedSession, setSavedSession] = useState<StoredCompassSession | null>(null);
+  const [sessionLoaded, setSessionLoaded] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
+
   const [areaIndex, setAreaIndex] = useState(0);
   const [answer, setAnswer] = useState("");
-  const [discussionAnswer, setDiscussionAnswer] = useState("");
   const [areaResponses, setAreaResponses] = useState<CompassAreaResponse[]>([]);
   const [selectedArea, setSelectedArea] = useState<CompassGoalArea | null>(null);
   const [recursiveLayers, setRecursiveLayers] = useState<CompassRecursiveLayer[]>([]);
@@ -64,6 +82,8 @@ export default function CompassPage() {
   const [proposedStep, setProposedStep] = useState("");
   const [executionFeeling, setExecutionFeeling] = useState("");
   const [finalStep, setFinalStep] = useState("");
+  const [discussionInput, setDiscussionInput] = useState("");
+  const [discussionMessages, setDiscussionMessages] = useState<CompassDiscussionMessage[]>([]);
 
   const currentArea = COMPASS_AREA_QUESTIONS[areaIndex];
 
@@ -91,13 +111,142 @@ export default function CompassPage() {
     ? AREA_LABELS[selectedArea]
     : "your chosen goal";
 
+  useEffect(() => {
+    async function loadSession() {
+      try {
+        const response = await fetch("/api/compass/session", {
+          method: "GET",
+        });
+
+        if (!response.ok) {
+          setPhase("intro");
+          setSessionLoaded(true);
+          return;
+        }
+
+        const data = await response.json();
+
+        if (data.session) {
+          setSavedSession(data.session);
+          setPhase("resume");
+        } else {
+          setPhase("intro");
+        }
+      } catch {
+        setPhase("intro");
+      } finally {
+        setSessionLoaded(true);
+      }
+    }
+
+    loadSession();
+  }, []);
+
+  useEffect(() => {
+    if (!sessionLoaded || !hasStarted || phase === "loading" || phase === "resume" || phase === "analyzing") {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      fetch("/api/compass/session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phase,
+          selectedArea,
+          areaResponses,
+          recursiveLayers,
+          resistanceMap,
+          discussionMessages,
+          proposedStep,
+          finalStep,
+        }),
+      }).catch(() => {
+        // Silent for now. Compass should not interrupt the user if background save fails.
+      });
+    }, 700);
+
+    return () => window.clearTimeout(timeout);
+  }, [
+    sessionLoaded,
+    hasStarted,
+    phase,
+    selectedArea,
+    areaResponses,
+    recursiveLayers,
+    resistanceMap,
+    discussionMessages,
+    proposedStep,
+    finalStep,
+  ]);
+
   function pauseThen(next: () => void) {
     setPhase("analyzing");
     window.setTimeout(next, 1800);
   }
 
+  function beginNewSession() {
+    setSavedSession(null);
+    setHasStarted(true);
+    setAreaIndex(0);
+    setAnswer("");
+    setAreaResponses([]);
+    setSelectedArea(null);
+    setRecursiveLayers([]);
+    setRecursiveAnswer("");
+    setExtraReflection("");
+    setResistanceAnswer("");
+    setResistanceMap(null);
+    setProposedStep("");
+    setExecutionFeeling("");
+    setFinalStep("");
+    setDiscussionInput("");
+    setDiscussionMessages([]);
+    setPhase("intro");
+  }
+
+  function resumeSession() {
+    if (!savedSession) {
+      setPhase("intro");
+      return;
+    }
+
+    const restoredAreaResponses = toArray<CompassAreaResponse>(savedSession.area_responses);
+    const restoredRecursiveLayers = toArray<CompassRecursiveLayer>(savedSession.recursive_layers);
+    const restoredMessages = toArray<CompassDiscussionMessage>(savedSession.discussion_messages);
+
+    setAreaResponses(restoredAreaResponses);
+    setRecursiveLayers(restoredRecursiveLayers);
+    setDiscussionMessages(restoredMessages);
+    setResistanceMap(toObject<CompassResistanceMap>(savedSession.resistance_map));
+    setProposedStep(savedSession.proposed_step ?? "");
+    setFinalStep(savedSession.final_step ?? "");
+
+    const restoredArea = isCompassGoalArea(savedSession.selected_area)
+      ? savedSession.selected_area
+      : null;
+
+    setSelectedArea(restoredArea);
+
+    const nextAreaIndex = Math.min(
+      restoredAreaResponses.length,
+      COMPASS_AREA_QUESTIONS.length - 1,
+    );
+
+    setAreaIndex(nextAreaIndex);
+
+    const restoredPhase = normalizePhase(savedSession.phase);
+
+    setHasStarted(true);
+    setPhase(restoredPhase);
+  }
+
   function submitAreaAnswer() {
     if (!currentArea || !answer.trim()) return;
+
+    setHasStarted(true);
 
     const analyzed = analyzeAreaResponse({
       area: currentArea.area,
@@ -119,12 +268,15 @@ export default function CompassPage() {
   }
 
   function chooseArea(area: CompassGoalArea) {
+    setHasStarted(true);
     setSelectedArea(area);
     pauseThen(() => setPhase("depth_intro"));
   }
 
   function submitRecursiveAnswer() {
     if (!recursiveAnswer.trim()) return;
+
+    setHasStarted(true);
 
     const layerNumber = recursiveLayers.length + 1;
 
@@ -133,8 +285,7 @@ export default function CompassPage() {
       selectedAreaLabel,
       previousAnswer: recursiveLayers[recursiveLayers.length - 1]?.answer ?? "",
       firstAnswer:
-        areaResponses.find((response) => response.area === selectedArea)?.answer ??
-        "",
+        areaResponses.find((response) => response.area === selectedArea)?.answer ?? "",
     });
 
     const fallbackQuestion = getRecursiveQuestion(layerNumber);
@@ -161,6 +312,8 @@ export default function CompassPage() {
   function submitResistance() {
     if (!resistanceAnswer.trim()) return;
 
+    setHasStarted(true);
+
     const mapped = mapResistance({ answer: resistanceAnswer });
     setResistanceMap(mapped);
 
@@ -171,16 +324,63 @@ export default function CompassPage() {
     });
 
     setProposedStep(step);
+
+    setDiscussionMessages([
+      {
+        role: "compass",
+        content:
+          "Before we finalize the next step, let’s sit with the resistance for a moment. The aim here is not to force intensity. It is to find the smallest honest movement you can actually keep.",
+      },
+      {
+        role: "compass",
+        content: step,
+      },
+    ]);
+
     pauseThen(() => setPhase("discussion"));
   }
 
-  function submitDiscussion() {
-    if (!discussionAnswer.trim()) return;
+  function submitDiscussionMessage() {
+    if (!discussionInput.trim()) return;
+
+    setHasStarted(true);
+
+    const participantMessage: CompassDiscussionMessage = {
+      role: "participant",
+      content: discussionInput,
+    };
+
+    const nextMessages = [...discussionMessages, participantMessage];
+
+    const result = continueCompassDiscussion({
+      messages: nextMessages,
+      latestAnswer: discussionInput,
+      proposedStep,
+    });
+
+    const compassMessage: CompassDiscussionMessage = {
+      role: "compass",
+      content: result.compassReply,
+    };
+
+    setDiscussionMessages([...nextMessages, compassMessage]);
+    setDiscussionInput("");
+
+    if (!result.shouldContinueDiscussion) {
+      setFinalStep(result.suggestedMicroStep ?? proposedStep);
+      pauseThen(() => setPhase("complete"));
+    }
+  }
+
+  function moveToExecutionCheck() {
+    setHasStarted(true);
     pauseThen(() => setPhase("execution_check"));
   }
 
   function submitExecutionFeeling() {
     if (!executionFeeling.trim()) return;
+
+    setHasStarted(true);
 
     const calibrated = calibrateExecutionStep({
       proposedStep,
@@ -225,6 +425,32 @@ export default function CompassPage() {
             </p>
           </header>
 
+          {phase === "loading" && (
+            <CompassCard
+              title="Opening Compass"
+              description="Checking whether there is an active session to resume."
+            >
+              <div className={`flex justify-center py-8 text-5xl ${BODY_TEXT}`}>
+                ...
+              </div>
+            </CompassCard>
+          )}
+
+          {phase === "resume" && (
+            <CompassCard
+              title="Resume Compass?"
+              description="Compass found a previous active session. You can continue from where you left off, or begin again."
+            >
+              <button onClick={resumeSession} className="primary-button">
+                Resume previous session
+              </button>
+
+              <button onClick={beginNewSession} className="secondary-button">
+                Start fresh
+              </button>
+            </CompassCard>
+          )}
+
           {phase === "intro" && (
             <CompassCard
               title="Begin Compass"
@@ -245,7 +471,13 @@ export default function CompassPage() {
                 the goal you choose.
               </p>
 
-              <button onClick={() => setPhase("area")} className="primary-button">
+              <button
+                onClick={() => {
+                  setHasStarted(true);
+                  setPhase("area");
+                }}
+                className="primary-button"
+              >
                 Begin
               </button>
             </CompassCard>
@@ -289,10 +521,7 @@ export default function CompassPage() {
           )}
 
           {phase === "area_mirror" && (
-            <CompassCard
-              title="Compass reflection"
-              description={areaMirror.reflection}
-            >
+            <CompassCard title="Compass reflection" description={areaMirror.reflection}>
               <details className="rounded-2xl border border-zinc-800 bg-[#131313] p-4">
                 <summary className={`cursor-pointer text-sm ${BODY_TEXT}`}>
                   Review your eight answers
@@ -315,11 +544,6 @@ export default function CompassPage() {
                   ))}
                 </div>
               </details>
-
-              <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-                If anything feels misunderstood, you can use that awareness when
-                choosing your priority on the next page.
-              </p>
 
               <button
                 onClick={() => pauseThen(() => setPhase("area_confirmation"))}
@@ -378,11 +602,8 @@ export default function CompassPage() {
               description={`Let's go deeper into your priority of ${selectedAreaLabel}.`}
             >
               <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-                You may notice we ask a few similar questions.
-              </p>
-
-              <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-                The repetition is deliberate.
+                You may notice we ask a few similar questions. The repetition is
+                deliberate.
               </p>
 
               <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
@@ -494,23 +715,38 @@ export default function CompassPage() {
 
           {phase === "discussion" && (
             <CompassCard
-              title="Let's discuss this a little further."
-              description="There may still be useful insight available before finalizing your next step."
+              title="Let’s sit with this before we move."
+              description="This is where Compass helps you find the smallest truthful next step."
             >
-              <div className={`rounded-[1.5rem] border border-zinc-800 bg-[#121212] p-5 text-sm leading-relaxed whitespace-pre-line ${BODY_TEXT}`}>
-                {proposedStep}
+              <div className="space-y-4">
+                {discussionMessages.map((message, index) => (
+                  <div
+                    key={`${message.role}-${index}`}
+                    className={
+                      message.role === "compass"
+                        ? `rounded-[1.5rem] border border-zinc-800 bg-[#121212] p-5 text-sm leading-relaxed whitespace-pre-line ${BODY_TEXT}`
+                        : "ml-auto rounded-[1.5rem] border border-[#d8b15f]/45 bg-[#1c1408] p-5 text-sm leading-relaxed text-zinc-100 whitespace-pre-line"
+                    }
+                  >
+                    {message.content}
+                  </div>
+                ))}
               </div>
 
               <textarea
-                value={discussionAnswer}
-                onChange={(event) => setDiscussionAnswer(event.target.value)}
-                placeholder="How does this land for you? What feels accurate, inaccurate, difficult, exciting, unrealistic, emotionally loaded, or important here?"
-                rows={7}
+                value={discussionInput}
+                onChange={(event) => setDiscussionInput(event.target.value)}
+                placeholder="Reply here. If you feel blocked, say that. If you feel resistant, say that. If you feel ready, say that too."
+                rows={6}
                 className="compass-textarea"
               />
 
-              <button onClick={submitDiscussion} className="primary-button">
-                Continue
+              <button onClick={submitDiscussionMessage} className="primary-button">
+                Send
+              </button>
+
+              <button onClick={moveToExecutionCheck} className="secondary-button">
+                I’m ready to choose the next step
               </button>
             </CompassCard>
           )}
@@ -587,6 +823,23 @@ export default function CompassPage() {
           background: linear-gradient(180deg, #e2c374, #a87a38);
         }
 
+        .secondary-button {
+          margin-top: 0.25rem;
+          width: 100%;
+          border-radius: 999px;
+          border: 1px solid #3f3f46;
+          background: #111111;
+          padding: 0.9rem 1.2rem;
+          font-size: 0.9rem;
+          color: #a1a1aa;
+          transition: 180ms ease;
+        }
+
+        .secondary-button:hover {
+          border-color: #71717a;
+          color: #f4f4f5;
+        }
+
         .selection-button {
           border-radius: 1.2rem;
           border: 1px solid #27272a;
@@ -629,6 +882,53 @@ export default function CompassPage() {
       `}</style>
     </main>
   );
+}
+
+function normalizePhase(value: string | null | undefined): CompassPhase {
+  const allowed: CompassPhase[] = [
+    "intro",
+    "area",
+    "area_mirror",
+    "area_confirmation",
+    "depth_intro",
+    "depth",
+    "core_reflection",
+    "resistance",
+    "discussion",
+    "execution_check",
+    "complete",
+  ];
+
+  if (value && allowed.includes(value as CompassPhase)) {
+    return value as CompassPhase;
+  }
+
+  return "intro";
+}
+
+function isCompassGoalArea(value: unknown): value is CompassGoalArea {
+  return (
+    value === "relationships" ||
+    value === "income" ||
+    value === "health" ||
+    value === "spirituality" ||
+    value === "investments" ||
+    value === "network" ||
+    value === "knowledge" ||
+    value === "lifestyle"
+  );
+}
+
+function toArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
+function toObject<T>(value: unknown): T | null {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value as T;
+  }
+
+  return null;
 }
 
 function CompassCard({

@@ -22,6 +22,31 @@ model circle_members {
   @@index([user_id])
 }
 
+model compass_sessions {
+  id                 String   @id @default(cuid())
+  user_id            String
+  status             String   @default("active")
+
+  phase              String?
+  selected_area      String?
+
+  area_responses     Json?
+  recursive_layers   Json?
+  resistance_map     Json?
+  discussion_messages Json?
+
+  proposed_step      String?
+  final_step         String?
+
+  detected_patterns  Json?
+
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  @@index([user_id])
+  @@index([status])
+}
+
 model prompt_analyses {
   id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   completion_id      String             @db.Uuid
