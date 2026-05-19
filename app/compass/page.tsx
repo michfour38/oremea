@@ -1,5 +1,7 @@
 "use client";
 
+import { CompassPriorityFlow } from "@/components/compass/CompassPriorityFlow";
+import { CompassAreaFlow } from "@/components/compass/CompassAreaFlow";
 import { CompassCard } from "@/components/compass/CompassCard";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
@@ -551,67 +553,36 @@ export default function CompassPage() {
             </CompassCard>
           )}
 
-          {phase === "area" && currentArea && (
-            <CompassCard eyebrow={`${areaIndex + 1} of ${COMPASS_AREA_QUESTIONS.length}`} title={currentArea.title} description={currentArea.question}>
-              <textarea value={answer} onChange={(event) => setAnswer(event.target.value)} placeholder={currentArea.placeholder} rows={7} className="compass-textarea" />
-
-              <p className={`text-xs leading-relaxed ${BODY_TEXT}`}>
-                Your answers do not need to match the examples above. Those are
-                only there to help if you feel stuck. The more you open up, the
-                more direction you might find.
-              </p>
-
-              <button onClick={submitAreaAnswer} className="primary-button">
-                Continue
-              </button>
-            </CompassCard>
-          )}
+          {phase === "area" && (
+  <CompassAreaFlow
+    areaIndex={areaIndex}
+    answer={answer}
+    areaResponses={areaResponses}
+    onAnswerChange={setAnswer}
+    onSubmitAnswer={submitAreaAnswer}
+  />
+)}
 
           {phase === "area_mirror" && (
-            <CompassCard title="Compass reflection" description={areaMirror.reflection}>
-              <details className="rounded-2xl border border-zinc-800 bg-[#131313] p-4">
-                <summary className={`cursor-pointer text-sm ${BODY_TEXT}`}>Review your eight answers</summary>
-
-                <div className="mt-4 space-y-4">
-                  {areaResponses.map((response) => (
-                    <div key={response.area} className="rounded-xl border border-zinc-800 p-4">
-                      <p className="text-sm font-medium text-[#d8b15f]">{AREA_LABELS[response.area]}</p>
-                      <p className={`mt-2 whitespace-pre-line text-sm ${BODY_TEXT}`}>{response.answer}</p>
-                    </div>
-                  ))}
-                </div>
-              </details>
-
-              <button onClick={() => pauseThen(() => setPhase("area_confirmation"))} className="primary-button">
-                Continue
-              </button>
-            </CompassCard>
-          )}
+  <CompassPriorityFlow
+    title="Compass reflection"
+    description={areaMirror.reflection}
+    areaResponses={areaResponses}
+    reviewLabel="Review your eight answers"
+    onContinue={() => pauseThen(() => setPhase("area_confirmation"))}
+  />
+)}
 
           {phase === "area_confirmation" && (
-            <CompassCard title="What feels most important right now?" description={primaryReflection.reflection}>
-              <details className="rounded-2xl border border-zinc-800 bg-[#131313] p-4">
-                <summary className={`cursor-pointer text-sm ${BODY_TEXT}`}>Review your answers</summary>
-
-                <div className="mt-4 space-y-4">
-                  {areaResponses.map((response) => (
-                    <div key={response.area} className="rounded-xl border border-zinc-800 p-4">
-                      <p className="text-sm font-medium text-[#d8b15f]">{AREA_LABELS[response.area]}</p>
-                      <p className={`mt-2 whitespace-pre-line text-sm ${BODY_TEXT}`}>{response.answer}</p>
-                    </div>
-                  ))}
-                </div>
-              </details>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                {COMPASS_AREA_QUESTIONS.map((item) => (
-                  <button key={item.area} onClick={() => chooseArea(item.area)} className="selection-button">
-                    {item.title}
-                  </button>
-                ))}
-              </div>
-            </CompassCard>
-          )}
+  <CompassPriorityFlow
+    title="What feels most important right now?"
+    description={primaryReflection.reflection}
+    areaResponses={areaResponses}
+    reviewLabel="Review your answers"
+    showAreaChoices
+    onChooseArea={chooseArea}
+  />
+)}
 
           {phase === "depth_intro" && (
             <CompassCard title="Great, now we're getting into it." description={`Let's go deeper into your priority of ${selectedAreaLabel}.`}>
