@@ -1,5 +1,6 @@
 "use client";
 
+import { CompassCard } from "@/components/compass/CompassCard";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
@@ -87,36 +88,17 @@ export default function CompassPage() {
 
   const currentArea = COMPASS_AREA_QUESTIONS[areaIndex];
 
-  const areaMirror = useMemo(
-    () => buildAreaMirrorReflection(areaResponses),
-    [areaResponses],
-  );
+  const areaMirror = useMemo(() => buildAreaMirrorReflection(areaResponses), [areaResponses]);
+  const primaryReflection = useMemo(() => reflectPrimaryArea(areaResponses), [areaResponses]);
+  const coreReflection = useMemo(() => reflectCoreValues(recursiveLayers), [recursiveLayers]);
+  const resonanceBridge = useMemo(() => evaluateResonanceBridge(areaResponses), [areaResponses]);
 
-  const primaryReflection = useMemo(
-    () => reflectPrimaryArea(areaResponses),
-    [areaResponses],
-  );
-
-  const coreReflection = useMemo(
-    () => reflectCoreValues(recursiveLayers),
-    [recursiveLayers],
-  );
-
-  const resonanceBridge = useMemo(
-    () => evaluateResonanceBridge(areaResponses),
-    [areaResponses],
-  );
-
-  const selectedAreaLabel = selectedArea
-    ? AREA_LABELS[selectedArea]
-    : "your chosen goal";
+  const selectedAreaLabel = selectedArea ? AREA_LABELS[selectedArea] : "your chosen goal";
 
   useEffect(() => {
     async function loadSession() {
       try {
-        const response = await fetch("/api/compass/session", {
-          method: "GET",
-        });
+        const response = await fetch("/api/compass/session", { method: "GET" });
 
         if (!response.ok) {
           setPhase("intro");
@@ -143,7 +125,34 @@ export default function CompassPage() {
   }, []);
 
   useEffect(() => {
-    if (!sessionLoaded || !hasStarted || phase === "loading" || phase === "resume" || phase === "analyzing") {
+    window.history.pushState({ compass: true }, "", window.location.href);
+
+    function handleBrowserBack() {
+      if (phase === "intro" || phase === "loading" || phase === "resume") {
+        window.history.pushState({ compass: true }, "", window.location.href);
+        return;
+      }
+
+      goBackInsideCompass();
+      window.history.pushState({ compass: true }, "", window.location.href);
+    }
+
+    window.addEventListener("popstate", handleBrowserBack);
+
+    return () => {
+      window.removeEventListener("popstate", handleBrowserBack);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, areaIndex, recursiveLayers.length]);
+
+  useEffect(() => {
+    if (
+      !sessionLoaded ||
+      !hasStarted ||
+      phase === "loading" ||
+      phase === "resume" ||
+      phase === "analyzing"
+    ) {
       return;
     }
 
@@ -163,9 +172,7 @@ export default function CompassPage() {
           proposedStep,
           finalStep,
         }),
-      }).catch(() => {
-        // Silent for now. Compass should not interrupt the user if background save fails.
-      });
+      }).catch(() => {});
     }, 700);
 
     return () => window.clearTimeout(timeout);
@@ -185,6 +192,70 @@ export default function CompassPage() {
   function pauseThen(next: () => void) {
     setPhase("analyzing");
     window.setTimeout(next, 1800);
+  }
+
+  function goBackInsideCompass() {
+    if (phase === "area") {
+      if (areaIndex > 0) {
+        setAreaIndex((current) => Math.max(0, current - 1));
+        setPhase("area");
+        return;
+      }
+
+      setPhase("intro");
+      return;
+    }
+
+    if (phase === "area_mirror") {
+      setAreaIndex(COMPASS_AREA_QUESTIONS.length - 1);
+      setPhase("area");
+      return;
+    }
+
+    if (phase === "area_confirmation") {
+      setPhase("area_mirror");
+      return;
+    }
+
+    if (phase === "depth_intro") {
+      setPhase("area_confirmation");
+      return;
+    }
+
+    if (phase === "depth") {
+      if (recursiveLayers.length > 0) {
+        setRecursiveLayers((current) => current.slice(0, -1));
+        setPhase("depth");
+        return;
+      }
+
+      setPhase("depth_intro");
+      return;
+    }
+
+    if (phase === "core_reflection") {
+      setPhase("depth");
+      return;
+    }
+
+    if (phase === "resistance") {
+      setPhase("core_reflection");
+      return;
+    }
+
+    if (phase === "discussion") {
+      setPhase("resistance");
+      return;
+    }
+
+    if (phase === "execution_check") {
+      setPhase("discussion");
+      return;
+    }
+
+    if (phase === "complete") {
+      setPhase("execution_check");
+    }
   }
 
   function beginNewSession() {
@@ -229,18 +300,9 @@ export default function CompassPage() {
       : null;
 
     setSelectedArea(restoredArea);
-
-    const nextAreaIndex = Math.min(
-      restoredAreaResponses.length,
-      COMPASS_AREA_QUESTIONS.length - 1,
-    );
-
-    setAreaIndex(nextAreaIndex);
-
-    const restoredPhase = normalizePhase(savedSession.phase);
-
+    setAreaIndex(Math.min(restoredAreaResponses.length, COMPASS_AREA_QUESTIONS.length - 1));
     setHasStarted(true);
-    setPhase(restoredPhase);
+    setPhase(normalizePhase(savedSession.phase));
   }
 
   function submitAreaAnswer() {
@@ -284,8 +346,7 @@ export default function CompassPage() {
       layer: layerNumber,
       selectedAreaLabel,
       previousAnswer: recursiveLayers[recursiveLayers.length - 1]?.answer ?? "",
-      firstAnswer:
-        areaResponses.find((response) => response.area === selectedArea)?.answer ?? "",
+      firstAnswer: areaResponses.find((response) => response.area === selectedArea)?.answer ?? "",
     });
 
     const fallbackQuestion = getRecursiveQuestion(layerNumber);
@@ -329,7 +390,7 @@ export default function CompassPage() {
       {
         role: "compass",
         content:
-          "Before we finalize the next step, let’s sit with the resistance for a moment. The aim here is not to force intensity. It is to find the smallest honest movement you can actually keep.",
+          "Before we finalize the next step, let’s sit with the resistance for a moment. The aim is not to force intensity. It is to find the smallest honest movement you can actually keep.",
       },
       {
         role: "compass",
@@ -396,6 +457,8 @@ export default function CompassPage() {
     pauseThen(() => setPhase("complete"));
   }
 
+  const showBackButton = !["loading", "resume", "intro", "analyzing"].includes(phase);
+
   return (
     <main className="min-h-screen bg-[#090909] text-stone-100">
       <section className="relative min-h-screen overflow-hidden px-5 py-8 sm:px-8 lg:px-12">
@@ -425,22 +488,24 @@ export default function CompassPage() {
             </p>
           </header>
 
-          {phase === "loading" && (
-            <CompassCard
-              title="Opening Compass"
-              description="Checking whether there is an active session to resume."
+          {showBackButton && (
+            <button
+              type="button"
+              onClick={goBackInsideCompass}
+              className="mb-4 text-sm text-zinc-400 transition hover:text-[#d8b15f]"
             >
-              <div className={`flex justify-center py-8 text-5xl ${BODY_TEXT}`}>
-                ...
-              </div>
+              ← Back
+            </button>
+          )}
+
+          {phase === "loading" && (
+            <CompassCard title="Opening Compass" description="Checking whether there is an active session to resume.">
+              <div className={`flex justify-center py-8 text-5xl ${BODY_TEXT}`}>...</div>
             </CompassCard>
           )}
 
           {phase === "resume" && (
-            <CompassCard
-              title="Resume Compass?"
-              description="Compass found a previous active session. You can continue from where you left off, or begin again."
-            >
+            <CompassCard title="Resume Compass?" description="Compass found a previous active session. You can continue from where you left off, or begin again.">
               <button onClick={resumeSession} className="primary-button">
                 Resume previous session
               </button>
@@ -452,10 +517,7 @@ export default function CompassPage() {
           )}
 
           {phase === "intro" && (
-            <CompassCard
-              title="Begin Compass"
-              description="You will move through eight recognizable life areas, one question at a time."
-            >
+            <CompassCard title="Begin Compass" description="You will move through eight recognizable life areas, one question at a time.">
               <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
                 Compass may notice emotional weighting, repeating language,
                 contradictions, resistance patterns, or recurring values in your
@@ -484,29 +546,14 @@ export default function CompassPage() {
           )}
 
           {phase === "analyzing" && (
-            <CompassCard
-              title="Compass is analyzing your responses"
-              description="Please wait while Compass reflects on your language patterns."
-            >
-              <div className={`flex justify-center py-8 text-5xl ${BODY_TEXT}`}>
-                ...
-              </div>
+            <CompassCard title="Compass is analyzing your responses" description="Please wait while Compass reflects on your language patterns.">
+              <div className={`flex justify-center py-8 text-5xl ${BODY_TEXT}`}>...</div>
             </CompassCard>
           )}
 
           {phase === "area" && currentArea && (
-            <CompassCard
-              eyebrow={`${areaIndex + 1} of ${COMPASS_AREA_QUESTIONS.length}`}
-              title={currentArea.title}
-              description={currentArea.question}
-            >
-              <textarea
-                value={answer}
-                onChange={(event) => setAnswer(event.target.value)}
-                placeholder={currentArea.placeholder}
-                rows={7}
-                className="compass-textarea"
-              />
+            <CompassCard eyebrow={`${areaIndex + 1} of ${COMPASS_AREA_QUESTIONS.length}`} title={currentArea.title} description={currentArea.question}>
+              <textarea value={answer} onChange={(event) => setAnswer(event.target.value)} placeholder={currentArea.placeholder} rows={7} className="compass-textarea" />
 
               <p className={`text-xs leading-relaxed ${BODY_TEXT}`}>
                 Your answers do not need to match the examples above. Those are
@@ -523,60 +570,34 @@ export default function CompassPage() {
           {phase === "area_mirror" && (
             <CompassCard title="Compass reflection" description={areaMirror.reflection}>
               <details className="rounded-2xl border border-zinc-800 bg-[#131313] p-4">
-                <summary className={`cursor-pointer text-sm ${BODY_TEXT}`}>
-                  Review your eight answers
-                </summary>
+                <summary className={`cursor-pointer text-sm ${BODY_TEXT}`}>Review your eight answers</summary>
 
                 <div className="mt-4 space-y-4">
                   {areaResponses.map((response) => (
-                    <div
-                      key={response.area}
-                      className="rounded-xl border border-zinc-800 p-4"
-                    >
-                      <p className="text-sm font-medium text-[#d8b15f]">
-                        {AREA_LABELS[response.area]}
-                      </p>
-
-                      <p className={`mt-2 whitespace-pre-line text-sm ${BODY_TEXT}`}>
-                        {response.answer}
-                      </p>
+                    <div key={response.area} className="rounded-xl border border-zinc-800 p-4">
+                      <p className="text-sm font-medium text-[#d8b15f]">{AREA_LABELS[response.area]}</p>
+                      <p className={`mt-2 whitespace-pre-line text-sm ${BODY_TEXT}`}>{response.answer}</p>
                     </div>
                   ))}
                 </div>
               </details>
 
-              <button
-                onClick={() => pauseThen(() => setPhase("area_confirmation"))}
-                className="primary-button"
-              >
+              <button onClick={() => pauseThen(() => setPhase("area_confirmation"))} className="primary-button">
                 Continue
               </button>
             </CompassCard>
           )}
 
           {phase === "area_confirmation" && (
-            <CompassCard
-              title="What feels most important right now?"
-              description={primaryReflection.reflection}
-            >
+            <CompassCard title="What feels most important right now?" description={primaryReflection.reflection}>
               <details className="rounded-2xl border border-zinc-800 bg-[#131313] p-4">
-                <summary className={`cursor-pointer text-sm ${BODY_TEXT}`}>
-                  Review your answers
-                </summary>
+                <summary className={`cursor-pointer text-sm ${BODY_TEXT}`}>Review your answers</summary>
 
                 <div className="mt-4 space-y-4">
                   {areaResponses.map((response) => (
-                    <div
-                      key={response.area}
-                      className="rounded-xl border border-zinc-800 p-4"
-                    >
-                      <p className="text-sm font-medium text-[#d8b15f]">
-                        {AREA_LABELS[response.area]}
-                      </p>
-
-                      <p className={`mt-2 whitespace-pre-line text-sm ${BODY_TEXT}`}>
-                        {response.answer}
-                      </p>
+                    <div key={response.area} className="rounded-xl border border-zinc-800 p-4">
+                      <p className="text-sm font-medium text-[#d8b15f]">{AREA_LABELS[response.area]}</p>
+                      <p className={`mt-2 whitespace-pre-line text-sm ${BODY_TEXT}`}>{response.answer}</p>
                     </div>
                   ))}
                 </div>
@@ -584,11 +605,7 @@ export default function CompassPage() {
 
               <div className="grid gap-3 sm:grid-cols-2">
                 {COMPASS_AREA_QUESTIONS.map((item) => (
-                  <button
-                    key={item.area}
-                    onClick={() => chooseArea(item.area)}
-                    className="selection-button"
-                  >
+                  <button key={item.area} onClick={() => chooseArea(item.area)} className="selection-button">
                     {item.title}
                   </button>
                 ))}
@@ -597,10 +614,7 @@ export default function CompassPage() {
           )}
 
           {phase === "depth_intro" && (
-            <CompassCard
-              title="Great, now we're getting into it."
-              description={`Let's go deeper into your priority of ${selectedAreaLabel}.`}
-            >
+            <CompassCard title="Great, now we're getting into it." description={`Let's go deeper into your priority of ${selectedAreaLabel}.`}>
               <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
                 You may notice we ask a few similar questions. The repetition is
                 deliberate.
@@ -623,11 +637,8 @@ export default function CompassPage() {
               title={buildAdaptiveRecursiveQuestion({
                 layer: recursiveLayers.length + 1,
                 selectedAreaLabel,
-                previousAnswer:
-                  recursiveLayers[recursiveLayers.length - 1]?.answer ?? "",
-                firstAnswer:
-                  areaResponses.find((response) => response.area === selectedArea)
-                    ?.answer ?? "",
+                previousAnswer: recursiveLayers[recursiveLayers.length - 1]?.answer ?? "",
+                firstAnswer: areaResponses.find((response) => response.area === selectedArea)?.answer ?? "",
               })}
               description={
                 recursiveLayers.length > 0
@@ -635,13 +646,7 @@ export default function CompassPage() {
                   : `Let's begin exploring why ${selectedAreaLabel.toLowerCase()} matters to you.`
               }
             >
-              <textarea
-                value={recursiveAnswer}
-                onChange={(event) => setRecursiveAnswer(event.target.value)}
-                placeholder="Answer openly. The more context you give, the more Compass can help reflect possible patterns, values, and next steps."
-                rows={7}
-                className="compass-textarea"
-              />
+              <textarea value={recursiveAnswer} onChange={(event) => setRecursiveAnswer(event.target.value)} placeholder="Answer openly. The more context you give, the more Compass can help reflect possible patterns, values, and next steps." rows={7} className="compass-textarea" />
 
               <button onClick={submitRecursiveAnswer} className="primary-button">
                 Continue
@@ -650,62 +655,31 @@ export default function CompassPage() {
           )}
 
           {phase === "core_reflection" && (
-            <CompassCard
-              title="Core pattern reflection"
-              description={coreReflection.reflection}
-            >
+            <CompassCard title="Core pattern reflection" description={coreReflection.reflection}>
               <details className="rounded-2xl border border-zinc-800 bg-[#131313] p-4">
-                <summary className={`cursor-pointer text-sm ${BODY_TEXT}`}>
-                  Review your deeper reflections
-                </summary>
+                <summary className={`cursor-pointer text-sm ${BODY_TEXT}`}>Review your deeper reflections</summary>
 
                 <div className="mt-4 space-y-4">
                   {recursiveLayers.map((layer) => (
-                    <div
-                      key={layer.layer}
-                      className="rounded-xl border border-zinc-800 p-4"
-                    >
-                      <p className="text-sm text-[#d8b15f]">
-                        {layer.question}
-                      </p>
-
-                      <p className={`mt-2 whitespace-pre-line text-sm ${BODY_TEXT}`}>
-                        {layer.answer}
-                      </p>
+                    <div key={layer.layer} className="rounded-xl border border-zinc-800 p-4">
+                      <p className="text-sm text-[#d8b15f]">{layer.question}</p>
+                      <p className={`mt-2 whitespace-pre-line text-sm ${BODY_TEXT}`}>{layer.answer}</p>
                     </div>
                   ))}
                 </div>
               </details>
 
-              <textarea
-                value={extraReflection}
-                onChange={(event) => setExtraReflection(event.target.value)}
-                placeholder="Would you like to clarify, question, refine, or add anything before continuing?"
-                rows={5}
-                className="compass-textarea"
-              />
+              <textarea value={extraReflection} onChange={(event) => setExtraReflection(event.target.value)} placeholder="Would you like to clarify, question, refine, or add anything before continuing?" rows={5} className="compass-textarea" />
 
-              <button
-                onClick={() => setPhase("resistance")}
-                className="primary-button"
-              >
+              <button onClick={() => setPhase("resistance")} className="primary-button">
                 Continue
               </button>
             </CompassCard>
           )}
 
           {phase === "resistance" && (
-            <CompassCard
-              title="What tends to get in the way?"
-              description={`What usually interrupts, delays, emotionally complicates, or prevents movement toward ${selectedAreaLabel.toLowerCase()}?`}
-            >
-              <textarea
-                value={resistanceAnswer}
-                onChange={(event) => setResistanceAnswer(event.target.value)}
-                placeholder="Describe the friction, emotional resistance, avoidance patterns, fears, or recurring interruptions."
-                rows={8}
-                className="compass-textarea"
-              />
+            <CompassCard title="What tends to get in the way?" description={`What usually interrupts, delays, emotionally complicates, or prevents movement toward ${selectedAreaLabel.toLowerCase()}?`}>
+              <textarea value={resistanceAnswer} onChange={(event) => setResistanceAnswer(event.target.value)} placeholder="Describe the friction, emotional resistance, avoidance patterns, fears, or recurring interruptions." rows={8} className="compass-textarea" />
 
               <button onClick={submitResistance} className="primary-button">
                 Analyze resistance
@@ -714,32 +688,22 @@ export default function CompassPage() {
           )}
 
           {phase === "discussion" && (
-            <CompassCard
-              title="Let’s sit with this before we move."
-              description="This is where Compass helps you find the smallest truthful next step."
-            >
-              <div className="space-y-4">
+            <CompassCard title="Let’s sit with this before we move." description="This is where Compass helps you find the smallest truthful next step.">
+              <div className="space-y-5">
                 {discussionMessages.map((message, index) => (
-                  <div
-                    key={`${message.role}-${index}`}
-                    className={
-                      message.role === "compass"
-                        ? `rounded-[1.5rem] border border-zinc-800 bg-[#121212] p-5 text-sm leading-relaxed whitespace-pre-line ${BODY_TEXT}`
-                        : "ml-auto rounded-[1.5rem] border border-[#d8b15f]/45 bg-[#1c1408] p-5 text-sm leading-relaxed text-zinc-100 whitespace-pre-line"
-                    }
-                  >
-                    {message.content}
+                  <div key={`${message.role}-${index}`} className="text-sm leading-relaxed">
+                    <p className={message.role === "compass" ? "mb-1 text-[#d8b15f]" : "mb-1 text-zinc-200"}>
+                      {message.role === "compass" ? "Compass" : "You"}
+                    </p>
+
+                    <p className={`whitespace-pre-line ${message.role === "compass" ? BODY_TEXT : "text-zinc-100"}`}>
+                      {message.content}
+                    </p>
                   </div>
                 ))}
               </div>
 
-              <textarea
-                value={discussionInput}
-                onChange={(event) => setDiscussionInput(event.target.value)}
-                placeholder="Reply here. If you feel blocked, say that. If you feel resistant, say that. If you feel ready, say that too."
-                rows={6}
-                className="compass-textarea"
-              />
+              <textarea value={discussionInput} onChange={(event) => setDiscussionInput(event.target.value)} placeholder="Reply here. If you feel blocked, say that. If you feel resistant, say that. If you feel ready, say that too." rows={6} className="compass-textarea" />
 
               <button onClick={submitDiscussionMessage} className="primary-button">
                 Send
@@ -752,49 +716,26 @@ export default function CompassPage() {
           )}
 
           {phase === "execution_check" && (
-            <CompassCard
-              title="Do you feel able to execute this?"
-              description="If this still feels too large, unclear, public, emotionally loaded, or difficult to begin, Compass will reduce the pressure further."
-            >
-              <textarea
-                value={executionFeeling}
-                onChange={(event) => setExecutionFeeling(event.target.value)}
-                placeholder="Does this feel realistic, emotionally safe, sustainable, too large, too public, unclear, or difficult to begin?"
-                rows={6}
-                className="compass-textarea"
-              />
+            <CompassCard title="Do you feel able to execute this?" description="If this still feels too large, unclear, public, emotionally loaded, or difficult to begin, Compass will reduce the pressure further.">
+              <textarea value={executionFeeling} onChange={(event) => setExecutionFeeling(event.target.value)} placeholder="Does this feel realistic, emotionally safe, sustainable, too large, too public, unclear, or difficult to begin?" rows={6} className="compass-textarea" />
 
-              <button
-                onClick={submitExecutionFeeling}
-                className="primary-button"
-              >
+              <button onClick={submitExecutionFeeling} className="primary-button">
                 Finalize next step
               </button>
             </CompassCard>
           )}
 
           {phase === "complete" && (
-            <CompassCard
-              title="Your next executable step"
-              description="One real movement. Not the entire transformation."
-            >
+            <CompassCard title="Your next executable step" description="One real movement. Not the entire transformation.">
               <div className={`rounded-[1.5rem] border border-zinc-800 bg-[#121212] p-5 text-sm leading-relaxed whitespace-pre-line ${BODY_TEXT}`}>
                 {finalStep}
               </div>
 
               {resonanceBridge.eligible && (
                 <div className="rounded-[1.5rem] border border-zinc-800 bg-[#121212] p-5">
-                  <p className={`whitespace-pre-line text-sm leading-relaxed ${BODY_TEXT}`}>
-                    {resonanceBridge.reflection}
-                  </p>
+                  <p className={`whitespace-pre-line text-sm leading-relaxed ${BODY_TEXT}`}>{resonanceBridge.reflection}</p>
 
-                  <a
-                    href={
-                      resonanceBridge.ctaHref ??
-                      "https://www.oremea.com/?open=resonance"
-                    }
-                    className="primary-button inline-flex items-center justify-center"
-                  >
+                  <a href={resonanceBridge.ctaHref ?? "https://www.oremea.com/?open=resonance"} className="primary-button inline-flex items-center justify-center">
                     {resonanceBridge.ctaLabel}
                   </a>
                 </div>
@@ -931,34 +872,3 @@ function toObject<T>(value: unknown): T | null {
   return null;
 }
 
-function CompassCard({
-  eyebrow,
-  title,
-  description,
-  children,
-}: {
-  eyebrow?: string;
-  title: string;
-  description: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="rounded-[2rem] border border-zinc-800 bg-[#0f0f0f]/96 p-6 shadow-2xl shadow-black/30 backdrop-blur">
-      {eyebrow && (
-        <p className="mb-3 text-xs uppercase tracking-[0.28em] text-zinc-400">
-          {eyebrow}
-        </p>
-      )}
-
-      <h1 className="font-serif text-3xl text-[#d8b15f] sm:text-4xl">
-        {title}
-      </h1>
-
-      <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-zinc-400 sm:text-base">
-        {description}
-      </p>
-
-      <div className="mt-6 space-y-4">{children}</div>
-    </section>
-  );
-}
