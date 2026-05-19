@@ -1,26 +1,23 @@
 "use client";
 
-import { CompassPriorityFlow } from "@/components/compass/CompassPriorityFlow";
 import { CompassAreaFlow } from "@/components/compass/CompassAreaFlow";
 import { CompassCard } from "@/components/compass/CompassCard";
-import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
-
-import {
-  CompassDepthFlow,
-  CompassDepthIntro,
-} from "@/components/compass/CompassDepthFlow";
-
-import {
-  CompassCoreReflection,
-  CompassResistanceFlow,
-} from "@/components/compass/CompassResistanceFlow";
-
 import {
   CompassComplete,
   CompassDiscussionFlow,
   CompassExecutionCheck,
 } from "@/components/compass/CompassDiscussionFlow";
+import {
+  CompassDepthFlow,
+  CompassDepthIntro,
+} from "@/components/compass/CompassDepthFlow";
+import { CompassPriorityFlow } from "@/components/compass/CompassPriorityFlow";
+import {
+  CompassCoreReflection,
+  CompassResistanceFlow,
+} from "@/components/compass/CompassResistanceFlow";
+import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   COMPASS_AREA_QUESTIONS,
@@ -85,7 +82,8 @@ const BODY_TEXT = "text-zinc-400";
 
 export default function CompassPage() {
   const [phase, setPhase] = useState<CompassPhase>("loading");
-  const [savedSession, setSavedSession] = useState<StoredCompassSession | null>(null);
+  const [savedSession, setSavedSession] =
+    useState<StoredCompassSession | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
 
@@ -97,26 +95,47 @@ export default function CompassPage() {
   const [recursiveAnswer, setRecursiveAnswer] = useState("");
   const [extraReflection, setExtraReflection] = useState("");
   const [resistanceAnswer, setResistanceAnswer] = useState("");
-  const [resistanceMap, setResistanceMap] = useState<CompassResistanceMap | null>(null);
+  const [resistanceMap, setResistanceMap] =
+    useState<CompassResistanceMap | null>(null);
   const [proposedStep, setProposedStep] = useState("");
   const [executionFeeling, setExecutionFeeling] = useState("");
   const [finalStep, setFinalStep] = useState("");
   const [discussionInput, setDiscussionInput] = useState("");
-  const [discussionMessages, setDiscussionMessages] = useState<CompassDiscussionMessage[]>([]);
+  const [discussionMessages, setDiscussionMessages] =
+    useState<CompassDiscussionMessage[]>([]);
 
   const currentArea = COMPASS_AREA_QUESTIONS[areaIndex];
 
-  const areaMirror = useMemo(() => buildAreaMirrorReflection(areaResponses), [areaResponses]);
-  const primaryReflection = useMemo(() => reflectPrimaryArea(areaResponses), [areaResponses]);
-  const coreReflection = useMemo(() => reflectCoreValues(recursiveLayers), [recursiveLayers]);
-  const resonanceBridge = useMemo(() => evaluateResonanceBridge(areaResponses), [areaResponses]);
+  const areaMirror = useMemo(
+    () => buildAreaMirrorReflection(areaResponses),
+    [areaResponses],
+  );
 
-  const selectedAreaLabel = selectedArea ? AREA_LABELS[selectedArea] : "your chosen goal";
+  const primaryReflection = useMemo(
+    () => reflectPrimaryArea(areaResponses),
+    [areaResponses],
+  );
+
+  const coreReflection = useMemo(
+    () => reflectCoreValues(recursiveLayers),
+    [recursiveLayers],
+  );
+
+  const resonanceBridge = useMemo(
+    () => evaluateResonanceBridge(areaResponses),
+    [areaResponses],
+  );
+
+  const selectedAreaLabel = selectedArea
+    ? AREA_LABELS[selectedArea]
+    : "your chosen goal";
 
   useEffect(() => {
     async function loadSession() {
       try {
-        const response = await fetch("/api/compass/session", { method: "GET" });
+        const response = await fetch("/api/compass/session", {
+          method: "GET",
+        });
 
         if (!response.ok) {
           setPhase("intro");
@@ -302,9 +321,15 @@ export default function CompassPage() {
       return;
     }
 
-    const restoredAreaResponses = toArray<CompassAreaResponse>(savedSession.area_responses);
-    const restoredRecursiveLayers = toArray<CompassRecursiveLayer>(savedSession.recursive_layers);
-    const restoredMessages = toArray<CompassDiscussionMessage>(savedSession.discussion_messages);
+    const restoredAreaResponses = toArray<CompassAreaResponse>(
+      savedSession.area_responses,
+    );
+    const restoredRecursiveLayers = toArray<CompassRecursiveLayer>(
+      savedSession.recursive_layers,
+    );
+    const restoredMessages = toArray<CompassDiscussionMessage>(
+      savedSession.discussion_messages,
+    );
 
     setAreaResponses(restoredAreaResponses);
     setRecursiveLayers(restoredRecursiveLayers);
@@ -318,7 +343,9 @@ export default function CompassPage() {
       : null;
 
     setSelectedArea(restoredArea);
-    setAreaIndex(Math.min(restoredAreaResponses.length, COMPASS_AREA_QUESTIONS.length - 1));
+    setAreaIndex(
+      Math.min(restoredAreaResponses.length, COMPASS_AREA_QUESTIONS.length - 1),
+    );
     setHasStarted(true);
     setPhase(normalizePhase(savedSession.phase));
   }
@@ -364,7 +391,9 @@ export default function CompassPage() {
       layer: layerNumber,
       selectedAreaLabel,
       previousAnswer: recursiveLayers[recursiveLayers.length - 1]?.answer ?? "",
-      firstAnswer: areaResponses.find((response) => response.area === selectedArea)?.answer ?? "",
+      firstAnswer:
+        areaResponses.find((response) => response.area === selectedArea)
+          ?.answer ?? "",
     });
 
     const fallbackQuestion = getRecursiveQuestion(layerNumber);
@@ -475,7 +504,9 @@ export default function CompassPage() {
     pauseThen(() => setPhase("complete"));
   }
 
-  const showBackButton = !["loading", "resume", "intro", "analyzing"].includes(phase);
+  const showBackButton = !["loading", "resume", "intro", "analyzing"].includes(
+    phase,
+  );
 
   return (
     <main className="min-h-screen bg-[#090909] text-stone-100">
@@ -495,7 +526,9 @@ export default function CompassPage() {
               />
             </div>
 
-            <p className={`mx-auto max-w-2xl text-base leading-relaxed ${BODY_TEXT} sm:text-lg`}>
+            <p
+              className={`mx-auto max-w-2xl text-base leading-relaxed ${BODY_TEXT} sm:text-lg`}
+            >
               Compass helps you discover what matters most to you, understand why
               it matters, identify what interrupts it, and build momentum through
               aligned execution.
@@ -517,13 +550,21 @@ export default function CompassPage() {
           )}
 
           {phase === "loading" && (
-            <CompassCard title="Opening Compass" description="Checking whether there is an active session to resume.">
-              <div className={`flex justify-center py-8 text-5xl ${BODY_TEXT}`}>...</div>
+            <CompassCard
+              title="Opening Compass"
+              description="Checking whether there is an active session to resume."
+            >
+              <div className={`flex justify-center py-8 text-5xl ${BODY_TEXT}`}>
+                ...
+              </div>
             </CompassCard>
           )}
 
           {phase === "resume" && (
-            <CompassCard title="Resume Compass?" description="Compass found a previous active session. You can continue from where you left off, or begin again.">
+            <CompassCard
+              title="Resume Compass?"
+              description="Compass found a previous active session. You can continue from where you left off, or begin again."
+            >
               <button onClick={resumeSession} className="primary-button">
                 Resume previous session
               </button>
@@ -535,7 +576,10 @@ export default function CompassPage() {
           )}
 
           {phase === "intro" && (
-            <CompassCard title="Begin Compass" description="You will move through eight recognizable life areas, one question at a time.">
+            <CompassCard
+              title="Begin Compass"
+              description="You will move through eight recognizable life areas, one question at a time."
+            >
               <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
                 Compass may notice emotional weighting, repeating language,
                 contradictions, resistance patterns, or recurring values in your
@@ -564,129 +608,113 @@ export default function CompassPage() {
           )}
 
           {phase === "analyzing" && (
-            <CompassCard title="Compass is analyzing your responses" description="Please wait while Compass reflects on your language patterns.">
-              <div className={`flex justify-center py-8 text-5xl ${BODY_TEXT}`}>...</div>
+            <CompassCard
+              title="Compass is analyzing your responses"
+              description="Please wait while Compass reflects on your language patterns."
+            >
+              <div className={`flex justify-center py-8 text-5xl ${BODY_TEXT}`}>
+                ...
+              </div>
             </CompassCard>
           )}
 
           {phase === "area" && (
-  <CompassAreaFlow
-    areaIndex={areaIndex}
-    answer={answer}
-    areaResponses={areaResponses}
-    onAnswerChange={setAnswer}
-    onSubmitAnswer={submitAreaAnswer}
-  />
-)}
+            <CompassAreaFlow
+              areaIndex={areaIndex}
+              answer={answer}
+              areaResponses={areaResponses}
+              onAnswerChange={setAnswer}
+              onSubmitAnswer={submitAreaAnswer}
+            />
+          )}
 
           {phase === "area_mirror" && (
-  <CompassPriorityFlow
-    title="Compass reflection"
-    description={areaMirror.reflection}
-    areaResponses={areaResponses}
-    reviewLabel="Review your eight answers"
-    onContinue={() => pauseThen(() => setPhase("area_confirmation"))}
-  />
-)}
+            <CompassPriorityFlow
+              title="Compass reflection"
+              description={areaMirror.reflection}
+              areaResponses={areaResponses}
+              reviewLabel="Review your eight answers"
+              onContinue={() => pauseThen(() => setPhase("area_confirmation"))}
+            />
+          )}
 
           {phase === "area_confirmation" && (
-  <CompassPriorityFlow
-    title="What feels most important right now?"
-    description={primaryReflection.reflection}
-    areaResponses={areaResponses}
-    reviewLabel="Review your answers"
-    showAreaChoices
-    onChooseArea={chooseArea}
-  />
-)}
+            <CompassPriorityFlow
+              title="What feels most important right now?"
+              description={primaryReflection.reflection}
+              areaResponses={areaResponses}
+              reviewLabel="Review your answers"
+              showAreaChoices
+              onChooseArea={chooseArea}
+            />
+          )}
 
           {phase === "depth_intro" && (
-  <CompassDepthIntro
-    selectedAreaLabel={selectedAreaLabel}
-    onBegin={() => setPhase("depth")}
-  />
-)}
+            <CompassDepthIntro
+              selectedAreaLabel={selectedAreaLabel}
+              onBegin={() => setPhase("depth")}
+            />
+          )}
 
           {phase === "depth" && (
-  <CompassDepthFlow
-    selectedArea={selectedArea}
-    selectedAreaLabel={selectedAreaLabel}
-    areaResponses={areaResponses}
-    recursiveLayers={recursiveLayers}
-    recursiveAnswer={recursiveAnswer}
-    onAnswerChange={setRecursiveAnswer}
-    onSubmitAnswer={submitRecursiveAnswer}
-  />
-)}
+            <CompassDepthFlow
+              selectedArea={selectedArea}
+              selectedAreaLabel={selectedAreaLabel}
+              areaResponses={areaResponses}
+              recursiveLayers={recursiveLayers}
+              recursiveAnswer={recursiveAnswer}
+              onAnswerChange={setRecursiveAnswer}
+              onSubmitAnswer={submitRecursiveAnswer}
+            />
+          )}
 
           {phase === "core_reflection" && (
-  <CompassCoreReflection
-    reflection={coreReflection.reflection}
-    recursiveLayers={recursiveLayers}
-    extraReflection={extraReflection}
-    onExtraReflectionChange={setExtraReflection}
-    onContinue={() => setPhase("resistance")}
-  />
-)}
+            <CompassCoreReflection
+              reflection={coreReflection.reflection}
+              recursiveLayers={recursiveLayers}
+              extraReflection={extraReflection}
+              onExtraReflectionChange={setExtraReflection}
+              onContinue={() => setPhase("resistance")}
+            />
+          )}
 
           {phase === "resistance" && (
-  <CompassResistanceFlow
-    selectedAreaLabel={selectedAreaLabel}
-    resistanceAnswer={resistanceAnswer}
-    onResistanceChange={setResistanceAnswer}
-    onSubmitResistance={submitResistance}
-  />
-)}
+            <CompassResistanceFlow
+              selectedAreaLabel={selectedAreaLabel}
+              resistanceAnswer={resistanceAnswer}
+              onResistanceChange={setResistanceAnswer}
+              onSubmitResistance={submitResistance}
+            />
+          )}
 
           {phase === "discussion" && (
-            <CompassCard title="Let’s sit with this before we move." description="This is where Compass helps you find the smallest truthful next step.">
-              <div className="space-y-5">
-                {discussionMessages.map((message, index) => (
-                  <div key={`${message.role}-${index}`} className="text-sm leading-relaxed">
-                    <p className={message.role === "compass" ? "mb-1 text-[#d8b15f]" : "mb-1 text-zinc-200"}>
-                      {message.role === "compass" ? "Compass" : "You"}
-                    </p>
+            <CompassDiscussionFlow
+              discussionMessages={discussionMessages}
+              discussionInput={discussionInput}
+              onDiscussionInputChange={setDiscussionInput}
+              onSend={submitDiscussionMessage}
+              onReady={moveToExecutionCheck}
+            />
+          )}
 
-                    <p className={`whitespace-pre-line ${message.role === "compass" ? BODY_TEXT : "text-zinc-100"}`}>
-                      {message.content}
-                    </p>
-                  </div>
-                ))}
-              </div>
+          {phase === "execution_check" && (
+            <CompassExecutionCheck
+              executionFeeling={executionFeeling}
+              onExecutionFeelingChange={setExecutionFeeling}
+              onFinalize={submitExecutionFeeling}
+            />
+          )}
 
-              <textarea value={discussionInput} onChange={(event) => setDiscussionInput(event.target.value)} placeholder="Reply here. If you feel blocked, say that. If you feel resistant, say that. If you feel ready, say that too." rows={6} className="compass-textarea" />
-
-              <button onClick={submitDiscussionMessage} className="primary-button">
-                Send
-              </button>
-
-              <button onClick={moveToExecutionCheck} className="secondary-button">
-                I’m read{phase === "discussion" && (
-  <CompassDiscussionFlow
-    discussionMessages={discussionMessages}
-    discussionInput={discussionInput}
-    onDiscussionInputChange={setDiscussionInput}
-    onSend={submitDiscussionMessage}
-    onReady={moveToExecutionCheck}
-  />
-)}
-
-{phase === "execution_check" && (
-  <CompassExecutionCheck
-    executionFeeling={executionFeeling}
-    onExecutionFeelingChange={setExecutionFeeling}
-    onFinalize={submitExecutionFeeling}
-  />
-)}
-
-{phase === "complete" && (
-  <CompassComplete
-    finalStep={finalStep}
-    resonanceReflection={resonanceBridge.eligible ? resonanceBridge.reflection : null}
-    resonanceCtaHref={resonanceBridge.ctaHref}
-    resonanceCtaLabel={resonanceBridge.ctaLabel}
-  />
-)}
+          {phase === "complete" && (
+            <CompassComplete
+              finalStep={finalStep}
+              resonanceReflection={
+                resonanceBridge.eligible ? resonanceBridge.reflection : null
+              }
+              resonanceCtaHref={resonanceBridge.ctaHref}
+              resonanceCtaLabel={resonanceBridge.ctaLabel}
+            />
+          )}
         </div>
       </section>
 
@@ -816,4 +844,3 @@ function toObject<T>(value: unknown): T | null {
 
   return null;
 }
-
