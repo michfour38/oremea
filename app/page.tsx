@@ -8,7 +8,7 @@ import { SiteShell } from "@/components/site/site-shell";
 const products = [
   {
     name: "Resonance",
-    href: "/sign-in?redirect_url=/oremea/resume",
+    href: "/oremea",
     active: true,
     short:
       "A self-paced reflective journey designed to help people understand the patterns they carry into connection.",
