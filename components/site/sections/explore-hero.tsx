@@ -18,21 +18,6 @@ export function ExploreHero() {
           recognition tools.
         </p>
 
-        <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <a
-            href="/compare"
-            className="rounded-full border border-amber-200/30 bg-amber-100/10 px-6 py-3 text-sm uppercase tracking-[0.18em] text-amber-100 transition hover:border-amber-100/60 hover:bg-amber-100/15"
-          >
-            Compare Products
-          </a>
-
-          <a
-            href="/oremea/enter"
-            className="rounded-full border border-white/10 px-6 py-3 text-sm uppercase tracking-[0.18em] text-zinc-300 transition hover:border-white/20 hover:text-white"
-          >
-            Enter Oremea
-          </a>
-        </div>
       </div>
     </section>
   );
