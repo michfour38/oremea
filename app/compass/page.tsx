@@ -301,6 +301,18 @@ export default function CompassPage() {
 
   function beginNewSession() {
     setSavedSession(null);
+fetch("/api/compass/session", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    phase: "intro",
+    areaResponses: [],
+    recursiveLayers: [],
+    discussionMessages: [],
+  }),
+}).catch(() => {});
     setHasStarted(true);
     setAreaIndex(0);
     setAnswer("");
@@ -598,9 +610,9 @@ export default function CompassPage() {
 
               <button
                 onClick={() => {
-                  setHasStarted(true);
-                  setPhase("area");
-                }}
+  beginNewSession();
+  setPhase("area");
+}}
                 className="primary-button"
               >
                 Begin
