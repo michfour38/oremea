@@ -1,6 +1,6 @@
 "use client";
 
-import { SiteNav } from "@/components/site/site-nav";
+import MemberNav from "@/app/(member)/member-nav";
 import { CompassAreaFlow } from "@/components/compass/CompassAreaFlow";
 import { CompassCard } from "@/components/compass/CompassCard";
 import {
@@ -535,7 +535,7 @@ fetch("/api/compass/session", {
 
   return (
     <main className="min-h-screen bg-[#090909] text-stone-100">
-<SiteNav />
+<MemberNav />
       <section className="relative min-h-screen overflow-hidden px-5 py-8 sm:px-8 lg:px-12">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(184,134,64,0.08),_transparent_28%),linear-gradient(180deg,_rgba(16,16,16,0.96),_rgba(9,9,9,1))]" />
 
