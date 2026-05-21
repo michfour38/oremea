@@ -80,12 +80,12 @@ function ProductName({ name }: { name: string }) {
   }
 
   if (name === "The Compass") {
-    return (
-      <span className="font-serif">
-        The <span className="italic text-[#c8a96a]">Compass</span>
-      </span>
-    );
-  }
+  return (
+    <span className="font-serif tracking-[0.04em] text-[#f3efe7]">
+      The <span className="text-[#c8a96a]">Compass</span>
+    </span>
+  );
+}
 
   return <span className="font-serif">{name}</span>;
 }

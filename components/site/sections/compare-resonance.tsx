@@ -39,9 +39,6 @@ export function CompareResonance({
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-[#BFBFBF]">
-                    Like seeing your own patterns without being shamed for them.
-                  </p>
-
 <div className="flex flex-wrap gap-4 pt-2">
   <Link
     href="/oremea/enter"
@@ -57,6 +54,8 @@ export function CompareResonance({
     Resonance + Mirror — R1240
   </Link>
 </div>
+                    Like seeing your own patterns without being shamed for them.
+                  </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-[#BFBFBF]">
                     Like someone held up a mirror gently — and didn’t look away.
@@ -69,6 +68,7 @@ export function CompareResonance({
                   <p className="mt-8 font-serif text-xl leading-relaxed text-[#BFBFBF]">
                     Like finally recognising the difference between attraction, attachment, clarity, and repetition.
                   </p>
+                  
                 </div>
               </div>
             ) : (
