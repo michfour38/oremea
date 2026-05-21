@@ -46,7 +46,7 @@ export default function MemberNav() {
             </button>
 
             {openMenu === "archive" ? (
-              <div className="absolute right-0 top-12 z-50 min-w-[220px] rounded-[1.75rem] border border-zinc-800/80 bg-zinc-950/95 p-4 shadow-[0_10px_40px_rgba(0,0,0,0.45)]">
+              <div className="absolute right-0 top-12 z-[200] min-w-[220px] rounded-[1.75rem] border border-zinc-800/80 bg-zinc-950/95 p-4 shadow-[0_10px_40px_rgba(0,0,0,0.45)]">
                 <Link href="/journey" className="block rounded-xl px-4 py-3 text-center text-sm text-zinc-300 transition hover:bg-zinc-900 hover:text-white">
                   Return to the present
                 </Link>
@@ -73,7 +73,7 @@ export default function MemberNav() {
             </button>
 
             {openMenu === "profile" ? (
-              <div className="absolute right-0 top-12 z-50 min-w-[240px] rounded-[1.75rem] border border-zinc-800/80 bg-zinc-950/95 p-4 shadow-[0_10px_40px_rgba(0,0,0,0.45)]">
+              <div className="absolute right-0 top-12 z-[200] min-w-[240px] rounded-[1.75rem] border border-zinc-800/80 bg-zinc-950/95 p-4 shadow-[0_10px_40px_rgba(0,0,0,0.45)]">
                 <Link href="/profile" className="block rounded-xl px-4 py-3 text-center text-sm text-zinc-300 transition hover:bg-zinc-900 hover:text-white">
                   Profile
                 </Link>

@@ -536,10 +536,10 @@ fetch("/api/compass/session", {
   return (
     <main className="min-h-screen bg-[#090909] text-stone-100">
 <MemberNav />
-      <section className="relative min-h-screen overflow-hidden px-5 py-8 sm:px-8 lg:px-12">
+      <section className="relative z-0 min-h-screen overflow-hidden px-5 py-8 sm:px-8 lg:px-12">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(184,134,64,0.08),_transparent_28%),linear-gradient(180deg,_rgba(16,16,16,0.96),_rgba(9,9,9,1))]" />
 
-        <div className="relative mx-auto max-w-3xl">
+        <div className="relative z-0 mx-auto max-w-3xl">
           <header className="mb-5 pt-1 text-center">
             <div className="mx-auto mb-2 flex justify-center">
               <Image
