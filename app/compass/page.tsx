@@ -305,52 +305,6 @@ possibilityAnswers,
       return;
     }
 
-if (phase === "possibility") {
-  return (
-    <CompassCard
-      title="Let’s explore what becomes possible"
-      description={possibilityQuestion.question}
-    >
-      <textarea
-        value={possibilityAnswer}
-        onChange={(event) =>
-          setPossibilityAnswer(event.target.value)
-        }
-        placeholder="Describe this in your own words."
-        rows={6}
-        className="compass-textarea"
-      />
-
-      <button
-        onClick={submitPossibilityAnswer}
-        className="primary-button"
-      >
-        Continue
-      </button>
-    </CompassCard>
-  );
-}
-
-if (phase === "possibility_mirror") {
-  return (
-    <CompassCard
-      title="Compass reflection"
-      description={possibilityMirror}
-    >
-      <button
-        onClick={() =>
-          pauseThen(() =>
-            setPhase("resistance"),
-          )
-        }
-        className="primary-button"
-      >
-        Continue
-      </button>
-    </CompassCard>
-  );
-}
-
     if (phase === "core_reflection") {
       setPhase("depth");
       return;
@@ -813,6 +767,42 @@ window.setTimeout(() => {
             />
           )}
 
+          {phase === "possibility" && (
+            <CompassCard
+              title="Let’s explore what becomes possible"
+              description={possibilityQuestion.question}
+            >
+              <textarea
+                value={possibilityAnswer}
+                onChange={(event) => setPossibilityAnswer(event.target.value)}
+                placeholder="Describe this in your own words."
+                rows={6}
+                className="compass-textarea"
+              />
+
+              <button
+                onClick={submitPossibilityAnswer}
+                className="primary-button"
+              >
+                Continue
+              </button>
+            </CompassCard>
+          )}
+
+          {phase === "possibility_mirror" && (
+            <CompassCard
+              title="Compass reflection"
+              description={possibilityMirror}
+            >
+              <button
+                onClick={() => pauseThen(() => setPhase("resistance"))}
+                className="primary-button"
+              >
+                Continue
+              </button>
+            </CompassCard>
+          )}
+
           {phase === "core_reflection" && (
             <CompassCoreReflection
               reflection={coreReflection.reflection}
@@ -972,6 +962,8 @@ function normalizePhase(value: string | null | undefined): CompassPhase {
     "depth_intro",
     "depth",
     "core_reflection",
+"possibility",
+"possibility_mirror",
     "resistance",
     "discussion",
     "execution_check",
