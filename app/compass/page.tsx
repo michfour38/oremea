@@ -504,7 +504,10 @@ window.setTimeout(() => {
     content: result.compassReply,
   };
 
-  setDiscussionMessages([...nextMessages, compassMessage]);
+  setDiscussionMessages((current) => [
+    ...current.slice(0, -1),
+    compassMessage,
+  ]);
 }, 2800);
 
     if (!result.shouldContinueDiscussion) {
