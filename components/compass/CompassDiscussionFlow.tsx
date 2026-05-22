@@ -22,19 +22,16 @@ export function CompassDiscussionFlow({
       title="Let’s sit with this before we move."
       description="This is where Compass helps reduce the pressure enough for movement to become possible again."
     >
-      <div className="space-y-5">
+      <div className="space-y-6">
         {discussionMessages.map((message, index) => (
-          <div key={`${message.role}-${index}`} className="text-sm leading-relaxed">
-            <p
-              className={
-                message.role === "compass"
-                  ? "mb-1 text-[#d8b15f]"
-                  : "mb-1 text-zinc-200"
-              }
-            >
-              {message.role === "compass" ? "Compass" : "You"}
-            </p>
-
+          <div
+  key={`${message.role}-${index}`}
+  className={`text-sm leading-relaxed ${
+    message.role === "compass"
+      ? "rounded-[1.4rem] border border-[#2A2418] bg-[#12100D] p-5"
+      : "rounded-[1.4rem] border border-zinc-800 bg-[#121212] p-5"
+  }`}
+>
             <p
               className={`whitespace-pre-line ${
                 message.role === "compass" ? BODY_TEXT : "text-zinc-100"
@@ -49,7 +46,11 @@ export function CompassDiscussionFlow({
       <textarea
         value={discussionInput}
         onChange={(event) => onDiscussionInputChange(event.target.value)}
-        placeholder="Reply here. Compass will use your exact response to keep narrowing the next question. Short answers are okay, but if you feel blocked, try describing what feels hard to name."
+        placeholder="Let’s discuss openly. Often we struggle to take the next step because we may not yet trust ourselves to do what we said we would do.
+
+If you feel resistance, uncertainty, pressure, avoidance, or emotional exhaustion around taking action, describe it honestly here.
+
+Compass will work through it with you and help uncover the next best step."
         rows={6}
         className="compass-textarea"
       />

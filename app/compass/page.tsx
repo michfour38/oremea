@@ -488,13 +488,24 @@ Sometimes the real next step is not bigger action — it is reducing the emotion
       proposedStep,
     });
 
-    const compassMessage: CompassDiscussionMessage = {
-      role: "compass",
-      content: result.compassReply,
-    };
+    setDiscussionMessages([
+  ...nextMessages,
+  {
+    role: "compass",
+    content: "...",
+  },
+]);
 
-    setDiscussionMessages([...nextMessages, compassMessage]);
-    setDiscussionInput("");
+setDiscussionInput("");
+
+window.setTimeout(() => {
+  const compassMessage: CompassDiscussionMessage = {
+    role: "compass",
+    content: result.compassReply,
+  };
+
+  setDiscussionMessages([...nextMessages, compassMessage]);
+}, 2800);
 
     if (!result.shouldContinueDiscussion) {
       setFinalStep(result.suggestedMicroStep ?? proposedStep);
