@@ -1,5 +1,6 @@
 "use client";
 
+import { evaluatePriorityRedirect } from "@/src/lib/compass/session/priority-redirect";
 import MemberNav from "@/app/(member)/member-nav";
 import { CompassAreaFlow } from "@/components/compass/CompassAreaFlow";
 import { CompassCard } from "@/components/compass/CompassCard";
@@ -442,6 +443,17 @@ fetch("/api/compass/session", {
     const mapped = mapResistance({ answer: resistanceAnswer });
     setResistanceMap(mapped);
 
+const redirect = evaluatePriorityRedirect({
+  selectedArea,
+  areaResponses,
+  recursiveAnswers: recursiveLayers.map((layer) => layer.answer),
+  resistanceAnswer,
+});
+
+if (redirect.shouldRedirect && redirect.suggestedArea) {
+  setSelectedArea(redirect.suggestedArea);
+}
+
     const step = generateNextStep({
       goal: selectedAreaLabel,
       resistance: mapped,
@@ -643,8 +655,8 @@ window.setTimeout(() => {
 
           {phase === "analyzing" && (
             <CompassCard
-              title="Compass is analyzing your responses"
-              description="Please wait while Compass reflects on your language patterns."
+              title="Compass is finding the clearest thread"
+              description="Stay with this for a moment."
             >
               <div className={`flex justify-center py-8 text-5xl ${BODY_TEXT}`}>
                 ...
