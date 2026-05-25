@@ -305,6 +305,24 @@ possibilityAnswers,
       return;
     }
 
+if (phase === "possibility") {
+  if (possibilityAnswers.length > 0) {
+    setPossibilityAnswers((current) =>
+      current.slice(0, -1),
+    );
+    setPhase("possibility");
+    return;
+  }
+
+  setPhase("depth");
+  return;
+}
+
+if (phase === "possibility_mirror") {
+  setPhase("possibility");
+  return;
+}
+
     if (phase === "core_reflection") {
       setPhase("depth");
       return;
@@ -771,26 +789,19 @@ window.setTimeout(() => {
           )}
 
           {phase === "possibility" && (
-            <CompassCard
-              title="Let’s explore what becomes possible"
-              description={possibilityQuestion.question}
-            >
-              <textarea
-                value={possibilityAnswer}
-                onChange={(event) => setPossibilityAnswer(event.target.value)}
-                placeholder="Describe this in your own words."
-                rows={6}
-                className="compass-textarea"
-              />
-
-              <button
-                onClick={submitPossibilityAnswer}
-                className="primary-button"
-              >
-                Continue
-              </button>
-            </CompassCard>
-          )}
+  <CompassDiscussionFlow
+    discussionMessages={[
+      {
+        role: "compass",
+        content: possibilityQuestion.question,
+      },
+    ]}
+    discussionInput={possibilityAnswer}
+    onDiscussionInputChange={setPossibilityAnswer}
+    onSend={submitPossibilityAnswer}
+    onReady={submitPossibilityAnswer}
+  />
+)}
 
           {phase === "possibility_mirror" && (
             <CompassCard
