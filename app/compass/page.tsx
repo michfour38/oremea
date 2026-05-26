@@ -308,9 +308,8 @@ const possibilityMirror = useMemo(
 
 if (phase === "possibility") {
   if (possibilityAnswers.length > 0) {
-    setPossibilityAnswers((current) =>
-      current.slice(0, -1),
-    );
+    setPossibilityAnswers((current) => current.slice(0, -1));
+    setPossibilityAnswer("");
     setPhase("possibility");
     return;
   }
@@ -501,13 +500,22 @@ function submitPossibilityAnswer() {
   setPossibilityAnswer("");
 
   if (updated.length < 4) {
-    pauseThen(() => setPhase("possibility"));
-    return;
-  }
+  pauseThen(() => setPhase("possibility"));
+  return;
+}
 
-  pauseThen(() =>
-    setPhase("possibility_mirror"),
-  );
+setDiscussionMessages([
+  {
+    role: "compass",
+    content: possibilityMirror,
+  },
+  {
+    role: "compass",
+    content: "What tends to interrupt movement toward this most often?",
+  },
+]);
+
+pauseThen(() => setPhase("discussion"));
 }
 
   function submitResistance() {
@@ -540,21 +548,15 @@ if (redirect.shouldRedirect && redirect.suggestedArea) {
     setDiscussionMessages([
   {
     role: "compass",
-    content: `
-Before we move forward, let’s stay with what feels difficult for a moment.
-
-There is no need to force intensity, urgency, or performance here.
-
-Sometimes the real next step is not bigger action — it is reducing the emotional weight surrounding the action first.
-`.trim(),
+    content: possibilityMirror,
   },
   {
     role: "compass",
-    content: step,
+    content: `What tends to interrupt movement toward this most often?`,
   },
 ]);
 
-    pauseThen(() => setPhase("discussion"));
+pauseThen(() => setPhase("discussion"));
   }
 
   function submitDiscussionMessage() {
