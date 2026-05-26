@@ -195,7 +195,7 @@ const possibilityMirror = useMemo(
     loadSession();
   }, []);
 
-  useEffect(() => {
+    useEffect(() => {
     window.history.pushState({ compass: true }, "", window.location.href);
 
     function handleBrowserBack() {
@@ -214,7 +214,7 @@ const possibilityMirror = useMemo(
       window.removeEventListener("popstate", handleBrowserBack);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, areaIndex, recursiveLayers.length]);
+  }, [phase, areaIndex, recursiveLayers.length, possibilityAnswers.length]);
 
   useEffect(() => {
     if (
@@ -238,7 +238,7 @@ const possibilityMirror = useMemo(
           selectedArea,
           areaResponses,
           recursiveLayers,
-possibilityAnswers,
+          possibilityAnswers,
           resistanceMap,
           discussionMessages,
           proposedStep,
@@ -255,6 +255,7 @@ possibilityAnswers,
     selectedArea,
     areaResponses,
     recursiveLayers,
+    possibilityAnswers,
     resistanceMap,
     discussionMessages,
     proposedStep,
