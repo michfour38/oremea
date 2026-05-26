@@ -161,12 +161,6 @@ const possibilityMirror = useMemo(
     ? AREA_LABELS[selectedArea]
     : "your chosen goal";
 
-useEffect(() => {
-  if (phase === "depth" && recursiveLayers.length >= 7) {
-    setPhase("possibility");
-  }
-}, [phase, recursiveLayers.length]);
-
   useEffect(() => {
     async function loadSession() {
       try {
@@ -491,7 +485,7 @@ setPossibilityAnswers(toArray<string>(savedSession.possibility_answers));
       return;
     }
 
-    pauseThen(() => setPhase("possibility"));
+    pauseThen(() => setPhase("core_reflection"));
   }
 
 function submitPossibilityAnswer() {
@@ -834,7 +828,7 @@ window.setTimeout(() => {
               recursiveLayers={recursiveLayers}
               extraReflection={extraReflection}
               onExtraReflectionChange={setExtraReflection}
-              onContinue={() => setPhase("resistance")}
+              onContinue={() => setPhase("possibility")}
             />
           )}
 
