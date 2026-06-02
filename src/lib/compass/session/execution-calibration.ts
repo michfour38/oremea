@@ -29,7 +29,7 @@ export function calibrateExecutionStep({
     recalibratedStep:
       executable
         ? null
-        : recalibrateStep(proposedStep),
+        : recalibrateStep(),
   }
 }
 
@@ -40,16 +40,17 @@ function detectTone(
     input.toLowerCase()
 
   if (
-    normalized.includes("scared") ||
-    normalized.includes("afraid") ||
+    normalized.includes("too big") ||
     normalized.includes("too much") ||
-    normalized.includes("overwhelming")
+    normalized.includes("not realistic") ||
+    normalized.includes("unrealistic")
   ) {
     return "apprehensive"
   }
 
   if (
     normalized.includes("confused") ||
+    normalized.includes("unclear") ||
     normalized.includes("unsure") ||
     normalized.includes("don't know")
   ) {
@@ -57,25 +58,27 @@ function detectTone(
   }
 
   if (
-    normalized.includes("excited") ||
     normalized.includes("ready") ||
-    normalized.includes("motivated")
+    normalized.includes("clear") ||
+    normalized.includes("doable") ||
+    normalized.includes("realistic")
   ) {
     return "energized"
   }
 
   if (
-    normalized.includes("resistant") ||
     normalized.includes("avoid") ||
+    normalized.includes("delay") ||
+    normalized.includes("procrastinate") ||
     normalized.includes("don't want")
   ) {
     return "resistant"
   }
 
   if (
-    normalized.includes("emotional") ||
-    normalized.includes("sad") ||
-    normalized.includes("angry")
+    normalized.includes("public") ||
+    normalized.includes("exposed") ||
+    normalized.includes("complicated")
   ) {
     return "emotional"
   }
@@ -93,16 +96,12 @@ function isExecutableTone(
   ].includes(tone)
 }
 
-function recalibrateStep(
-  step: string,
-): string {
+function recalibrateStep(): string {
   return `
-This step may currently feel too large, emotionally loaded, or difficult to sustain consistently.
+This step is not small enough yet.
 
-Compass suggests reducing the scale of the action temporarily.
+Reduce it to one visible action that can be started without needing the whole goal to be solved first.
 
-Embodied momentum matters more than fantasy intensity.
-
-Smaller consistent movement is still movement.
+The next step should be clear, specific, and completeable.
 `.trim()
 }

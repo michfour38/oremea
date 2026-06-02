@@ -12,12 +12,10 @@ const RELATIONAL_SIGNALS = [
   "communication",
   "marriage",
   "divorce",
-  "attachment",
-  "lonely",
+  "dating",
+  "family",
   "seen",
   "understood",
-  "emotionally safe",
-  "emotionally unsafe",
 ]
 
 export type ResonanceBridgeResult = {
@@ -54,18 +52,13 @@ export function evaluateResonanceBridge(
     eligible: true,
 
     reflection: `
-Some of your goals appear closely connected to relational patterns, emotional safety, communication, connection, attachment, or self-awareness inside relationships.
+Some of what you named appears connected to how you choose, build, protect, or navigate connection.
 
-Sometimes execution difficulties are not only about discipline or motivation.
+If relationships are part of the reality you are trying to create, Resonance continues this work in a more relational container.
 
-Sometimes they are connected to:
-- how safe a person feels,
-- how seen they feel,
-- what they fear losing,
-- what they learned about love,
-- or how they relate to themselves inside connection.
+Compass has helped identify movement.
 
-You are welcome to explore this further if it feels relevant to you.
+Resonance is where relational patterns, choices, and participation can be explored over time.
 `.trim(),
 
     ctaLabel: "Explore Resonance",

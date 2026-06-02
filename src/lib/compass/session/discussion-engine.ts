@@ -1,6 +1,7 @@
 import {
-  generateEthericLoopResponse,
-} from "@/src/lib/etheric-loop/relational-response"
+  runELTick,
+  type EngineTick,
+} from "@/src/lib/el"
 
 export type CompassDiscussionMessage = {
   role: "participant" | "compass"
@@ -23,77 +24,47 @@ export type CompassDiscussionResult = {
 export function continueCompassDiscussion({
   messages,
   latestAnswer,
-  proposedStep,
 }: {
   messages: CompassDiscussionMessage[]
   latestAnswer: string
   proposedStep: string
 }): CompassDiscussionResult {
-  const previousParticipantAnswers = messages
-    .filter((message) => message.role === "participant")
-    .map((message) => message.content)
+  const previousTicks = extractPreviousTicks(messages)
 
-  const permissionPromptCount =
-    messages.filter(
-      (message) =>
-        message.role === "compass" &&
-        isPermissionPrompt(message.content),
-    ).length
-
-  const response = generateEthericLoopResponse({
-    latestAnswer,
-    previousAnswers: previousParticipantAnswers,
-    proposedStep,
-    isSharedContext: false,
-    reflectionStyle: "mixed",
-    permissionPromptCount,
+  const result = runELTick({
+    participantResponse: latestAnswer,
+    previousTicks,
   })
 
   return {
-    shouldContinueDiscussion: response.shouldContinue,
-    compassReply: response.reply,
-    suggestedMicroStep: response.suggestedMicroStep,
-    detectedPattern: mapStateToPattern(
-      response.state.primaryState,
-    ),
+    shouldContinueDiscussion: result.shouldContinue,
+    compassReply: result.reply,
+    suggestedMicroStep:
+      result.tick.primaryState === "movement_current"
+        ? latestAnswer
+        : null,
+    detectedPattern:
+      result.tick.primaryState === "movement_current"
+        ? "ready"
+        : "unclear",
   }
 }
 
-function isPermissionPrompt(content: string): boolean {
-  return (
-    content.includes("Would you like me to reflect") ||
-    content.includes("A pattern may be repeating here") ||
-    content.includes("Would you like to pause here") ||
-    content.includes("Would you like help working through this privately")
-  )
-}
-
-function mapStateToPattern(
-  state: string,
-):
-  | "blocked"
-  | "self_trust"
-  | "avoidance"
-  | "overwhelm"
-  | "ready"
-  | "unclear" {
-  switch (state) {
-    case "self_trust_gap":
-      return "self_trust"
-
-    case "avoidance":
-      return "avoidance"
-
-    case "overwhelm":
-    case "freeze":
-    case "collapse":
-    case "shame":
-      return "overwhelm"
-
-    case "ready":
-      return "ready"
-
-    default:
-      return "unclear"
-  }
+function extractPreviousTicks(
+  messages: CompassDiscussionMessage[],
+): EngineTick[] {
+  return messages
+    .filter((message) =>
+      message.content.startsWith("__EL_TICK__"),
+    )
+    .map((message) => {
+      try {
+        return JSON.parse(
+          message.content.replace("__EL_TICK__", ""),
+        ) as EngineTick
+      } catch {
+        return null
+      }
+    })
+    .filter((tick): tick is EngineTick => Boolean(tick))
 }

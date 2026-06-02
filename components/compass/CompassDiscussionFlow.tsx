@@ -4,20 +4,6 @@ import { CompassCard } from "./CompassCard";
 
 const BODY_TEXT = "text-zinc-400";
 
-function isPermissionMessage(content: string) {
-  return (
-    content.includes("Would you like me to reflect") ||
-    content.includes("Would you like me to reflect what") ||
-    content.includes("Would you like to pause here") ||
-    content.includes("A pattern may be repeating here") ||
-    content.includes("Would you like help working through this privately")
-  );
-}
-
-function isStyleSelectionMessage(content: string) {
-  return content.includes("How would you like Compass to work with you from here?");
-}
-
 export function CompassDiscussionFlow({
   discussionMessages,
   discussionInput,
@@ -31,30 +17,19 @@ export function CompassDiscussionFlow({
   onSend: () => void;
   onReady: () => void;
 }) {
-  const latestMessage = discussionMessages[discussionMessages.length - 1];
-
-  const showStyleChoices =
-    latestMessage?.role === "compass" &&
-    isStyleSelectionMessage(latestMessage.content);
-
-  const showPermissionChoices =
-    latestMessage?.role === "compass" &&
-    isPermissionMessage(latestMessage.content) &&
-    !showStyleChoices;
-
   return (
     <CompassCard
-      title="Let’s sit with this before we move."
-      description="This is where Compass helps reduce the pressure enough for movement to become possible again."
+      title="What tends to interrupt movement?"
+      description="Looking at everything you have written so far, what most often gets in the way?"
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
         {discussionMessages.map((message, index) => (
           <div
             key={`${message.role}-${index}`}
-            className={`text-sm leading-relaxed ${
+            className={`rounded-[1.4rem] p-5 text-sm leading-relaxed ${
               message.role === "compass"
-                ? "rounded-[1.4rem] border border-[#2A2418] bg-[#12100D] p-5"
-                : "rounded-[1.4rem] border border-zinc-800 bg-[#121212] p-5"
+                ? "bg-[#12100D]"
+                : "bg-[#121212] text-zinc-100"
             }`}
           >
             <p
@@ -64,58 +39,6 @@ export function CompassDiscussionFlow({
             >
               {message.content}
             </p>
-
-            {index === discussionMessages.length - 1 && showPermissionChoices && (
-              <div className="mt-5 grid gap-3">
-                <button
-                  onClick={() => onDiscussionInputChange("Yes, reflect.")}
-                  className="primary-button !mt-0"
-                >
-                  Yes, reflect
-                </button>
-
-                <button
-                  onClick={() => onDiscussionInputChange("Not right now.")}
-                  className="secondary-button !mt-0"
-                >
-                  Not right now
-                </button>
-
-                <button
-                  onClick={() =>
-                    onDiscussionInputChange("Ugh fine — tell me more.")
-                  }
-                  className="secondary-button !mt-0"
-                >
-                  Ugh fine — tell me more
-                </button>
-              </div>
-            )}
-
-            {index === discussionMessages.length - 1 && showStyleChoices && (
-              <div className="mt-5 grid gap-3">
-                <button
-                  onClick={() => onDiscussionInputChange("Stay gentle.")}
-                  className="secondary-button !mt-0"
-                >
-                  Stay gentle
-                </button>
-
-                <button
-                  onClick={() => onDiscussionInputChange("Be direct.")}
-                  className="primary-button !mt-0"
-                >
-                  Be direct
-                </button>
-
-                <button
-                  onClick={() => onDiscussionInputChange("Mix both.")}
-                  className="secondary-button !mt-0"
-                >
-                  Mix both
-                </button>
-              </div>
-            )}
           </div>
         ))}
       </div>
@@ -123,17 +46,13 @@ export function CompassDiscussionFlow({
       <textarea
         value={discussionInput}
         onChange={(event) => onDiscussionInputChange(event.target.value)}
-        placeholder="Let’s discuss openly. Often we struggle to take the next step because we may not yet trust ourselves to do what we said we would do.
-
-If you feel resistance, uncertainty, pressure, avoidance, or emotional exhaustion around taking action, describe it honestly here.
-
-Compass will work through it with you and help uncover the next best step."
-        rows={6}
-        className="compass-textarea"
+        placeholder="Describe what most often interrupts movement. Be specific about what actually happens."
+        rows={7}
+        className="compass-textarea mt-5"
       />
 
       <button onClick={onSend} className="primary-button">
-        Send
+        Continue
       </button>
 
       <button onClick={onReady} className="secondary-button">
@@ -154,14 +73,14 @@ export function CompassExecutionCheck({
 }) {
   return (
     <CompassCard
-      title="Do you feel able to execute this?"
-      description="If this still feels too large, unclear, public, emotionally loaded, or difficult to begin, Compass will reduce the pressure further."
+      title="Can this be acted on now?"
+      description="If the next movement still feels too large, unclear, exposed, or difficult to begin, Compass will reduce the scale."
     >
       <textarea
         value={executionFeeling}
         onChange={(event) => onExecutionFeelingChange(event.target.value)}
-        placeholder="Does this feel realistic, emotionally safe, sustainable, too large, too public, unclear, or difficult to begin?"
-        rows={6}
+        placeholder="Describe whether this feels realistic, clear, sustainable, too large, too public, or difficult to begin."
+        rows={7}
         className="compass-textarea"
       />
 
@@ -185,17 +104,17 @@ export function CompassComplete({
 }) {
   return (
     <CompassCard
-      title="Your next executable step"
+      title="Your next completed action"
       description="One real movement. Not the entire transformation."
     >
       <div
-        className={`rounded-[1.5rem] border border-zinc-800 bg-[#121212] p-5 text-sm leading-relaxed whitespace-pre-line ${BODY_TEXT}`}
+        className={`rounded-[1.5rem] bg-[#121212] p-5 text-sm leading-relaxed whitespace-pre-line ${BODY_TEXT}`}
       >
         {finalStep}
       </div>
 
       {resonanceReflection && (
-        <div className="rounded-[1.5rem] border border-zinc-800 bg-[#121212] p-5">
+        <div className="rounded-[1.5rem] bg-[#121212] p-5">
           <p className={`whitespace-pre-line text-sm leading-relaxed ${BODY_TEXT}`}>
             {resonanceReflection}
           </p>

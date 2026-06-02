@@ -1,3 +1,7 @@
+import {
+  detectDependencyClusters,
+} from "./dependency-cluster-engine"
+
 import type {
   CompassAreaResponse,
   CompassGoalArea,
@@ -19,44 +23,44 @@ export function reflectPrimaryArea(
     }
   }
 
-  const scored = responses.map((response) => ({
-    area: response.area,
+  const clusters = detectDependencyClusters(responses)
 
-    score:
-      response.languageWeight +
-      response.emotionalWeight +
-      response.valueWords.length,
-  }))
+  const strongestCluster = clusters[0]
 
-  scored.sort((a, b) => b.score - a.score)
-
-  const strongest = scored[0]
-
-  if (!strongest) {
+  if (!strongestCluster) {
     return {
       detectedArea: null,
       reflection:
-        "Compass could not yet identify a possible area carrying stronger emotional or cognitive weighting.",
+        "Compass could not yet identify a useful leverage point.",
     }
   }
 
+  const detectedArea =
+    strongestCluster.supportingAreas[0] as CompassGoalArea
+
   return {
-    detectedArea: strongest.area,
+    detectedArea,
 
     reflection: `
-Compass noticed stronger emotional and cognitive weighting around ${strongest.area}.
+Compass noticed that several of your answers appear connected through ${strongestCluster.label}.
 
 This does not mean Compass is deciding for you.
 
-You may feel this area truly is most important right now,
-or you may feel another area matters more deeply in service of the life you are trying to build.
+It also does not mean ${strongestCluster.label} is the only thing that matters.
 
-Sometimes people speak most emotionally about:
-- what hurts most,
-- what feels most urgent,
-- what feels most neglected,
-- or what quietly supports the deeper goal beneath the surface.
+It means movement there may create movement elsewhere.
 
+Sometimes the most important area is not the one carrying the most emotion.
+
+Sometimes it is the area carrying the most leverage.
+
+The question is not:
+
+"What feels biggest?"
+
+The question is:
+
+"What creates the strongest bridge between your current reality and the reality you want to create?"
 `.trim(),
   }
 }

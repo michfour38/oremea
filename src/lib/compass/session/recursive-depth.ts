@@ -28,17 +28,19 @@ const VALUE_WORDS = [
   "capacity",
   "protection",
   "provision",
+  "responsibility",
+  "movement",
 ]
 
 export function getRecursiveQuestion(layer: number): string {
   const questions = [
     "Why does this matter to you right now?",
-    "What feels painful, frustrating, unfair, unresolved, or heavy inside this?",
-    "What fear, pressure, belief, or old pattern might be sitting underneath this?",
-    "If this no longer held the same emotional weight, what would change in your daily life, decisions, body, or relationships?",
-    "What would you be able to choose, build, protect, or become if that pressure began to shift?",
-    "What does this show you about what you deeply need, value, or refuse to keep living without?",
-    "What is the truest reason this still matters to you?",
+    "What makes this goal significant enough to keep your attention?",
+    "What value, responsibility, standard, hope, or expectation gives this goal its weight?",
+    "If this became fully real in your life, what would become possible that feels difficult, unavailable, restricted, or out of reach right now?",
+    "What would you be able to do, build, choose, protect, experience, or create from that reality?",
+    "What does this show you about what you are no longer willing to live without?",
+    "After everything you have written, what is the core reality you are choosing to build?",
   ]
 
   return questions[layer - 1] ?? questions[questions.length - 1]
@@ -91,26 +93,26 @@ export function buildAdaptiveRecursiveQuestion({
   }
 
   if (layer === 2) {
-    return `When you describe “${reference}”, what feels painful, frustrating, unfair, unresolved, or emotionally heavy inside it?`
+    return `When you describe “${reference}”, what makes this significant enough to keep your attention?`
   }
 
   if (layer === 3) {
-    return `Under “${reference}”, what fear, pressure, belief, or old pattern might be quietly driving the weight of this goal?`
+    return `Under “${reference}”, what value, responsibility, standard, hope, or expectation gives this goal its weight?`
   }
 
   if (layer === 4) {
-    return `If “${reference}” no longer carried the same emotional weight, what would change in your daily life, decisions, body, relationships, or sense of self?`
+    return `If “${reference}” became fully real in your life, what would become possible that feels difficult, unavailable, restricted, or out of reach right now?`
   }
 
   if (layer === 5) {
-    return `If the pressure inside “${reference}” began to shift, what would you be able to choose, build, protect, or become that feels difficult right now?`
+    return `From the reality you described in “${reference}”, what would you be able to do, build, choose, protect, experience, or create?`
   }
 
   if (layer === 6) {
-    return `Looking at “${reference}”, what does this reveal about what you deeply need, value, or refuse to keep living without?`
+    return `Looking at “${reference}”, what does this show you about what you are no longer willing to live without?`
   }
 
-  return `After everything you have written, what is the truest reason “${reference}” still matters to you?`
+  return `After everything you have written, what is the core reality you are choosing to build through “${reference}”?`
 }
 
 function cleanReference(input: string): string {

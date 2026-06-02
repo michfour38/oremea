@@ -20,7 +20,7 @@ export function CompassCoreReflection({
   onContinue: () => void;
 }) {
   return (
-    <CompassCard title="Core pattern reflection" description={reflection}>
+    <CompassCard title="Core Reality Reflection" description={reflection}>
       <details className="rounded-2xl border border-zinc-800 bg-[#131313] p-4">
         <summary className={`cursor-pointer text-sm ${BODY_TEXT}`}>
           Review your deeper reflections
@@ -41,14 +41,6 @@ export function CompassCoreReflection({
           ))}
         </div>
       </details>
-
-      <textarea
-        value={extraReflection}
-        onChange={(event) => onExtraReflectionChange(event.target.value)}
-        placeholder="Would you like to clarify, question, refine, or add anything before continuing?"
-        rows={5}
-        className="compass-textarea"
-      />
 
       <button onClick={onContinue} className="primary-button">
         Continue

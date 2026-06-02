@@ -1,5 +1,6 @@
 "use client";
 
+import { CompassPromptFlow } from "@/components/compass/CompassPromptFlow";
 import { evaluatePriorityRedirect } from "@/src/lib/compass/session/priority-redirect";
 import MemberNav from "@/app/(member)/member-nav";
 import { CompassAreaFlow } from "@/components/compass/CompassAreaFlow";
@@ -19,7 +20,7 @@ import {
   CompassResistanceFlow,
 } from "@/components/compass/CompassResistanceFlow";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   buildPossibilityMirror,
   getPossibilityQuestion,
@@ -116,6 +117,7 @@ const [possibilityAnswer, setPossibilityAnswer] = useState("");
   const [discussionInput, setDiscussionInput] = useState("");
   const [discussionMessages, setDiscussionMessages] =
     useState<CompassDiscussionMessage[]>([]);
+const backLockRef = useRef(false);
 
   const currentArea = COMPASS_AREA_QUESTIONS[areaIndex];
 
@@ -199,14 +201,40 @@ const possibilityMirror = useMemo(
     window.history.pushState({ compass: true }, "", window.location.href);
 
     function handleBrowserBack() {
-      if (phase === "intro" || phase === "loading" || phase === "resume") {
-        window.history.pushState({ compass: true }, "", window.location.href);
-        return;
-      }
+  if (backLockRef.current) return;
 
-      goBackInsideCompass();
-      window.history.pushState({ compass: true }, "", window.location.href);
-    }
+  backLockRef.current = true;
+
+  if (
+    phase === "intro" ||
+    phase === "loading" ||
+    phase === "resume"
+  ) {
+    window.history.pushState(
+      { compass: true },
+      "",
+      window.location.href,
+    );
+
+    window.setTimeout(() => {
+      backLockRef.current = false;
+    }, 300);
+
+    return;
+  }
+
+  goBackInsideCompass();
+
+  window.history.pushState(
+    { compass: true },
+    "",
+    window.location.href,
+  );
+
+  window.setTimeout(() => {
+    backLockRef.current = false;
+  }, 300);
+}
 
     window.addEventListener("popstate", handleBrowserBack);
 
@@ -276,87 +304,93 @@ const possibilityMirror = useMemo(
 }
 
   function goBackInsideCompass() {
-    if (phase === "area") {
-      if (areaIndex > 0) {
-        setAreaIndex((current) => Math.max(0, current - 1));
-        setPhase("area");
-        return;
-      }
-
-      setPhase("intro");
-      return;
-    }
-
-    if (phase === "area_mirror") {
-      setAreaIndex(COMPASS_AREA_QUESTIONS.length - 1);
+  if (phase === "area") {
+    if (areaIndex > 0) {
+      setAreaIndex((current) => Math.max(0, current - 1));
       setPhase("area");
       return;
     }
 
-    if (phase === "area_confirmation") {
-      setPhase("area_mirror");
-      return;
-    }
-
-    if (phase === "depth_intro") {
-      setPhase("area_confirmation");
-      return;
-    }
-
-    if (phase === "depth") {
-      if (recursiveLayers.length > 0) {
-        setRecursiveLayers((current) => current.slice(0, -1));
-        setPhase("depth");
-        return;
-      }
-
-      setPhase("depth_intro");
-      return;
-    }
-
-if (phase === "possibility") {
-  if (possibilityAnswers.length > 0) {
-    setPossibilityAnswers((current) => current.slice(0, -1));
-    setPossibilityAnswer("");
-    setPhase("possibility");
+    setPhase("intro");
     return;
   }
 
-  setRecursiveLayers((current) => current.slice(0, -1));
-  setRecursiveAnswer("");
-  setPhase("depth");
-  return;
-}
+  if (phase === "area_mirror") {
+    setAreaIndex(COMPASS_AREA_QUESTIONS.length - 1);
+    setPhase("area");
+    return;
+  }
 
-if (phase === "possibility_mirror") {
-  setPhase("possibility");
-  return;
-}
+  if (phase === "area_confirmation") {
+    setPhase("area_mirror");
+    return;
+  }
 
-    if (phase === "core_reflection") {
+  if (phase === "depth_intro") {
+    setPhase("area_confirmation");
+    return;
+  }
+
+  if (phase === "depth") {
+    if (recursiveLayers.length > 0) {
+      setRecursiveLayers((current) => current.slice(0, -1));
+      setRecursiveAnswer("");
       setPhase("depth");
       return;
     }
 
-    if (phase === "resistance") {
-      setPhase("core_reflection");
-      return;
-    }
-
-    if (phase === "discussion") {
-      setPhase("resistance");
-      return;
-    }
-
-    if (phase === "execution_check") {
-      setPhase("discussion");
-      return;
-    }
-
-    if (phase === "complete") {
-      setPhase("execution_check");
-    }
+    setPhase("depth_intro");
+    return;
   }
+
+  if (phase === "core_reflection") {
+    setRecursiveLayers((current) => current.slice(0, -1));
+    setRecursiveAnswer("");
+    setPhase("depth");
+    return;
+  }
+
+  if (phase === "possibility") {
+    if (possibilityAnswers.length > 0) {
+      setPossibilityAnswers((current) => current.slice(0, -1));
+      setPossibilityAnswer("");
+      setPhase("possibility");
+      return;
+    }
+
+    setPhase("core_reflection");
+    return;
+  }
+
+  if (phase === "possibility_mirror") {
+    setPhase("possibility");
+    return;
+  }
+
+  if (phase === "resistance") {
+    setPhase("possibility_mirror");
+    return;
+  }
+
+  if (phase === "discussion") {
+    if (possibilityAnswers.length > 0) {
+      setPhase("possibility");
+      return;
+    }
+
+    setPhase("resistance");
+    return;
+  }
+
+  if (phase === "execution_check") {
+    setPhase("discussion");
+    return;
+  }
+
+  if (phase === "complete") {
+    setPhase("execution_check");
+  }
+}
 
   function beginNewSession() {
     setSavedSession(null);
@@ -461,6 +495,11 @@ setPossibilityAnswers(toArray<string>(savedSession.possibility_answers));
 
   function submitRecursiveAnswer() {
     if (!recursiveAnswer.trim()) return;
+
+    if (recursiveLayers.length >= 7) {
+  setPhase("core_reflection");
+  return;
+}
 
     setHasStarted(true);
 
@@ -712,23 +751,32 @@ window.setTimeout(() => {
 
           {phase === "intro" && (
             <CompassCard
-              title="Begin Compass"
+              title="Begin Navigation"
               description="You will move through eight recognizable life areas, one question at a time."
             >
               <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-                Compass may notice emotional weighting, repeating language,
-                contradictions, resistance patterns, or recurring values in your
-                responses.
-              </p>
+  Compass works best when you answer with as much honesty and detail as you can.
 
-              <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-                Compass will never decide for you.
-              </p>
+  The more specific you are about what you want, what currently exists, and what feels in the way, the easier it becomes to identify the bridge between your current reality and the reality you want to create.
+</p>
 
-              <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-                Later, Compass will take you at least seven layers deeper into
-                the goal you choose.
-              </p>
+<p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
+  Specificity creates clarity.
+
+  Clarity creates choice.
+
+  Choice creates movement.
+</p>
+
+<p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
+  Compass will never decide for you.
+
+  Compass helps you recognize possibilities, choose intentionally, and identify the next movement that belongs to you.
+</p>
+
+<p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
+  Later, Compass will guide you through The Descent, a seven-layer exploration designed to reveal the bridges between your current reality and the reality you want to create.
+</p>
 
               <button
                 onClick={() => {
@@ -744,8 +792,8 @@ window.setTimeout(() => {
 
           {phase === "analyzing" && (
             <CompassCard
-              title="Compass is finding the clearest thread"
-              description="Stay with this for a moment."
+              title="Reading your responses"
+description=""
             >
               <div className={`flex justify-center py-8 text-5xl ${BODY_TEXT}`}>
                 ...
@@ -808,17 +856,14 @@ window.setTimeout(() => {
           )}
 
           {phase === "possibility" && (
-  <CompassDiscussionFlow
-    discussionMessages={[
-      {
-        role: "compass",
-        content: possibilityQuestion.question,
-      },
-    ]}
-    discussionInput={possibilityAnswer}
-    onDiscussionInputChange={setPossibilityAnswer}
-    onSend={submitPossibilityAnswer}
-    onReady={submitPossibilityAnswer}
+  <CompassPromptFlow
+    title={possibilityQuestion.question}
+    description={null}
+    value={possibilityAnswer}
+    onChange={setPossibilityAnswer}
+    onSubmit={submitPossibilityAnswer}
+    placeholder="Answer with real-life details. What changes, who benefits, and what becomes possible?"
+    buttonLabel="Continue"
   />
 )}
 

@@ -33,11 +33,11 @@ export function getPossibilityQuestion({
   const area = selectedArea ? AREA_LABELS[selectedArea] : "this area";
 
   const questions = [
-    `If ${area} became more supportive over time, what parts of life feel easier to imagine?`,
-    `What kinds of possibilities, experiences, or ways of living feel meaningful to you beneath the practical pressure?`,
-    `If ${area} became steadier over time, what might begin opening elsewhere in your life?`,
-    `What kind of life quietly calls to you when you imagine this area becoming less heavy to carry?`,
-  ];
+  `If ${area} became stronger and more reliable, what would become possible that is not fully possible today?`,
+  `What would you be able to choose, create, protect, experience, or build from that stronger reality?`,
+  `Who or what would benefit first if this area became more stable, resourced, and available?`,
+  `Looking at what you named, which possibility would create the most useful movement first: your independence, your family, your health, your environment, your choices, or something else?`,
+];
 
   return {
     question: questions[index] ?? questions[questions.length - 1],

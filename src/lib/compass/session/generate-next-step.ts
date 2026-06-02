@@ -20,52 +20,50 @@ export function generateNextStep({
     return execution.recalibratedStep
   }
 
-  const avoidance =
+  const interruption =
     resistance?.avoidancePattern ?? ""
 
-  if (avoidance === "overthinking") {
+  if (interruption === "overthinking") {
     return `
-Do not attempt to solve the entire goal today.
+Do not try to solve the whole goal today.
 
 Choose one contained action that creates movement:
 - open the page,
 - review the document,
 - send the message,
 - make the call,
-- walk into the environment,
-- begin with observation instead of pressure.
+- enter the environment,
+- or begin by observing what is actually there.
 
-Embodied momentum matters more than fantasy intensity.
+The next step only needs to make the goal less theoretical.
 `.trim()
   }
 
-  if (avoidance === "collapse") {
+  if (interruption === "collapse") {
     return `
-Reduce the demand level temporarily.
+Reduce the size of the next action.
 
-Your next step is not maximum performance.
-Your next step is sustainable re-entry.
+Choose one step that can be started without needing the whole system to be fixed first.
 
-Choose the smallest action that restores consistency without overwhelming your nervous system.
+The next movement should restore contact with ${goal}, not complete it.
 `.trim()
   }
 
-  if (avoidance === "perfectionism") {
+  if (interruption === "perfectionism") {
     return `
-The goal is not flawless execution.
+Do one useful version instead of waiting for the perfect version.
 
-The goal is repeated aligned movement.
+Choose an action that can be completed, seen, sent, checked, opened, booked, written, or decided today.
 
-Complete one imperfect but real action today instead of waiting for ideal conditions.
+The point is movement, not performance.
 `.trim()
   }
 
   return `
-Based on your responses, it seems the pressure surrounding this goal may currently be heavier than the action itself.
+Based on your responses, the next step should be small enough to begin and specific enough to complete.
 
-So rather than forcing momentum, Compass will help narrow this into something emotionally sustainable.
+Choose one action that brings ${goal} out of thought and into reality.
 
-The goal is not intensity.
-The goal is rebuilding movement without abandoning yourself in the process.
+It should be visible, doable, and finished in one clear movement.
 `.trim()
 }

@@ -167,6 +167,6 @@ export function evaluatePriorityRedirect({
     shouldRedirect: true,
     suggestedArea: strongest.area,
     reason:
-      "The emotional weight in your answers appears to be gathering around a different area than the one originally selected.",
+  "The strongest leverage point in your answers appears to be gathering around a different area than the one originally selected.",
   }
 }

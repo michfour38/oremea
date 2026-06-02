@@ -2,7 +2,7 @@ import type {
   CompassResistanceMap,
 } from "./session-types"
 
-const AVOIDANCE_PATTERNS = [
+const INTERRUPTION_PATTERNS = [
   "overthinking",
   "avoidance",
   "delay",
@@ -26,7 +26,7 @@ export function mapResistance({
     answer.toLowerCase()
 
   const detectedPattern =
-    AVOIDANCE_PATTERNS.find((pattern) =>
+    INTERRUPTION_PATTERNS.find((pattern) =>
       normalized.includes(pattern),
     ) ?? "unrecognized"
 
@@ -37,7 +37,7 @@ export function mapResistance({
       detectedPattern,
 
     emotionalFriction:
-      detectEmotionalFriction(normalized),
+      detectInterruptionType(normalized),
 
     supportNeeded:
       determineSupportNeeded(
@@ -56,37 +56,38 @@ function extractObstacle(
   return input.slice(0, 180)
 }
 
-function detectEmotionalFriction(
+function detectInterruptionType(
   normalized: string,
 ): string {
   if (
-    normalized.includes("afraid") ||
-    normalized.includes("fear")
+    normalized.includes("fear") ||
+    normalized.includes("afraid")
   ) {
-    return "fear-based resistance"
+    return "hesitation"
   }
 
   if (
     normalized.includes("overwhelmed") ||
     normalized.includes("exhausted")
   ) {
-    return "capacity-based resistance"
+    return "capacity constraint"
   }
 
   if (
-    normalized.includes("confused")
+    normalized.includes("confused") ||
+    normalized.includes("unclear")
   ) {
-    return "clarity-based resistance"
+    return "clarity constraint"
   }
 
   if (
-    normalized.includes("ashamed") ||
-    normalized.includes("embarrassed")
+    normalized.includes("embarrassed") ||
+    normalized.includes("ashamed")
   ) {
-    return "shame-based resistance"
+    return "exposure concern"
   }
 
-  return "general resistance"
+  return "general interruption"
 }
 
 function determineSupportNeeded(
@@ -94,19 +95,19 @@ function determineSupportNeeded(
 ): string {
   switch (pattern) {
     case "overthinking":
-      return "smaller executable actions"
+      return "smaller actions"
 
     case "perfectionism":
-      return "reduced execution pressure"
+      return "lower completion standards"
 
     case "collapse":
-      return "nervous-system stabilization"
+      return "reduced scope"
 
     case "urgency":
-      return "slower decision pacing"
+      return "clear sequencing"
 
     case "avoidance":
-      return "lower-friction re-entry"
+      return "lower-friction entry"
 
     default:
       return "clarity and consistency"

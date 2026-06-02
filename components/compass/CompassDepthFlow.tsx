@@ -29,29 +29,36 @@ export function CompassDepthIntro({
 }) {
   return (
     <CompassCard
-      title="Great, now we're getting into it."
-      description={`Let's go deeper into your priority of ${selectedAreaLabel}.`}
+      title="The Descent"
+      description={`You have chosen ${selectedAreaLabel}. Now Compass begins identifying the bridges between your current reality and the reality you want to create.`}
     >
       <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-        You may notice we ask a few similar questions. The repetition is
-        deliberate.
-      </p>
+  Over the next seven layers, Compass will approach this goal from several
+  different angles.
+</p>
 
-      <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-        Compass is not only looking at the goal itself.
+<p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
+  Some questions may feel similar at first. This is intentional.
+</p>
 
-The Descent follows the deeper thread beneath it:
-the pressure,
-the values,
-the contradictions,
-the resistance,
-the emotional weight,
-and the reason this still matters to you.
-      </p>
+<p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
+  Each layer is designed to reveal something different:
+  what matters,
+  what gives the goal its weight,
+  what becomes possible,
+  what you are unwilling to live without,
+  and the deeper reality you are ultimately trying to create.
+</p>
+
+<p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
+  The purpose of The Descent is not understanding for its own sake.
+
+  The purpose is movement.
+</p>
 
       <button onClick={onBegin} className="primary-button">
-  Begin The Descent
-</button>
+        Begin The Descent
+      </button>
     </CompassCard>
   );
 }
@@ -75,7 +82,7 @@ export function CompassDepthFlow({
 }) {
   return (
     <CompassCard
-      eyebrow={`The Descent · Layer ${recursiveLayers.length + 1} of 7`}
+      eyebrow={`The Descent · Layer ${Math.min(recursiveLayers.length + 1, 7)} of 7`}
       title={buildAdaptiveRecursiveQuestion({
         layer: recursiveLayers.length + 1,
         selectedAreaLabel,
@@ -86,15 +93,15 @@ export function CompassDepthFlow({
             ?.answer ?? "",
       })}
       description={
-  recursiveLayers.length > 0
-    ? "The thread beneath this is beginning to narrow."
-    : `The Descent will follow the deeper thread beneath your focus on ${selectedAreaLabel.toLowerCase()}.`
+  recursiveLayers.length === 0
+    ? `The Descent will follow the deeper thread beneath your focus on ${selectedAreaLabel.toLowerCase()}.`
+    : ""
 }
     >
       <textarea
         value={recursiveAnswer}
         onChange={(event) => onAnswerChange(event.target.value)}
-        placeholder="Answer openly. The more context you give, the more Compass can help reflect possible patterns, values, and next steps."
+        placeholder="Answer with as much specific reality as you can. What exists, what is missing, and what would create movement?"
         rows={7}
         className="compass-textarea"
       />
