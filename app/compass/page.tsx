@@ -719,9 +719,6 @@ window.setTimeout(() => {
               aligned execution.
             </p>
 
-            <p className="mt-5 text-sm uppercase tracking-[0.34em] text-[#d8b15f]">
-              Embodied momentum matters more than fantasy intensity.
-            </p>
           </header>
 
           {showBackButton && (
@@ -751,43 +748,53 @@ window.setTimeout(() => {
 
           {phase === "intro" && (
             <CompassCard
-              title="Begin Navigation"
-              description="You will move through eight recognizable life areas, one question at a time."
-            >
-              <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-  Compass works best when you answer with as much honesty and detail as you can.
+  title="Begin Navigation"
+  description="You are about to move through eight areas of life."
+>
+  <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
+    There are no perfect answers.
 
-  The more specific you are about what you want, what currently exists, and what feels in the way, the easier it becomes to identify the bridge between your current reality and the reality you want to create.
-</p>
+    There is nothing to perform.
 
-<p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-  Specificity creates clarity.
+    Compass will not tell you what to do.
+  </p>
 
-  Clarity creates choice.
+  <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
+    Compass helps reveal where your attention already lives, what matters most, what reality your choices are creating, and where movement is most likely to produce meaningful change.
+  </p>
 
-  Choice creates movement.
-</p>
+  <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
+    You may discover that the area demanding your attention is not the area you expected.
 
-<p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-  Compass will never decide for you.
+    You may discover that several areas are connected.
 
-  Compass helps you recognize possibilities, choose intentionally, and identify the next movement that belongs to you.
-</p>
+    You may discover that one decision influences far more than anticipated.
+  </p>
 
-<p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-  Later, Compass will guide you through The Descent, a seven-layer exploration designed to reveal the bridges between your current reality and the reality you want to create.
-</p>
+  <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
+    Answer honestly.
 
-              <button
-                onClick={() => {
-  beginNewSession();
-  setPhase("area");
-}}
-                className="primary-button"
-              >
-                Begin
-              </button>
-            </CompassCard>
+    Answer specifically.
+  </p>
+
+  <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
+    Specificity creates clarity.
+
+    Clarity creates choice.
+
+    Choice creates movement.
+  </p>
+
+  <button
+    onClick={() => {
+      beginNewSession();
+      setPhase("area");
+    }}
+    className="primary-button"
+  >
+    Begin
+  </button>
+</CompassCard>
           )}
 
           {phase === "analyzing" && (

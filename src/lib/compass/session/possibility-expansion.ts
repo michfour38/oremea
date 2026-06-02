@@ -33,10 +33,10 @@ export function getPossibilityQuestion({
   const area = selectedArea ? AREA_LABELS[selectedArea] : "this area";
 
   const questions = [
-  `If ${area} became stronger and more reliable, what would become possible that is not fully possible today?`,
-  `What would you be able to choose, create, protect, experience, or build from that stronger reality?`,
-  `Who or what would benefit first if this area became more stable, resourced, and available?`,
-  `Looking at what you named, which possibility would create the most useful movement first: your independence, your family, your health, your environment, your choices, or something else?`,
+  `From a stronger and more reliable position in ${area}, what opens up that feels difficult, restricted, or unavailable today?`,
+  `From that stronger position, what are you able to build, create, protect, or support?`,
+  `Beyond yourself, who or what benefits most from that change?`,
+  `Of everything you just named, which change creates the most meaningful movement right now?`,
 ];
 
   return {

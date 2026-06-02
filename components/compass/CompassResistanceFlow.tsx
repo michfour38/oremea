@@ -63,18 +63,18 @@ export function CompassResistanceFlow({
   return (
     <CompassCard
       title="What tends to get in the way?"
-      description={`What usually interrupts, delays, emotionally complicates, or prevents movement toward ${selectedAreaLabel.toLowerCase()}?`}
+      description={`What usually interrupts, delays, or prevents movement toward {selectedAreaLabel.toLowerCase()}?`}
     >
       <textarea
         value={resistanceAnswer}
         onChange={(event) => onResistanceChange(event.target.value)}
-        placeholder="Describe the friction, emotional resistance, avoidance patterns, fears, or recurring interruptions."
+        placeholder="Describe what most often gets in the way. Be specific about what actually happens."
         rows={8}
         className="compass-textarea"
       />
 
       <button onClick={onSubmitResistance} className="primary-button">
-        Analyze resistance
+        Continue
       </button>
     </CompassCard>
   );
