@@ -107,6 +107,15 @@ const [usedBackPanels, setUsedBackPanels] = useState<number[]>([]);
 
 useEffect(() => {
 const params = new URLSearchParams(window.location.search);
+const fresh = params.get("fresh") === "1";
+
+if (fresh) {
+  window.localStorage.removeItem(DRAFT_KEY);
+  setPanelIndex(0);
+  setAnswers({});
+  setError("");
+  return;
+}
 const ref = params.get("ref")?.trim().toLowerCase() || "";
 if (ref) setCreatorRef(ref);
   const saved = window.localStorage.getItem(DRAFT_KEY);
