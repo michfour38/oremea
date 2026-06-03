@@ -714,11 +714,11 @@ window.setTimeout(() => {
             <p
   className={`mx-auto max-w-2xl text-base leading-relaxed ${BODY_TEXT} sm:text-lg`}
 >
-  Turn self-awareness into one executable next step.
+  Turn self-awareness into one executable next step
 </p>
 
 <p className="mt-5 text-sm uppercase tracking-[0.34em] text-[#d8b15f]">
-  Clarity. Direction. Execution.
+  Clarity . Direction . Execution
 </p>
 
           </header>
@@ -817,25 +817,25 @@ description=""
           )}
 
           {phase === "area_mirror" && (
-            <CompassPriorityFlow
-              title="Compass reflection"
-              description={areaMirror.reflection}
-              areaResponses={areaResponses}
-              reviewLabel="Review your eight answers"
-              onContinue={() =>
-  pauseThen(() => setPhase("area_confirmation"), {
-    showAnalyzing: false,
-  })
-}
-            />
-          )}
+  <CompassPriorityFlow
+    title="What stands out"
+    description={areaMirror.reflection}
+    areaResponses={areaResponses}
+    reviewLabel="Review your eight answers"
+    onContinue={() =>
+      pauseThen(() => setPhase("area_confirmation"), {
+        showAnalyzing: false,
+      })
+    }
+  />
+)}
 
           {phase === "area_confirmation" && (
             <CompassPriorityFlow
-              title="What feels most important right now?"
+              title="The clearest direction"
               description={primaryReflection.reflection}
               areaResponses={areaResponses}
-              reviewLabel="Review your answers"
+              reviewLabel="Review before choosing"
               showAreaChoices
               onChooseArea={chooseArea}
             />
