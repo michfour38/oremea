@@ -7,10 +7,11 @@ export async function POST(request: Request) {
     const body = await request.json()
 
     const output = await runCompassMirror({
-      areaResponses: body.areaResponses ?? [],
-      selectedArea: body.selectedArea ?? null,
-      recursiveLayers: body.recursiveLayers ?? [],
-    })
+  areaResponses: body.areaResponses ?? [],
+  selectedArea: body.selectedArea ?? null,
+  recursiveLayers: body.recursiveLayers ?? [],
+  mirrorStage: body.mirrorStage ?? "core",
+})
 
     if (!output) {
       return NextResponse.json(

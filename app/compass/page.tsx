@@ -105,6 +105,7 @@ export default function CompassPage() {
   const [recursiveAnswer, setRecursiveAnswer] = useState("");
   const [extraReflection, setExtraReflection] = useState("");
 const [compassMirrorOutput, setCompassMirrorOutput] = useState("");
+const [areaMirrorOutput, setAreaMirrorOutput] = useState("");
 
 const [possibilityAnswers, setPossibilityAnswers] = useState<string[]>([]);
 const [possibilityAnswer, setPossibilityAnswer] = useState("");
@@ -379,14 +380,9 @@ const possibilityMirror = useMemo(
   }
 
   if (phase === "discussion") {
-    if (possibilityAnswers.length > 0) {
-      setPhase("possibility");
-      return;
-    }
-
-    setPhase("resistance");
-    return;
-  }
+  setPhase("core_reflection");
+  return;
+}
 
   if (phase === "execution_check") {
     setPhase("discussion");
@@ -479,8 +475,10 @@ setPossibilityAnswers(toArray<string>(savedSession.possibility_answers));
       answer,
     });
 
-    setAreaResponses((current) => [...current, analyzed]);
-    setAnswer("");
+    const updatedAreaResponses = [...areaResponses, analyzed];
+
+setAreaResponses(updatedAreaResponses);
+setAnswer("");
 
     if (areaIndex < COMPASS_AREA_QUESTIONS.length - 1) {
       pauseThen(() => {
@@ -490,7 +488,10 @@ setPossibilityAnswers(toArray<string>(savedSession.possibility_answers));
       return;
     }
 
-    pauseThen(() => setPhase("area_mirror"));
+    pauseThen(async () => {
+  await generateAreaMirror(updatedAreaResponses);
+  setPhase("area_mirror");
+});
   }
 
   function chooseArea(area: CompassGoalArea) {
@@ -498,6 +499,35 @@ setPossibilityAnswers(toArray<string>(savedSession.possibility_answers));
     setSelectedArea(area);
     pauseThen(() => setPhase("depth_intro"));
   }
+
+async function generateAreaMirror(updatedAreaResponses: CompassAreaResponse[]) {
+  try {
+    const response = await fetch("/api/compass/mirror", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        areaResponses: updatedAreaResponses,
+        selectedArea: null,
+        recursiveLayers: [],
+        mirrorStage: "area",
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data?.ok && typeof data.output === "string") {
+      setAreaMirrorOutput(data.output);
+      return;
+    }
+
+    setAreaMirrorOutput("");
+  } catch (error) {
+    console.error("Compass Area Mirror failed:", error);
+    setAreaMirrorOutput("");
+  }
+}
 
 async function generateCompassMirror(
   updatedLayers: CompassRecursiveLayer[],
@@ -509,10 +539,11 @@ async function generateCompassMirror(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        areaResponses,
-        selectedArea,
-        recursiveLayers: updatedLayers,
-      }),
+  areaResponses,
+  selectedArea,
+  recursiveLayers: updatedLayers,
+  mirrorStage: "core",
+}),
     });
 
     const data = await response.json();
@@ -660,10 +691,18 @@ pauseThen(() => setPhase("discussion"));
     const nextMessages = [...discussionMessages, participantMessage];
 
     const result = continueCompassDiscussion({
-      messages: nextMessages,
-      latestAnswer: discussionInput,
-      proposedStep,
-    });
+  messages: nextMessages,
+  latestAnswer: discussionInput,
+  proposedStep,
+  compassContext: {
+    selectedArea,
+    areaResponses,
+    recursiveLayers,
+    coreMirror:
+      compassMirrorOutput ||
+      coreReflection.reflection,
+  },
+});
 
     setDiscussionMessages([
   ...nextMessages,
@@ -858,7 +897,7 @@ description=""
           {phase === "area_mirror" && (
   <CompassPriorityFlow
     title="What stands out"
-    description={areaMirror.reflection}
+    description={areaMirrorOutput || areaMirror.reflection}
     areaResponses={areaResponses}
     reviewLabel="Review your eight answers"
     onContinue={() =>
@@ -927,12 +966,23 @@ description=""
 
           {phase === "core_reflection" && (
             <CompassCoreReflection
-              reflection={compassMirrorOutput || coreReflection.reflection}
-              recursiveLayers={recursiveLayers}
-              extraReflection={extraReflection}
-              onExtraReflectionChange={setExtraReflection}
-              onContinue={() => setPhase("possibility")}
-            />
+  reflection={compassMirrorOutput || coreReflection.reflection}
+  recursiveLayers={recursiveLayers}
+  extraReflection={extraReflection}
+  onExtraReflectionChange={setExtraReflection}
+  onContinue={() => {
+    const mirrorText = compassMirrorOutput || coreReflection.reflection;
+
+    setDiscussionMessages([
+      {
+        role: "compass",
+        content: mirrorText,
+      },
+    ]);
+
+    setPhase("discussion");
+  }}
+/>
           )}
 
           {phase === "resistance" && (

@@ -3,6 +3,10 @@ import {
   type EngineTick,
 } from "@/src/lib/el"
 
+import type {
+  CompassContext,
+} from "./session-types"
+
 export type CompassDiscussionMessage = {
   role: "participant" | "compass"
   content: string
@@ -24,11 +28,15 @@ export type CompassDiscussionResult = {
 export function continueCompassDiscussion({
   messages,
   latestAnswer,
+  compassContext,
 }: {
   messages: CompassDiscussionMessage[]
   latestAnswer: string
+  compassContext: CompassContext
   proposedStep: string
 }): CompassDiscussionResult {
+  void compassContext
+
   const previousTicks = extractPreviousTicks(messages)
 
   const result = runELTick({

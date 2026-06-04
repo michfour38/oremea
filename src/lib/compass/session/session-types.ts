@@ -26,6 +26,10 @@ export type CompassResponseTone =
   | "apprehensive"
   | "energized"
 
+export type CompassMirrorStage =
+  | "area"
+  | "core"
+
 export type CompassAreaResponse = {
   area: CompassGoalArea
   answer: string
@@ -71,4 +75,11 @@ export type CompassSession = {
   executionCheck: CompassExecutionCheck | null
   finalNextStep: string | null
   resonanceCtaEligible: boolean
+}
+
+export type CompassContext = {
+  selectedArea: CompassGoalArea | null
+  areaResponses: CompassAreaResponse[]
+  recursiveLayers: CompassRecursiveLayer[]
+  coreMirror: string
 }
