@@ -796,10 +796,21 @@ pauseThen(() => setPhase("discussion"));
 
   function moveToExecutionCheck() {
   setHasStarted(true);
-  pauseThen(() => setPhase("execution_check"), {
+
+  const lastParticipantMessage = [...discussionMessages]
+    .reverse()
+    .find((message) => message.role === "participant");
+
+  setFinalStep(
+    lastParticipantMessage?.content ||
+      proposedStep ||
+      "Choose one small movement that can be completed next.",
+  );
+
+  pauseThen(() => setPhase("complete"), {
     showAnalyzing: false,
   });
-}
+}     
 
   function submitExecutionFeeling() {
     if (!executionFeeling.trim()) return;

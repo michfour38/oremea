@@ -2,20 +2,41 @@ import type {
   CompassAreaResponse,
 } from "./session-types"
 
-const RELATIONAL_SIGNALS = [
-  "relationship",
-  "relationships",
-  "partner",
-  "love",
-  "connection",
-  "trust",
-  "communication",
-  "marriage",
-  "divorce",
-  "dating",
-  "family",
-  "seen",
-  "understood",
+const CONTRADICTION_SIGNALS = [
+  "but",
+  "however",
+  "even though",
+  "i know",
+  "i should",
+  "i want",
+  "i need",
+  "i can't",
+  "i cannot",
+  "i don't",
+  "i keep",
+  "again",
+  "always",
+  "never",
+  "stuck",
+  "repeat",
+  "same",
+  "avoid",
+  "give up",
+  "walk away",
+]
+
+const SELF_PATTERN_SIGNALS = [
+  "i don't know who i am",
+  "i don't know what i want",
+  "i don't know what matters",
+  "i say",
+  "i do",
+  "i choose",
+  "i abandon",
+  "i disappear",
+  "i sabotage",
+  "i shut down",
+  "i avoid",
 ]
 
 export type ResonanceBridgeResult = {
@@ -28,18 +49,24 @@ export type ResonanceBridgeResult = {
 export function evaluateResonanceBridge(
   responses: CompassAreaResponse[],
 ): ResonanceBridgeResult {
-  const combinedText =
-    responses
-      .map((response) => response.answer)
-      .join(" ")
-      .toLowerCase()
+  const combinedText = responses
+    .map((response) => response.answer)
+    .join(" ")
+    .toLowerCase()
 
-  const matches =
-    RELATIONAL_SIGNALS.filter((signal) =>
-      combinedText.includes(signal),
-    )
+  const contradictionMatches = CONTRADICTION_SIGNALS.filter((signal) =>
+    combinedText.includes(signal),
+  )
 
-  if (matches.length < 3) {
+  const selfPatternMatches = SELF_PATTERN_SIGNALS.filter((signal) =>
+    combinedText.includes(signal),
+  )
+
+  const eligible =
+    contradictionMatches.length >= 4 ||
+    selfPatternMatches.length >= 2
+
+  if (!eligible) {
     return {
       eligible: false,
       reflection: null,
@@ -52,18 +79,19 @@ export function evaluateResonanceBridge(
     eligible: true,
 
     reflection: `
-Some of what you named appears connected to how you choose, build, protect, or navigate connection.
+Compass identified direction.
 
-If relationships are part of the reality you are trying to create, Resonance continues this work in a more relational container.
+What also appears present is a repeated pattern between what is wanted, what is chosen, what is avoided, and what keeps happening.
 
-Compass has helped identify movement.
+That is Resonance territory.
 
-Resonance is where relational patterns, choices, and participation can be explored over time.
+Resonance is not the next step because relationships were mentioned.
+
+It becomes relevant when the pattern itself needs to be explored over time.
 `.trim(),
 
     ctaLabel: "Explore Resonance",
 
-    ctaHref:
-      "https://www.oremea.com/?open=resonance",
+    ctaHref: "https://www.oremea.com/?open=resonance",
   }
 }
