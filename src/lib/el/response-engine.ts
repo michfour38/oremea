@@ -1,17 +1,22 @@
 import type {
   EngineScores,
   EngineState,
+  Evidence,
   Observation,
 } from "./el-types"
 
 export function generateResponse({
+  participantResponse,
   state,
   question,
+  evidence,
   observations,
   scores,
 }: {
+  participantResponse: string
   state: EngineState
   question: string
+  evidence: Evidence[]
   observations: Observation[]
   scores: EngineScores
 }): string {
@@ -26,9 +31,11 @@ Compass stops here.
   }
 
   const reflection = buildOptionalReflection({
-    observations,
-    scores,
-  })
+  participantResponse,
+  evidence,
+  observations,
+  scores,
+})
 
   if (!reflection) {
     return question
@@ -42,15 +49,33 @@ ${question}
 }
 
 function buildOptionalReflection({
+  participantResponse,
+  evidence,
   observations,
   scores,
 }: {
+  participantResponse: string
+  evidence: Evidence[]
   observations: Observation[]
   scores: EngineScores
 }): string | null {
+  void evidence
+
   if (scores.confidence < 55) {
     return null
   }
+
+  const answer = participantResponse.trim()
+
+  if (answer.length > 180) {
+  const compressed = compressAnswer(answer)
+
+  return `
+${compressed}
+
+What breaks first when this tries to move?
+`.trim()
+}
 
   const contradiction = observations.find(
     (item) => item.type === "contradiction",
@@ -77,4 +102,21 @@ function buildOptionalReflection({
   }
 
   return null
+}
+
+function compressAnswer(answer: string): string {
+  const cleaned = answer.trim().replace(/\s+/g, " ")
+
+  const sentences = cleaned
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean)
+
+  const strongest = sentences.slice(0, 3)
+
+  if (strongest.length === 0) {
+    return "There is a real interruption here."
+  }
+
+  return strongest.join("\n\n")
 }

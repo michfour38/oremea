@@ -31,7 +31,6 @@ import {
   buildAdaptiveRecursiveQuestion,
   buildAreaMirrorReflection,
   calibrateExecutionStep,
-  continueCompassDiscussion,
   createRecursiveLayer,
   evaluateResonanceBridge,
   generateNextStep,
@@ -678,59 +677,122 @@ if (redirect.shouldRedirect && redirect.suggestedArea) {
 pauseThen(() => setPhase("discussion"));
   }
 
-  function submitDiscussionMessage() {
-    if (!discussionInput.trim()) return;
+  async function submitDiscussionMessage() {
+  if (!discussionInput.trim()) return;
 
-    setHasStarted(true);
+  setHasStarted(true);
 
-    const participantMessage: CompassDiscussionMessage = {
-      role: "participant",
-      content: discussionInput,
-    };
-
-    const nextMessages = [...discussionMessages, participantMessage];
-
-    const result = continueCompassDiscussion({
-  messages: nextMessages,
-  latestAnswer: discussionInput,
-  proposedStep,
-  compassContext: {
-    selectedArea,
-    areaResponses,
-    recursiveLayers,
-    coreMirror:
-      compassMirrorOutput ||
-      coreReflection.reflection,
-  },
-});
-
-    setDiscussionMessages([
-  ...nextMessages,
-  {
-    role: "compass",
-    content: "•••",
-  },
-]);
-
-setDiscussionInput("");
-
-window.setTimeout(() => {
-  const compassMessage: CompassDiscussionMessage = {
-    role: "compass",
-    content: result.compassReply,
+  const participantMessage: CompassDiscussionMessage = {
+    role: "participant",
+    content: discussionInput,
   };
 
-  setDiscussionMessages((current) => [
-    ...current.slice(0, -1),
-    compassMessage,
-  ]);
-}, calculateTypingDelay(result.compassReply));
+  const nextMessages = [
+    ...discussionMessages,
+    participantMessage,
+  ];
 
-    if (!result.shouldContinueDiscussion) {
-      setFinalStep(result.suggestedMicroStep ?? proposedStep);
-      pauseThen(() => setPhase("complete"));
-    }
+  setDiscussionMessages([
+    ...nextMessages,
+    {
+      role: "compass",
+      content: "...",
+    },
+  ]);
+
+  const latestAnswer = discussionInput;
+
+  setDiscussionInput("");
+
+  try {
+    const response = await fetch(
+      "/api/el/conversation",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          product: "compass",
+          stage: "discussion",
+
+          latestAnswer,
+
+          conversation: nextMessages.map(
+            (message) => ({
+              role:
+                message.role === "participant"
+                  ? "participant"
+                  : "system",
+              content: message.content,
+            }),
+          ),
+
+          contextBlocks: [
+            {
+              label: "Selected Area",
+              content: selectedAreaLabel,
+            },
+            {
+              label: "Area Responses",
+              content: areaResponses
+                .map(
+                  (response) =>
+                    `${AREA_LABELS[response.area]}:\n${response.answer}`,
+                )
+                .join("\n\n"),
+            },
+            {
+              label: "Recursive Layers",
+              content: recursiveLayers
+                .map(
+                  (layer) =>
+                    `Layer ${layer.layer}\n${layer.answer}`,
+                )
+                .join("\n\n"),
+            },
+            {
+              label: "Compass Mirror",
+              content:
+                compassMirrorOutput ||
+                coreReflection.reflection,
+            },
+          ],
+        }),
+      },
+    );
+
+    const data = await response.json();
+
+    const reply =
+      data?.ok &&
+      typeof data?.result?.reply === "string"
+        ? data.result.reply
+        : "Compass could not clearly identify the next thing to examine. Say the most important part again.";
+
+    setDiscussionMessages([
+      ...nextMessages,
+      {
+        role: "compass",
+        content: reply,
+      },
+    ]);
+  } catch (error) {
+    console.error(
+      "EL conversation failed:",
+      error,
+    );
+
+    setDiscussionMessages([
+      ...nextMessages,
+      {
+        role: "compass",
+        content:
+          "Compass could not clearly identify the next thing to examine. Say the most important part again.",
+      },
+    ]);
   }
+}
 
   function moveToExecutionCheck() {
   setHasStarted(true);
@@ -796,7 +858,7 @@ window.setTimeout(() => {
 </p>
 
 <p className="mt-5 text-sm uppercase tracking-[0.34em] text-[#d8b15f]">
-  Clarity . Direction . Execution
+  Clarity • Direction • Execution
 </p>
 
           </header>

@@ -62,11 +62,13 @@ export function runELTick({
   })
 
   const reply = generateResponse({
-    state: primaryState,
-    question: selectedQuestion,
-    observations,
-    scores,
-  })
+  participantResponse,
+  state: primaryState,
+  question: selectedQuestion,
+  evidence,
+  observations,
+  scores,
+})
 
   const tick: EngineTick = {
     id: crypto.randomUUID(),
