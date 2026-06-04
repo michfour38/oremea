@@ -20,19 +20,19 @@ export function CompareFinalGuidance() {
         </p>
 
         <div className="mt-16 flex flex-col items-center justify-center gap-6 md:flex-row">
-          <div className="rounded-3xl border border-amber-200/10 bg-amber-100/[0.03] px-8 py-5 text-sm tracking-[0.18em] text-amber-100">
-            Resonance
-          </div>
+          <div className="rounded-3xl border border-amber-200/10 bg-amber-100/[0.03] px-8 py-5 text-sm tracking-[0.18em] text-[#EAEAEA]">
+  Resonance
+</div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/[0.02] px-8 py-5 text-sm tracking-[0.18em] text-zinc-300">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.02] px-8 py-5 text-sm tracking-[0.18em] text-[#EAEAEA]">
             Compass
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/[0.02] px-8 py-5 text-sm tracking-[0.18em] text-zinc-300">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.02] px-8 py-5 text-sm tracking-[0.18em] text-[#EAEAEA]">
             Harmonize
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/[0.02] px-8 py-5 text-sm tracking-[0.18em] text-zinc-300">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.02] px-8 py-5 text-sm tracking-[0.18em] text-[#EAEAEA]">
             The Current
           </div>
         </div>

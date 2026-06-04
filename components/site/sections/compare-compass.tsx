@@ -1,12 +1,11 @@
+import Link from "next/link";
 import type { CompareMode } from "@/app/compare/page";
 
 type CompareCompassProps = {
   mode: CompareMode;
 };
 
-export function CompareCompass({
-  mode,
-}: CompareCompassProps) {
+export function CompareCompass({ mode }: CompareCompassProps) {
   return (
     <section className="border-b border-white/5 bg-zinc-950/60">
       <div className="mx-auto max-w-6xl px-5 py-24">
@@ -30,24 +29,33 @@ export function CompareCompass({
               <div className="space-y-8">
                 <div className="rounded-3xl border border-[#2A2418] bg-[#11100D] p-8">
                   <p className="font-serif text-2xl leading-relaxed text-[#EAEAEA] md:text-3xl">
-                    Like the noise finally reducing enough to hear what matters.
-                  </p>
+  Like finally knowing what to do next.
+</p>
 
-                  <p className="mt-8 font-serif text-xl leading-relaxed text-[#BFBFBF]">
-                    Like your thoughts becoming directional instead of circular.
-                  </p>
+<p className="mt-8 font-serif text-xl leading-relaxed text-[#BFBFBF]">
+  Like several competing priorities collapsing into one clear direction.
+</p>
 
-                  <p className="mt-8 font-serif text-xl leading-relaxed text-[#BFBFBF]">
-                    Like movement replacing internal friction.
-                  </p>
+<p className="mt-8 font-serif text-xl leading-relaxed text-[#BFBFBF]">
+  Like seeing why a goal matters before deciding how to pursue it.
+</p>
 
-                  <p className="mt-8 font-serif text-xl leading-relaxed text-[#BFBFBF]">
-                    Like clarity becoming executable.
-                  </p>
+<p className="mt-8 font-serif text-xl leading-relaxed text-[#BFBFBF]">
+  Like understanding what keeps interrupting movement.
+</p>
 
-                  <p className="mt-8 font-serif text-xl leading-relaxed text-[#BFBFBF]">
-                    Like finally moving with yourself instead of against yourself.
-                  </p>
+<p className="mt-8 font-serif text-xl leading-relaxed text-[#BFBFBF]">
+  Like making an agreement with yourself you can actually keep.
+</p>
+
+                  <div className="mt-10 flex flex-wrap gap-4">
+                    <Link
+                      href="/compass"
+                      className="rounded-full border border-amber-200/20 bg-amber-100/[0.05] px-5 py-2 text-sm text-amber-100 transition hover:border-amber-100/50 hover:bg-amber-100/[0.08]"
+                    >
+                      Compass — R520
+                    </Link>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -58,10 +66,17 @@ export function CompareCompass({
                   </p>
 
                   <p className="text-base leading-8 text-zinc-300">
-                    Compass is a structured decision and execution layer
-                    designed to convert awareness into directional movement,
-                    executable next steps, and aligned behavioural action.
-                  </p>
+  Compass is a structured goal-setting, decision-making,
+  and execution process.
+
+  It helps transform awareness into movement by identifying
+  what matters most, what keeps interrupting progress,
+  and what next step can realistically be taken.
+
+  Rather than generating more possibilities, Compass narrows
+  attention toward one executable direction and helps build
+  confidence through action.
+</p>
                 </div>
 
                 <div>
@@ -83,21 +98,37 @@ export function CompareCompass({
                   </p>
 
                   <ul className="grid gap-3 text-base leading-7 text-zinc-400 md:grid-cols-2">
-                    <li>• structured goal frameworks</li>
-                    <li>• contradiction detection</li>
-                    <li>• state / action mapping</li>
-                    <li>• execution pathway systems</li>
-                    <li>• next-step synthesis</li>
-                    <li>• behavioural alignment support</li>
+                    <li>• structured goal exploration</li>
+<li>• priority clarification</li>
+<li>• interruption identification</li>
+<li>• layered self-inquiry</li>
+<li>• guided discussion</li>
+<li>• executable next-step creation</li>
                   </ul>
                 </div>
 
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-6">
                   <p className="text-sm leading-7 text-zinc-400">
-                    Compass helps users identify the tension between what they want,
-                    what they protect, and what keeps interrupting movement —
-                    then translates that into one executable next step.
-                  </p>
+  Most people do not struggle because they lack goals.
+
+  They struggle because movement becomes interrupted.
+
+  Compass helps reveal what matters most, what creates resistance,
+  and what action can realistically be sustained.
+
+  Confidence is built through kept agreements with yourself.
+
+  Compass helps you begin there.
+</p>
+                </div>
+
+                <div className="flex flex-wrap gap-4 pt-2">
+                  <Link
+                    href="/compass"
+                    className="rounded-full border border-amber-200/20 bg-amber-100/[0.05] px-5 py-2 text-sm text-amber-100 transition hover:border-amber-100/50 hover:bg-amber-100/[0.08]"
+                  >
+                    Compass — R520
+                  </Link>
                 </div>
               </div>
             )}

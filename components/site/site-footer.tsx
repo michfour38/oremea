@@ -46,13 +46,13 @@ export function SiteFooter() {
                 href="/oremea/enter"
                 className="transition hover:text-amber-100"
               >
-                Begin Resonance
+                Enter Resonance
               </Link>
 <Link
   href="/compass"
   className="transition hover:text-[#f1dfb4]"
 >
-  Begin Compass
+  Enter Compass
 </Link>
             </div>
           </div>

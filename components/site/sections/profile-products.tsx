@@ -73,9 +73,12 @@ export function ProfileProducts() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <div className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">
-                Compass
-              </div>
+              <Link
+  href="/compass"
+  className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300 transition hover:border-white/20 hover:text-white"
+>
+  Compass
+</Link>
 
               <div className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">
                 Harmonize
