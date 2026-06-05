@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import {
+  completeCompassSession,
   getActiveCompassSession,
   saveCompassSession,
 } from "@/src/lib/compass/session/session-persistence";
@@ -52,16 +53,21 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     const session = await saveCompassSession({
-      userId,
-      phase: body.phase,
-      selectedArea: body.selectedArea,
-      areaResponses: body.areaResponses,
-      recursiveLayers: body.recursiveLayers,
-      resistanceMap: body.resistanceMap,
-      discussionMessages: body.discussionMessages,
-      proposedStep: body.proposedStep,
-      finalStep: body.finalStep,
-    });
+  userId,
+  phase: body.phase,
+  selectedArea: body.selectedArea,
+  areaResponses: body.areaResponses,
+  recursiveLayers: body.recursiveLayers,
+  possibilityAnswers: body.possibilityAnswers,
+  resistanceMap: body.resistanceMap,
+  discussionMessages: body.discussionMessages,
+  proposedStep: body.proposedStep,
+  finalStep: body.finalStep,
+});
+
+if (body.phase === "complete") {
+  await completeCompassSession(userId);
+}
 
     return NextResponse.json({
       success: true,

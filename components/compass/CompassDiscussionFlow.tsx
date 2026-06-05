@@ -19,8 +19,8 @@ export function CompassDiscussionFlow({
 }) {
   return (
     <CompassCard
-      title="What tends to interrupt movement?"
-      description="Looking at everything you have written so far, what most often gets in the way?"
+      title="What interrupts movement?"
+      description="Name what actually happens between knowing what matters and following through."
     >
       <div className="space-y-4">
         {discussionMessages.map((message, index) => (
@@ -46,17 +46,17 @@ export function CompassDiscussionFlow({
       <textarea
         value={discussionInput}
         onChange={(event) => onDiscussionInputChange(event.target.value)}
-        placeholder="Describe what most often interrupts movement. Be specific about what actually happens."
+        placeholder="Be specific. What usually interrupts this movement? Avoidance, fear, timing, exposure, people, money, energy, doubt, conflict, or something else?"
         rows={7}
         className="compass-textarea mt-5"
       />
 
       <button onClick={onSend} className="primary-button">
-        Continue
+        Continue discussion
       </button>
 
       <button onClick={onReady} className="secondary-button">
-        I’m ready to choose the next step
+        Choose my next step
       </button>
     </CompassCard>
   );
@@ -73,19 +73,19 @@ export function CompassExecutionCheck({
 }) {
   return (
     <CompassCard
-      title="Can this be acted on now?"
-      description="If the next movement still feels too large, unclear, exposed, or difficult to begin, Compass will reduce the scale."
+      title="Will this actually happen?"
+      description="Before Compass closes, make the action small enough, clear enough, and honest enough to complete."
     >
       <textarea
         value={executionFeeling}
         onChange={(event) => onExecutionFeelingChange(event.target.value)}
-        placeholder="Describe whether this feels realistic, clear, sustainable, too large, too public, or difficult to begin."
+        placeholder="Write the exact action you are willing to complete next. If the action still feels too large, vague, exposed, dependent on others, or unlikely to happen, reduce it until it becomes real."
         rows={7}
         className="compass-textarea"
       />
 
       <button onClick={onFinalize} className="primary-button">
-        Finalize next step
+        Finalize commitment
       </button>
     </CompassCard>
   );
@@ -96,11 +96,13 @@ export function CompassComplete({
   resonanceReflection,
   resonanceCtaHref,
   resonanceCtaLabel,
+  onComplete,
 }: {
   finalStep: string;
   resonanceReflection: string | null;
   resonanceCtaHref: string | null;
   resonanceCtaLabel: string | null;
+  onComplete: () => void;
 }) {
   return (
     <CompassCard
@@ -108,13 +110,17 @@ export function CompassComplete({
       description="One real movement. Not the entire transformation."
     >
       <div
-        className={`rounded-[1.5rem] bg-[#121212] p-5 text-sm leading-relaxed whitespace-pre-line ${BODY_TEXT}`}
+        className={`rounded-[1.5rem] border border-[#3A3224] bg-[#17130D] p-5 text-sm leading-relaxed whitespace-pre-line text-zinc-300`}
       >
         {finalStep}
       </div>
 
+<button onClick={onComplete} className="primary-button">
+  Complete Compass
+</button>
+
       {resonanceReflection && (
-        <div className="rounded-[1.5rem] bg-[#121212] p-5">
+        <div className="rounded-[1.5rem] border border-zinc-800 bg-[#121212] p-5">
           <p className={`whitespace-pre-line text-sm leading-relaxed ${BODY_TEXT}`}>
             {resonanceReflection}
           </p>

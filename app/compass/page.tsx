@@ -794,6 +794,28 @@ pauseThen(() => setPhase("discussion"));
   }
 }
 
+async function completeCompassProcess() {
+  setHasStarted(true);
+
+  await fetch("/api/compass/session", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      phase: "complete",
+      selectedArea,
+      areaResponses,
+      recursiveLayers,
+      possibilityAnswers,
+      resistanceMap,
+      discussionMessages,
+      proposedStep,
+      finalStep,
+    }),
+  });
+}
+
   function moveToExecutionCheck() {
   setHasStarted(true);
 
@@ -801,35 +823,32 @@ pauseThen(() => setPhase("discussion"));
     .reverse()
     .find((message) => message.role === "participant");
 
-  setFinalStep(
+  setProposedStep(
     lastParticipantMessage?.content ||
       proposedStep ||
       "Choose one small movement that can be completed next.",
   );
 
-  pauseThen(() => setPhase("complete"), {
+  setExecutionFeeling(
+    lastParticipantMessage?.content ||
+      proposedStep ||
+      "",
+  );
+
+  pauseThen(() => setPhase("execution_check"), {
     showAnalyzing: false,
   });
 }     
 
   function submitExecutionFeeling() {
-    if (!executionFeeling.trim()) return;
+  if (!executionFeeling.trim()) return;
 
-    setHasStarted(true);
+  setHasStarted(true);
 
-    const calibrated = calibrateExecutionStep({
-      proposedStep,
-      participantResponse: executionFeeling,
-    });
+  setFinalStep(executionFeeling.trim());
 
-    setFinalStep(
-      calibrated.isStepExecutable
-        ? proposedStep
-        : calibrated.recalibratedStep ?? proposedStep,
-    );
-
-    pauseThen(() => setPhase("complete"));
-  }
+  pauseThen(() => setPhase("complete"));
+}
 
   if (isRestoring) {
     return (
@@ -1087,13 +1106,14 @@ description=""
 
           {phase === "complete" && (
             <CompassComplete
-              finalStep={finalStep}
-              resonanceReflection={
-                resonanceBridge.eligible ? resonanceBridge.reflection : null
-              }
-              resonanceCtaHref={resonanceBridge.ctaHref}
-              resonanceCtaLabel={resonanceBridge.ctaLabel}
-            />
+  finalStep={finalStep}
+  resonanceReflection={
+    resonanceBridge.eligible ? resonanceBridge.reflection : null
+  }
+  resonanceCtaHref={resonanceBridge.ctaHref}
+  resonanceCtaLabel={resonanceBridge.ctaLabel}
+  onComplete={completeCompassProcess}
+/>
           )}
         </div>
       </section>

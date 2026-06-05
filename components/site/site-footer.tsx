@@ -42,18 +42,6 @@ export function SiteFooter() {
                 Compare
               </Link>
 
-              <Link
-                href="/oremea/enter"
-                className="transition hover:text-amber-100"
-              >
-                Enter Resonance
-              </Link>
-<Link
-  href="/compass"
-  className="transition hover:text-[#f1dfb4]"
->
-  Enter Compass
-</Link>
             </div>
           </div>
 
