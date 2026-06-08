@@ -1,8 +1,9 @@
 "use client"
 
+import { cycleStatusMessage } from "@/lib/harmonize/cycle-status"
 import { repairQuestions } from "@/lib/harmonize/repair-questions"
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 export default function HarmonizeRepairPage({
   params,
@@ -10,9 +11,30 @@ export default function HarmonizeRepairPage({
   params: { systemId: string; cycleId: string }
 }) {
   const [answers, setAnswers] = useState<Record<string, string>>({})
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [error, setError] = useState("")
+const [saving, setSaving] = useState(false)
+const [saved, setSaved] = useState(false)
+const [error, setError] = useState("")
+const [cycleStatus, setCycleStatus] = useState("")
+
+useEffect(() => {
+  async function loadCycleStatus() {
+    try {
+      const response = await fetch(
+        `/api/harmonize/cycle/summary?cycleId=${params.cycleId}`,
+      )
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setCycleStatus(data.cycle?.status || "")
+      }
+    } catch {
+      // Status warning is helpful but not required.
+    }
+  }
+
+  loadCycleStatus()
+}, [params.cycleId])
 
   function updateAnswer(key: string, value: string) {
     setAnswers((current) => ({
@@ -38,6 +60,12 @@ export default function HarmonizeRepairPage({
           phase: "repair",
         }),
       })
+
+await fetch("/api/harmonize/cycle/review-due", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ cycleId: params.cycleId }),
+})
 
       setSaved(true)
     } catch (err) {
@@ -75,6 +103,12 @@ export default function HarmonizeRepairPage({
           Repair does not require agreement. It requires enough shared
           understanding to choose one small practice.
         </p>
+
+{cycleStatusMessage(cycleStatus) ? (
+  <p className="mt-6 rounded-2xl border border-[#c6a96b]/30 bg-[#c6a96b]/10 p-4 text-sm leading-6 text-[#f4f1ea]">
+    {cycleStatusMessage(cycleStatus)}
+  </p>
+) : null}
 
         <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-6">
           <div className="space-y-5">

@@ -1,5 +1,6 @@
 "use client"
 
+import { cycleStatusMessage } from "@/lib/harmonize/cycle-status"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 
@@ -35,6 +36,7 @@ export default function HarmonizeCycleCompletePage({
   }, [params.cycleId])
 
   const latestOutcome = summary?.reviews?.[0]?.outcome
+const statusMessage = cycleStatusMessage(summary?.status)
 const cycleSummary = summary?.systemSnapshot?.cycleSummary
 
   return (
@@ -56,6 +58,12 @@ const cycleSummary = summary?.systemSnapshot?.cycleSummary
           Review closes a cycle. The next cycle begins whenever you are willing
           to return with more awareness.
         </p>
+
+{statusMessage ? (
+  <p className="mt-6 rounded-2xl border border-[#c6a96b]/30 bg-[#c6a96b]/10 p-4 text-sm leading-6 text-[#f4f1ea]">
+    {statusMessage}
+  </p>
+) : null}
 
 {cycleSummary ? (
   <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-6">

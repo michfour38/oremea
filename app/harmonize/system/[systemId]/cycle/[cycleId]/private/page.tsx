@@ -1,5 +1,6 @@
 "use client"
 
+import { cycleStatusMessage } from "@/lib/harmonize/cycle-status"
 import { getFirstQuestion } from "@/lib/harmonize/flow"
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -21,6 +22,7 @@ export default function HarmonizePrivatePage({
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState("")
+const [cycleStatus, setCycleStatus] = useState("")
 const firstQuestion = getFirstQuestion()
 
   async function loadEntries() {
@@ -38,6 +40,15 @@ const firstQuestion = getFirstQuestion()
       }
 
       setEntries(data.entries || [])
+const summaryResponse = await fetch(
+  `/api/harmonize/cycle/summary?cycleId=${params.cycleId}`,
+)
+
+const summaryData = await summaryResponse.json()
+
+if (summaryResponse.ok && summaryData.success) {
+  setCycleStatus(summaryData.cycle.status)
+}
     } catch (err) {
       setError(
         err instanceof Error
@@ -116,6 +127,12 @@ const firstQuestion = getFirstQuestion()
           Nothing written here is automatically shared. Harmonize begins by
           witnessing what happened, without forcing repair too soon.
         </p>
+
+{cycleStatusMessage(cycleStatus) ? (
+  <p className="mt-6 rounded-2xl border border-[#c6a96b]/30 bg-[#c6a96b]/10 p-4 text-sm leading-6 text-[#f4f1ea]">
+    {cycleStatusMessage(cycleStatus)}
+  </p>
+) : null}
 
         <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-6">
           <p className="text-sm uppercase tracking-[0.25em] text-[#c6a96b]">

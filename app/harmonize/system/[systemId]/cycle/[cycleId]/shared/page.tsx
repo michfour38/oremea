@@ -1,4 +1,6 @@
 "use client"
+
+import { cycleStatusMessage } from "@/lib/harmonize/cycle-status"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -13,6 +15,7 @@ export default function HarmonizeSharedPage({
 const [saved, setSaved] = useState(false)
 const [warning, setWarning] = useState("")
 const [error, setError] = useState("")
+const [cycleStatus, setCycleStatus] = useState("")
 
 const router = useRouter()
 
@@ -24,6 +27,10 @@ useEffect(() => {
       )
 
       const data = await response.json()
+
+if (response.ok && data.success) {
+  setCycleStatus(data.cycle?.status || "")
+}
 
       if (response.ok && data.success && data.cycle?.status === "paused") {
         router.push(
@@ -110,6 +117,12 @@ router.push(
           reflections remain private unless each participant chooses their own
           words to bring forward.
         </p>
+
+{cycleStatusMessage(cycleStatus) ? (
+  <p className="mt-6 rounded-2xl border border-[#c6a96b]/30 bg-[#c6a96b]/10 p-4 text-sm leading-6 text-[#f4f1ea]">
+    {cycleStatusMessage(cycleStatus)}
+  </p>
+) : null}
 
         <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-6">
           <p className="text-xl leading-8 text-[#f4f1ea]">

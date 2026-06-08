@@ -1,5 +1,6 @@
 "use client"
 
+import { cycleStatusMessage } from "@/lib/harmonize/cycle-status"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 
@@ -9,8 +10,10 @@ export default function HarmonizeLoopPage({
   params: { systemId: string; cycleId: string }
 }) {
   const [summary, setSummary] = useState<any>(null)
+const [patternBetween, setPatternBetween] = useState<any>(null)
   const [entries, setEntries] = useState<any[]>([])
   const [error, setError] = useState("")
+const [cycleStatus, setCycleStatus] = useState("")
 
   useEffect(() => {
     async function loadLoop() {
@@ -27,6 +30,24 @@ export default function HarmonizeLoopPage({
 
         setSummary(data.summary)
         setEntries(data.entries || [])
+const summaryResponse = await fetch(
+  `/api/harmonize/cycle/summary?cycleId=${params.cycleId}`,
+)
+
+const summaryData = await summaryResponse.json()
+
+if (summaryResponse.ok && summaryData.success) {
+  setCycleStatus(summaryData.cycle?.status || "")
+}
+const patternResponse = await fetch(
+  `/api/harmonize/pattern-between?cycleId=${params.cycleId}`,
+)
+
+const patternData = await patternResponse.json()
+
+if (patternResponse.ok && patternData.success) {
+  setPatternBetween(patternData.patternBetween)
+}
       } catch (err) {
         setError(
           err instanceof Error
@@ -62,11 +83,43 @@ export default function HarmonizeLoopPage({
           repair movement and containment moments from this cycle.
         </p>
 
+{cycleStatusMessage(cycleStatus) ? (
+  <p className="mt-6 rounded-2xl border border-[#c6a96b]/30 bg-[#c6a96b]/10 p-4 text-sm leading-6 text-[#f4f1ea]">
+    {cycleStatusMessage(cycleStatus)}
+  </p>
+) : null}
+
         {error ? (
           <p className="mt-6 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
             {error}
           </p>
         ) : null}
+
+{patternBetween ? (
+  <div className="mt-8 rounded-3xl border border-[#c6a96b]/30 bg-[#c6a96b]/10 p-6">
+    <h2 className="text-lg font-medium text-[#f4f1ea]">
+      Pattern between
+    </h2>
+
+    <p className="mt-3 text-base leading-7 text-[#f4f1ea]">
+      {patternBetween.patternLabel}
+    </p>
+
+    <p className="mt-3 text-sm leading-6 text-[#d8d2c6]">
+      {patternBetween.description}
+    </p>
+
+    {patternBetween.evidence?.length ? (
+      <div className="mt-4 space-y-2">
+        {patternBetween.evidence.map((item: string, index: number) => (
+          <p key={index} className="text-sm leading-6 text-[#d8d2c6]">
+            {item}
+          </p>
+        ))}
+      </div>
+    ) : null}
+  </div>
+) : null}
 
         {summary ? (
           <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-6">
