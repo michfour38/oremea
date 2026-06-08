@@ -54,7 +54,6 @@ const [memory, setMemory] = useState<any>(null)
         }
 
         setSystem(data.system)
-setSystem(data.system)
       } catch (err) {
         setError(
           err instanceof Error
@@ -133,17 +132,21 @@ setSystem(data.system)
 
 {memory ? (
   <div className="mt-8 rounded-3xl border border-[#c6a96b]/30 bg-[#c6a96b]/10 p-6">
-    <h2 className="text-lg font-medium text-[#f4f1ea]">
-      System memory
-    </h2>
+    <div className="mt-4 space-y-2 text-sm leading-6 text-[#d8d2c6]">
+  <p>Total cycles: {memory.totalCycles}</p>
+  <p>Reviewed cycles: {memory.reviewedCycles}</p>
+  <p>Cycles with visible shift: {memory.integrationCycles}</p>
+  <p>Cycles with repetition: {memory.repetitionCycles}</p>
+  <p>Cycles with words/behavior gap: {memory.mimicryCycles}</p>
+</div>
 
     <div className="mt-4 space-y-2 text-sm leading-6 text-[#d8d2c6]">
-      <p>Total cycles: {memory.totalCycles}</p>
-      <p>Reviewed cycles: {memory.reviewedCycles}</p>
-      <p>Cycles with visible shift: {memory.integrationCycles}</p>
-      <p>Cycles with repetition: {memory.repetitionCycles}</p>
-      <p>Cycles with words/behavior gap: {memory.mimicryCycles}</p>
-    </div>
+  <p>{memory.totalCycles} cycle(s) have been started in this system.</p>
+  <p>{memory.reviewedCycles} cycle(s) have been reviewed.</p>
+  <p>Visible shift has appeared in {memory.integrationCycles} reviewed cycle(s).</p>
+  <p>Repetition has appeared in {memory.repetitionCycles} reviewed cycle(s).</p>
+  <p>A words/behavior gap has appeared in {memory.mimicryCycles} reviewed cycle(s).</p>
+</div>
   </div>
 ) : null}
 
