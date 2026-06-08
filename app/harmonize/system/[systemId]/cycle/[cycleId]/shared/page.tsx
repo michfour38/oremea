@@ -1,5 +1,6 @@
 "use client"
 
+import { HarmonizeDrawer } from "@/components/harmonize/harmonize-drawer"
 import { cycleStatusMessage } from "@/lib/harmonize/cycle-status"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -12,38 +13,38 @@ export default function HarmonizeSharedPage({
 }) {
   const [content, setContent] = useState("")
   const [saving, setSaving] = useState(false)
-const [saved, setSaved] = useState(false)
-const [warning, setWarning] = useState("")
-const [error, setError] = useState("")
-const [cycleStatus, setCycleStatus] = useState("")
+  const [saved, setSaved] = useState(false)
+  const [warning, setWarning] = useState("")
+  const [error, setError] = useState("")
+  const [cycleStatus, setCycleStatus] = useState("")
 
-const router = useRouter()
+  const router = useRouter()
 
-useEffect(() => {
-  async function checkCycleStatus() {
-    try {
-      const response = await fetch(
-        `/api/harmonize/cycle/summary?cycleId=${params.cycleId}`,
-      )
+  useEffect(() => {
+    async function checkCycleStatus() {
+      try {
+        const response = await fetch(
+          `/api/harmonize/cycle/summary?cycleId=${params.cycleId}`,
+        )
 
-      const data = await response.json()
+        const data = await response.json()
 
-if (response.ok && data.success) {
-  setCycleStatus(data.cycle?.status || "")
-}
+        if (response.ok && data.success) {
+          setCycleStatus(data.cycle?.status || "")
+        }
 
-      if (response.ok && data.success && data.cycle?.status === "paused") {
-        router.push(
-  `/harmonize/system/${params.systemId}/cycle/${params.cycleId}/share-review`,
-)
+        if (response.ok && data.success && data.cycle?.status === "paused") {
+          router.push(
+            `/harmonize/system/${params.systemId}/cycle/${params.cycleId}/share-review`,
+          )
+        }
+      } catch {
+        // Shared page still renders if status check fails.
       }
-    } catch {
-      // Shared page still renders if status check fails.
     }
-  }
 
-  checkCycleStatus()
-}, [params.cycleId, params.systemId, router])
+    checkCycleStatus()
+  }, [params.cycleId, params.systemId, router])
 
   async function saveSharedEntry() {
     setSaving(true)
@@ -72,13 +73,13 @@ if (response.ok && data.success) {
 
       if (data.entry?.requires_review_before_send) {
         setWarning(
-  data.shareReview?.reason ||
-    "This message has been saved for review before shared repair continues.",
-)
+          data.shareReview?.reason ||
+            "This message has been saved for review before shared repair continues.",
+        )
 
-router.push(
-  `/harmonize/system/${params.systemId}/cycle/${params.cycleId}/pause`,
-)
+        router.push(
+          `/harmonize/system/${params.systemId}/cycle/${params.cycleId}/share-review`,
+        )
       } else {
         setSaved(true)
         setContent("")
@@ -96,6 +97,11 @@ router.push(
 
   return (
     <main className="min-h-screen bg-[#0b0b0b] text-[#f4f1ea]">
+      <HarmonizeDrawer
+        systemId={params.systemId}
+        cycleId={params.cycleId}
+      />
+
       <section className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6 py-20">
         <Link
           href={`/harmonize/system/${params.systemId}/cycle/${params.cycleId}/private`}
@@ -118,11 +124,11 @@ router.push(
           words to bring forward.
         </p>
 
-{cycleStatusMessage(cycleStatus) ? (
-  <p className="mt-6 rounded-2xl border border-[#c6a96b]/30 bg-[#c6a96b]/10 p-4 text-sm leading-6 text-[#f4f1ea]">
-    {cycleStatusMessage(cycleStatus)}
-  </p>
-) : null}
+        {cycleStatusMessage(cycleStatus) ? (
+          <p className="mt-6 rounded-2xl border border-[#c6a96b]/30 bg-[#c6a96b]/10 p-4 text-sm leading-6 text-[#f4f1ea]">
+            {cycleStatusMessage(cycleStatus)}
+          </p>
+        ) : null}
 
         <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-6">
           <p className="text-xl leading-8 text-[#f4f1ea]">
@@ -164,19 +170,21 @@ router.push(
           </button>
         </div>
 
-<Link
-  href={`/harmonize/system/${params.systemId}/cycle/${params.cycleId}/loop`}
-  className="mt-8 mr-3 inline-flex w-fit rounded-full border border-[#c6a96b]/40 px-6 py-3 text-sm font-medium text-[#c6a96b]"
->
-  View pattern between
-</Link>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Link
+            href={`/harmonize/system/${params.systemId}/cycle/${params.cycleId}/loop`}
+            className="rounded-full border border-[#c6a96b]/40 px-6 py-3 text-sm font-medium text-[#c6a96b]"
+          >
+            View pattern between
+          </Link>
 
-        <Link
-          href={`/harmonize/system/${params.systemId}/cycle/${params.cycleId}/review`}
-          className="mt-8 inline-flex w-fit rounded-full bg-[#c6a96b] px-6 py-3 text-sm font-medium text-black"
-        >
-          Continue to review
-        </Link>
+          <Link
+            href={`/harmonize/system/${params.systemId}/cycle/${params.cycleId}/review`}
+            className="rounded-full bg-[#c6a96b] px-6 py-3 text-sm font-medium text-black"
+          >
+            Continue to review
+          </Link>
+        </div>
       </section>
     </main>
   )

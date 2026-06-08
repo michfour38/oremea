@@ -1,5 +1,6 @@
 "use client"
 
+import { HarmonizeDrawer } from "@/components/harmonize/harmonize-drawer"
 import { detectPauseReadiness } from "@/lib/harmonize/pause-signals"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -106,6 +107,10 @@ setAppearsReflective(readiness.appearsReflective)
 
   return (
     <main className="min-h-screen bg-[#0b0b0b] text-[#f4f1ea]">
+      <HarmonizeDrawer
+        systemId={params.systemId}
+        cycleId={params.cycleId}
+      />
       <section className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6 py-20">
         <p className="mb-4 text-xs uppercase tracking-[0.35em] text-[#c6a96b]">
           Active Pause

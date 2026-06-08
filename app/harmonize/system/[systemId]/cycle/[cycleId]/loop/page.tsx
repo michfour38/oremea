@@ -1,5 +1,6 @@
 "use client"
 
+import { HarmonizeDrawer } from "@/components/harmonize/harmonize-drawer"
 import { cycleStatusMessage } from "@/lib/harmonize/cycle-status"
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -62,6 +63,10 @@ if (patternResponse.ok && patternData.success) {
 
   return (
     <main className="min-h-screen bg-[#0b0b0b] text-[#f4f1ea]">
+      <HarmonizeDrawer
+        systemId={params.systemId}
+        cycleId={params.cycleId}
+      />
       <section className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6 py-20">
         <Link
           href={`/harmonize/system/${params.systemId}/cycle/${params.cycleId}/shared`}
