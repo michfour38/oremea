@@ -35,6 +35,7 @@ export default function HarmonizeSystemPage({
 }) {
   const router = useRouter()
   const [system, setSystem] = useState<any>(null)
+const [memory, setMemory] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState("")
@@ -53,6 +54,7 @@ export default function HarmonizeSystemPage({
         }
 
         setSystem(data.system)
+setSystem(data.system)
       } catch (err) {
         setError(
           err instanceof Error
@@ -128,6 +130,22 @@ export default function HarmonizeSystemPage({
             {error}
           </p>
         ) : null}
+
+{memory ? (
+  <div className="mt-8 rounded-3xl border border-[#c6a96b]/30 bg-[#c6a96b]/10 p-6">
+    <h2 className="text-lg font-medium text-[#f4f1ea]">
+      System memory
+    </h2>
+
+    <div className="mt-4 space-y-2 text-sm leading-6 text-[#d8d2c6]">
+      <p>Total cycles: {memory.totalCycles}</p>
+      <p>Reviewed cycles: {memory.reviewedCycles}</p>
+      <p>Cycles with visible shift: {memory.integrationCycles}</p>
+      <p>Cycles with repetition: {memory.repetitionCycles}</p>
+      <p>Cycles with words/behavior gap: {memory.mimicryCycles}</p>
+    </div>
+  </div>
+) : null}
 
         {system ? (
           <>
