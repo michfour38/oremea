@@ -103,8 +103,9 @@ if (name === "The Compass") {
 
 if (name === "Harmonize") {
   return (
-    <span className="font-serif text-[#c8a96a]">
-      Harmonize
+    <span className="font-serif text-[#c8a96a] tracking-[0.01em]">
+      <span className="text-[1.18em] leading-none">H</span>
+      ARMONIZE
     </span>
   );
 }

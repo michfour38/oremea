@@ -28,22 +28,29 @@ const modes = [
 export default function HarmonizePage() {
   return (
     <SiteShell>
-      <main className="min-h-screen text-[#f4f1ea]">
-        <section className="mx-auto max-w-5xl px-6 py-20">
+      <main
+  className="min-h-screen text-[#f4f1ea]"
+  style={{
+    backgroundImage:
+      "linear-gradient(rgba(0,0,0,0.70), rgba(0,0,0,0.70)), url('/images/harmonize/bg-harmonize-entry.webp')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundAttachment: "fixed",
+  }}
+>
+        <section className="mx-auto max-w-5xl px-6 pt-6 pb-20">
           <img
-            src="/images/harmonize/harmonize-hero.webp"
-            alt="Harmonize"
-            className="mx-auto mb-12 w-full max-w-4xl"
-          />
+  src="/images/harmonize/harmonize-hero.webp"
+  alt="Harmonize"
+  className="mx-auto mb-4 w-full max-w-[200px]"
+/>
 
-          <p className="mx-auto max-w-3xl whitespace-pre-line text-center text-base leading-7 text-[#d8d2c6] md:text-lg">
-            {`Harmonize is a structured relational reflection space for couples, families, friendships, business partnerships, and parallel parenting relationships who want to understand the pattern forming between them.
-
-Private reflection remains private.
-Shared repair is chosen, not extracted.`}
+          <p className="mx-auto -mt-2 max-w-4xl whitespace-pre-line text-center text-base leading-7 text-[#d8d2c6] md:text-lg">
+            {`Harmonize is a structured relational reflection space for couples, families, friendships, business partnerships,
+and parallel parenting relationships who want to understand the pattern forming between them.`}
           </p>
 
-          <div className="mx-auto mt-10 max-w-4xl rounded-3xl border border-white/10 bg-white/[0.04] p-6">
+          <div className="mx-auto mt-6 max-w-4xl rounded-3xl border border-white/10 bg-white/[0.04] p-6">
             <h2 className="text-lg font-medium text-[#f4f1ea]">
               Choose a starting point
             </h2>

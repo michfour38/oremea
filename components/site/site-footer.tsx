@@ -10,14 +10,13 @@ export function SiteFooter() {
           </p>
 
           <p className="mt-5 text-sm leading-8 text-zinc-400">
-            Structured awareness systems for relational clarity,
-            intentional communication, execution alignment,
-            and conscious connection.
+            Structured awareness systems for relational clarity, intentional
+            communication, execution alignment, and conscious connection.
           </p>
 
           <p className="mt-5 text-sm leading-8 text-zinc-500">
-            Oremea products are designed around self-led reflection,
-            pattern recognition, and intentional participation.
+            Oremea products are designed around self-led reflection, pattern
+            recognition, and intentional participation.
           </p>
         </div>
 
@@ -28,20 +27,17 @@ export function SiteFooter() {
             </p>
 
             <div className="flex flex-col gap-3 text-zinc-300">
-              <Link
-                href="/explore"
-                className="transition hover:text-amber-100"
-              >
+              <Link href="/explore" className="transition hover:text-amber-100">
                 Explore
               </Link>
 
-              <Link
-                href="/compare"
-                className="transition hover:text-amber-100"
-              >
-                Compare
+              <Link href="/reviews" className="transition hover:text-amber-100">
+                Reviews
               </Link>
 
+              <Link href="/compare" className="transition hover:text-amber-100">
+                Compare
+              </Link>
             </div>
           </div>
 
@@ -51,10 +47,19 @@ export function SiteFooter() {
             </p>
 
             <div className="flex flex-col gap-3 text-zinc-300">
-              <p>Resonance</p>
-              <p>Compass</p>
-              <p>Harmonize</p>
-              <p>The Current</p>
+              <Link href="/oremea" className="transition hover:text-amber-100">
+                Resonance
+              </Link>
+
+              <Link href="/harmonize" className="transition hover:text-amber-100">
+                Harmonize
+              </Link>
+
+              <Link href="/compass" className="transition hover:text-amber-100">
+                Compass
+              </Link>
+
+              <p className="text-zinc-500">The Current</p>
             </div>
           </div>
 
@@ -64,38 +69,23 @@ export function SiteFooter() {
             </p>
 
             <div className="flex flex-col gap-3 text-zinc-300">
-              <Link
-                href="/terms"
-                className="transition hover:text-amber-100"
-              >
+              <Link href="/terms" className="transition hover:text-amber-100">
                 Terms
               </Link>
 
-              <Link
-                href="/privacy"
-                className="transition hover:text-amber-100"
-              >
+              <Link href="/privacy" className="transition hover:text-amber-100">
                 Privacy
               </Link>
 
-              <Link
-                href="/refunds"
-                className="transition hover:text-amber-100"
-              >
+              <Link href="/refunds" className="transition hover:text-amber-100">
                 Refunds
               </Link>
 
-              <Link
-                href="/disclaimer"
-                className="transition hover:text-amber-100"
-              >
+              <Link href="/disclaimer" className="transition hover:text-amber-100">
                 Disclaimer
               </Link>
 
-              <Link
-                href="/conduct"
-                className="transition hover:text-amber-100"
-              >
+              <Link href="/conduct" className="transition hover:text-amber-100">
                 Conduct
               </Link>
             </div>
@@ -107,10 +97,7 @@ export function SiteFooter() {
             </p>
 
             <div className="flex flex-col gap-3 text-zinc-300">
-              <Link
-                href="/contact"
-                className="transition hover:text-amber-100"
-              >
+              <Link href="/contact" className="transition hover:text-amber-100">
                 Contact
               </Link>
 
@@ -121,12 +108,8 @@ export function SiteFooter() {
                 support@oremea.com
               </a>
 
-              <p className="text-zinc-500">
-                South Africa
-              </p>
-              <p className="text-zinc-500">
-                Local is Lekker
-              </p>
+              <p className="text-zinc-500">South Africa</p>
+              <p className="text-zinc-500">Local is Lekker</p>
             </div>
           </div>
         </div>
