@@ -98,6 +98,17 @@ export function CompassDepthFlow({
     : ""
 }
     >
+
+<div className="mb-4 rounded-[1.2rem] border border-[#d8b15f]/25 bg-[#17130D] p-4 text-sm leading-relaxed text-[#d8b15f]">
+  <span className="font-semibold">NB:</span> Compass is using your previous
+  answer to shape the next question.
+
+  Some questions may feel similar. This is intentional.
+
+  Compass is following the same topic from different angles to uncover the
+  deeper pattern beneath your goal.
+</div>
+
       <textarea
         value={recursiveAnswer}
         onChange={(event) => onAnswerChange(event.target.value)}

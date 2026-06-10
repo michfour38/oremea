@@ -19,9 +19,9 @@ export function CompassDiscussionFlow({
 }) {
   return (
     <CompassCard
-      title="What interrupts movement?"
-      description="Name what actually happens between knowing what matters and following through."
-    >
+  title="Discussion"
+  description="The questions are finished. From here, treat Compass like a conversation. Answer naturally. Add details when they matter. Correct Compass when it misunderstands you. Continue until you feel ready to choose your next step."
+>
       <div className="space-y-4">
         {discussionMessages.map((message, index) => (
           <div
@@ -46,7 +46,7 @@ export function CompassDiscussionFlow({
       <textarea
         value={discussionInput}
         onChange={(event) => onDiscussionInputChange(event.target.value)}
-        placeholder="Be specific. What usually interrupts this movement? Avoidance, fear, timing, exposure, people, money, energy, doubt, conflict, or something else?"
+        placeholder="Reply naturally. Short answers are fine. Long answers are fine. Add context, disagree, correct Compass, or explain what actually happens."
         rows={7}
         className="compass-textarea mt-5"
       />
