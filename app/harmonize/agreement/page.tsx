@@ -1,12 +1,8 @@
-import Link from "next/link"
-import { redirect } from "next/navigation"
+"use client"
 
-const allowedModes = [
-  "couple",
-  "family_adults",
-  "team",
-  "parallel_parenting_adults",
-] as const
+import { useEffect, useState } from "react"
+import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 
 const agreements = [
   "Private reflections remain private.",
@@ -18,19 +14,43 @@ const agreements = [
   "Minor participation is not available in this version.",
 ]
 
-export default function HarmonizeAgreementPage({
-  searchParams,
-}: {
-  searchParams: { mode?: string }
-}) {
-  const mode = searchParams.mode
+export default function HarmonizeAgreementPage() {
+  const searchParams = useSearchParams()
+  const mode = searchParams.get("mode") || "couple"
 
-  if (!mode || !allowedModes.includes(mode as any)) {
-    redirect("/harmonize")
+  const [revealed, setRevealed] = useState(0)
+  const [safetyAccepted, setSafetyAccepted] = useState(false)
+const storageKey = `harmonize-agreement-${mode}`
+
+  const allRevealed = revealed >= agreements.length
+  const canContinue = allRevealed && safetyAccepted
+
+useEffect(() => {
+  const savedAgreement = window.localStorage.getItem(storageKey)
+
+  if (savedAgreement === "accepted") {
+    setRevealed(agreements.length)
+    setSafetyAccepted(true)
+  }
+}, [storageKey])
+
+  function revealNext() {
+    if (revealed < agreements.length) {
+      setRevealed(revealed + 1)
+    }
   }
 
   return (
-    <main className="min-h-screen bg-[#0b0b0b] text-[#f4f1ea]">
+    <main
+      className="min-h-screen text-[#f4f1ea]"
+      style={{
+        backgroundImage:
+          "linear-gradient(rgba(0,0,0,0.74), rgba(0,0,0,0.74)), url('/images/harmonize/bg-harmonize-entry.webp')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
       <section className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6 py-20">
         <Link
           href={`/harmonize/start?mode=${mode}`}
@@ -40,51 +60,101 @@ export default function HarmonizeAgreementPage({
         </Link>
 
         <p className="mb-4 text-xs uppercase tracking-[0.35em] text-[#c6a96b]">
-          Harmonize Agreement
+          Harmonize by Oremea
         </p>
 
         <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
-          Before we create the system.
+          Harmonize Agreement
         </h1>
 
         <p className="mt-6 text-base leading-7 text-[#d8d2c6]">
-          Harmonize is designed for awareness, ownership, repair, integration,
-          and practice together. It does not replace legal, medical, therapeutic,
-          or emergency support.
+          Read each agreement before continuing. Participation begins with
+          consent, clarity, and responsibility.
         </p>
 
-        <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-          <div className="space-y-4">
-            {agreements.map((agreement) => (
-              <div
-                key={agreement}
-                className="flex gap-3 rounded-2xl border border-white/10 bg-black/20 p-4"
+        <div className="mt-8 space-y-3">
+          {agreements.map((text, index) => {
+            const isVisible = index < revealed
+
+            return (
+              <button
+                key={text}
+                type="button"
+                onClick={revealNext}
+                disabled={isVisible && index !== revealed}
+                className={`w-full rounded-2xl border p-4 text-left text-sm leading-6 transition ${
+                  isVisible
+                    ? "border-[#c6a96b]/30 bg-[#c6a96b]/10 text-[#f4f1ea]"
+                    : "border-white/10 bg-white/[0.04] text-[#777] blur-[3px]"
+                }`}
               >
-                <span className="mt-1 h-2 w-2 rounded-full bg-[#c6a96b]" />
-                <p className="text-sm leading-6 text-[#d8d2c6]">
-                  {agreement}
-                </p>
-              </div>
-            ))}
-          </div>
+                {isVisible ? text : "Agreement hidden until acknowledged."}
+              </button>
+            )
+          })}
         </div>
 
-        <div className="mt-8 rounded-3xl border border-white/10 bg-black/20 p-6">
-          <h2 className="text-lg font-medium text-[#f4f1ea]">
-            Safety note
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-[#bfb8aa]">
-            If a shared message appears to contain contempt, personal data,
-            private disclosures, or information that may be difficult to retract,
-            Harmonize may pause the send and ask for review first.
-          </p>
-        </div>
+        {!allRevealed ? (
+          <button
+            type="button"
+            onClick={revealNext}
+            className="mt-6 w-fit rounded-full border border-[#c6a96b]/40 px-6 py-3 text-sm font-medium text-[#c6a96b]"
+          >
+            I understand — reveal next
+          </button>
+        ) : null}
+
+        {allRevealed ? (
+          <div className="mt-8 rounded-3xl border border-[#c6a96b]/30 bg-[#c6a96b]/10 p-6">
+            <h2 className="text-lg font-medium text-[#f4f1ea]">
+              Safety note
+            </h2>
+
+            <p className="mt-3 whitespace-pre-line text-sm leading-6 text-[#d8d2c6]">
+{`I understand that by continuing I shall be deemed to have read understood acknowledged and accepted these participation principles
+
+My participation in Harmonize shall constitute my agreement to engage responsibly to respect the privacy of other participants and to enter the process voluntarily`}
+</p>
+
+<p className="mt-3 whitespace-pre-line text-sm leading-6 text-[#d8d2c6]">
+{`Harmonize shall not be used as evidence of fault liability wrongdoing or entitlement by any participant
+
+Participants remain solely responsible for their own decisions actions communications and legal obligations`}
+</p>
+
+            <label className="mt-5 flex gap-3 text-sm leading-6 text-[#f4f1ea]">
+              <input
+                type="checkbox"
+                checked={safetyAccepted}
+                onChange={(event) => {
+  const checked = event.target.checked
+  setSafetyAccepted(checked)
+
+  if (checked) {
+    window.localStorage.setItem(storageKey, "accepted")
+  } else {
+    window.localStorage.removeItem(storageKey)
+  }
+}}
+                className="mt-1"
+              />
+              <span>
+  I acknowledge and accept these participation principles
+</span>
+            </label>
+          </div>
+        ) : null}
 
         <Link
-          href={`/harmonize/create?mode=${mode}`}
-          className="mt-8 inline-flex w-fit rounded-full bg-[#c6a96b] px-6 py-3 text-sm font-medium text-black transition hover:opacity-90"
+          href={canContinue ? `/harmonize/create?mode=${mode}` : "#"}
+          aria-disabled={!canContinue}
+          className={`mt-8 inline-flex w-fit rounded-full px-6 py-3 text-sm font-medium transition ${
+            canContinue
+              ? "bg-[#c6a96b] text-black hover:opacity-90"
+              : "cursor-not-allowed bg-white/10 text-[#777]"
+          }`}
         >
-          I understand — continue
+          I acknowledge agree and commit
         </Link>
       </section>
     </main>

@@ -584,11 +584,12 @@ model entry_mirror_outputs {
 }
 
 model harmonize_systems {
-  id         String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  mode       HarmonizeMode
-  name       String?
-  status     HarmonizeSystemStatus @default(active)
-  created_by String
+  id               String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  mode             HarmonizeMode
+  name             String?
+  status           HarmonizeSystemStatus @default(active)
+  consent_snapshot Json                  @default("{}")
+  created_by       String
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
   updated_at DateTime @updatedAt @db.Timestamptz(6)
@@ -646,9 +647,10 @@ model harmonize_cycles {
   created_at  DateTime  @default(now()) @db.Timestamptz(6)
   updated_at  DateTime  @updatedAt @db.Timestamptz(6)
 
-  systems harmonize_systems   @relation(fields: [system_id], references: [id], onDelete: Cascade)
-  entries harmonize_entries[]
-  reviews harmonize_reviews[]
+  systems         harmonize_systems           @relation(fields: [system_id], references: [id], onDelete: Cascade)
+  entries         harmonize_entries[]
+  reviews         harmonize_reviews[]
+  witness_anchors harmonize_witness_anchors[]
 
   @@index([system_id])
   @@index([status])
@@ -663,6 +665,7 @@ model harmonize_entries {
   content String
 
   question_key String?
+  prompt_text  String?
   phase        String?
 
   share_risk_level            Int     @default(0)
@@ -671,13 +674,67 @@ model harmonize_entries {
   created_at DateTime @default(now()) @db.Timestamptz(6)
   updated_at DateTime @updatedAt @db.Timestamptz(6)
 
-  cycles        harmonize_cycles          @relation(fields: [cycle_id], references: [id], onDelete: Cascade)
-  participants  harmonize_participants    @relation(fields: [participant_id], references: [id], onDelete: Cascade)
-  share_reviews harmonize_share_reviews[]
+  cycles          harmonize_cycles            @relation(fields: [cycle_id], references: [id], onDelete: Cascade)
+  participants    harmonize_participants      @relation(fields: [participant_id], references: [id], onDelete: Cascade)
+  share_reviews   harmonize_share_reviews[]
+  witness_anchors harmonize_witness_anchors[]
 
   @@index([cycle_id])
   @@index([participant_id])
   @@index([scope])
+}
+
+model harmonize_witness_anchors {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  cycle_id String  @db.Uuid
+  entry_id String? @db.Uuid
+
+  anchor_type String
+  anchor_name String
+
+  confidence Float @default(0)
+
+  behavioral_markers Json @default("[]")
+  evidence           Json @default("[]")
+
+  strength Float @default(0)
+
+  source String @default("entry")
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  cycles  harmonize_cycles   @relation(fields: [cycle_id], references: [id], onDelete: Cascade)
+  entries harmonize_entries? @relation(fields: [entry_id], references: [id], onDelete: SetNull)
+
+  outgoing_relationships harmonize_anchor_relationships[] @relation("AnchorSource")
+  incoming_relationships harmonize_anchor_relationships[] @relation("AnchorTarget")
+
+  @@index([cycle_id])
+  @@index([entry_id])
+  @@index([anchor_type])
+  @@index([source])
+  @@index([strength])
+}
+
+model harmonize_anchor_relationships {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  source_anchor_id String @db.Uuid
+  target_anchor_id String @db.Uuid
+
+  relationship_type String
+  reason            String?
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  source_anchor harmonize_witness_anchors @relation("AnchorSource", fields: [source_anchor_id], references: [id], onDelete: Cascade)
+  target_anchor harmonize_witness_anchors @relation("AnchorTarget", fields: [target_anchor_id], references: [id], onDelete: Cascade)
+
+  @@index([source_anchor_id])
+  @@index([target_anchor_id])
+  @@index([relationship_type])
 }
 
 model harmonize_share_reviews {

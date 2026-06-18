@@ -1,14 +1,18 @@
 "use client"
 
+import { buildLiveWitnessSessionState } from "@/src/lib/harmonize/witness-live-state"
 import { HarmonizeDrawer } from "@/components/harmonize/harmonize-drawer"
+import { WitnessEmergencePanel } from "@/src/components/harmonize/WitnessEmergencePanel"
 import { cycleStatusMessage } from "@/lib/harmonize/cycle-status"
-import { getFirstQuestion } from "@/lib/harmonize/flow"
+import { privateWitnessEngine } from "@/src/lib/harmonize/private-witness-engine"
+import { buildWitnessMeaningPanelModel } from "@/src/lib/harmonize/witness-meaning-panel-model"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 
 type HarmonizeEntry = {
   id: string
   content: string
+  prompt_text?: string | null
   created_at: string
 }
 
@@ -23,8 +27,19 @@ export default function HarmonizePrivatePage({
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState("")
-const [cycleStatus, setCycleStatus] = useState("")
-const firstQuestion = getFirstQuestion()
+  const [cycleStatus, setCycleStatus] = useState("")
+
+  const witness = privateWitnessEngine(entries)
+
+  const meaningPanelModel = buildWitnessMeaningPanelModel(
+  buildLiveWitnessSessionState({
+    cycleId: params.cycleId,
+    anchorDefinition: witness.anchorDefinition,
+    strongestSignal: witness.strongestSignal,
+    nextQuestion: witness.nextQuestion,
+    readyForSharedSpace: witness.readyForSharedSpace,
+  }),
+)
 
   async function loadEntries() {
     setLoadingEntries(true)
@@ -33,7 +48,6 @@ const firstQuestion = getFirstQuestion()
       const response = await fetch(
         `/api/harmonize/entries?cycleId=${params.cycleId}`,
       )
-
       const data = await response.json()
 
       if (!response.ok || !data.success) {
@@ -41,15 +55,15 @@ const firstQuestion = getFirstQuestion()
       }
 
       setEntries(data.entries || [])
-const summaryResponse = await fetch(
-  `/api/harmonize/cycle/summary?cycleId=${params.cycleId}`,
-)
 
-const summaryData = await summaryResponse.json()
+      const summaryResponse = await fetch(
+        `/api/harmonize/cycle/summary?cycleId=${params.cycleId}`,
+      )
+      const summaryData = await summaryResponse.json()
 
-if (summaryResponse.ok && summaryData.success) {
-  setCycleStatus(summaryData.cycle.status)
-}
+      if (summaryResponse.ok && summaryData.success) {
+        setCycleStatus(summaryData.cycle.status)
+      }
     } catch (err) {
       setError(
         err instanceof Error
@@ -73,12 +87,13 @@ if (summaryResponse.ok && summaryData.success) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-  cycleId: params.cycleId,
-  scope: "private",
-  content,
-  questionKey: "tell_me_what_happened",
-  phase: "witness",
-}),
+          cycleId: params.cycleId,
+          scope: "private",
+          content,
+          questionKey: "private_witness",
+          promptText: witness.nextQuestion,
+          phase: "witness",
+        }),
       })
 
       const data = await response.json()
@@ -107,25 +122,25 @@ if (summaryResponse.ok && summaryData.success) {
   }, [params.cycleId])
 
   return (
-    <main className="min-h-screen bg-[#0b0b0b] text-[#f4f1ea]">
-      <HarmonizeDrawer
-        systemId={params.systemId}
-        cycleId={params.cycleId}
-      />
-      <section className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6 py-20">
-        <Link
-          href={`/harmonize/system/${params.systemId}`}
-          className="mb-8 text-sm text-[#c6a96b]"
-        >
-          ← Back to system
-        </Link>
+    <main
+      className="min-h-screen text-[#f4f1ea]"
+      style={{
+        backgroundImage:
+          "linear-gradient(rgba(0,0,0,0.76), rgba(0,0,0,0.76)), url('/images/harmonize/bg-harmonize-private.webp')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
+      <HarmonizeDrawer systemId={params.systemId} cycleId={params.cycleId} />
 
+      <section className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6 py-20">
         <p className="mb-4 text-xs uppercase tracking-[0.35em] text-[#c6a96b]">
-          Private Witness
+          Harmonize by Oremea
         </p>
 
         <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
-          This space belongs only to you.
+          This space belongs only to you
         </h1>
 
         <p className="mt-6 text-base leading-7 text-[#d8d2c6]">
@@ -133,31 +148,53 @@ if (summaryResponse.ok && summaryData.success) {
           witnessing what happened, without forcing repair too soon.
         </p>
 
-{cycleStatusMessage(cycleStatus) ? (
-  <p className="mt-6 rounded-2xl border border-[#c6a96b]/30 bg-[#c6a96b]/10 p-4 text-sm leading-6 text-[#f4f1ea]">
-    {cycleStatusMessage(cycleStatus)}
-  </p>
-) : null}
+        {cycleStatusMessage(cycleStatus) ? (
+          <p className="mt-6 rounded-2xl border border-[#c6a96b]/30 bg-[#c6a96b]/10 p-4 text-sm leading-6 text-[#f4f1ea]">
+            {cycleStatusMessage(cycleStatus)}
+          </p>
+        ) : null}
 
         <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-6">
           <p className="text-sm uppercase tracking-[0.25em] text-[#c6a96b]">
-            EL begins
+            Private Witness
           </p>
 
-          <p className="mt-4 text-xl leading-8 text-[#f4f1ea]">
-  {firstQuestion?.text ?? "Tell me what happened."}
-</p>
+          <div className="mt-6 space-y-4">
+            {loadingEntries ? (
+              <p className="text-sm text-[#bfb8aa]">
+                Loading private witness...
+              </p>
+            ) : null}
+
+            {entries.map((entry) => (
+              <div key={entry.id} className="space-y-3">
+                {entry.prompt_text ? (
+                  <div className="mr-auto max-w-[85%] rounded-2xl border border-white/10 bg-black/30 p-4 text-sm leading-6 text-[#d8d2c6]">
+                    {entry.prompt_text}
+                  </div>
+                ) : null}
+
+                <div className="ml-auto max-w-[85%] rounded-2xl border border-[#c6a96b]/20 bg-[#c6a96b]/10 p-4 text-sm leading-6 text-[#f4f1ea]">
+                  {entry.content}
+                </div>
+              </div>
+            ))}
+
+            <div className="mr-auto max-w-[85%] rounded-2xl border border-white/10 bg-black/30 p-4 text-sm leading-6 text-[#d8d2c6]">
+              {witness.nextQuestion}
+            </div>
+          </div>
+
+          <div className="mt-8">
+            <WitnessEmergencePanel model={meaningPanelModel} />
+          </div>
 
           <textarea
             value={content}
             onChange={(event) => setContent(event.target.value)}
-            placeholder="Write privately here..."
-            className="mt-6 min-h-[180px] w-full rounded-2xl border border-white/10 bg-black/30 p-4 text-sm leading-6 text-[#f4f1ea] outline-none placeholder:text-[#777] focus:border-[#c6a96b]/60"
+            placeholder="Reply..."
+            className="mt-6 min-h-[140px] w-full rounded-2xl border border-white/10 bg-black/30 p-4 text-sm leading-6 text-[#f4f1ea] outline-none placeholder:text-[#777] focus:border-[#c6a96b]/60"
           />
-
-          {saved ? (
-            <p className="mt-4 text-sm text-[#c6a96b]">Saved privately.</p>
-          ) : null}
 
           {error ? (
             <p className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
@@ -171,44 +208,24 @@ if (summaryResponse.ok && summaryData.success) {
             disabled={saving || !content.trim()}
             className="mt-5 rounded-full bg-[#c6a96b] px-6 py-3 text-sm font-medium text-black disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {saving ? "Saving..." : "Save private entry"}
+            {saving ? "Saving…" : "Save private entry"}
           </button>
-        </div>
 
-        <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-          <h2 className="text-lg font-medium">Private entries</h2>
-
-          {loadingEntries ? (
-            <p className="mt-4 text-sm text-[#bfb8aa]">Loading...</p>
-          ) : entries.length === 0 ? (
+          {saved ? (
             <p className="mt-4 text-sm text-[#bfb8aa]">
-              No private entries yet.
+              Saved. The witness trail has been updated.
             </p>
-          ) : (
-            <div className="mt-5 space-y-4">
-              {entries.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="rounded-2xl border border-white/10 bg-black/20 p-4"
-                >
-                  <p className="whitespace-pre-wrap text-sm leading-6 text-[#d8d2c6]">
-                    {entry.content}
-                  </p>
-                  <p className="mt-3 text-xs text-[#777]">
-                    {new Date(entry.created_at).toLocaleString()}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+          ) : null}
 
-        <Link
-  href={`/harmonize/system/${params.systemId}/cycle/${params.cycleId}/question/what_stayed_with_you`}
-  className="mt-8 inline-flex w-fit rounded-full bg-[#c6a96b] px-6 py-3 text-sm font-medium text-black"
->
-  Continue privately
-</Link>
+          {witness.readyForSharedSpace ? (
+            <Link
+              href={`/harmonize/system/${params.systemId}/cycle/${params.cycleId}/shared`}
+              className="mt-6 inline-flex rounded-full bg-[#c6a96b] px-6 py-3 text-sm font-medium text-black"
+            >
+              Enter shared space
+            </Link>
+          ) : null}
+        </div>
       </section>
     </main>
   )

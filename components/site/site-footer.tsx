@@ -31,6 +31,13 @@ export function SiteFooter() {
                 Explore
               </Link>
 
+<Link
+  href="/about/oremea"
+  className="transition hover:text-amber-100"
+>
+  About Oremea
+</Link>
+
               <Link href="/reviews" className="transition hover:text-amber-100">
                 Reviews
               </Link>

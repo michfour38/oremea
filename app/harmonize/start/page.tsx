@@ -27,7 +27,16 @@ export default function HarmonizeStartPage({
   }
 
   return (
-    <main className="min-h-screen bg-[#0b0b0b] text-[#f4f1ea]">
+    <main
+  className="min-h-screen text-[#f4f1ea]"
+  style={{
+    backgroundImage:
+      "linear-gradient(rgba(0,0,0,0.72), rgba(0,0,0,0.72)), url('/images/harmonize/bg-harmonize-entry.webp')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundAttachment: "fixed",
+  }}
+>
       <section className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6 py-20">
         <Link
           href="/harmonize"
@@ -37,7 +46,7 @@ export default function HarmonizeStartPage({
         </Link>
 
         <p className="mb-4 text-xs uppercase tracking-[0.35em] text-[#c6a96b]">
-          Harmonize
+          Harmonize by Oremea
         </p>
 
         <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
@@ -79,23 +88,12 @@ export default function HarmonizeStartPage({
           </div>
         </div>
 
-        <div className="mt-8 rounded-3xl border border-[#c6a96b]/30 bg-[#c6a96b]/10 p-6">
-          <h2 className="text-lg font-medium text-[#f4f1ea]">
-            Adult-only v1
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-[#d8d2c6]">
-            Children and minors are not available in this version. The structure
-            is being built with future safety in mind, but child access remains
-            disabled.
-          </p>
-        </div>
-
         <Link
-          href={`/harmonize/agreement?mode=${mode}`}
-          className="mt-8 inline-flex w-fit rounded-full bg-[#c6a96b] px-6 py-3 text-sm font-medium text-black transition hover:opacity-90"
-        >
-          Continue
-        </Link>
+  href={`/harmonize/agreement?mode=${mode}`}
+  className="mt-8 inline-flex w-fit rounded-full bg-[#c6a96b] px-6 py-3 text-sm font-medium text-black transition hover:opacity-90"
+>
+  Let's begin.
+</Link>
       </section>
     </main>
   )

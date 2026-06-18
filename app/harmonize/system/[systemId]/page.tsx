@@ -102,23 +102,29 @@ const [memory, setMemory] = useState<any>(null)
   }
 
   return (
-    <main className="min-h-screen bg-[#0b0b0b] text-[#f4f1ea]">
+    <main
+  className="min-h-screen text-[#f4f1ea]"
+  style={{
+    backgroundImage:
+      "linear-gradient(rgba(0,0,0,0.74), rgba(0,0,0,0.74)), url('/images/harmonize/bg-harmonize-private.webp')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundAttachment: "fixed",
+  }}
+>
       <section className="mx-auto flex min-h-screen max-w-4xl flex-col justify-center px-6 py-20">
-        <Link href="/harmonize" className="mb-8 text-sm text-[#c6a96b]">
-          ← Harmonize
-        </Link>
-
+        
         <p className="mb-4 text-xs uppercase tracking-[0.35em] text-[#c6a96b]">
-          Harmonize System
-        </p>
+  Harmonize by Oremea
+</p>
 
         <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
-          Your Harmonize space.
-        </h1>
+  {system?.mode?.replaceAll("_", " ") || "Harmonize"}
+</h1>
 
-        <p className="mt-6 text-sm leading-6 text-[#bfb8aa]">
-          System ID: {params.systemId}
-        </p>
+<p className="mt-6 text-sm leading-6 text-[#bfb8aa]">
+  Active Harmonize container
+</p>
 
         {loading ? (
           <p className="mt-8 text-sm text-[#bfb8aa]">Loading...</p>
@@ -154,7 +160,7 @@ const [memory, setMemory] = useState<any>(null)
           <>
             <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-6">
               <h2 className="text-lg font-medium text-[#f4f1ea]">
-                System details
+                Container overview
               </h2>
 
               <div className="mt-4 space-y-2 text-sm leading-6 text-[#d8d2c6]">
@@ -178,7 +184,7 @@ const [memory, setMemory] = useState<any>(null)
                   disabled={starting}
                   className="inline-flex rounded-full bg-[#c6a96b] px-5 py-2 text-sm font-medium text-black disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {starting ? "Starting..." : "Start new cycle"}
+                  {starting ? "Starting..." : "Begin reflection"}
                 </button>
               </div>
             </div>

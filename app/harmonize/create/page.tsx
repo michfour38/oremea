@@ -49,7 +49,24 @@ export default function HarmonizeCreatePage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ mode }),
+        body: JSON.stringify({
+  mode,
+  consentSnapshot: {
+    acceptedAt: new Date().toISOString(),
+    mode,
+    agreementVersion: "harmonize-v1",
+    principles: [
+      "Private reflections remain private",
+      "Shared repair is chosen not extracted",
+      "Understanding is more important than agreement",
+      "Repair is invitation not obligation",
+      "Harmonize does not determine who is right",
+      "Participants remain responsible for their own choices",
+      "Minor participation is not available in this version",
+    ],
+    safetyAccepted: true,
+  },
+}),
       })
 
       const data = await response.json()
@@ -71,7 +88,16 @@ export default function HarmonizeCreatePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0b0b0b] text-[#f4f1ea]">
+    <main
+  className="min-h-screen text-[#f4f1ea]"
+  style={{
+    backgroundImage:
+      "linear-gradient(rgba(0,0,0,0.72), rgba(0,0,0,0.72)), url('/images/harmonize/bg-harmonize-entry.webp')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundAttachment: "fixed",
+  }}
+>
       <section className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6 py-20">
         <Link
           href={`/harmonize/agreement?mode=${mode}`}
@@ -81,25 +107,24 @@ export default function HarmonizeCreatePage() {
         </Link>
 
         <p className="mb-4 text-xs uppercase tracking-[0.35em] text-[#c6a96b]">
-          Create Harmonize System
+          Harmonize by Oremea
         </p>
 
         <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
-          Create your {modeLabels[mode]} space.
+          Begin your {modeLabels[mode]} space
         </h1>
 
         <p className="mt-6 text-base leading-7 text-[#d8d2c6]">
-          This creates the private container for your Harmonize process. You
-          will be added as the first adult participant.
+          This creates the private container for your Harmonize process. You will enter as the first adult participant
         </p>
 
         <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-          <h2 className="text-lg font-medium">What this creates</h2>
+          <h2 className="text-lg font-medium">What begins here</h2>
 
           <div className="mt-5 space-y-4 text-sm leading-6 text-[#bfb8aa]">
-            <p>A Harmonize system for this relationship structure.</p>
-            <p>A first participant profile connected to your account.</p>
-            <p>A protected space where private reflection can begin.</p>
+            <p>A Harmonize system for this relationship structure</p>
+            <p>Your participation is connected to your account</p>
+            <p>A protected space where private reflection can begin</p>
           </div>
         </div>
 
@@ -115,7 +140,7 @@ export default function HarmonizeCreatePage() {
           disabled={loading}
           className="mt-8 inline-flex w-fit rounded-full bg-[#c6a96b] px-6 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {loading ? "Creating..." : "Create system"}
+          {loading ? "Beginning..." : "Create the container"}
         </button>
       </section>
     </main>

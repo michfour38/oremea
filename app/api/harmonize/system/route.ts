@@ -33,12 +33,13 @@ export async function POST(request: Request) {
     }
 
     const system = await prisma.harmonize_systems.create({
-      data: {
-        mode: body.mode,
-        created_by: userId,
-        status: "active",
-      },
-    });
+  data: {
+    mode: body.mode,
+    created_by: userId,
+    status: "active",
+    consent_snapshot: body.consentSnapshot || {},
+  },
+});
 
     await prisma.harmonize_participants.create({
       data: {

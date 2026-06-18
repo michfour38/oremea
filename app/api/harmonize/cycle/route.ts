@@ -35,23 +35,44 @@ export async function POST(request: Request) {
       )
     }
 
+    const existingCycle = await prisma.harmonize_cycles.findFirst({
+      where: {
+        system_id: systemId,
+        status: {
+          in: ["active", "paused", "review_due"],
+        },
+      },
+      orderBy: {
+        started_at: "desc",
+      },
+    })
+
+    if (existingCycle) {
+      return NextResponse.json({
+        success: true,
+        cycle: existingCycle,
+        resumed: true,
+      })
+    }
+
     const cycle = await prisma.harmonize_cycles.create({
       data: {
         system_id: systemId,
         status: "active",
-        title: "First Harmonize Cycle",
+        title: "Harmonize Cycle",
       },
     })
 
     return NextResponse.json({
       success: true,
       cycle,
+      resumed: false,
     })
   } catch (error) {
     console.error("POST /api/harmonize/cycle failed:", error)
 
     return NextResponse.json(
-      { success: false, error: "Failed to create Harmonize cycle" },
+      { success: false, error: "Failed to create or resume Harmonize cycle" },
       { status: 500 },
     )
   }
