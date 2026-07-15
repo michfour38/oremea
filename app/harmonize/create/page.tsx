@@ -107,9 +107,14 @@ export default function HarmonizeCreatePage() {
 
       const data = await response.json()
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || "Unable to create relationship space")
-      }
+      if (data.paymentRequired) {
+  router.push("/harmonize/upgrade")
+  return
+}
+
+if (!response.ok || !data.success) {
+  throw new Error(data.error || "Unable to create relationship space")
+}
 
       router.push(`/harmonize/system/${data.system.id}`)
     } catch (err) {

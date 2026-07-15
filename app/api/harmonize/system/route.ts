@@ -1,35 +1,37 @@
-import { auth } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server"
+import { NextResponse } from "next/server"
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma"
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
 const ALLOWED_MODES = [
   "couple",
   "family_adults",
   "team",
   "parallel_parenting_adults",
-] as const;
+] as const
+
+const INCLUDED_OWNED_SPACE_LIMIT = 1
 
 export async function POST(request: Request) {
   try {
-    const { userId } = auth();
+    const { userId } = auth()
 
     if (!userId) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 },
-      );
+      )
     }
 
-    const body = await request.json();
+    const body = await request.json()
 
     if (!ALLOWED_MODES.includes(body.mode)) {
       return NextResponse.json(
         { error: "Invalid mode" },
         { status: 400 },
-      );
+      )
     }
 
     await prisma.profiles.upsert({
@@ -43,7 +45,37 @@ export async function POST(request: Request) {
         pathway: "harmonize",
         updated_at: new Date(),
       },
-    });
+    })
+
+    const ownedSpaceCount =
+      await prisma.harmonize_systems.count({
+        where: {
+          status: "active",
+          OR: [
+            {
+              owner_profile_id: userId,
+            },
+            {
+              owner_profile_id: null,
+              created_by: userId,
+            },
+          ],
+        },
+      })
+
+    if (ownedSpaceCount >= INCLUDED_OWNED_SPACE_LIMIT) {
+      return NextResponse.json(
+        {
+          success: false,
+          paymentRequired: true,
+          error:
+            "Your current relationship space allowance has been reached.",
+          ownedSpaceCount,
+          ownedSpaceLimit: INCLUDED_OWNED_SPACE_LIMIT,
+        },
+        { status: 402 },
+      )
+    }
 
     const system = await prisma.harmonize_systems.create({
       data: {
@@ -57,7 +89,7 @@ export async function POST(request: Request) {
         status: "active",
         consent_snapshot: body.consentSnapshot || {},
       },
-    });
+    })
 
     await prisma.harmonize_participants.create({
       data: {
@@ -66,24 +98,26 @@ export async function POST(request: Request) {
         role: "other",
         relationship_context: null,
       },
-    });
+    })
 
     return NextResponse.json({
       success: true,
       system,
-    });
+      ownedSpaceCount: ownedSpaceCount + 1,
+      ownedSpaceLimit: INCLUDED_OWNED_SPACE_LIMIT,
+    })
   } catch (error) {
     console.error(
       "POST /api/harmonize/system failed:",
       error,
-    );
+    )
 
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to create system",
+        error: "Failed to create relationship space",
       },
       { status: 500 },
-    );
+    )
   }
 }

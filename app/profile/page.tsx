@@ -6,6 +6,7 @@ import { ProfilePolicies } from "@/components/site/sections/profile-policies";
 import { ProfileProducts } from "@/components/site/sections/profile-products";
 import { ProfileProgress } from "@/components/site/sections/profile-progress";
 import { ProfileSupport } from "@/components/site/sections/profile-support";
+import { ProfileRelationshipSpaces } from "@/components/site/sections/profile-relationship-spaces";
 
 export default function ProfilePage() {
   return (
@@ -15,6 +16,8 @@ export default function ProfilePage() {
       <ProfileAccount />
 
       <ProfileProducts />
+
+      <ProfileRelationshipSpaces />
 
       <ProfileProgress />
 

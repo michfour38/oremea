@@ -31,8 +31,13 @@ export async function GET(request: Request) {
         },
       },
       include: {
-        participants: true,
-        cycles: {
+  participants: true,
+  invites: {
+    orderBy: {
+      created_at: "desc",
+    },
+  },
+  cycles: {
   orderBy: {
     started_at: "desc",
   },
@@ -107,19 +112,34 @@ return NextResponse.json({
   system: {
   ...system,
 
-  participants: system.participants.map((participant) => ({
+  participants: [
+  ...system.participants.map((participant) => ({
     ...participant,
 
     isOwner:
       participant.profile_id === system.owner_profile_id,
 
-    displayName:
-  participant.profile_id === userId
-    ? "You"
-    : "Participant",
+    isPending: false,
 
-relationshipContext: participant.relationship_context,
+    displayName:
+      participant.profile_id === userId
+        ? "You"
+        : "Participant",
+
+    relationshipContext: participant.relationship_context,
   })),
+
+  ...system.invites
+    .filter((invite) => invite.status === "pending")
+    .map((invite) => ({
+      id: invite.id,
+      active: false,
+      isOwner: false,
+      isPending: true,
+      displayName: invite.email,
+      relationshipContext: invite.relationship_context,
+    })),
+],
 
   cycles,
 },

@@ -23,14 +23,14 @@ function cycleHref(systemId: string, cycle: any) {
 }
 
 function modeLabel(mode?: string) {
-  if (mode === "couple") return "Couple Container"
-  if (mode === "family_adults") return "Family Adults Container"
-  if (mode === "team") return "Team Container"
+  if (mode === "couple") return "Couple"
+  if (mode === "family_adults") return "Family Adults"
+  if (mode === "team") return "Team"
   if (mode === "parallel_parenting_adults") {
-    return "Parallel Parenting Container"
+    return "Parallel Parenting"
   }
 
-  return "Harmonize Container"
+  return "Harmonize"
 }
 
 const TITLE_SUGGESTIONS = [
@@ -54,11 +54,13 @@ export default function HarmonizeSystemPage({
   const router = useRouter()
 
   const [system, setSystem] = useState<any>(null)
+  const [memory, setMemory] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState("")
   const [cycleTitle, setCycleTitle] = useState("")
   const [showInvitePanel, setShowInvitePanel] = useState(false)
+  const [copiedInviteId, setCopiedInviteId] = useState<string | null>(null)
 
 const waitingCycles =
   system?.cycles?.filter(
@@ -81,6 +83,7 @@ async function loadSystem() {
     }
 
     setSystem(data.system)
+    setMemory(data.memory)
   } catch (err) {
     setError(
       err instanceof Error
@@ -89,6 +92,18 @@ async function loadSystem() {
     )
   } finally {
     setLoading(false)
+  }
+}
+
+async function copyInviteLink(inviteId: string) {
+  const inviteLink =
+    `${window.location.origin}/harmonize/join/${params.systemId}`
+
+  try {
+    await navigator.clipboard.writeText(inviteLink)
+    setCopiedInviteId(inviteId)
+  } catch {
+    setError("Unable to copy the invitation link.")
   }
 }
 
@@ -154,19 +169,25 @@ useEffect(() => {
           </p>
 
           <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
-            {modeLabel(system?.mode)}
-          </h1>
+  {system?.name || modeLabel(system?.mode)}
+</h1>
+
+{system?.name ? (
+  <p className="mt-3 text-xs uppercase tracking-[0.25em] text-[#c6a96b]">
+    {modeLabel(system.mode)}
+  </p>
+) : null}
 
           <p className="mt-6 max-w-3xl text-base leading-7 text-[#d8d2c6]">
-            This is the shared container. Private witness remains private.
-            Conversations are held inside this container. Shared space only
+            This is your shared Relationship Space. Private witness remains private.
+Conversations are held inside this Relationship Space. Shared space only
             becomes meaningful when participants choose to bring something
             forward.
           </p>
 
           {loading ? (
             <p className="mt-8 text-sm text-[#bfb8aa]">
-              Loading container...
+              Loading Relationship Space...
             </p>
           ) : null}
 
@@ -187,7 +208,7 @@ useEffect(() => {
                     {system.participants?.length || 0}
                   </p>
                   <p className="mt-2 text-sm text-[#d8d2c6]">
-                    People currently connected to this container.
+                    People currently connected to this Relationship Space.
                   </p>
                 </div>
 
@@ -205,14 +226,13 @@ useEffect(() => {
 
                 <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
                   <p className="text-xs uppercase tracking-[0.25em] text-[#c6a96b]">
-                    Container status
+                    Relationship Space
                   </p>
                   <p className="mt-4 text-3xl font-semibold capitalize">
                     {system.status}
                   </p>
                   <p className="mt-2 text-sm text-[#d8d2c6]">
-                    This container remains active while the relationship space is
-                    open.
+                    This Relationship Space remains active while participants continue using it.
                   </p>
                 </div>
               </div>
@@ -225,11 +245,8 @@ useEffect(() => {
                     </h2>
 
                     <p className="mt-3 text-sm leading-6 text-[#bfb8aa]">
-                      Everyone listed below belongs to this container. Container
-                      creation is administrative only and gives no additional
-                      authority inside the conversation. Every participant's
-                      private witness remains private unless they intentionally
-                      choose to share it.
+                      Everyone listed below belongs to this Relationship Space.
+Creating the Relationship Space is simply an administrative action and gives no additional authority inside the conversation. Every participant's private witness remains private unless they intentionally choose to share it.
                     </p>
                   </div>
 
@@ -248,23 +265,48 @@ useEffect(() => {
                       key={participant.id}
                       className="rounded-2xl border border-white/10 bg-black/20 p-4"
                     >
-                      <p className="text-sm font-medium text-[#f4f1ea]">
-                        {participant.displayName}
-                      </p>
+                      <div className="flex items-center gap-2">
+  <span
+    className={
+      participant.isPending
+        ? "text-[#8f8778]"
+        : "text-[#c6a96b]"
+    }
+  >
+    {participant.isPending ? "○" : "✓"}
+  </span>
+
+  <p className="text-sm font-medium text-[#f4f1ea]">
+    {participant.displayName}
+  </p>
+</div>
 
                       <p className="mt-1 text-xs text-[#8f8778]">
-                        {participant.isOwner
-                          ? "Container Creator"
-                          : participant.active
-                            ? "Participant"
-                            : "Invitation Pending"}
-                      </p>
+  {participant.isOwner
+    ? "Relationship Space Creator · Joined"
+    : participant.isPending
+      ? "Invitation pending"
+      : "Joined"}
+</p>
 
                       {participant.relationshipContext ? (
                         <p className="mt-2 text-xs text-[#c6a96b]">
                           {participant.relationshipContext}
                         </p>
                       ) : null}
+
+{participant.isPending ? (
+  <button
+    type="button"
+    onClick={() => copyInviteLink(participant.id)}
+    className="mt-4 rounded-full border border-[#c6a96b]/40 px-4 py-2 text-xs font-medium text-[#c6a96b]"
+  >
+    {copiedInviteId === participant.id
+      ? "Invite link copied"
+      : "Copy invite link"}
+  </button>
+) : null}
+
                     </div>
                   ))}
                 </div>
@@ -274,53 +316,67 @@ useEffect(() => {
   <ParticipantForm
   systemId={params.systemId}
   onSaved={async () => {
-    setShowInvitePanel(false)
-    await loadSystem()
-  }}
+  await loadSystem()
+}}
 />
 ) : null}
 
+                <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-6">
+  <h2 className="text-lg font-medium text-[#f4f1ea]">
+    Relationship Memory
+  </h2>
+
+  <p className="mt-3 text-sm leading-6 text-[#bfb8aa]">
+    What has become visible across completed conversations in this
+    Relationship Space.
+  </p>
+
+  <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+      <p className="text-xs uppercase tracking-[0.2em] text-[#8f8778]">
+        Conversations
+      </p>
+
+      <p className="mt-2 text-2xl font-semibold text-[#f4f1ea]">
+        {memory?.totalCycles || 0}
+      </p>
+    </div>
+
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+      <p className="text-xs uppercase tracking-[0.2em] text-[#8f8778]">
+        Integrated
+      </p>
+
+      <p className="mt-2 text-2xl font-semibold text-[#f4f1ea]">
+        {memory?.integrationCycles || 0}
+      </p>
+    </div>
+
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+      <p className="text-xs uppercase tracking-[0.2em] text-[#8f8778]">
+        Repeating
+      </p>
+
+      <p className="mt-2 text-2xl font-semibold text-[#f4f1ea]">
+        {memory?.repetitionCycles || 0}
+      </p>
+    </div>
+
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+      <p className="text-xs uppercase tracking-[0.2em] text-[#8f8778]">
+        Words / behaviour gap
+      </p>
+
+      <p className="mt-2 text-2xl font-semibold text-[#f4f1ea]">
+        {memory?.mimicryCycles || 0}
+      </p>
+    </div>
+  </div>
+</div>
+
               <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-6">
                 <h2 className="text-lg font-medium text-[#f4f1ea]">
-                  What this container holds
-                </h2>
-
-                <div className="mt-5 grid gap-4 md:grid-cols-3">
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <p className="text-sm font-medium text-[#f4f1ea]">
-                      Private Witness
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-[#bfb8aa]">
-                      Each participant writes privately first. Nothing is shared
-                      automatically.
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <p className="text-sm font-medium text-[#f4f1ea]">
-                      Pattern Between
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-[#bfb8aa]">
-                      Patterns only become available when there is enough safe
-                      material to reflect.
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <p className="text-sm font-medium text-[#f4f1ea]">
-                      Shared Space
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-[#bfb8aa]">
-                      Shared discussion is chosen. Harmful speech should be
-                      stopped and returned to private witness.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-                <h2 className="text-lg font-medium text-[#f4f1ea]">
-                  Conversations in this container
+                  Conversations in this Relationship Space
                 </h2>
 
                 {!system.cycles?.length ? (
