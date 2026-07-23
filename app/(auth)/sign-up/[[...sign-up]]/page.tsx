@@ -7,7 +7,7 @@ type SignUpPageProps = {
 };
 
 export default function SignUpPage({ searchParams }: SignUpPageProps) {
-  const redirectUrl = searchParams?.redirect_url || "/oremea/enter";
+  const redirectUrl = searchParams?.redirect_url || "/";
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-10">
