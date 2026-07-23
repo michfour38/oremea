@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { DayPromptDTO } from "./journey.service";
+import { DayPromptDTO } from "./resonance.service";
 import { submitPromptAction } from "./actions";
 
 interface MirrorCardProps {
