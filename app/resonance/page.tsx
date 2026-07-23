@@ -1,5 +1,1 @@
-import { redirect } from "next/navigation";
-
-export default function ResonancePage() {
-  redirect("/journey");
-}
+export { default, dynamic } from "../(member)/journey/page";
