@@ -175,7 +175,7 @@ export default async function JourneyPage({
 const signedInEmail = await getSignedInEmail();
 
 if (!signedInEmail) {
-  redirect("/journey/unlock");
+  redirect("/sign-in?redirect_url=%2Fresonance");
 }
 
 const shouldActivateMirror =
@@ -397,7 +397,6 @@ fullMirrorEligible = mirrorAccess.has2QOnly;
 liteMirrorUnlocked = false;
 
 fullMirrorUnlocked = mirrorAccess.hasFullMirror;
-
       const foundMirror = await prisma.mirror_responses.findFirst({
   where: {
     user_id: userId,
