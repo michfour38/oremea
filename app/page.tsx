@@ -8,7 +8,7 @@ import { SiteShell } from "@/components/site/site-shell";
 const products = [
   {
     name: "Resonance",
-    href: "/oremea",
+    href: "/resonance",
     active: true,
     short:
       "A self-paced reflective journey designed to help people understand the patterns they carry into connection.",
@@ -23,38 +23,36 @@ const products = [
     ],
   },
   {
-  name: "Harmonize",
-  href: "/harmonize",
-  active: true,
-  short:
-    "A structured relational reflection space that helps people understand the pattern forming between them.",
-  action: "Enter Harmonize",
-  full: [
-    "Most relational conflict repeats because people can feel the tension but cannot see the pattern creating it.",
-    "Harmonize is a structured relational reflection space for couples, families, friendships, business partnerships, and poly dynamics who want to understand what is happening between them.",
-    "It does not decide who is right. It does not assign blame. It slows the interaction down enough for each person to see what they are protecting, what they are needing, and how their responses shape the shared space.",
-    "Private reflection remains private. Shared repair is chosen, not extracted. Each participant decides what they bring forward into the relationship.",
-    "As cycles unfold, Harmonize helps reveal recurring movements: pursuit and withdrawal, explanation and defensiveness, closeness and pressure, rupture and repair.",
-    "The goal is not perfect agreement. The goal is greater visibility, greater ownership, and a more conscious relationship with the pattern forming between people.",
-  ],
-},
-
-{
-  name: "The Compass",
-  href: "/compass",
-  active: true,
-  short:
-    "Turn self-awareness into one executable next step. Clarity. Direction. Execution.",
-  action: "Enter Compass",
-  full: [
-    "The Compass is for the moment after awareness, when you know something matters but still do not know what to do next.",
-    "It helps you move from scattered goals into one clear priority, then takes you deeper into why it matters.",
-    "Compass does not rush you into fantasy intensity. It helps you find embodied momentum: the smallest honest next step you can actually take.",
-    "Through layered reflection and discussion, Compass helps reveal what interrupts movement, where resistance lives, and what kind of action your nervous system can realistically hold.",
-    "Confidence in the self to follow through is built through kept agreements. Compass helps you begin there.",
-  ],
-},
-
+    name: "Harmonize",
+    href: "/harmonize",
+    active: true,
+    short:
+      "A structured relational reflection space that helps people understand the pattern forming between them.",
+    action: "Enter Harmonize",
+    full: [
+      "Most relational conflict repeats because people can feel the tension but cannot see the pattern creating it.",
+      "Harmonize is a structured relational reflection space for couples, families, friendships, business partnerships, and poly dynamics who want to understand what is happening between them.",
+      "It does not decide who is right. It does not assign blame. It slows the interaction down enough for each person to see what they are protecting, what they are needing, and how their responses shape the shared space.",
+      "Private reflection remains private. Shared repair is chosen, not extracted. Each participant decides what they bring forward into the relationship.",
+      "As cycles unfold, Harmonize helps reveal recurring movements: pursuit and withdrawal, explanation and defensiveness, closeness and pressure, rupture and repair.",
+      "The goal is not perfect agreement. The goal is greater visibility, greater ownership, and a more conscious relationship with the pattern forming between people.",
+    ],
+  },
+  {
+    name: "The Compass",
+    href: "/compass",
+    active: true,
+    short:
+      "Turn self-awareness into one executable next step. Clarity. Direction. Execution.",
+    action: "Enter Compass",
+    full: [
+      "The Compass is for the moment after awareness, when you know something matters but still do not know what to do next.",
+      "It helps you move from scattered goals into one clear priority, then takes you deeper into why it matters.",
+      "Compass does not rush you into fantasy intensity. It helps you find embodied momentum: the smallest honest next step you can actually take.",
+      "Through layered reflection and discussion, Compass helps reveal what interrupts movement, where resistance lives, and what kind of action your nervous system can realistically hold.",
+      "Confidence in the self to follow through is built through kept agreements. Compass helps you begin there.",
+    ],
+  },
   {
     name: "The Current",
     active: false,
@@ -81,34 +79,25 @@ function ProductName({ name }: { name: string }) {
     );
   }
 
-if (name === "The Compass") {
-  return (
-    <span className="inline-flex items-baseline font-serif text-[#c8a96a]">
-      <span className="text-[1.08em] leading-none">T</span>
-
-      <span className="text-[0.82em] tracking-[0.00em] leading-none">
-        HE
+  if (name === "The Compass") {
+    return (
+      <span className="inline-flex items-baseline font-serif text-[#c8a96a]">
+        <span className="text-[1.08em] leading-none">T</span>
+        <span className="text-[0.82em] tracking-[0.00em] leading-none">HE</span>
+        <span className="ml-[0.18em] text-[1.08em] leading-none">C</span>
+        <span className="text-[0.82em] tracking-[0.00em] leading-none">OMPASS</span>
       </span>
+    );
+  }
 
-      <span className="ml-[0.18em] text-[1.08em] leading-none">
-        C
+  if (name === "Harmonize") {
+    return (
+      <span className="font-serif text-[#c8a96a] tracking-[0.01em]">
+        <span className="text-[1.18em] leading-none">H</span>
+        ARMONIZE
       </span>
-
-      <span className="text-[0.82em] tracking-[0.00em] leading-none">
-        OMPASS
-      </span>
-    </span>
-  );
-}
-
-if (name === "Harmonize") {
-  return (
-    <span className="font-serif text-[#c8a96a] tracking-[0.01em]">
-      <span className="text-[1.18em] leading-none">H</span>
-      ARMONIZE
-    </span>
-  );
-}
+    );
+  }
 
   return <span className="font-serif">{name}</span>;
 }
