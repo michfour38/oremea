@@ -1,6 +1,6 @@
 "use client";
 
-import { DayPromptDTO, PromptThreadDTO } from "./journey.service";
+import { DayPromptDTO, PromptThreadDTO } from "./resonance.service";
 import {
   submitPromptAction,
   toggleWitnessAction,
