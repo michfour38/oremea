@@ -16,7 +16,7 @@ import {
   approveAnalysisPublic,
   declineAnalysisPublic,
   makeAnalysisPrivateAgain,
-} from "./journey.service";
+} from "./resonance.service";
 
 import { getMemberWaveContext } from "../../../src/lib/wave/wave.service";
 import { markWaveDayComplete } from "../../../src/lib/wave/wave.completion";
