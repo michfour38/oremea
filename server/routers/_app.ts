@@ -4,19 +4,11 @@
 
 import { router } from "../trpc";
 import { adminRouter } from "./admin";
-import { journeyRouter } from "./journey";
 import { profileRouter } from "./profile";
-import { cohortRouter } from "./cohort";
-import { reflectionRouter } from "./reflection";
-import { inquiryRouter } from "./inquiry";
 
 export const appRouter = router({
   admin: adminRouter,
-  journey: journeyRouter,
   profile: profileRouter,
-  cohort: cohortRouter,
-  reflection: reflectionRouter,
-  inquiry: inquiryRouter,
 });
 
 export type AppRouter = typeof appRouter;
