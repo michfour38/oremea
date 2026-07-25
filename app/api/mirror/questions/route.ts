@@ -1,6 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+
 import { prisma } from "@/lib/prisma";
+import { getResonanceWeekState } from "@/src/lib/resonance/resonance-week-state";
 
 function parseQuestions(output: string) {
   return output
@@ -10,7 +12,7 @@ function parseQuestions(output: string) {
         .trim()
         .replace(/^[-•]\s*/, "")
         .replace(/^\d+[\).\s-]+/, "")
-        .trim()
+        .trim(),
     )
     .filter((line: string) => line.includes("?"))
     .slice(0, 2);
@@ -67,6 +69,64 @@ ${reflections.join("\n\n")}
   return questions.length === 2 ? questions : null;
 }
 
+async function assertActiveCompletedDay(
+  userId: string,
+  weekNumber: number,
+  dayNumber: number,
+) {
+  if (
+    !Number.isInteger(weekNumber) ||
+    weekNumber < 1 ||
+    weekNumber > 10 ||
+    !Number.isInteger(dayNumber) ||
+    dayNumber < 1 ||
+    dayNumber > 7
+  ) {
+    return null;
+  }
+
+  const state = await getResonanceWeekState(userId);
+  if (state.activeWeek !== weekNumber) return null;
+
+  const day = await prisma.resonance_days.findFirst({
+    where: {
+      day_number: dayNumber,
+      resonance_weeks: {
+        week_number: weekNumber,
+        is_published: true,
+      },
+    },
+    select: {
+      day_prompts: {
+        where: { is_published: true },
+        orderBy: { prompt_order: "asc" },
+        select: {
+          id: true,
+          prompt_completions: {
+            where: { user_id: userId },
+            select: { response: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!day || day.day_prompts.length === 0) return null;
+
+  const allPromptsCompleted = day.day_prompts.every(
+    (prompt) => prompt.prompt_completions.length > 0,
+  );
+
+  if (!allPromptsCompleted) return null;
+
+  const reflections = day.day_prompts
+    .flatMap((prompt) => prompt.prompt_completions)
+    .map((completion) => completion.response?.trim())
+    .filter((value): value is string => Boolean(value));
+
+  return reflections.length > 0 ? reflections : null;
+}
+
 export async function GET(request: Request) {
   const { userId } = await auth();
 
@@ -82,23 +142,22 @@ export async function GET(request: Request) {
     return NextResponse.json({ questions: [] }, { status: 400 });
   }
 
-  const existing = await prisma.mirror_responses.findFirst({
+  const existing = await prisma.resonance_day_guidance.findUnique({
     where: {
-      user_id: userId,
-      week_number: weekNumber,
-      day_number: dayNumber,
-      tier: "lite",
+      user_id_week_number_day_number: {
+        user_id: userId,
+        week_number: weekNumber,
+        day_number: dayNumber,
+      },
     },
-    orderBy: { created_at: "desc" },
-    select: { output: true },
+    select: {
+      question_one: true,
+      question_two: true,
+    },
   });
 
-  if (!existing?.output) {
-    return NextResponse.json({ questions: [] });
-  }
-
   return NextResponse.json({
-    questions: parseQuestions(existing.output),
+    questions: existing ? [existing.question_one, existing.question_two] : [],
   });
 }
 
@@ -117,47 +176,37 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid params" }, { status: 400 });
   }
 
-  const existing = await prisma.mirror_responses.findFirst({
+  const existing = await prisma.resonance_day_guidance.findUnique({
     where: {
-      user_id: userId,
-      week_number: weekNumber,
-      day_number: dayNumber,
-      tier: "lite",
-    },
-    orderBy: { created_at: "desc" },
-    select: { output: true },
-  });
-
-  if (existing?.output) {
-    const savedQuestions = parseQuestions(existing.output);
-
-    if (savedQuestions.length === 2) {
-      return NextResponse.json({ questions: savedQuestions });
-    }
-  }
-
-  const completions = await prisma.prompt_completions.findMany({
-    where: {
-      user_id: userId,
-      day_prompts: {
-        resonance_days: {
-          day_number: dayNumber,
-          resonance_weeks: {
-            week_number: weekNumber,
-          },
-        },
+      user_id_week_number_day_number: {
+        user_id: userId,
+        week_number: weekNumber,
+        day_number: dayNumber,
       },
     },
-    orderBy: { created_at: "asc" },
-    select: { response: true },
+    select: {
+      question_one: true,
+      question_two: true,
+    },
   });
 
-  const reflections: string[] = completions
-    .map((c: { response: string | null }) => c.response?.trim())
-    .filter((value): value is string => Boolean(value));
+  if (existing) {
+    return NextResponse.json({
+      questions: [existing.question_one, existing.question_two],
+    });
+  }
 
-  if (reflections.length === 0) {
-    return NextResponse.json({ error: "No reflections found" }, { status: 400 });
+  const reflections = await assertActiveCompletedDay(
+    userId,
+    weekNumber,
+    dayNumber,
+  );
+
+  if (!reflections) {
+    return NextResponse.json(
+      { error: "Complete the current day before generating questions" },
+      { status: 400 },
+    );
   }
 
   const questions = await callQuestionAPI(reflections);
@@ -165,24 +214,24 @@ export async function POST(request: Request) {
   if (!questions) {
     return NextResponse.json(
       { error: "Could not generate questions" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
-  await prisma.mirror_responses.create({
-  data: {
-    user_id: userId,
-    week_number: weekNumber,
-    day_number: dayNumber,
-    tier: "lite",
-    output: questions.join("\n"),
-    input_snapshot: {
-      type: "two_questions",
-      reflections,
-      questions,
+  await prisma.resonance_day_guidance.create({
+    data: {
+      user_id: userId,
+      week_number: weekNumber,
+      day_number: dayNumber,
+      question_one: questions[0],
+      question_two: questions[1],
+      input_snapshot: {
+        type: "two_questions",
+        reflections,
+        questions,
+      },
     },
-  },
-});
+  });
 
   return NextResponse.json({ questions });
 }
