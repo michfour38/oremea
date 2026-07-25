@@ -2,17 +2,26 @@
 
 import { useEffect, useState } from "react";
 
-import { MirrorResponseDTO } from "./mirror.service";
 import {
   completeResonanceWeekAction,
   continueResonanceDayAction,
 } from "../resonance/actions";
 import ContinueDayButton from "../resonance/continue-day-button";
 
+type MirrorDisplay = {
+  id: string;
+  userId: string;
+  weekNumber: number;
+  dayNumber: number;
+  tier: "full";
+  output: string;
+  createdAt: string;
+};
+
 interface MirrorOutputProps {
   weekNumber: number;
   dayNumber: number;
-  mirror: Omit<MirrorResponseDTO, "inputSnapshot"> | null;
+  mirror: MirrorDisplay | null;
   reflectionsCompleted: boolean;
 }
 
@@ -42,16 +51,14 @@ export default function MirrorOutput({
   reflectionsCompleted,
 }: MirrorOutputProps) {
   const [questions, setQuestions] = useState<string[]>([]);
+  const [answerOne, setAnswerOne] = useState("");
+  const [answerTwo, setAnswerTwo] = useState("");
+  const [answersSaved, setAnswersSaved] = useState(false);
+  const [answersSaving, setAnswersSaving] = useState(false);
+  const [answersError, setAnswersError] = useState(false);
   const [questionsLoading, setQuestionsLoading] = useState(false);
   const [questionsError, setQuestionsError] = useState(false);
   const [isGeneratingMirror, setIsGeneratingMirror] = useState(false);
-  const [feedbackState, setFeedbackState] = useState<
-    "idle" | "saving" | "saved" | "error"
-  >("idle");
-  const [selectedFeedback, setSelectedFeedback] = useState<
-    "yes" | "not_quite" | null
-  >(null);
-  const [note, setNote] = useState("");
 
   const isWeekClose = dayNumber === 7;
 
@@ -71,6 +78,13 @@ export default function MirrorOutput({
         if (Array.isArray(data?.questions) && data.questions.length === 2) {
           setQuestions(data.questions);
         }
+
+        if (Array.isArray(data?.answers) && data.answers.length === 2) {
+          setAnswerOne(typeof data.answers[0] === "string" ? data.answers[0] : "");
+          setAnswerTwo(typeof data.answers[1] === "string" ? data.answers[1] : "");
+        }
+
+        setAnswersSaved(data?.answered === true);
       } catch (error) {
         console.error("Saved 2Q load failed:", error);
       }
@@ -109,6 +123,13 @@ export default function MirrorOutput({
       }
 
       setQuestions(data.questions);
+
+      if (Array.isArray(data?.answers) && data.answers.length === 2) {
+        setAnswerOne(typeof data.answers[0] === "string" ? data.answers[0] : "");
+        setAnswerTwo(typeof data.answers[1] === "string" ? data.answers[1] : "");
+      }
+
+      setAnswersSaved(data?.answered === true);
     } catch (error) {
       console.error("Questions generation failed:", error);
       setQuestionsError(true);
@@ -117,32 +138,39 @@ export default function MirrorOutput({
     }
   }
 
-  async function submitFeedback(
-    feedback: "yes" | "not_quite",
-    customNote = "",
-  ) {
-    if (feedbackState === "saving") return;
+  async function saveAnswers() {
+    if (answersSaving || !answerOne.trim() || !answerTwo.trim()) return;
 
-    setFeedbackState("saving");
-    setSelectedFeedback(feedback);
+    setAnswersSaving(true);
+    setAnswersError(false);
 
     try {
-      const res = await fetch("/api/mirror/feedback", {
-        method: "POST",
+      const res = await fetch("/api/mirror/questions", {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           weekNumber,
-          dayNumber: 7,
-          feedback,
-          note: feedback === "not_quite" ? customNote : "",
+          dayNumber,
+          answerOne,
+          answerTwo,
         }),
       });
 
-      if (!res.ok) throw new Error("Feedback request failed");
-      setFeedbackState("saved");
+      if (!res.ok) throw new Error("2Q answers could not be saved");
+
+      const data = await res.json();
+      if (!Array.isArray(data?.answers) || data.answers.length !== 2) {
+        throw new Error("2Q answer response was invalid");
+      }
+
+      setAnswerOne(data.answers[0]);
+      setAnswerTwo(data.answers[1]);
+      setAnswersSaved(data?.answered === true);
     } catch (error) {
-      console.error("Mirror feedback failed:", error);
-      setFeedbackState("error");
+      console.error("2Q answer save failed:", error);
+      setAnswersError(true);
+    } finally {
+      setAnswersSaving(false);
     }
   }
 
@@ -161,14 +189,53 @@ export default function MirrorOutput({
         </div>
 
         {questions.length === 2 ? (
-          <div className="space-y-4 text-sm leading-7 text-[#efe4c6]">
-            <p>{questions[0]}</p>
-            <p>{questions[1]}</p>
+          <div className="space-y-5">
+            <div className="space-y-3">
+              <p className="text-sm leading-7 text-[#efe4c6]">{questions[0]}</p>
+              <textarea
+                value={answerOne}
+                onChange={(event) => {
+                  setAnswerOne(event.target.value);
+                  setAnswersSaved(false);
+                }}
+                rows={4}
+                placeholder="Stay with this question..."
+                className="w-full resize-none rounded-2xl border border-[#6d5b2b]/35 bg-black/35 px-4 py-3 text-sm leading-7 text-[#efe4c6] placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-[#8a7331]/50"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-sm leading-7 text-[#efe4c6]">{questions[1]}</p>
+              <textarea
+                value={answerTwo}
+                onChange={(event) => {
+                  setAnswerTwo(event.target.value);
+                  setAnswersSaved(false);
+                }}
+                rows={4}
+                placeholder="Stay with this question..."
+                className="w-full resize-none rounded-2xl border border-[#6d5b2b]/35 bg-black/35 px-4 py-3 text-sm leading-7 text-[#efe4c6] placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-[#8a7331]/50"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+              <div className="text-xs text-zinc-500">
+                {answersSaved ? "2Q saved" : "Answer both questions to continue."}
+              </div>
+              <button
+                type="button"
+                onClick={() => void saveAnswers()}
+                disabled={answersSaving || !answerOne.trim() || !answerTwo.trim()}
+                className="inline-flex min-w-[110px] items-center justify-center rounded-xl border border-[#8a7331]/50 bg-[#2a2210] px-4 py-2 text-sm text-[#f3e7bf] transition-colors hover:bg-[#352b15] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {answersSaving ? <LoadingDots /> : answersSaved ? "Saved" : "Save 2Q"}
+              </button>
+            </div>
           </div>
         ) : (
           <button
             type="button"
-            onClick={generateQuestions}
+            onClick={() => void generateQuestions()}
             disabled={questionsLoading}
             className="inline-flex min-w-[180px] items-center justify-center rounded-xl border border-[#8a7331]/50 bg-[#2a2210] px-4 py-2 text-sm text-[#f3e7bf] transition-colors hover:bg-[#352b15] disabled:cursor-not-allowed disabled:opacity-60"
           >
@@ -180,7 +247,11 @@ export default function MirrorOutput({
           <p className="text-xs text-red-400">Couldn&apos;t generate questions. Try again.</p>
         ) : null}
 
-        {questions.length === 2 && !isWeekClose ? (
+        {answersError ? (
+          <p className="text-xs text-red-400">Couldn&apos;t save your 2Q. Try again.</p>
+        ) : null}
+
+        {answersSaved && !isWeekClose ? (
           <form action={continueResonanceDayAction} className="flex justify-end pt-2">
             <input type="hidden" name="weekNumber" value={weekNumber} />
             <input type="hidden" name="dayNumber" value={dayNumber} />
@@ -189,7 +260,7 @@ export default function MirrorOutput({
         ) : null}
       </section>
 
-      {questions.length === 2 && isWeekClose ? (
+      {answersSaved && isWeekClose ? (
         <section className="space-y-5 rounded-3xl border border-[#6d5b2b]/35 bg-[#15120c] px-6 py-6">
           <div className="space-y-2">
             <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#b6a36a]">
@@ -233,63 +304,10 @@ export default function MirrorOutput({
                   ))}
               </div>
 
-              <div className="space-y-3 border-t border-zinc-800 pt-4">
-                <p className="text-xs text-zinc-500">Did this feel accurate?</p>
-
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => void submitFeedback("yes")}
-                    disabled={feedbackState === "saving" || feedbackState === "saved"}
-                    className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:border-zinc-500 disabled:opacity-50"
-                  >
-                    Yes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedFeedback("not_quite");
-                      setFeedbackState("idle");
-                    }}
-                    disabled={feedbackState === "saving" || feedbackState === "saved"}
-                    className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:border-zinc-500 disabled:opacity-50"
-                  >
-                    Not quite
-                  </button>
-                </div>
-
-                {selectedFeedback === "not_quite" && feedbackState !== "saved" ? (
-                  <div className="space-y-3">
-                    <textarea
-                      value={note}
-                      onChange={(event) => setNote(event.target.value)}
-                      rows={3}
-                      placeholder="What felt off?"
-                      className="w-full resize-none rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm leading-7 text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-700"
-                    />
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => void submitFeedback("not_quite", note)}
-                        disabled={feedbackState === "saving"}
-                        className="text-xs text-zinc-400 transition-colors hover:text-zinc-200"
-                      >
-                        Send feedback
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
-
-                {feedbackState === "saved" ? (
-                  <p className="text-xs text-zinc-500">Thanks. That helps refine the Mirror.</p>
-                ) : null}
-
-                {feedbackState === "error" ? (
-                  <p className="text-xs text-red-400">Couldn&apos;t save feedback. Try again.</p>
-                ) : null}
-              </div>
-
-              <form action={completeResonanceWeekAction} className="flex justify-end border-t border-zinc-800 pt-5">
+              <form
+                action={completeResonanceWeekAction}
+                className="flex justify-end border-t border-zinc-800 pt-5"
+              >
                 <input type="hidden" name="weekNumber" value={weekNumber} />
                 <button
                   type="submit"
