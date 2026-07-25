@@ -1,43 +1,21 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
-import {
-  activateResonanceWeek,
-  completeResonanceWeek,
-} from "@/src/lib/resonance/resonance-week-state";
-import {
-  completeResonanceRun,
-  getActiveResonanceRun,
-} from "@/src/lib/resonance/resonance-week-run";
+import { completeRunPrompt } from "@/src/lib/resonance/complete-run-prompt";
 import {
   getRunContinuedDays,
   getRunGuidance,
   getRunMirror,
   getRunPromptCompletions,
 } from "@/src/lib/resonance/resonance-run-data";
-import { completeRunPrompt } from "@/src/lib/resonance/complete-run-prompt";
-
 import {
-  toggleWitness,
-  toggleResonated,
-  upsertAnalysis,
-  requestAnalysisPublic,
-  withdrawAnalysisPublicRequest,
-  approveAnalysisPublic,
-  declineAnalysisPublic,
-  makeAnalysisPrivateAgain,
-} from "./resonance.service";
-
-import {
-  signalReaction,
-  signalAnalyze,
-  signalResonanceOnCompletion,
-  signalDepthAlignment,
-} from "../signals/signals.service";
+  completeResonanceRun,
+  getActiveResonanceRun,
+} from "@/src/lib/resonance/resonance-week-run";
 
 async function getCurrentActiveDay(runId: string) {
   const completedDays = await getRunContinuedDays(runId);
@@ -131,22 +109,6 @@ async function continueRunDay(params: {
   `;
 }
 
-export async function activateResonanceWeekAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const weekNumber = Number(formData.get("weekNumber"));
-  if (!weekNumber) return;
-
-  // Kept temporarily for legacy access while the purchase entry point is
-  // migrated to create a Resonance run directly.
-  await activateResonanceWeek(userId, weekNumber);
-
-  revalidatePath("/entry");
-  revalidatePath("/resonance");
-  redirect("/resonance");
-}
-
 export async function submitPromptAction(formData: FormData) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
@@ -189,129 +151,8 @@ export async function submitPromptAction(formData: FormData) {
     response,
   });
 
-  try {
-    signalResonanceOnCompletion(userId, promptId, response);
-    signalDepthAlignment(userId, promptId, response);
-  } catch (error) {
-    console.error("Signal side effects failed:", error);
-  }
-
   revalidatePath("/resonance");
   redirect("/resonance");
-}
-
-// Legacy social actions remain available only for historical data/components.
-// The active Resonance journey no longer exposes or calls them.
-export async function toggleWitnessAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const completionId = String(formData.get("completionId"));
-  if (!completionId) return;
-
-  await toggleWitness(completionId, userId);
-  signalReaction(userId, completionId, "witness");
-
-  revalidatePath("/resonance");
-}
-
-export async function toggleResonatedAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const completionId = String(formData.get("completionId"));
-  if (!completionId) return;
-
-  await toggleResonated(completionId, userId);
-  signalReaction(userId, completionId, "resonated");
-
-  revalidatePath("/resonance");
-}
-
-export async function submitAnalysisAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const completionId = String(formData.get("completionId"));
-  const content = String(formData.get("content") ?? "").trim();
-
-  if (!completionId || !content) return;
-
-  await upsertAnalysis(completionId, userId, content);
-  signalAnalyze(userId, completionId);
-
-  revalidatePath("/resonance");
-}
-
-export async function requestAnalysisPublicAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const analysisId = String(formData.get("analysisId"));
-  if (!analysisId) return;
-
-  await requestAnalysisPublic(analysisId, userId);
-  revalidatePath("/resonance");
-}
-
-export async function withdrawAnalysisPublicRequestAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const analysisId = String(formData.get("analysisId"));
-  if (!analysisId) return;
-
-  await withdrawAnalysisPublicRequest(analysisId, userId);
-  revalidatePath("/resonance");
-}
-
-export async function approveAnalysisPublicAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const analysisId = String(formData.get("analysisId"));
-  if (!analysisId) return;
-
-  await approveAnalysisPublic(analysisId, userId);
-  revalidatePath("/resonance");
-}
-
-export async function declineAnalysisPublicAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const analysisId = String(formData.get("analysisId"));
-  if (!analysisId) return;
-
-  await declineAnalysisPublic(analysisId, userId);
-  revalidatePath("/resonance");
-}
-
-export async function makeAnalysisPrivateAgainAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const analysisId = String(formData.get("analysisId"));
-  if (!analysisId) return;
-
-  await makeAnalysisPrivateAgain(analysisId, userId);
-  revalidatePath("/resonance");
-}
-
-export async function updatePathwayAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const pathway = String(formData.get("pathway") ?? "").trim();
-
-  if (pathway !== "discover" && pathway !== "relate") return;
-
-  await prisma.profiles.update({
-    where: { id: userId },
-    data: { pathway },
-  });
-
-  revalidatePath("/resonance");
 }
 
 export async function continueResonanceDayAction(formData: FormData) {
@@ -373,10 +214,6 @@ export async function completeResonanceWeekAction(formData: FormData) {
   });
 
   await completeResonanceRun(userId, activeRun.id);
-
-  // Keep the legacy entitlement ledger synchronized until /entry purchase
-  // selection is moved fully onto run purchases.
-  await completeResonanceWeek(userId, weekNumber);
 
   revalidatePath("/entry");
   revalidatePath("/resonance");
