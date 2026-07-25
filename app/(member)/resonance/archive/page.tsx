@@ -3,7 +3,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
-import { getResonanceWeekState } from "@/src/lib/resonance/resonance-week-state";
+import { backfillLegacyResonanceGuidance } from "@/src/lib/resonance/backfill-legacy-guidance";
+import {
+  getResonanceWeekRuns,
+  type ResonanceWeekRun,
+} from "@/src/lib/resonance/resonance-week-run";
 import MemberNav from "../../member-nav";
 
 type Props = {
@@ -13,18 +17,43 @@ type Props = {
   };
 };
 
+type ReflectionRow = {
+  id: string;
+  run_id: string;
+  response: string;
+  created_at: Date;
+  question: string;
+  prompt_order: number;
+  day_number: number;
+};
+
+type GuidanceRow = {
+  run_id: string;
+  day_number: number;
+  question_one: string;
+  question_two: string;
+  answer_one: string | null;
+  answer_two: string | null;
+  generated_at: Date;
+};
+
+type MirrorRow = {
+  id: string;
+  run_id: string;
+  output: string;
+  created_at: Date;
+};
+
 type ReflectionItem = {
   id: string;
   response: string;
   question: string;
   promptOrder: number;
   createdAt: Date;
-  weekNumber: number;
   dayNumber: number;
 };
 
 type GuidanceItem = {
-  weekNumber: number;
   dayNumber: number;
   questionOne: string;
   questionTwo: string;
@@ -35,7 +64,6 @@ type GuidanceItem = {
 
 type MirrorItem = {
   id: string;
-  weekNumber: number;
   output: string;
   createdAt: Date;
 };
@@ -46,12 +74,16 @@ type DayGroup = {
   guidance: GuidanceItem | null;
 };
 
-type WeekGroup = {
+type RunGroup = {
+  runId: string;
   weekNumber: number;
+  runNumber: number;
   title: string;
   theme: string;
-  journeyPosition: number | null;
-  status: "completed" | "active" | "preserved";
+  journeyPosition: number;
+  status: ResonanceWeekRun["status"];
+  startedAt: Date;
+  completedAt: Date | null;
   days: DayGroup[];
   mirror: MirrorItem | null;
 };
@@ -60,12 +92,11 @@ type SearchHit = {
   key: string;
   kind: "Reflection" | "2Q" | "Mirror";
   weekNumber: number;
+  runNumber: number;
   dayNumber: number | null;
   title: string;
   body: string;
 };
-
-const RESONANCE_WEEK_PREFIX = "resonance-week:";
 
 const archiveBackgroundDesktop = "/images/desktop/bg-archive.webp";
 const archiveBackgroundMobile = "/images/mobile/bg-archive.webp";
@@ -74,29 +105,6 @@ const archiveOverlayStyle = {
   background:
     "radial-gradient(circle at top, rgba(34,40,48,0.14) 0%, rgba(10,10,10,0.34) 40%, rgba(0,0,0,0.66) 100%), linear-gradient(to bottom, rgba(0,0,0,0.14), rgba(0,0,0,0.38), rgba(0,0,0,0.58))",
 };
-
-function parseWeekNumber(productKey: string) {
-  if (!productKey.startsWith(RESONANCE_WEEK_PREFIX)) return null;
-
-  const weekNumber = Number(productKey.slice(RESONANCE_WEEK_PREFIX.length));
-  return Number.isInteger(weekNumber) && weekNumber >= 1 && weekNumber <= 10
-    ? weekNumber
-    : null;
-}
-
-function parseLegacyQuestions(output: string) {
-  return output
-    .split("\n")
-    .map((line) =>
-      line
-        .trim()
-        .replace(/^[-•]\s*/, "")
-        .replace(/^\d+[\).\s-]+/, "")
-        .trim(),
-    )
-    .filter((line) => line.includes("?"))
-    .slice(0, 2);
-}
 
 function cleanMirrorOutput(text: string) {
   return text
@@ -120,54 +128,8 @@ function truncate(text: string, max = 240) {
   return `${text.slice(0, max).trim()}…`;
 }
 
-async function getCompletedJourneyOrder(userId: string, activeWeek: number | null) {
-  const [weekEntitlements, daySevenContinues, fullMirrors] = await Promise.all([
-    prisma.oremea_entitlements.findMany({
-      where: {
-        user_id: userId,
-        status: "completed",
-        product_key: { startsWith: RESONANCE_WEEK_PREFIX },
-      },
-      orderBy: { updated_at: "asc" },
-      select: { product_key: true, updated_at: true },
-    }),
-    prisma.resonance_day_continues.findMany({
-      where: { user_id: userId, day_number: 7 },
-      orderBy: { continued_at: "asc" },
-      select: { week_number: true, continued_at: true },
-    }),
-    prisma.mirror_responses.findMany({
-      where: { user_id: userId, day_number: 7, tier: "full" },
-      orderBy: { created_at: "asc" },
-      select: { week_number: true, created_at: true },
-    }),
-  ]);
-
-  const completedAtByWeek = new Map<number, Date>();
-
-  for (const row of fullMirrors) {
-    if (row.week_number === activeWeek) continue;
-    completedAtByWeek.set(row.week_number, row.created_at);
-  }
-
-  for (const row of daySevenContinues) {
-    if (row.week_number === activeWeek) continue;
-
-    const existing = completedAtByWeek.get(row.week_number);
-    if (!existing || row.continued_at > existing) {
-      completedAtByWeek.set(row.week_number, row.continued_at);
-    }
-  }
-
-  for (const row of weekEntitlements) {
-    const weekNumber = parseWeekNumber(row.product_key);
-    if (weekNumber === null || weekNumber === activeWeek) continue;
-    completedAtByWeek.set(weekNumber, row.updated_at);
-  }
-
-  return Array.from(completedAtByWeek.entries())
-    .sort((a, b) => a[1].getTime() - b[1].getTime())
-    .map(([weekNumber]) => weekNumber);
+function runSortTime(run: ResonanceWeekRun) {
+  return (run.completedAt ?? run.startedAt).getTime();
 }
 
 function DayArchiveCard({ day }: { day: DayGroup }) {
@@ -216,7 +178,7 @@ function DayArchiveCard({ day }: { day: DayGroup }) {
             <p className="text-[11px] uppercase tracking-[0.2em] text-[#b6a36a]">
               2Q
             </p>
-            <div className="mt-4 space-y-4 text-sm leading-7 text-[#efe4c6]">
+            <div className="mt-4 space-y-5 text-sm leading-7 text-[#efe4c6]">
               <div>
                 <p>{day.guidance.questionOne}</p>
                 {day.guidance.answerOne ? (
@@ -241,7 +203,7 @@ function DayArchiveCard({ day }: { day: DayGroup }) {
   );
 }
 
-function WeekArchiveCard({ group }: { group: WeekGroup }) {
+function RunArchiveCard({ group }: { group: RunGroup }) {
   return (
     <details
       open={group.status === "active"}
@@ -251,14 +213,17 @@ function WeekArchiveCard({ group }: { group: WeekGroup }) {
         <div className="flex items-start justify-between gap-5">
           <div>
             <p className="text-[11px] uppercase tracking-[0.2em] text-[#f1dfb4]/65">
-              {group.journeyPosition
-                ? `Journey position ${group.journeyPosition} · `
-                : ""}
-              Week {group.weekNumber}
+              Journey position {group.journeyPosition} · Week {group.weekNumber} · Run {group.runNumber}
             </p>
             <h2 className="mt-2 text-2xl text-white">{group.title}</h2>
             <p className="mt-2 max-w-xl text-sm leading-7 text-zinc-400">
               {group.theme}
+            </p>
+            <p className="mt-3 text-xs text-zinc-500">
+              Began {formatArchiveDate(group.startedAt)}
+              {group.completedAt
+                ? ` · Completed ${formatArchiveDate(group.completedAt)}`
+                : ""}
             </p>
           </div>
 
@@ -300,7 +265,7 @@ function WeekArchiveCard({ group }: { group: WeekGroup }) {
           </section>
         ) : group.status === "completed" ? (
           <p className="text-sm text-zinc-500">
-            This completed week does not have a preserved weekly Mirror.
+            This completed run does not have a preserved cumulative Mirror.
           </p>
         ) : null}
       </div>
@@ -312,90 +277,90 @@ export default async function ArchivePage({ searchParams }: Props) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in?redirect_url=%2Fresonance%2Farchive");
 
-  const weekState = await getResonanceWeekState(userId);
+  await backfillLegacyResonanceGuidance(userId);
 
-  const [weeks, completions, guidanceRows, mirrorRows, completedJourneyOrder] =
-    await Promise.all([
-      prisma.resonance_weeks.findMany({
-        orderBy: { week_number: "asc" },
-        select: {
-          week_number: true,
-          title: true,
-          theme: true,
-        },
-      }),
-      prisma.prompt_completions.findMany({
-        where: {
-          user_id: userId,
-          response: { not: "" },
-        },
-        orderBy: { created_at: "asc" },
-        select: {
-          id: true,
-          response: true,
-          created_at: true,
-          day_prompts: {
-            select: {
-              content: true,
-              prompt_order: true,
-              resonance_days: {
-                select: {
-                  day_number: true,
-                  resonance_weeks: {
-                    select: { week_number: true },
-                  },
-                },
-              },
-            },
-          },
-        },
-      }),
-      prisma.resonance_day_guidance.findMany({
-        where: { user_id: userId },
-        orderBy: [{ week_number: "asc" }, { day_number: "asc" }],
-        select: {
-          week_number: true,
-          day_number: true,
-          question_one: true,
-          question_two: true,
-          answer_one: true,
-          answer_two: true,
-          generated_at: true,
-        },
-      }),
-      prisma.mirror_responses.findMany({
-        where: { user_id: userId },
-        orderBy: { created_at: "asc" },
-        select: {
-          id: true,
-          week_number: true,
-          day_number: true,
-          output: true,
-          tier: true,
-          created_at: true,
-        },
-      }),
-      getCompletedJourneyOrder(userId, weekState.activeWeek),
-    ]);
+  const [weeks, runs] = await Promise.all([
+    prisma.resonance_weeks.findMany({
+      orderBy: { week_number: "asc" },
+      select: {
+        week_number: true,
+        title: true,
+        theme: true,
+      },
+    }),
+    getResonanceWeekRuns(userId),
+  ]);
+
+  const runIds = runs.map((run) => run.id);
+
+  const [reflectionRows, guidanceRows, mirrorRows] =
+    runIds.length > 0
+      ? await Promise.all([
+          prisma.$queryRaw<ReflectionRow[]>`
+            SELECT
+              pc."id",
+              pc."run_id",
+              pc."response",
+              pc."created_at",
+              dp."content" AS "question",
+              dp."prompt_order",
+              rd."day_number"
+            FROM "prompt_completions" pc
+            JOIN "day_prompts" dp ON dp."id" = pc."prompt_id"
+            JOIN "journey_days" rd ON rd."id" = dp."day_id"
+            WHERE pc."run_id" = ANY(${runIds}::uuid[])
+              AND BTRIM(pc."response") <> ''
+            ORDER BY pc."created_at" ASC
+          `,
+          prisma.$queryRaw<GuidanceRow[]>`
+            SELECT
+              "run_id",
+              "day_number",
+              "question_one",
+              "question_two",
+              "answer_one",
+              "answer_two",
+              "generated_at"
+            FROM "resonance_day_guidance"
+            WHERE "run_id" = ANY(${runIds}::uuid[])
+            ORDER BY "generated_at" ASC, "day_number" ASC
+          `,
+          prisma.$queryRaw<MirrorRow[]>`
+            SELECT
+              "id",
+              "run_id",
+              "output",
+              "created_at"
+            FROM "mirror_responses"
+            WHERE "run_id" = ANY(${runIds}::uuid[])
+              AND "day_number" = 7
+              AND "tier" = 'full'
+            ORDER BY "created_at" ASC
+          `,
+        ])
+      : [[], [], []];
 
   const weekMeta = new Map(weeks.map((week) => [week.week_number, week]));
+  const runById = new Map(runs.map((run) => [run.id, run]));
 
-  const reflections: ReflectionItem[] = completions.map((completion) => ({
-    id: completion.id,
-    response: completion.response,
-    question: completion.day_prompts.content,
-    promptOrder: completion.day_prompts.prompt_order,
-    createdAt: completion.created_at,
-    weekNumber:
-      completion.day_prompts.resonance_days.resonance_weeks.week_number,
-    dayNumber: completion.day_prompts.resonance_days.day_number,
-  }));
+  const reflectionsByRunDay = new Map<string, ReflectionItem[]>();
+  for (const row of reflectionRows) {
+    const key = `${row.run_id}-${row.day_number}`;
+    const current = reflectionsByRunDay.get(key) ?? [];
+    current.push({
+      id: row.id,
+      response: row.response,
+      question: row.question,
+      promptOrder: row.prompt_order,
+      createdAt: row.created_at,
+      dayNumber: row.day_number,
+    });
+    reflectionsByRunDay.set(key, current);
+  }
 
-  const guidanceByDay = new Map<string, GuidanceItem>();
-
+  const guidanceByRunDay = new Map<string, GuidanceItem>();
   for (const row of guidanceRows) {
-    guidanceByDay.set(`${row.week_number}-${row.day_number}`, {
-      weekNumber: row.week_number,
+    guidanceByRunDay.set(`${row.run_id}-${row.day_number}`, {
       dayNumber: row.day_number,
       questionOne: row.question_one,
       questionTwo: row.question_two,
@@ -405,170 +370,139 @@ export default async function ArchivePage({ searchParams }: Props) {
     });
   }
 
-  // Preserve 2Q generated before resonance_day_guidance became the daily store.
+  const mirrorByRun = new Map<string, MirrorItem>();
   for (const row of mirrorRows) {
-    if (row.tier !== "lite") continue;
-
-    const key = `${row.week_number}-${row.day_number}`;
-    if (guidanceByDay.has(key)) continue;
-
-    const questions = parseLegacyQuestions(row.output);
-    if (questions.length !== 2) continue;
-
-    guidanceByDay.set(key, {
-      weekNumber: row.week_number,
-      dayNumber: row.day_number,
-      questionOne: questions[0],
-      questionTwo: questions[1],
-      answerOne: null,
-      answerTwo: null,
-      generatedAt: row.created_at,
-    });
-  }
-
-  const fullMirrorByWeek = new Map<number, MirrorItem>();
-  for (const row of mirrorRows) {
-    if (row.tier !== "full" || row.day_number !== 7) continue;
-
-    fullMirrorByWeek.set(row.week_number, {
+    mirrorByRun.set(row.run_id, {
       id: row.id,
-      weekNumber: row.week_number,
       output: row.output,
       createdAt: row.created_at,
     });
   }
 
-  const weeksWithData = new Set<number>();
-  for (const reflection of reflections) weeksWithData.add(reflection.weekNumber);
-  for (const guidance of guidanceByDay.values()) weeksWithData.add(guidance.weekNumber);
-  for (const mirror of fullMirrorByWeek.values()) weeksWithData.add(mirror.weekNumber);
-  for (const completedWeek of completedJourneyOrder) weeksWithData.add(completedWeek);
-  if (weekState.activeWeek !== null) weeksWithData.add(weekState.activeWeek);
+  const journeyRuns = [...runs].sort((a, b) => {
+    const timeDifference = runSortTime(a) - runSortTime(b);
+    if (timeDifference !== 0) return timeDifference;
+    if (a.weekNumber !== b.weekNumber) return a.weekNumber - b.weekNumber;
+    return a.runNumber - b.runNumber;
+  });
 
-  const completedPosition = new Map(
-    completedJourneyOrder.map((weekNumber, index) => [weekNumber, index + 1]),
+  const journeyPositionByRun = new Map(
+    journeyRuns.map((run, index) => [run.id, index + 1]),
   );
 
-  const remainingDataWeeks = Array.from(weeksWithData)
-    .filter(
-      (weekNumber) =>
-        !completedPosition.has(weekNumber) && weekNumber !== weekState.activeWeek,
-    )
-    .sort((a, b) => a - b);
-
-  const journeyWeekOrder = [
-    ...completedJourneyOrder,
-    ...(weekState.activeWeek !== null ? [weekState.activeWeek] : []),
-    ...remainingDataWeeks,
-  ];
-
-  const completedSet = new Set(completedJourneyOrder);
-
-  const weekGroups: WeekGroup[] = journeyWeekOrder
-    .map((weekNumber) => {
-      const meta = weekMeta.get(weekNumber);
+  const runGroups: RunGroup[] = journeyRuns
+    .map((run) => {
+      const meta = weekMeta.get(run.weekNumber);
       if (!meta) return null;
 
       const days = Array.from({ length: 7 }, (_, index) => index + 1)
         .map((dayNumber) => {
-          const dayReflections = reflections
-            .filter(
-              (reflection) =>
-                reflection.weekNumber === weekNumber &&
-                reflection.dayNumber === dayNumber,
-            )
-            .sort((a, b) => a.promptOrder - b.promptOrder);
-
+          const reflections = [
+            ...(reflectionsByRunDay.get(`${run.id}-${dayNumber}`) ?? []),
+          ].sort((a, b) => a.promptOrder - b.promptOrder);
           const guidance =
-            guidanceByDay.get(`${weekNumber}-${dayNumber}`) ?? null;
+            guidanceByRunDay.get(`${run.id}-${dayNumber}`) ?? null;
 
-          if (dayReflections.length === 0 && !guidance) return null;
+          if (reflections.length === 0 && !guidance) return null;
 
           return {
             dayNumber,
-            reflections: dayReflections,
+            reflections,
             guidance,
           } satisfies DayGroup;
         })
         .filter((day): day is DayGroup => day !== null);
 
       return {
-        weekNumber,
+        runId: run.id,
+        weekNumber: run.weekNumber,
+        runNumber: run.runNumber,
         title: meta.title,
         theme: meta.theme,
-        journeyPosition: completedPosition.get(weekNumber) ?? null,
-        status:
-          weekState.activeWeek === weekNumber
-            ? "active"
-            : completedSet.has(weekNumber)
-              ? "completed"
-              : "preserved",
+        journeyPosition: journeyPositionByRun.get(run.id) ?? 0,
+        status: run.status,
+        startedAt: run.startedAt,
+        completedAt: run.completedAt,
         days,
-        mirror: fullMirrorByWeek.get(weekNumber) ?? null,
-      } satisfies WeekGroup;
+        mirror: mirrorByRun.get(run.id) ?? null,
+      } satisfies RunGroup;
     })
-    .filter((group): group is WeekGroup => group !== null);
+    .filter((group): group is RunGroup => group !== null);
 
-  const requestedView = searchParams?.view ?? "day";
-  const view = requestedView === "search" ? "search" : requestedView === "week" ? "week" : "journey";
+  const requestedView = searchParams?.view ?? "journey";
+  const view =
+    requestedView === "search"
+      ? "search"
+      : requestedView === "week"
+        ? "week"
+        : "journey";
   const query = (searchParams?.q ?? "").trim().toLowerCase();
 
   const displayGroups =
     view === "week"
-      ? [...weekGroups].sort((a, b) => a.weekNumber - b.weekNumber)
-      : weekGroups;
+      ? [...runGroups].sort((a, b) => {
+          if (a.weekNumber !== b.weekNumber) return a.weekNumber - b.weekNumber;
+          return a.runNumber - b.runNumber;
+        })
+      : runGroups;
 
   const searchHits: SearchHit[] = query
     ? [
-        ...reflections.flatMap((reflection) => {
-          const haystack = `${reflection.question} ${reflection.response}`.toLowerCase();
+        ...reflectionRows.flatMap((row) => {
+          const run = runById.get(row.run_id);
+          if (!run) return [];
+          const haystack = `${row.question} ${row.response}`.toLowerCase();
           if (!haystack.includes(query)) return [];
 
           return [
             {
-              key: `reflection-${reflection.id}`,
+              key: `reflection-${row.id}`,
               kind: "Reflection" as const,
-              weekNumber: reflection.weekNumber,
-              dayNumber: reflection.dayNumber,
-              title: reflection.question,
-              body: reflection.response,
+              weekNumber: run.weekNumber,
+              runNumber: run.runNumber,
+              dayNumber: row.day_number,
+              title: row.question,
+              body: row.response,
             },
           ];
         }),
-        ...Array.from(guidanceByDay.values()).flatMap((guidance) => {
+        ...guidanceRows.flatMap((row) => {
+          const run = runById.get(row.run_id);
+          if (!run) return [];
           const body = [
-            guidance.questionOne,
-            guidance.answerOne ?? "",
-            guidance.questionTwo,
-            guidance.answerTwo ?? "",
+            row.question_one,
+            row.answer_one ?? "",
+            row.question_two,
+            row.answer_two ?? "",
           ].join("\n\n");
 
           if (!body.toLowerCase().includes(query)) return [];
 
           return [
             {
-              key: `guidance-${guidance.weekNumber}-${guidance.dayNumber}`,
+              key: `guidance-${row.run_id}-${row.day_number}`,
               kind: "2Q" as const,
-              weekNumber: guidance.weekNumber,
-              dayNumber: guidance.dayNumber,
-              title: `${guidance.questionOne}\n${guidance.questionTwo}`,
-              body: [guidance.answerOne, guidance.answerTwo]
-                .filter(Boolean)
-                .join("\n\n"),
+              weekNumber: run.weekNumber,
+              runNumber: run.runNumber,
+              dayNumber: row.day_number,
+              title: `${row.question_one}\n${row.question_two}`,
+              body: [row.answer_one, row.answer_two].filter(Boolean).join("\n\n"),
             },
           ];
         }),
-        ...Array.from(fullMirrorByWeek.values()).flatMap((mirror) => {
-          if (!mirror.output.toLowerCase().includes(query)) return [];
+        ...mirrorRows.flatMap((row) => {
+          const run = runById.get(row.run_id);
+          if (!run || !row.output.toLowerCase().includes(query)) return [];
 
           return [
             {
-              key: `mirror-${mirror.id}`,
+              key: `mirror-${row.id}`,
               kind: "Mirror" as const,
-              weekNumber: mirror.weekNumber,
+              weekNumber: run.weekNumber,
+              runNumber: run.runNumber,
               dayNumber: null,
               title: "Cumulative Mirror",
-              body: cleanMirrorOutput(mirror.output),
+              body: cleanMirrorOutput(row.output),
             },
           ];
         }),
@@ -597,14 +531,14 @@ export default async function ArchivePage({ searchParams }: Props) {
           <header className="space-y-3">
             <h1 className="text-3xl font-semibold text-white">What has stayed</h1>
             <p className="max-w-xl text-sm leading-7 text-zinc-400">
-              Return to the journey in the order you lived it, or revisit a week by
-              its own identity.
+              Return to each Resonance visit as it was lived. Repeating a room creates
+              a new run while the earlier visit stays intact.
             </p>
           </header>
 
           <nav className="flex flex-wrap gap-3">
             <Link
-              href="/resonance/archive?view=day"
+              href="/resonance/archive?view=journey"
               className={`rounded-full border px-4 py-2 text-sm transition ${
                 view === "journey"
                   ? "border-[#c8a96a]/60 text-[#f1dfb4]"
@@ -639,7 +573,7 @@ export default async function ArchivePage({ searchParams }: Props) {
             displayGroups.length > 0 ? (
               <div className="space-y-5">
                 {displayGroups.map((group) => (
-                  <WeekArchiveCard key={group.weekNumber} group={group} />
+                  <RunArchiveCard key={group.runId} group={group} />
                 ))}
               </div>
             ) : (
@@ -669,7 +603,7 @@ export default async function ArchivePage({ searchParams }: Props) {
                         className="rounded-2xl border border-zinc-800/80 bg-black/40 px-5 py-5"
                       >
                         <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-                          {hit.kind} · Week {hit.weekNumber}
+                          {hit.kind} · Week {hit.weekNumber} · Run {hit.runNumber}
                           {hit.dayNumber ? ` · Day ${hit.dayNumber}` : ""}
                         </p>
                         <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-400">
