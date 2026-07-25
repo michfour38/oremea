@@ -79,6 +79,14 @@ async function assertAllDayReflectionsComplete(
   }
 }
 
+function assertGuidanceAnswered(
+  guidance: Awaited<ReturnType<typeof getRunGuidance>>,
+) {
+  if (!guidance?.answerOne?.trim() || !guidance.answerTwo?.trim()) {
+    throw new Error("Answer both of today's 2Q before continuing.");
+  }
+}
+
 async function continueRunDay(params: {
   runId: string;
   userId: string;
@@ -168,9 +176,7 @@ export async function continueResonanceDayAction(formData: FormData) {
   await assertAllDayReflectionsComplete(activeRun.id, weekNumber, dayNumber);
 
   const guidance = await getRunGuidance(activeRun.id, dayNumber);
-  if (!guidance) {
-    throw new Error("Complete today's 2Q before continuing.");
-  }
+  assertGuidanceAnswered(guidance);
 
   await continueRunDay({
     runId: activeRun.id,
@@ -198,9 +204,7 @@ export async function completeResonanceWeekAction(formData: FormData) {
     getRunMirror(activeRun.id, 7),
   ]);
 
-  if (!guidance) {
-    throw new Error("Complete Day 7's 2Q before completing the week.");
-  }
+  assertGuidanceAnswered(guidance);
 
   if (!mirror || mirror.tier !== "full") {
     throw new Error("Open the weekly Mirror before completing the week.");
