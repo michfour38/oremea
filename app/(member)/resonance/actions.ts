@@ -30,6 +30,80 @@ import {
   signalDepthAlignment,
 } from "../signals/signals.service";
 
+async function getCurrentActiveDay(userId: string, weekNumber: number) {
+  const continues = await prisma.resonance_day_continues.findMany({
+    where: {
+      user_id: userId,
+      week_number: weekNumber,
+    },
+    select: { day_number: true },
+  });
+
+  const completedDays = new Set(continues.map((row) => row.day_number));
+
+  for (let dayNumber = 1; dayNumber <= 7; dayNumber += 1) {
+    if (!completedDays.has(dayNumber)) return dayNumber;
+  }
+
+  return null;
+}
+
+async function assertActiveDay(
+  userId: string,
+  weekNumber: number,
+  dayNumber: number,
+) {
+  const state = await getResonanceWeekState(userId);
+  if (state.activeWeek !== weekNumber) {
+    throw new Error("This Resonance week is not active.");
+  }
+
+  const currentDay = await getCurrentActiveDay(userId, weekNumber);
+  if (currentDay !== dayNumber) {
+    throw new Error("This Resonance day is not currently active.");
+  }
+}
+
+async function assertAllDayReflectionsComplete(
+  userId: string,
+  weekNumber: number,
+  dayNumber: number,
+) {
+  const day = await prisma.resonance_days.findFirst({
+    where: {
+      day_number: dayNumber,
+      resonance_weeks: {
+        week_number: weekNumber,
+        is_published: true,
+      },
+    },
+    select: {
+      day_prompts: {
+        where: { is_published: true },
+        select: {
+          id: true,
+          prompt_completions: {
+            where: { user_id: userId },
+            select: { id: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!day || day.day_prompts.length === 0) {
+    throw new Error("This Resonance day is not available.");
+  }
+
+  const allComplete = day.day_prompts.every(
+    (prompt) => prompt.prompt_completions.length > 0,
+  );
+
+  if (!allComplete) {
+    throw new Error("Complete today's reflections before continuing.");
+  }
+}
+
 export async function activateResonanceWeekAction(formData: FormData) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
@@ -53,6 +127,32 @@ export async function submitPromptAction(formData: FormData) {
 
   if (!promptId || !response) return;
 
+  const prompt = await prisma.day_prompts.findUnique({
+    where: { id: promptId },
+    select: {
+      is_published: true,
+      resonance_days: {
+        select: {
+          day_number: true,
+          resonance_weeks: {
+            select: {
+              week_number: true,
+              is_published: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!prompt?.is_published || !prompt.resonance_days.resonance_weeks.is_published) {
+    throw new Error("This Resonance reflection is not available.");
+  }
+
+  const weekNumber = prompt.resonance_days.resonance_weeks.week_number;
+  const dayNumber = prompt.resonance_days.day_number;
+
+  await assertActiveDay(userId, weekNumber, dayNumber);
   await completePrompt(promptId, userId, response, false);
 
   try {
@@ -189,10 +289,8 @@ export async function continueResonanceDayAction(formData: FormData) {
 
   if (!weekNumber || !dayNumber || dayNumber < 1 || dayNumber > 6) return;
 
-  const state = await getResonanceWeekState(userId);
-  if (state.activeWeek !== weekNumber) {
-    throw new Error("This Resonance week is not active.");
-  }
+  await assertActiveDay(userId, weekNumber, dayNumber);
+  await assertAllDayReflectionsComplete(userId, weekNumber, dayNumber);
 
   const guidance = await prisma.resonance_day_guidance.findUnique({
     where: {
@@ -238,10 +336,8 @@ export async function completeResonanceWeekAction(formData: FormData) {
   const weekNumber = Number(formData.get("weekNumber"));
   if (!weekNumber) return;
 
-  const state = await getResonanceWeekState(userId);
-  if (state.activeWeek !== weekNumber) {
-    throw new Error("This Resonance week is not active.");
-  }
+  await assertActiveDay(userId, weekNumber, 7);
+  await assertAllDayReflectionsComplete(userId, weekNumber, 7);
 
   const [guidance, mirror] = await Promise.all([
     prisma.resonance_day_guidance.findUnique({
