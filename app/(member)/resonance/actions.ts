@@ -46,30 +46,10 @@ export async function submitPromptAction(formData: FormData) {
 
   const promptId = String(formData.get("promptId") ?? "");
   const response = String(formData.get("response") ?? "").trim();
-  const isShared = formData.get("isShared") === "true";
-  const pathwayTransition = String(formData.get("pathwayTransition") ?? "").trim();
 
   if (!promptId || !response) return;
 
-  await completePrompt(promptId, userId, response, isShared);
-
-  try {
-    if (pathwayTransition === "discover_to_relate") {
-      await prisma.profiles.update({
-        where: { id: userId },
-        data: { pathway: "relate" },
-      });
-    }
-
-    if (pathwayTransition === "relate_to_discover") {
-      await prisma.profiles.update({
-        where: { id: userId },
-        data: { pathway: "discover" },
-      });
-    }
-  } catch (error) {
-    console.error("Pathway update failed:", error);
-  }
+  await completePrompt(promptId, userId, response, false);
 
   try {
     signalResonanceOnCompletion(userId, promptId, response);
@@ -82,6 +62,8 @@ export async function submitPromptAction(formData: FormData) {
   redirect("/resonance");
 }
 
+// Legacy social actions remain available only for historical data/components.
+// The active Resonance journey no longer exposes or calls them.
 export async function toggleWitnessAction(formData: FormData) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
