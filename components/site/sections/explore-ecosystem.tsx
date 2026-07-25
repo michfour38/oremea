@@ -18,7 +18,7 @@ export function ExploreEcosystem() {
           <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-10">
             <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
               <div className="max-w-2xl">
-                <p className="text-sm uppercase tracking-[0.18em] text-zinc-500">
+                <p className="text-sm uppercase tracking-[0.18em] text-zinc-400">
                   Recognition
                 </p>
 
@@ -26,7 +26,7 @@ export function ExploreEcosystem() {
                   See what is already present.
                 </h3>
 
-                <p className="mt-6 text-base leading-8 text-zinc-400">
+                <p className="mt-6 text-base leading-8 text-zinc-300">
                   A focused private reflection that listens for the thread already
                   present in your own words and gives it enough shape to become
                   visible.
@@ -57,7 +57,7 @@ export function ExploreEcosystem() {
                   Relational awareness and self-observation.
                 </h3>
 
-                <p className="mt-6 text-base leading-8 text-zinc-400">
+                <p className="mt-6 text-base leading-8 text-zinc-300">
                   A self-paced guided reflection experience structured across
                   approximately 10 weeks, designed to help users better understand
                   relational patterns, communication tendencies, emotional loops,
@@ -79,19 +79,30 @@ export function ExploreEcosystem() {
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-10">
-            <p className="text-sm uppercase tracking-[0.18em] text-zinc-500">
-              Compass
-            </p>
+            <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+              <div className="max-w-2xl">
+                <p className="text-sm uppercase tracking-[0.18em] text-zinc-400">
+                  Compass
+                </p>
 
-            <h3 className="mt-3 text-2xl font-light text-zinc-100">
-              Direction, execution, and alignment.
-            </h3>
+                <h3 className="mt-3 text-2xl font-light text-zinc-100">
+                  Direction, execution, and alignment.
+                </h3>
 
-            <p className="mt-6 max-w-3xl text-base leading-8 text-zinc-400">
-              Structured goal and execution systems designed for individuals,
-              couples, families, and aligned group dynamics seeking clearer
-              direction, accountability, and executable next steps.
-            </p>
+                <p className="mt-6 max-w-3xl text-base leading-8 text-zinc-300">
+                  Structured goal and execution systems designed for individuals,
+                  couples, families, and aligned group dynamics seeking clearer
+                  direction, accountability, and executable next steps.
+                </p>
+              </div>
+
+              <Link
+                href="/compass"
+                className="rounded-2xl border border-white/10 bg-black/20 px-5 py-3 text-sm tracking-[0.16em] text-amber-100 transition hover:border-amber-100/40 hover:bg-black/35"
+              >
+                Enter Compass
+              </Link>
+            </div>
           </div>
         </div>
       </div>
