@@ -5,7 +5,11 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
-import { activateResonanceWeek } from "@/src/lib/resonance/resonance-week-state";
+import {
+  activateResonanceWeek,
+  completeResonanceWeek,
+  getResonanceWeekState,
+} from "@/src/lib/resonance/resonance-week-state";
 
 import {
   completePrompt,
@@ -183,7 +187,27 @@ export async function continueResonanceDayAction(formData: FormData) {
   const weekNumber = Number(formData.get("weekNumber"));
   const dayNumber = Number(formData.get("dayNumber"));
 
-  if (!weekNumber || !dayNumber) return;
+  if (!weekNumber || !dayNumber || dayNumber < 1 || dayNumber > 6) return;
+
+  const state = await getResonanceWeekState(userId);
+  if (state.activeWeek !== weekNumber) {
+    throw new Error("This Resonance week is not active.");
+  }
+
+  const guidance = await prisma.resonance_day_guidance.findUnique({
+    where: {
+      user_id_week_number_day_number: {
+        user_id: userId,
+        week_number: weekNumber,
+        day_number: dayNumber,
+      },
+    },
+    select: { id: true },
+  });
+
+  if (!guidance) {
+    throw new Error("Complete today's 2Q before continuing.");
+  }
 
   await prisma.resonance_day_continues.upsert({
     where: {
@@ -205,4 +229,71 @@ export async function continueResonanceDayAction(formData: FormData) {
 
   revalidatePath("/resonance");
   redirect("/resonance");
+}
+
+export async function completeResonanceWeekAction(formData: FormData) {
+  const { userId } = await auth();
+  if (!userId) redirect("/sign-in");
+
+  const weekNumber = Number(formData.get("weekNumber"));
+  if (!weekNumber) return;
+
+  const state = await getResonanceWeekState(userId);
+  if (state.activeWeek !== weekNumber) {
+    throw new Error("This Resonance week is not active.");
+  }
+
+  const [guidance, mirror] = await Promise.all([
+    prisma.resonance_day_guidance.findUnique({
+      where: {
+        user_id_week_number_day_number: {
+          user_id: userId,
+          week_number: weekNumber,
+          day_number: 7,
+        },
+      },
+      select: { id: true },
+    }),
+    prisma.mirror_responses.findUnique({
+      where: {
+        user_id_week_number_day_number: {
+          user_id: userId,
+          week_number: weekNumber,
+          day_number: 7,
+        },
+      },
+      select: { id: true, tier: true },
+    }),
+  ]);
+
+  if (!guidance) {
+    throw new Error("Complete Day 7's 2Q before completing the week.");
+  }
+
+  if (!mirror || mirror.tier !== "full") {
+    throw new Error("Open the weekly Mirror before completing the week.");
+  }
+
+  await prisma.resonance_day_continues.upsert({
+    where: {
+      user_id_week_number_day_number: {
+        user_id: userId,
+        week_number: weekNumber,
+        day_number: 7,
+      },
+    },
+    update: { continued_at: new Date() },
+    create: {
+      user_id: userId,
+      week_number: weekNumber,
+      day_number: 7,
+    },
+  });
+
+  await completeResonanceWeek(userId, weekNumber);
+
+  revalidatePath("/entry");
+  revalidatePath("/resonance");
+  revalidatePath("/resonance/archive");
+  redirect("/entry");
 }
