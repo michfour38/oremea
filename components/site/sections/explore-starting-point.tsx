@@ -28,7 +28,7 @@ export function ExploreStartingPoint() {
                 The system is designed to help users build:
               </p>
 
-              <ul className="grid gap-3 text-zinc-400 md:grid-cols-2">
+              <ul className="grid gap-3 text-zinc-300 md:grid-cols-2">
                 <li>• relational awareness</li>
                 <li>• reflective honesty</li>
                 <li>• emotional observation</li>
