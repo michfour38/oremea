@@ -2,8 +2,8 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { runResonanceWeeklyMirror } from "@/src/lib/resonance/resonance-weekly-mirror";
 import { getResonanceWeekState } from "@/src/lib/resonance/resonance-week-state";
-import { runMirrorSynthesis } from "@/app/(member)/mirror/mirror.service";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://app.oremea.com";
 
@@ -39,7 +39,9 @@ export async function GET(request: Request) {
   });
 
   if (!guidance) {
-    return NextResponse.redirect(`${APP_URL}/resonance?mirror=questions-required#mirror`);
+    return NextResponse.redirect(
+      `${APP_URL}/resonance?mirror=questions-required#mirror`,
+    );
   }
 
   const existing = await prisma.mirror_responses.findUnique({
@@ -57,7 +59,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${APP_URL}/resonance?mirror=success#mirror`);
   }
 
-  const result = await runMirrorSynthesis(userId, weekNumber, 7, "full");
+  const result = await runResonanceWeeklyMirror(userId, weekNumber, 7);
 
   if (!result) {
     return NextResponse.redirect(`${APP_URL}/resonance?mirror=error#mirror`);
