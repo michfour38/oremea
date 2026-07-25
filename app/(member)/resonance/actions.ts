@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
+import { activateResonanceWeek } from "@/src/lib/resonance/resonance-week-state";
 
 import {
   completePrompt,
@@ -24,6 +25,20 @@ import {
   signalResonanceOnCompletion,
   signalDepthAlignment,
 } from "../signals/signals.service";
+
+export async function activateResonanceWeekAction(formData: FormData) {
+  const { userId } = await auth();
+  if (!userId) redirect("/sign-in");
+
+  const weekNumber = Number(formData.get("weekNumber"));
+  if (!weekNumber) return;
+
+  await activateResonanceWeek(userId, weekNumber);
+
+  revalidatePath("/entry");
+  revalidatePath("/resonance");
+  redirect("/resonance");
+}
 
 export async function submitPromptAction(formData: FormData) {
   const { userId } = await auth();
