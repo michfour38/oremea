@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { backfillLegacyResonanceGuidance } from "@/src/lib/resonance/backfill-legacy-guidance";
+import { getActiveResonanceRun } from "@/src/lib/resonance/resonance-week-run";
 
 const RESONANCE_WEEK_PREFIX = "resonance-week:";
 const RESONANCE_WEEK_COUNT = 10;
@@ -185,10 +186,6 @@ export async function getResonanceWeekState(
   ).sort((a, b) => a - b);
 
   const explicitActiveWeek = activeRows[0] ?? null;
-
-  // Legacy active inference is only used before the participant has entered the
-  // new week-selection system. Once a resonance-week entitlement exists, the
-  // explicit ledger owns active-week state.
   const activeWeek =
     explicitActiveWeek ?? (rows.length === 0 ? legacy.activeWeek : null);
 
@@ -225,14 +222,11 @@ export async function activateResonanceWeek(
     throw new Error("This Resonance week is not available.");
   }
 
-  const state = await getResonanceWeekState(userId);
-
-  if (state.completedWeeks.includes(weekNumber)) {
-    throw new Error("This Resonance week is already complete.");
-  }
-
-  if (state.activeWeek !== null && state.activeWeek !== weekNumber) {
-    throw new Error("Another Resonance week is already active.");
+  // Legacy entitlement activation may mirror an already-open purchased run, but
+  // it may never create Resonance access on its own.
+  const activeRun = await getActiveResonanceRun(userId);
+  if (!activeRun || activeRun.weekNumber !== weekNumber) {
+    throw new Error("A verified purchase is required to open this Resonance week.");
   }
 
   const productKey = productKeyForWeek(weekNumber);
@@ -246,8 +240,8 @@ export async function activateResonanceWeek(
     },
     update: {
       status: "active",
-      source: "resonance_week_selection",
-      source_reference: String(weekNumber),
+      source: "resonance_run_mirror",
+      source_reference: activeRun.id,
       revoked_at: null,
       expires_at: null,
     },
@@ -255,8 +249,8 @@ export async function activateResonanceWeek(
       user_id: userId,
       product_key: productKey,
       status: "active",
-      source: "resonance_week_selection",
-      source_reference: String(weekNumber),
+      source: "resonance_run_mirror",
+      source_reference: activeRun.id,
     },
   });
 
@@ -269,14 +263,10 @@ export async function completeResonanceWeek(
 ) {
   assertValidWeekNumber(weekNumber);
 
-  const state = await getResonanceWeekState(userId);
-
-  if (state.activeWeek !== weekNumber) {
-    throw new Error("This Resonance week is not active.");
-  }
-
   const productKey = productKeyForWeek(weekNumber);
 
+  // This ledger is retained only for backward compatibility. The run record is
+  // the authority for live Resonance progression and repeat purchases.
   await prisma.oremea_entitlements.upsert({
     where: {
       user_id_product_key: {
@@ -286,8 +276,7 @@ export async function completeResonanceWeek(
     },
     update: {
       status: "completed",
-      source: "resonance_week_completion",
-      source_reference: String(weekNumber),
+      source: "resonance_run_mirror",
       revoked_at: null,
       expires_at: null,
     },
@@ -295,7 +284,7 @@ export async function completeResonanceWeek(
       user_id: userId,
       product_key: productKey,
       status: "completed",
-      source: "resonance_week_completion",
+      source: "resonance_run_mirror",
       source_reference: String(weekNumber),
     },
   });
