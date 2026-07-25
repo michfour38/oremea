@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentDayContent } from "@/src/lib/resonance/getCurrentDayContent";
 import { getResonanceWeekState } from "@/src/lib/resonance/resonance-week-state";
-import { getPromptThread, PromptThreadDTO } from "./resonance.service";
 import PromptCard from "./prompt-card";
 import MirrorCard from "./mirror-card";
 import MemberNav from "../member-nav";
@@ -16,8 +15,6 @@ import AutoScrollToMirror from "./auto-scroll-to-mirror";
 
 export const dynamic = "force-dynamic";
 
-const PAYSTACK_CURRENT_URL = "https://paystack.shop/pay/ey9b56zykb";
-
 function normalizeEmail(email?: string | null) {
   return email?.trim().toLowerCase() || "";
 }
@@ -27,7 +24,7 @@ async function getSignedInEmail() {
 
   const primaryEmail =
     user?.emailAddresses.find(
-      (email) => email.id === user.primaryEmailAddressId
+      (email) => email.id === user.primaryEmailAddressId,
     )?.emailAddress ?? user?.emailAddresses[0]?.emailAddress ?? "";
 
   return normalizeEmail(primaryEmail);
@@ -139,13 +136,7 @@ async function getActiveResonancePosition(
   };
 }
 
-export default async function ResonancePage({
-  searchParams,
-}: {
-  searchParams?: {
-    mirror?: string;
-  };
-}) {
+export default async function ResonancePage() {
   const { userId } = await auth();
 
   if (!userId) {
@@ -157,45 +148,6 @@ export default async function ResonancePage({
   if (!signedInEmail) {
     redirect("/sign-in?redirect_url=%2Fresonance");
   }
-
-  const shouldActivateMirror =
-    typeof searchParams?.mirror === "string" &&
-    searchParams.mirror === "generate";
-
-  if (shouldActivateMirror) {
-    await prisma.entry_leads.updateMany({
-      where: { email: signedInEmail },
-      data: {
-        pathway: "relate",
-        resonance_access_granted: true,
-        resonance_paid_at: new Date(),
-      },
-    });
-  }
-
-  const entryLead = await prisma.entry_leads.findUnique({
-    where: { email: signedInEmail },
-    select: {
-      pathway: true,
-    },
-  });
-
-  const pathway =
-    entryLead?.pathway === "relate" ? "relate" : "discover";
-
-  await prisma.profiles.upsert({
-    where: { id: userId },
-    update: {
-      pathway,
-      updated_at: new Date(),
-    },
-    create: {
-      id: userId,
-      display_name: signedInEmail.split("@")[0],
-      pathway,
-      updated_at: new Date(),
-    },
-  });
 
   const resonanceAccess = await prisma.entry_leads.findUnique({
     where: { email: signedInEmail },
@@ -246,7 +198,7 @@ export default async function ResonancePage({
   }
 
   const backgrounds = getResonanceBackgrounds(
-    content?.weekNumber ?? progression.weekNumber ?? 1
+    content?.weekNumber ?? progression.weekNumber ?? 1,
   );
 
   let liteMirrorEligible = false;
@@ -256,7 +208,6 @@ export default async function ResonancePage({
   let currentMirror: Awaited<ReturnType<typeof getMirrorHistory>>[number] | null =
     null;
   let mirrorExerciseCompleted = false;
-  const threadMap = new Map<string, PromptThreadDTO | null>();
 
   if (content) {
     try {
@@ -264,26 +215,11 @@ export default async function ResonancePage({
         content.prompts.length > 0 &&
         content.prompts.every((prompt) => prompt.isCompleted);
 
-      await Promise.all(
-        content.prompts
-          .filter(
-            (prompt) => prompt.type === "thread_prompt" && prompt.isCompleted
-          )
-          .map(async (prompt) => {
-            const thread = await getPromptThread(prompt.id, userId);
-            threadMap.set(prompt.id, thread);
-          })
-      );
-
       const mirrorAccess = await getMirrorAccess(signedInEmail);
 
-      liteMirrorEligible = false;
-
       fullMirrorEligible = mirrorAccess.has2QOnly;
-
-      liteMirrorUnlocked = false;
-
       fullMirrorUnlocked = mirrorAccess.hasFullMirror;
+
       const foundMirror = await prisma.mirror_responses.findFirst({
         where: {
           user_id: userId,
@@ -313,14 +249,6 @@ export default async function ResonancePage({
     }
   }
 
-  const showCurrentUnlockCard = Boolean(
-    content &&
-      content.weekNumber === 10 &&
-      content.dayNumber === 7 &&
-      mirrorExerciseCompleted &&
-      currentMirror
-  );
-
   return (
     <main className="relative min-h-screen overflow-x-hidden text-white">
       <div
@@ -344,11 +272,7 @@ export default async function ResonancePage({
               {content ? (
                 <>
                   <h1 className="text-4xl text-white">{content.weekTitle}</h1>
-
-                  <p className="text-zinc-300">
-                    Resonance by Oremea - Journey
-                  </p>
-
+                  <p className="text-zinc-300">Resonance by Oremea - Journey</p>
                   <p className="text-zinc-400">{content.weekTheme}</p>
                 </>
               ) : (
@@ -367,7 +291,7 @@ export default async function ResonancePage({
             {content ? (
               <>
                 <div className="mt-10 space-y-6">
-                  {content.prompts.map((prompt, index) => {
+                  {content.prompts.map((prompt) => {
                     if (prompt.type === "mirror_exercise") {
                       return (
                         <MirrorCard
@@ -378,15 +302,7 @@ export default async function ResonancePage({
                       );
                     }
 
-                    return (
-                      <PromptCard
-                        key={prompt.id}
-                        prompt={prompt}
-                        index={index}
-                        thread={threadMap.get(prompt.id) ?? null}
-                        currentPathway={pathway}
-                      />
-                    );
+                    return <PromptCard key={prompt.id} prompt={prompt} />;
                   })}
                 </div>
 
@@ -426,48 +342,6 @@ export default async function ResonancePage({
 
                     <ContinueDayButton />
                   </form>
-                ) : null}
-
-                {showCurrentUnlockCard ? (
-                  <div className="mt-8 rounded-3xl border border-emerald-400/40 bg-emerald-400/10 p-6 md:p-8">
-                    <p className="text-xs uppercase tracking-[0.25em] text-emerald-300">
-                      The Current
-                    </p>
-
-                    <h2 className="mt-3 text-2xl font-semibold text-white">
-                      You’re ready for The Current.
-                    </h2>
-
-                    <p className="mt-4 text-base leading-8 text-zinc-100">
-                      Over the course of this journey, something in you has
-                      clarified.
-                    </p>
-
-                    <p className="mt-4 text-base leading-8 text-zinc-200">
-                      Not everyone reaches this point with the same honesty,
-                      steadiness, or willingness to be changed by what they’ve
-                      seen.
-                    </p>
-
-                    <p className="mt-4 text-base leading-8 text-zinc-200">
-                      What may be opening now is a quiet readiness to meet
-                      others more deeply, from where you are now.
-                    </p>
-
-                    <p className="mt-4 text-base leading-8 text-zinc-200">
-                      The Current is a space for people who have done the work —
-                      and want to meet others who have done the same.
-                    </p>
-
-                    <div className="mt-6 flex flex-wrap gap-3">
-                      <a
-                        href={PAYSTACK_CURRENT_URL}
-                        className="inline-flex items-center justify-center rounded-xl border border-emerald-400/50 px-5 py-3 text-sm text-emerald-200 transition hover:bg-emerald-400/10"
-                      >
-                        Enter The Current — R900
-                      </a>
-                    </div>
-                  </div>
                 ) : null}
               </>
             ) : null}
