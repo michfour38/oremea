@@ -76,7 +76,7 @@ export default async function EntryPage() {
               <p className="text-xs uppercase tracking-[0.3em] text-[#f1dfb4]/70">
                 Resonance
               </p>
-              <h2 className="mt-3 text-3xl font-light">Choose a room.</h2>
+              <h2 className="mt-3 text-3xl font-light">Choose a room</h2>
               <p className="mt-4 text-base leading-8 text-zinc-300">
                 Each purchase opens one seven-day Resonance run. When the run
                 closes, that visit remains available in the archive. Returning to
