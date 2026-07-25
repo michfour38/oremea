@@ -35,6 +35,113 @@ function assertValidWeekNumber(weekNumber: number) {
   }
 }
 
+type LegacyActivity = {
+  weekNumber: number;
+  occurredAt: Date;
+};
+
+async function getLegacyResonanceProgress(userId: string) {
+  const [continues, completions, mirrors] = await Promise.all([
+    prisma.resonance_day_continues.findMany({
+      where: { user_id: userId },
+      select: {
+        week_number: true,
+        day_number: true,
+        continued_at: true,
+      },
+    }),
+    prisma.prompt_completions.findMany({
+      where: { user_id: userId },
+      select: {
+        created_at: true,
+        updated_at: true,
+        day_prompts: {
+          select: {
+            resonance_days: {
+              select: {
+                resonance_weeks: {
+                  select: { week_number: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    }),
+    prisma.mirror_responses.findMany({
+      where: { user_id: userId },
+      select: {
+        week_number: true,
+        created_at: true,
+      },
+    }),
+  ]);
+
+  const completedWeeks = new Set(
+    continues
+      .filter((row) => row.day_number === 7)
+      .map((row) => row.week_number)
+      .filter(
+        (weekNumber) =>
+          weekNumber >= 1 && weekNumber <= RESONANCE_WEEK_COUNT,
+      ),
+  );
+
+  const activity: LegacyActivity[] = [];
+
+  for (const row of continues) {
+    if (
+      row.week_number >= 1 &&
+      row.week_number <= RESONANCE_WEEK_COUNT
+    ) {
+      activity.push({
+        weekNumber: row.week_number,
+        occurredAt: row.continued_at,
+      });
+    }
+  }
+
+  for (const row of completions) {
+    const weekNumber =
+      row.day_prompts?.resonance_days?.resonance_weeks?.week_number ?? null;
+
+    if (
+      weekNumber !== null &&
+      weekNumber >= 1 &&
+      weekNumber <= RESONANCE_WEEK_COUNT
+    ) {
+      activity.push({
+        weekNumber,
+        occurredAt:
+          row.updated_at.getTime() > row.created_at.getTime()
+            ? row.updated_at
+            : row.created_at,
+      });
+    }
+  }
+
+  for (const row of mirrors) {
+    if (
+      row.week_number >= 1 &&
+      row.week_number <= RESONANCE_WEEK_COUNT
+    ) {
+      activity.push({
+        weekNumber: row.week_number,
+        occurredAt: row.created_at,
+      });
+    }
+  }
+
+  const latestIncompleteActivity = activity
+    .filter((row) => !completedWeeks.has(row.weekNumber))
+    .sort((a, b) => b.occurredAt.getTime() - a.occurredAt.getTime())[0];
+
+  return {
+    completedWeeks: Array.from(completedWeeks),
+    activeWeek: latestIncompleteActivity?.weekNumber ?? null,
+  };
+}
+
 export async function getResonanceWeekState(
   userId: string,
 ): Promise<ResonanceWeekState> {
@@ -54,11 +161,10 @@ export async function getResonanceWeekState(
     },
   });
 
-  const completedWeeks = rows
+  const explicitCompletedWeeks = rows
     .filter((row) => row.status === "completed")
     .map((row) => parseWeekNumber(row.product_key))
-    .filter((weekNumber): weekNumber is number => weekNumber !== null)
-    .sort((a, b) => a - b);
+    .filter((weekNumber): weekNumber is number => weekNumber !== null);
 
   const activeRows = rows
     .filter((row) => row.status === "active")
@@ -69,7 +175,20 @@ export async function getResonanceWeekState(
     throw new Error("More than one Resonance week is active.");
   }
 
-  const activeWeek = activeRows[0] ?? null;
+  const legacy = await getLegacyResonanceProgress(userId);
+
+  const completedWeeks = Array.from(
+    new Set([...explicitCompletedWeeks, ...legacy.completedWeeks]),
+  ).sort((a, b) => a - b);
+
+  const explicitActiveWeek = activeRows[0] ?? null;
+
+  // Legacy active inference is only used before the participant has entered the
+  // new week-selection system. Once a resonance-week entitlement exists, the
+  // explicit ledger owns active-week state.
+  const activeWeek =
+    explicitActiveWeek ?? (rows.length === 0 ? legacy.activeWeek : null);
+
   const completedSet = new Set(completedWeeks);
 
   const availableWeeks = activeWeek
@@ -147,20 +266,34 @@ export async function completeResonanceWeek(
 ) {
   assertValidWeekNumber(weekNumber);
 
+  const state = await getResonanceWeekState(userId);
+
+  if (state.activeWeek !== weekNumber) {
+    throw new Error("This Resonance week is not active.");
+  }
+
   const productKey = productKeyForWeek(weekNumber);
 
-  const result = await prisma.oremea_entitlements.updateMany({
+  await prisma.oremea_entitlements.upsert({
     where: {
+      user_id_product_key: {
+        user_id: userId,
+        product_key: productKey,
+      },
+    },
+    update: {
+      status: "completed",
+      source: "resonance_week_completion",
+      source_reference: String(weekNumber),
+      revoked_at: null,
+      expires_at: null,
+    },
+    create: {
       user_id: userId,
       product_key: productKey,
-      status: "active",
-    },
-    data: {
       status: "completed",
+      source: "resonance_week_completion",
+      source_reference: String(weekNumber),
     },
   });
-
-  if (result.count !== 1) {
-    throw new Error("The active Resonance week could not be completed.");
-  }
 }
