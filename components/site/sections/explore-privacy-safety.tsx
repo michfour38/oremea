@@ -30,11 +30,11 @@ export function ExplorePrivacySafety() {
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-10">
-            <p className="text-sm uppercase tracking-[0.18em] text-zinc-500">
+            <p className="text-sm uppercase tracking-[0.18em] text-zinc-400">
               Important Clarifications
             </p>
 
-            <div className="mt-8 space-y-6 text-base leading-8 text-zinc-400">
+            <div className="mt-8 space-y-6 text-base leading-8 text-zinc-300">
               <p>
                 Oremea does not provide therapy, medical treatment,
                 crisis support, or diagnostic services.
