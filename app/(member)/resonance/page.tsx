@@ -3,7 +3,12 @@ import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentDayContent } from "@/src/lib/resonance/getCurrentDayContent";
-import { getResonanceWeekState } from "@/src/lib/resonance/resonance-week-state";
+import { getActiveResonanceRun } from "@/src/lib/resonance/resonance-week-run";
+import {
+  getRunContinuedDays,
+  getRunMirror,
+  getRunPromptCompletions,
+} from "@/src/lib/resonance/resonance-run-data";
 import PromptCard from "./prompt-card";
 import MirrorCard from "./mirror-card";
 import MemberNav from "../member-nav";
@@ -62,10 +67,7 @@ function getResonanceBackgrounds(weekNumber?: number) {
   };
 }
 
-async function getActiveResonancePosition(
-  userId: string,
-  activeWeek: number,
-) {
+async function getActiveResonancePosition(runId: string, activeWeek: number) {
   const week = await prisma.resonance_weeks.findUnique({
     where: { week_number: activeWeek },
     include: {
@@ -75,12 +77,7 @@ async function getActiveResonancePosition(
           day_prompts: {
             where: { is_published: true },
             orderBy: { prompt_order: "asc" },
-            include: {
-              prompt_completions: {
-                where: { user_id: userId },
-                select: { id: true },
-              },
-            },
+            select: { id: true },
           },
         },
       },
@@ -91,25 +88,21 @@ async function getActiveResonancePosition(
     throw new Error("The active Resonance week is not available.");
   }
 
-  const continuedDays = await prisma.resonance_day_continues.findMany({
-    where: {
-      user_id: userId,
-      week_number: activeWeek,
-    },
-    select: { day_number: true },
-  });
-
-  const continuedDayNumbers = new Set(
-    continuedDays.map((row) => row.day_number),
+  const promptIds = week.resonance_days.flatMap((day) =>
+    day.day_prompts.map((prompt) => prompt.id),
   );
+
+  const [completionByPrompt, continuedDayNumbers] = await Promise.all([
+    getRunPromptCompletions(runId, promptIds),
+    getRunContinuedDays(runId),
+  ]);
 
   for (const day of week.resonance_days) {
     const prompts = day.day_prompts;
-
     if (prompts.length === 0) continue;
 
-    const allPromptsDone = prompts.every(
-      (prompt) => prompt.prompt_completions.length > 0,
+    const allPromptsDone = prompts.every((prompt) =>
+      completionByPrompt.has(prompt.id),
     );
 
     const allDone =
@@ -163,15 +156,15 @@ export default async function ResonancePage() {
     redirect("/oremea/enter");
   }
 
-  const weekState = await getResonanceWeekState(userId);
+  const activeRun = await getActiveResonanceRun(userId);
 
-  if (weekState.activeWeek === null) {
+  if (!activeRun) {
     redirect("/entry");
   }
 
   const progression = await getActiveResonancePosition(
-    userId,
-    weekState.activeWeek,
+    activeRun.id,
+    activeRun.weekNumber,
   );
 
   let content: Awaited<ReturnType<typeof getCurrentDayContent>> | null = null;
@@ -186,10 +179,11 @@ export default async function ResonancePage() {
       weekNumber: progression.weekNumber,
       dayNumber: progression.dayNumber,
       userId,
+      runId: activeRun.id,
     });
   } catch (error) {
     contentLoadFailed = true;
-    console.error("Journey content failed to load:", error);
+    console.error("Resonance content failed to load:", error);
   }
 
   const backgrounds = getResonanceBackgrounds(
@@ -203,37 +197,18 @@ export default async function ResonancePage() {
   );
 
   const foundMirror =
-    content?.dayNumber === 7
-      ? await prisma.mirror_responses.findUnique({
-          where: {
-            user_id_week_number_day_number: {
-              user_id: userId,
-              week_number: content.weekNumber,
-              day_number: 7,
-            },
-          },
-          select: {
-            id: true,
-            user_id: true,
-            week_number: true,
-            day_number: true,
-            tier: true,
-            output: true,
-            created_at: true,
-          },
-        })
-      : null;
+    content?.dayNumber === 7 ? await getRunMirror(activeRun.id, 7) : null;
 
   const currentMirror =
     foundMirror?.tier === "full"
       ? {
           id: foundMirror.id,
-          userId: foundMirror.user_id,
-          weekNumber: foundMirror.week_number,
-          dayNumber: foundMirror.day_number,
+          userId: foundMirror.userId,
+          weekNumber: foundMirror.weekNumber,
+          dayNumber: foundMirror.dayNumber,
           tier: "full" as const,
           output: foundMirror.output,
-          createdAt: foundMirror.created_at.toISOString(),
+          createdAt: foundMirror.createdAt.toISOString(),
         }
       : null;
 
@@ -260,7 +235,7 @@ export default async function ResonancePage() {
               {content ? (
                 <>
                   <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
-                    Week {content.weekNumber} · Day {content.dayNumber}
+                    Week {content.weekNumber} · Run {activeRun.runNumber} · Day {content.dayNumber}
                   </p>
                   <h1 className="text-4xl text-white">{content.weekTitle}</h1>
                   <p className="text-zinc-300">Resonance by Oremea</p>
