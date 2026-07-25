@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { DayPromptDTO } from "./resonance.service";
+
+import type { ResonancePromptDTO } from "@/src/lib/resonance/getCurrentDayContent";
 import { submitPromptAction } from "./actions";
 
 interface PromptCardProps {
-  prompt: DayPromptDTO;
+  prompt: ResonancePromptDTO;
 }
 
 function LoadingDots() {
