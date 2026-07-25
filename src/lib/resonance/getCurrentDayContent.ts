@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getRunPromptCompletions } from "@/src/lib/resonance/resonance-run-data";
 
 export type PromptType = "thread_prompt" | "mirror_exercise";
 
@@ -23,6 +24,7 @@ export type CurrentDayContentParams = {
   weekNumber: number;
   dayNumber: number;
   userId?: string;
+  runId?: string;
 };
 
 export type CurrentDayContentResult = {
@@ -36,23 +38,6 @@ export type CurrentDayContentResult = {
   dayId: string | null;
   dayNumber: number;
   phase: "CORE" | "INTEGRATION";
-};
-
-type PromptCompletionRow = {
-  id: string;
-  response: string;
-  is_shared: boolean;
-  created_at: Date;
-  updated_at: Date;
-};
-
-type DayPromptRow = {
-  id: string;
-  type: string;
-  prompt_order: number;
-  label: string | null;
-  content: string;
-  prompt_completions?: PromptCompletionRow[];
 };
 
 const EDIT_WINDOW_MS = 10 * 60 * 1000;
@@ -81,6 +66,7 @@ export async function getCurrentDayContent({
   weekNumber,
   dayNumber,
   userId,
+  runId,
 }: CurrentDayContentParams): Promise<CurrentDayContentResult> {
   const week = await prisma.resonance_weeks.findFirst({
     where: {
@@ -100,25 +86,13 @@ export async function getCurrentDayContent({
             orderBy: {
               prompt_order: "asc",
             },
-            include: userId
-              ? {
-                  prompt_completions: {
-                    where: {
-                      user_id: userId,
-                    },
-                    orderBy: {
-                      created_at: "desc",
-                    },
-                    select: {
-                      id: true,
-                      response: true,
-                      is_shared: true,
-                      created_at: true,
-                      updated_at: true,
-                    },
-                  },
-                }
-              : undefined,
+            select: {
+              id: true,
+              type: true,
+              prompt_order: true,
+              label: true,
+              content: true,
+            },
           },
         },
       },
@@ -141,30 +115,32 @@ export async function getCurrentDayContent({
   }
 
   const day = week.resonance_days[0];
+  const promptIds = day.day_prompts.map((prompt) => prompt.id);
 
-  const prompts: ResonancePromptDTO[] = (day.day_prompts as DayPromptRow[]).map(
-    (prompt) => {
-      const completion = userId
-        ? prompt.prompt_completions?.[0] ?? null
-        : null;
+  const completionByPrompt =
+    userId && runId
+      ? await getRunPromptCompletions(runId, promptIds)
+      : new Map();
 
-      return {
-        id: prompt.id,
-        type: prompt.type as PromptType,
-        promptOrder: prompt.prompt_order,
-        label: prompt.label,
-        content: prompt.content,
-        isCompleted: completion !== null,
-        isShared: completion?.is_shared ?? false,
-        isUnlocked: true,
-        completionId: completion?.id ?? null,
-        response: completion?.response ?? null,
-        createdAt: completion?.created_at?.toISOString() ?? null,
-        updatedAt: completion?.updated_at?.toISOString() ?? null,
-        canEdit: isWithinEditWindow(completion?.created_at),
-      };
-    }
-  );
+  const prompts: ResonancePromptDTO[] = day.day_prompts.map((prompt) => {
+    const completion = completionByPrompt.get(prompt.id) ?? null;
+
+    return {
+      id: prompt.id,
+      type: prompt.type as PromptType,
+      promptOrder: prompt.prompt_order,
+      label: prompt.label,
+      content: prompt.content,
+      isCompleted: completion !== null,
+      isShared: completion?.isShared ?? false,
+      isUnlocked: true,
+      completionId: completion?.id ?? null,
+      response: completion?.response ?? null,
+      createdAt: completion?.createdAt.toISOString() ?? null,
+      updatedAt: completion?.updatedAt.toISOString() ?? null,
+      canEdit: isWithinEditWindow(completion?.createdAt),
+    };
+  });
 
   const gatedPrompts = applyGating(prompts);
   const firstPrompt = gatedPrompts[0]?.content ?? "No prompt available";
