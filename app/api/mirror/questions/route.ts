@@ -2,12 +2,12 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { getActiveResonanceRun } from "@/src/lib/resonance/resonance-week-run";
 import {
   getRunContinuedDays,
   getRunGuidance,
   getRunPromptCompletions,
 } from "@/src/lib/resonance/resonance-run-data";
+import { getActiveResonanceRun } from "@/src/lib/resonance/resonance-week-run";
 
 function parseQuestions(output: string) {
   return output
@@ -27,13 +27,13 @@ async function callQuestionAPI(reflections: string[]) {
   const prompt = `
 You are generating exactly TWO guiding reflection questions.
 
-Use only the user's reflections below.
+Use only the participant's reflections below.
 
 Rules:
 - Do not summarize.
 - Do not generate a Mirror synthesis.
 - Return exactly two questions.
-- Each question must be specific to the user's reflections.
+- Each question must be specific to the participant's reflections.
 - No generic self-help language.
 
 REFLECTIONS:
@@ -137,11 +137,27 @@ async function assertActiveCompletedDay(
     : null;
 }
 
+function guidancePayload(
+  guidance: Awaited<ReturnType<typeof getRunGuidance>>,
+) {
+  return {
+    questions: guidance
+      ? [guidance.questionOne, guidance.questionTwo]
+      : [],
+    answers: guidance
+      ? [guidance.answerOne ?? "", guidance.answerTwo ?? ""]
+      : [],
+    answered: Boolean(
+      guidance?.answerOne?.trim() && guidance?.answerTwo?.trim(),
+    ),
+  };
+}
+
 export async function GET(request: Request) {
   const { userId } = await auth();
 
   if (!userId) {
-    return NextResponse.json({ questions: [] }, { status: 401 });
+    return NextResponse.json({ questions: [], answers: [], answered: false }, { status: 401 });
   }
 
   const url = new URL(request.url);
@@ -149,19 +165,16 @@ export async function GET(request: Request) {
   const dayNumber = Number(url.searchParams.get("dayNumber"));
 
   if (!weekNumber || !dayNumber) {
-    return NextResponse.json({ questions: [] }, { status: 400 });
+    return NextResponse.json({ questions: [], answers: [], answered: false }, { status: 400 });
   }
 
   const activeRun = await getActiveResonanceRun(userId);
   if (!activeRun || activeRun.weekNumber !== weekNumber) {
-    return NextResponse.json({ questions: [] }, { status: 400 });
+    return NextResponse.json({ questions: [], answers: [], answered: false }, { status: 400 });
   }
 
   const existing = await getRunGuidance(activeRun.id, dayNumber);
-
-  return NextResponse.json({
-    questions: existing ? [existing.questionOne, existing.questionTwo] : [],
-  });
+  return NextResponse.json(guidancePayload(existing));
 }
 
 export async function POST(request: Request) {
@@ -181,14 +194,15 @@ export async function POST(request: Request) {
 
   const activeRun = await getActiveResonanceRun(userId);
   if (!activeRun || activeRun.weekNumber !== weekNumber) {
-    return NextResponse.json({ error: "This Resonance run is not active" }, { status: 400 });
+    return NextResponse.json(
+      { error: "This Resonance run is not active" },
+      { status: 400 },
+    );
   }
 
   const existing = await getRunGuidance(activeRun.id, dayNumber);
   if (existing) {
-    return NextResponse.json({
-      questions: [existing.questionOne, existing.questionTwo],
-    });
+    return NextResponse.json(guidancePayload(existing));
   }
 
   const completedDay = await assertActiveCompletedDay(
@@ -248,5 +262,77 @@ export async function POST(request: Request) {
     ON CONFLICT ("run_id", "day_number") DO NOTHING
   `;
 
-  return NextResponse.json({ questions });
+  const created = await getRunGuidance(completedDay.runId, dayNumber);
+  return NextResponse.json(guidancePayload(created));
+}
+
+export async function PATCH(request: Request) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let body: {
+    weekNumber?: unknown;
+    dayNumber?: unknown;
+    answerOne?: unknown;
+    answerTwo?: unknown;
+  };
+
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  const weekNumber = Number(body.weekNumber);
+  const dayNumber = Number(body.dayNumber);
+  const answerOne = typeof body.answerOne === "string" ? body.answerOne.trim() : "";
+  const answerTwo = typeof body.answerTwo === "string" ? body.answerTwo.trim() : "";
+
+  if (!answerOne || !answerTwo) {
+    return NextResponse.json(
+      { error: "Answer both questions before continuing" },
+      { status: 400 },
+    );
+  }
+
+  const completedDay = await assertActiveCompletedDay(
+    userId,
+    weekNumber,
+    dayNumber,
+  );
+
+  if (!completedDay) {
+    return NextResponse.json(
+      { error: "This Resonance day is not currently available" },
+      { status: 400 },
+    );
+  }
+
+  const guidance = await getRunGuidance(completedDay.runId, dayNumber);
+  if (!guidance) {
+    return NextResponse.json(
+      { error: "Generate today's 2Q before answering it" },
+      { status: 400 },
+    );
+  }
+
+  await prisma.$executeRaw`
+    UPDATE "resonance_day_guidance"
+    SET
+      "answer_one" = ${answerOne},
+      "answer_two" = ${answerTwo},
+      "answered_at" = CURRENT_TIMESTAMP,
+      "updated_at" = CURRENT_TIMESTAMP
+    WHERE "run_id" = ${completedDay.runId}::uuid
+      AND "day_number" = ${dayNumber}
+  `;
+
+  return NextResponse.json({
+    questions: [guidance.questionOne, guidance.questionTwo],
+    answers: [answerOne, answerTwo],
+    answered: true,
+  });
 }
