@@ -1,11 +1,9 @@
-"use client";
-
-import { SiteNav } from "@/components/site/site-nav";
-import { SiteFooter } from "@/components/site/site-footer";
+import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
 import { Playfair_Display } from "next/font/google";
-import { useUser } from "@clerk/nextjs";
-import { useEffect, useRef, useState, useTransition } from "react";
-import { getEntryResumeState, upsertEntryLead } from "./actions";
+
+import { SiteFooter } from "@/components/site/site-footer";
+import { SiteNav } from "@/components/site/site-nav";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -13,128 +11,11 @@ const playfair = Playfair_Display({
   style: ["normal", "italic"],
 });
 
-const RESONANCE_PAYSTACK_URL = "https://paystack.shop/pay/194owb7fjf";
-const MIRROR_PAYSTACK_URL = "https://paystack.shop/pay/wx9avyp3-t";
-
-type Plan = "resonance" | "mirror";
-
-function LoadingDots() {
-  return (
-    <span className="inline-flex items-center gap-1">
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.2s]" />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.1s]" />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current" />
-    </span>
-  );
-}
-
-export default function OremeaEnterPage() {
-  const { user, isLoaded } = useUser();
-
-  const [firstName, setFirstName] = useState("");
-  const [source, setSource] = useState("ghl");
-  const [isCheckingState, setIsCheckingState] = useState(false);
-
-  const [, startSavingLead] = useTransition();
-  const leadUpsertedRef = useRef(false);
-
-  const signedInEmail =
-    user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ||
-    user?.emailAddresses?.[0]?.emailAddress?.trim().toLowerCase() ||
-    "";
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-
-    const name = params.get("name")?.trim() || "";
-    const rawSource = params.get("source")?.trim();
-
-    const incomingSource =
-      rawSource === "ghl" ? "organic" : rawSource || "ghl";
-
-    setFirstName(name);
-    setSource(incomingSource);
-  }, []);
-
-  useEffect(() => {
-    if (!isLoaded || !user || !signedInEmail || leadUpsertedRef.current) return;
-
-    leadUpsertedRef.current = true;
-    setIsCheckingState(true);
-
-    startSavingLead(async () => {
-      await upsertEntryLead({
-        email: signedInEmail,
-        firstName: firstName || undefined,
-        source: source || undefined,
-      });
-
-      const resume = await getEntryResumeState({
-        email: signedInEmail,
-      });
-
-      if (resume.destination === "resonance") {
-        window.location.href = "/resonance";
-        return;
-      }
-
-      if (resume.destination === "begin") {
-        window.location.href = "/oremea/begin";
-        return;
-      }
-
-      setIsCheckingState(false);
-    });
-  }, [isLoaded, user, signedInEmail, firstName, source]);
-
-  function buildReturnToSelf(plan: Plan) {
-    const params = new URLSearchParams();
-
-    if (firstName) params.set("name", firstName);
-    if (source) params.set("source", source);
-    params.set("plan", plan);
-
-    return `/oremea/enter?${params.toString()}`;
-  }
-
-  function buildAuthHref(plan: Plan) {
-    return `/sign-up?redirect_url=${encodeURIComponent(buildReturnToSelf(plan))}`;
-  }
-
-  function buildPaystackHref(plan: Plan) {
-    if (!user || !signedInEmail) {
-      return buildAuthHref(plan);
-    }
-
-    const params = new URLSearchParams();
-
-    if (firstName) params.set("name", firstName);
-    if (signedInEmail) params.set("email", signedInEmail);
-    if (source) params.set("source", source);
-    params.set("plan", plan);
-
-    if (process.env.NEXT_PUBLIC_DEV_PAY === "true") {
-      return `/oremea/begin?payment=success&plan=${plan}`;
-    }
-
-    const baseUrl =
-      plan === "mirror" ? MIRROR_PAYSTACK_URL : RESONANCE_PAYSTACK_URL;
-
-    params.set(
-      "redirect_url",
-      `${window.location.origin}/oremea/begin?payment=success&plan=${plan}`,
-    );
-
-    return `${baseUrl}?${params.toString()}`;
-  }
-
-  if (!isLoaded || isCheckingState) {
-    return (
-      <main className="relative flex min-h-screen items-center justify-center overflow-x-hidden bg-black text-white">
-        <LoadingDots />
-      </main>
-    );
-  }
+export default async function ResonanceEnterPage() {
+  const { userId } = await auth();
+  const entryHref = userId
+    ? "/entry"
+    : `/sign-up?redirect_url=${encodeURIComponent("/entry")}`;
 
   return (
     <main id="top" className="relative min-h-screen overflow-x-hidden text-white">
@@ -149,10 +30,10 @@ export default function OremeaEnterPage() {
           className="absolute inset-0 hidden bg-cover bg-center bg-no-repeat md:block"
           style={{ backgroundImage: "url(/images/desktop/bg-entry.webp)" }}
         />
-        <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0 bg-black/65" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-6xl px-6 py-10 md:py-14">
+      <div className="relative z-10 mx-auto max-w-5xl px-6 py-12 md:py-16">
         <header className="mx-auto max-w-3xl text-center">
           <img
             src="/images/oremea-logo-wht.png"
@@ -165,202 +46,97 @@ export default function OremeaEnterPage() {
           </p>
 
           <h1
-            className={`${playfair.className} mt-4 text-4xl font-semibold leading-[0.95] tracking-tight md:text-6xl md:leading-[0.95]`}
+            className={`${playfair.className} mt-4 text-4xl font-semibold leading-[0.98] tracking-tight md:text-6xl`}
           >
-            See what keeps repeating — one day at a time.
+            Stay with what becomes visible.
           </h1>
 
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-zinc-200 md:text-lg">
-            Resonance is a structured reflection system designed to help your
-            patterns become visible over time.
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-zinc-200 md:text-lg">
+            Resonance is a private seven-day reflection experience. Ten thematic
+            rooms are available, and each visit opens one room for one complete run.
           </p>
         </header>
 
-        <section className="mt-10 grid gap-5 md:grid-cols-2">
-          <div className="flex h-full flex-col rounded-[2rem] border border-white/10 bg-black/35 p-6 backdrop-blur-[2px] md:p-8">
-            <p className="text-xs uppercase tracking-[0.28em] text-[#f1dfb4]/70">
-              Option 1
-            </p>
-
-            <h2 className={`${playfair.className} mt-3 text-3xl text-white`}>
-              Resonance
-            </h2>
-
-            <p className="mt-3 text-base leading-7 text-zinc-200">
-              The 10-week Resonance journey with daily prompts and two guiding
-              questions generated by Mirror.
-            </p>
-
-            <ul className="mt-6 space-y-3 text-sm leading-7 text-zinc-300">
-              <li>• Full 10-week journey</li>
-              <li>• Daily reflection prompts</li>
-              <li>• Two guiding questions generated by Mirror</li>
-              <li>• Structured awareness process</li>
-            </ul>
-
-            <a
-              href={buildPaystackHref("resonance")}
-              className="mt-auto inline-flex w-full items-center justify-center rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/10"
-            >
-              {user ? "Start with Resonance" : "Create account to begin"}
-            </a>
+        <section className="mx-auto mt-12 max-w-3xl rounded-[2rem] border border-white/10 bg-black/40 p-7 backdrop-blur-[2px] md:p-9">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.28em] text-[#f1dfb4]/70">
+                One room · one run
+              </p>
+              <h2 className={`${playfair.className} mt-3 text-3xl text-white`}>
+                Seven days of Resonance
+              </h2>
+            </div>
+            <p className="text-2xl text-[#f1dfb4]">$5</p>
           </div>
 
-          <div className="relative flex h-full flex-col rounded-[2rem] border border-[#c8a96a]/60 bg-[#c8a96a]/15 p-6 shadow-[0_0_45px_rgba(200,169,106,0.10)] backdrop-blur-[2px] md:p-8">
-            <div className="absolute right-5 top-5 rounded-full border border-[#c8a96a]/40 bg-black/30 px-3 py-1 text-[0.65rem] uppercase tracking-[0.22em] text-[#f1dfb4]/80">
-              Deeper clarity
+          <div className="mt-6 grid gap-5 text-sm leading-7 text-zinc-300 md:grid-cols-2">
+            <div className="rounded-2xl border border-white/8 bg-black/25 p-5">
+              <p className="text-zinc-100">Days 1–6</p>
+              <p className="mt-2">
+                Private reflections are followed by two questions drawn from that
+                day&apos;s own material, then the journey continues directly into the
+                next day.
+              </p>
             </div>
 
-            <p className="text-xs uppercase tracking-[0.28em] text-[#f1dfb4]/80">
-              Option 2
-            </p>
+            <div className="rounded-2xl border border-white/8 bg-black/25 p-5">
+              <p className="text-zinc-100">Day 7</p>
+              <p className="mt-2">
+                The final reflections and 2Q open a cumulative Mirror that reads the
+                Resonance journey completed so far and reflects what persists,
+                changes, and becomes more precise.
+              </p>
+            </div>
+          </div>
 
-            <h2 className={`${playfair.className} mt-3 text-3xl text-white`}>
-              Resonance +{" "}
-              <a
-                href="#what-mirror-adds"
-                onClick={(e) => {
-                  e.preventDefault();
+          <p className="mt-6 text-sm leading-7 text-zinc-300">
+            The ten rooms can be visited in the order that fits the participant.
+            One run remains active at a time. A completed room stays available in
+            the archive, and a later purchase opens a fresh visit while preserving
+            the earlier one.
+          </p>
 
-                  const el = document.getElementById("what-mirror-adds");
-                  if (!el) return;
-
-                  el.scrollIntoView({ behavior: "smooth", block: "start" });
-
-                  const details = el as HTMLDetailsElement;
-                  details.open = true;
-                }}
-                className="italic text-[#C8A96A] hover:underline"
-              >
-                Mirror
-              </a>
-            </h2>
-
-            <p className="mt-3 text-base leading-7 text-zinc-100">
-              The full 10-week journey with Mirror active throughout.
-            </p>
-
-            <ul className="mt-6 space-y-3 text-sm leading-7 text-zinc-200">
-              <li>• Everything in Resonance</li>
-              <li>• Full Mirror reflections throughout the journey</li>
-              <li>• Pattern synthesis across your responses</li>
-              <li>• Two guiding questions included within Mirror</li>
-            </ul>
-
-            <a
-              href={buildPaystackHref("mirror")}
-              className="mt-auto inline-flex w-full items-center justify-center rounded-xl border border-[#c8a96a]/70 bg-[#c8a96a]/10 px-5 py-3 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/20"
+          <div className="mt-8 flex justify-center">
+            <Link
+              href={entryHref}
+              className="inline-flex rounded-xl border border-[#c8a96a]/60 px-6 py-3 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/10"
             >
-              {user ? "Start with Mirror" : "Create account to begin"}
-            </a>
+              {userId ? "Choose a Resonance room" : "Create account and choose a room"}
+            </Link>
           </div>
         </section>
 
-        <p className="mx-auto mt-7 max-w-2xl text-center text-sm leading-7 text-zinc-300">
-          No hidden steps. No forced upgrades. You choose your depth from the
-          start.
-        </p>
-
-        <section className="mx-auto mt-10 max-w-3xl space-y-4">
+        <section className="mx-auto mt-8 max-w-3xl space-y-4">
           <details className="rounded-2xl border border-white/10 bg-black/30 p-5">
             <summary className="cursor-pointer text-sm text-zinc-100">
-              How it works
-            </summary>
-            <div className="mt-4 space-y-4 text-sm leading-7 text-zinc-400">
-              <p>
-                <span className="text-zinc-200">Layer 1:</span> Prompts create
-                reflection. You respond to structured prompts that surface
-                moments, reactions, and patterns you may not usually stay with.
-              </p>
-              <p>
-                <span className="text-zinc-200">Layer 2:</span> Questions
-                create depth. At the end of each day, guiding questions help you
-                stay with what you noticed and see it more clearly.
-              </p>
-              <p>
-                <span className="text-zinc-200">Layer 3:</span> Mirror reveals
-                patterns. Across your responses, Mirror reflects what repeats,
-                what shifts, and what may be forming beneath the surface.
-              </p>
-            </div>
-          </details>
-
-          <details
-            id="what-mirror-adds"
-            className="scroll-mt-24 rounded-2xl border border-white/10 bg-black/30 p-5"
-          >
-            <summary className="cursor-pointer text-sm text-zinc-100">
-              What Mirror adds
-            </summary>
-
-            <p className="mt-4 whitespace-pre-line text-sm leading-7 text-zinc-400">
-              {`You can reflect for weeks and still miss the pattern.
-
-Not because you’re unaware — but because you’re inside it.
-
-Mirror steps outside your individual answers, and looks across them.
-
-It tracks what repeats: how you interpret people, what you tolerate, where you override yourself, when you pull closer or step away.
-
-Not once — but over time.
-
-What feels like separate moments begins to reveal a structure.
-
-And once you can see the structure, you stop guessing.
-
-Each Mirror reflection also generates two precise questions based on your own responses — not generic prompts — designed to take you directly into the pattern that’s forming.
-
-Without Mirror, you reflect on moments.
-
-With Mirror, you start to see the pattern shaping your experience.
-
-And once you see it clearly, you can’t unsee it.
-
-Most people write.
-Very few ever see the pattern they’re writing.
-
-Choose how deeply you want to see.`}
-            </p>
-          </details>
-
-          <details className="rounded-2xl border border-white/10 bg-black/30 p-5">
-            <summary className="cursor-pointer text-sm text-zinc-100">
-              What this is not
+              Returning to a room
             </summary>
             <p className="mt-4 text-sm leading-7 text-zinc-400">
-              Resonance is not therapy, coaching, diagnosis, medical advice, or
-              crisis support. It is a self-led reflection system designed for
-              pattern awareness.
+              Each return creates a separate run. Earlier reflections, 2Q, and
+              Mirrors remain intact. Once the newer run closes, the two visits can
+              be viewed side by side so differences in the participant&apos;s own
+              language are visible without shaping the newer responses in advance.
+            </p>
+          </details>
+
+          <details className="rounded-2xl border border-white/10 bg-black/30 p-5">
+            <summary className="cursor-pointer text-sm text-zinc-100">
+              The role of Mirror
+            </summary>
+            <p className="mt-4 text-sm leading-7 text-zinc-400">
+              Daily 2Q holds the questioning function. The cumulative Mirror arrives
+              after Day 7 and reads participant reflections and participant-written
+              2Q answers as evidence. Earlier generated questions and Mirrors provide
+              continuity context so the reflection can remain fresh and grounded.
             </p>
           </details>
         </section>
-
-        <div className="mx-auto mt-10 max-w-2xl text-center">
-          <p className="text-base text-zinc-200">
-            Most people reflect on what happened.
-          </p>
-
-          <p className="mt-2 text-base text-zinc-200">
-            Very few ever see the pattern shaping their relationships.
-          </p>
-
-          <p className="mt-6 text-2xl leading-8 text-[#C8A96A]">
-            Choose how clearly you want to see.
-          </p>
-        </div>
       </div>
 
       <div className="relative z-10">
         <SiteFooter />
       </div>
-
-      <a
-        href="#top"
-        className="fixed bottom-24 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full border border-[#c8a96a]/50 bg-black/55 text-2xl text-[#f1dfb4] shadow-[0_0_24px_rgba(0,0,0,0.35)] backdrop-blur transition hover:border-[#f1dfb4] hover:bg-black/75 md:bottom-5"
-        aria-label="Return to top"
-      >
-        ↟
-      </a>
     </main>
   );
 }
