@@ -13,7 +13,7 @@ export function ExploreCreatorPartnerships() {
             </h2>
           </div>
 
-          <div className="space-y-8 text-base leading-8 text-zinc-400">
+          <div className="space-y-8 text-base leading-8 text-zinc-300">
             <p>
               Oremea collaborates with creators through focused entry
               experiences and high-quality guided reflection frameworks
@@ -37,11 +37,11 @@ export function ExploreCreatorPartnerships() {
 
         <div className="mt-16 grid gap-8 md:grid-cols-3">
           <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-8">
-            <p className="text-sm uppercase tracking-[0.18em] text-zinc-500">
+            <p className="text-sm uppercase tracking-[0.18em] text-zinc-400">
               Relationship Creators
             </p>
 
-            <p className="mt-5 text-base leading-8 text-zinc-400">
+            <p className="mt-5 text-base leading-8 text-zinc-300">
               Guided recognition frameworks focused on communication,
               attachment patterns, relational awareness,
               and intentional connection.
@@ -49,11 +49,11 @@ export function ExploreCreatorPartnerships() {
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-8">
-            <p className="text-sm uppercase tracking-[0.18em] text-zinc-500">
+            <p className="text-sm uppercase tracking-[0.18em] text-zinc-400">
               Direction & Execution Creators
             </p>
 
-            <p className="mt-5 text-base leading-8 text-zinc-400">
+            <p className="mt-5 text-base leading-8 text-zinc-300">
               Structured execution and alignment systems focused on
               direction, accountability, execution drift,
               and behavioral consistency.
@@ -61,11 +61,11 @@ export function ExploreCreatorPartnerships() {
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-8">
-            <p className="text-sm uppercase tracking-[0.18em] text-zinc-500">
+            <p className="text-sm uppercase tracking-[0.18em] text-zinc-400">
               Family & Communication Creators
             </p>
 
-            <p className="mt-5 text-base leading-8 text-zinc-400">
+            <p className="mt-5 text-base leading-8 text-zinc-300">
               Reflection frameworks designed around family dynamics,
               communication awareness, repair structures,
               and intentional interaction systems.
