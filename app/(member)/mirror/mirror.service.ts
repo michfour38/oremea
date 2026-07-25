@@ -1,7 +1,5 @@
 import { prisma } from "@/lib/prisma";
 
-// ─── Types ─────────────────────────────────────────
-
 export interface MirrorResponseDTO {
   id: string;
   userId: string;
@@ -12,104 +10,272 @@ export interface MirrorResponseDTO {
   createdAt: string;
 }
 
-// ─── Prompt building ───────────────────────────────
+type JourneyReflection = {
+  journeyPosition: number;
+  weekNumber: number;
+  weekTitle: string;
+  weekTheme: string;
+  dayNumber: number;
+  promptOrder: number;
+  response: string;
+};
+
+const RESONANCE_WEEK_PREFIX = "resonance-week:";
+
+function parseWeekNumber(productKey: string) {
+  if (!productKey.startsWith(RESONANCE_WEEK_PREFIX)) return null;
+
+  const weekNumber = Number(productKey.slice(RESONANCE_WEEK_PREFIX.length));
+  return Number.isInteger(weekNumber) && weekNumber >= 1 && weekNumber <= 10
+    ? weekNumber
+    : null;
+}
+
+async function getJourneyWeekOrder(userId: string, currentWeekNumber: number) {
+  const [weekEntitlements, legacyDaySevenContinues, priorWeeklyMirrors] =
+    await Promise.all([
+      prisma.oremea_entitlements.findMany({
+        where: {
+          user_id: userId,
+          status: "completed",
+          product_key: { startsWith: RESONANCE_WEEK_PREFIX },
+        },
+        orderBy: { updated_at: "asc" },
+        select: {
+          product_key: true,
+          updated_at: true,
+        },
+      }),
+      prisma.resonance_day_continues.findMany({
+        where: {
+          user_id: userId,
+          day_number: 7,
+        },
+        orderBy: { continued_at: "asc" },
+        select: {
+          week_number: true,
+          continued_at: true,
+        },
+      }),
+      prisma.mirror_responses.findMany({
+        where: {
+          user_id: userId,
+          day_number: 7,
+          tier: "full",
+        },
+        orderBy: { created_at: "asc" },
+        select: {
+          week_number: true,
+          created_at: true,
+        },
+      }),
+    ]);
+
+  const completedAtByWeek = new Map<number, Date>();
+
+  for (const row of priorWeeklyMirrors) {
+    if (row.week_number === currentWeekNumber) continue;
+    completedAtByWeek.set(row.week_number, row.created_at);
+  }
+
+  for (const row of legacyDaySevenContinues) {
+    if (row.week_number === currentWeekNumber) continue;
+
+    const existing = completedAtByWeek.get(row.week_number);
+    if (!existing || row.continued_at > existing) {
+      completedAtByWeek.set(row.week_number, row.continued_at);
+    }
+  }
+
+  for (const row of weekEntitlements) {
+    const weekNumber = parseWeekNumber(row.product_key);
+    if (weekNumber === null || weekNumber === currentWeekNumber) continue;
+
+    completedAtByWeek.set(weekNumber, row.updated_at);
+  }
+
+  const completedWeeks = Array.from(completedAtByWeek.entries())
+    .sort((a, b) => a[1].getTime() - b[1].getTime())
+    .map(([weekNumber]) => weekNumber);
+
+  return [...completedWeeks, currentWeekNumber];
+}
+
+async function getJourneyReflections(
+  userId: string,
+  journeyWeekOrder: number[],
+): Promise<JourneyReflection[]> {
+  const weekPosition = new Map(
+    journeyWeekOrder.map((weekNumber, index) => [weekNumber, index + 1]),
+  );
+
+  const completions = await prisma.prompt_completions.findMany({
+    where: {
+      user_id: userId,
+      day_prompts: {
+        resonance_days: {
+          resonance_weeks: {
+            week_number: { in: journeyWeekOrder },
+          },
+        },
+      },
+    },
+    select: {
+      response: true,
+      created_at: true,
+      day_prompts: {
+        select: {
+          prompt_order: true,
+          resonance_days: {
+            select: {
+              day_number: true,
+              resonance_weeks: {
+                select: {
+                  week_number: true,
+                  title: true,
+                  theme: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return completions
+    .map((completion) => {
+      const week = completion.day_prompts.resonance_days.resonance_weeks;
+      const response = completion.response.trim();
+      const journeyPosition = weekPosition.get(week.week_number);
+
+      if (!response || journeyPosition === undefined) return null;
+
+      return {
+        journeyPosition,
+        weekNumber: week.week_number,
+        weekTitle: week.title,
+        weekTheme: week.theme,
+        dayNumber: completion.day_prompts.resonance_days.day_number,
+        promptOrder: completion.day_prompts.prompt_order,
+        response,
+        createdAt: completion.created_at,
+      };
+    })
+    .filter(
+      (
+        reflection,
+      ): reflection is JourneyReflection & { createdAt: Date } => reflection !== null,
+    )
+    .sort((a, b) => {
+      if (a.journeyPosition !== b.journeyPosition) {
+        return a.journeyPosition - b.journeyPosition;
+      }
+      if (a.dayNumber !== b.dayNumber) return a.dayNumber - b.dayNumber;
+      if (a.promptOrder !== b.promptOrder) return a.promptOrder - b.promptOrder;
+      return a.createdAt.getTime() - b.createdAt.getTime();
+    })
+    .map(({ createdAt: _createdAt, ...reflection }) => reflection);
+}
+
+function buildJourneyTimeline(
+  reflections: JourneyReflection[],
+  journeyWeekOrder: number[],
+) {
+  return journeyWeekOrder
+    .map((weekNumber, index) => {
+      const weekReflections = reflections.filter(
+        (reflection) => reflection.weekNumber === weekNumber,
+      );
+
+      if (weekReflections.length === 0) return null;
+
+      const first = weekReflections[0];
+      const body = weekReflections
+        .map(
+          (reflection) =>
+            `[Day ${reflection.dayNumber} · Reflection ${reflection.promptOrder}]\n${reflection.response}`,
+        )
+        .join("\n\n");
+
+      return `JOURNEY POSITION ${index + 1}\nWeek ${weekNumber}: ${first.weekTitle}\nTheme: ${first.weekTheme}\n\n${body}`;
+    })
+    .filter((value): value is string => Boolean(value))
+    .join("\n\n---\n\n");
+}
 
 function buildPrompt(params: {
-  prewaveResponses: string[];
-  priorJourneyResponses: string[];
-  currentDayResponses: string[];
-  weekNumber: number;
-  dayNumber: number;
-  tier: "lite" | "full";
+  journeyWeekOrder: number[];
+  reflections: JourneyReflection[];
+  currentWeekNumber: number;
 }) {
-  const {
-    prewaveResponses,
-    priorJourneyResponses,
-    currentDayResponses,
-    weekNumber,
-    dayNumber,
-    tier,
-  } = params;
+  const { journeyWeekOrder, reflections, currentWeekNumber } = params;
+  const timeline = buildJourneyTimeline(reflections, journeyWeekOrder);
 
   return `
 You are the Resonance Mirror.
 
-You reflect what is becoming visible in the user's journey.
+Resonance means: Help me stay with myself.
 
-Current position:
-Week ${weekNumber}, Day ${dayNumber}
-Mirror tier: ${tier}
+This Mirror closes one completed Resonance week while looking across the participant's entire Resonance journey so far.
 
-You must use:
-1. the user's pre-wave responses
-2. the user's earlier journey reflections
-3. the user's reflections from THIS CURRENT DAY
+The numbered weeks are THEMATIC rooms. They are not chronological stages. The participant chooses their own week order. Treat JOURNEY POSITION as the true chronology.
 
-Your job is NOT to restate the same identity summary every day.
-Your job is to notice:
-- what is repeating
-- what feels newly revealed today
-- what tension is active now
-- what seems to be shifting
+The week closing now is Week ${currentWeekNumber}.
+The journey order so far is: ${journeyWeekOrder.map((week) => `Week ${week}`).join(" → ")}.
 
-WRITE LIKE THIS:
+YOUR TASK
+Reflect the longitudinal structure already present in the participant's own words.
 
+Look across the whole timeline for:
+- subjects, values, needs, relationships, conditions, or questions that remain present across different weeks
+- language that changes, becomes more precise, softens, strengthens, widens, or narrows over time
+- something the participant once described one way and later describes with greater distinction
+- what repeatedly matters to them, based on what they actually say matters
+- clarity that persists across changing circumstances
+- conditions under which they describe losing contact with clarity, second-guessing, circling, or being pulled away from what they know
+- recurring relationships or dependencies the participant explicitly describes
+- changes in how the participant describes their own participation
+- several truths that remain true at the same time
+- what becomes newly visible in the week closing now when placed beside the earlier journey
+
+EVIDENCE AND AUTHORITY
+- Participant language is authoritative about what they say, want, value, choose, notice, or know.
+- Repetition is evidence of recurrence, not proof of meaning.
+- A change in wording is evidence of changed wording. Describe what changed before assigning significance to it.
+- Several truths can coexist. Never manufacture a contradiction merely because two different statements are both present.
+- Distinguish direct statements from your interpretation.
+- Use grounded phrasing such as “you describe,” “you return to,” “across these weeks,” or “there may be” when interpretation is involved.
+- Preserve the participant's authority over what the pattern means.
+- Do not diagnose personality, attachment, trauma, pathology, readiness, healing, or psychological state.
+- Do not prescribe action, advise, coach, or tell the participant what to do next.
+- Do not treat intensity, repetition, punctuation, or emotional wording as proof of importance unless the participant identifies importance themselves.
+- Do not use previous generated Mirrors or generated 2Q as evidence. The timeline below contains participant reflections only.
+
+WRITING
 - grounded
 - clear
-- psychologically accurate
 - emotionally precise
-- not clinical
-- not generic
-- not mystical
-- not repetitive
+- human rather than clinical
+- specific rather than generic
+- spacious enough to hold complexity
+- proportionate to the available evidence
 
-RULES:
+Write a cumulative reflection of roughly 6 to 10 short paragraphs.
+Begin with what becomes most visible when the journey is viewed as a whole.
+Then show meaningful continuity and change across actual journey positions.
+Give particular attention to what the newly completed week adds, clarifies, or changes in relation to what came before.
+End with a grounded statement of what is now available for the participant to see in their own account.
 
-- Do not summarize the whole person
-- Do not give the same reflection every day
-- Do not repeat broad traits unless today's material genuinely supports them
-- Prioritize what is fresh, alive, specific, or newly clarified in today's reflections
-- Start from one concrete emotional edge, image, phrase, or tension that appears in today's writing
-- If an older pattern appears again, connect it briefly, then move to what is different now
-- Name one real tension or contradiction if present
-- Name one thing that feels newly revealed today
-- Keep it concise but meaningful
-- Write as though you truly heard the person, not as though you evaluated them
+Do not use headings.
+Do not write “The mirror shows.”
+Do not end with questions. Daily 2Q already holds the questioning function.
 
-STRUCTURE:
+PARTICIPANT REFLECTION TIMELINE
 
-- Do not use headings.
-- Do not write “The mirror shows:”
-- Do not write “Two questions:”
-- Do not bold section titles.
-- Let the reflection and the two questions flow naturally without labels.
-
-1. Begin with the most alive specific thing from today's reflections
-2. Name what it reveals underneath in plain, human language
-3. Name one real tension or contradiction if present
-4. Briefly distinguish what feels old versus what feels newly emerging today
-5. Keep the reflection grounded and concise
-6. End with exactly 2 precise questions that directly relate to what you just named
-
-QUESTION RULES:
-
-- Questions must reference the user's actual themes and wording energy
-- Avoid phrases like "how do you feel" or "what does this mean to you"
-- Ask something that makes the user pause and notice something real
-- At least one question should point to the tension between what the user wants and what they protect
-
-PRE-WAVE:
-${prewaveResponses.length ? prewaveResponses.join("\n\n") : "None"}
-
-EARLIER JOURNEY RESPONSES:
-${priorJourneyResponses.length ? priorJourneyResponses.join("\n\n") : "None"}
-
-CURRENT DAY RESPONSES:
-${currentDayResponses.length ? currentDayResponses.join("\n\n") : "None"}
+${timeline}
 `;
 }
-
-// ─── API call ──────────────────────────────────────
 
 async function callMirrorAPI(prompt: string): Promise<string | null> {
   try {
@@ -122,7 +288,7 @@ async function callMirrorAPI(prompt: string): Promise<string | null> {
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 850,
+        max_tokens: 1400,
         messages: [{ role: "user", content: prompt }],
       }),
     });
@@ -137,7 +303,7 @@ async function callMirrorAPI(prompt: string): Promise<string | null> {
     const text = Array.isArray(data?.content)
       ? data.content
           .filter(
-            (item: { type?: string; text?: string }) => item?.type === "text"
+            (item: { type?: string; text?: string }) => item?.type === "text",
           )
           .map((item: { text?: string }) => item.text ?? "")
           .join("\n\n")
@@ -156,21 +322,23 @@ async function callMirrorAPI(prompt: string): Promise<string | null> {
   }
 }
 
-// ─── Main ──────────────────────────────────────────
-
 export async function runMirrorSynthesis(
   userId: string,
   weekNumber: number,
   dayNumber: number,
-  tier: "lite" | "full" = "full"
+  tier: "lite" | "full" = "full",
 ): Promise<MirrorResponseDTO | null> {
+  if (dayNumber !== 7 || tier !== "full") {
+    return null;
+  }
+
   const existing = await prisma.mirror_responses.findFirst({
     where: {
-  user_id: userId,
-  week_number: weekNumber,
-  day_number: dayNumber,
-  tier,
-},
+      user_id: userId,
+      week_number: weekNumber,
+      day_number: 7,
+      tier: "full",
+    },
     select: {
       id: true,
       user_id: true,
@@ -189,132 +357,87 @@ export async function runMirrorSynthesis(
       weekNumber: existing.week_number,
       dayNumber: existing.day_number,
       output: existing.output,
-      tier: existing.tier as "lite" | "full",
+      tier: "full",
       createdAt: existing.created_at.toISOString(),
     };
   }
 
-  const mode: "lite" | "full" = tier;
+  const journeyWeekOrder = await getJourneyWeekOrder(userId, weekNumber);
+  const reflections = await getJourneyReflections(userId, journeyWeekOrder);
 
-  const allJourneyCompletions = await prisma.prompt_completions.findMany({
-  where: {
-    user_id: userId,
-  },
-  orderBy: { created_at: "asc" },
-  select: {
-    response: true,
-    created_at: true,
-    day_prompts: {
-      select: {
-        resonance_days: {
-          select: {
-            day_number: true,
-            resonance_weeks: {
-              select: {
-                week_number: true,
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-});
+  const currentWeekReflectionCount = reflections.filter(
+    (reflection) => reflection.weekNumber === weekNumber,
+  ).length;
 
-const priorJourneyResponses = allJourneyCompletions
-    .filter((c) => {
-      const completionWeek =
-        c.day_prompts?.resonance_days?.resonance_weeks?.week_number ?? null;
-      const completionDay = c.day_prompts?.resonance_days?.day_number ?? null;
-
-      if (completionWeek === null || completionDay === null) return false;
-
-      if (completionWeek < weekNumber) return true;
-      if (completionWeek === weekNumber && completionDay < dayNumber) return true;
-
-      return false;
-    })
-    .map((c) => c.response?.trim())
-    .filter((value): value is string => Boolean(value))
-    .slice(-24);
-
-  const currentDayResponses = allJourneyCompletions
-    .filter((c) => {
-      const completionWeek =
-        c.day_prompts?.resonance_days?.resonance_weeks?.week_number ?? null;
-      const completionDay = c.day_prompts?.resonance_days?.day_number ?? null;
-
-      return completionWeek === weekNumber && completionDay === dayNumber;
-    })
-    .map((c) => c.response?.trim())
-    .filter((value): value is string => Boolean(value))
-    .slice(-8);
-
-  if (
-  priorJourneyResponses.length === 0 &&
-  currentDayResponses.length === 0
-) {
+  if (currentWeekReflectionCount === 0) {
     return null;
   }
 
   const prompt = buildPrompt({
-    prewaveResponses: [],
-    priorJourneyResponses,
-    currentDayResponses,
-    weekNumber,
-    dayNumber,
-    tier: mode,
+    journeyWeekOrder,
+    reflections,
+    currentWeekNumber: weekNumber,
   });
 
   const output = await callMirrorAPI(prompt);
+  if (!output) return null;
 
-  if (!output) {
-    return null;
-  }
+  const reflectionCountsByWeek = journeyWeekOrder.map((journeyWeek) => ({
+    weekNumber: journeyWeek,
+    reflectionCount: reflections.filter(
+      (reflection) => reflection.weekNumber === journeyWeek,
+    ).length,
+  }));
 
   const saved = await prisma.mirror_responses.upsert({
-  where: {
-    user_id_week_number_day_number: {
+    where: {
+      user_id_week_number_day_number: {
+        user_id: userId,
+        week_number: weekNumber,
+        day_number: 7,
+      },
+    },
+    update: {
+      output,
+      tier: "full",
+      patterns_detected: [],
+      contradictions: [],
+      input_snapshot: {
+        type: "resonance_weekly_cumulative_mirror",
+        evidenceSource: "participant_reflections_only",
+        currentWeekNumber: weekNumber,
+        journeyWeekOrder,
+        reflectionCountsByWeek,
+        totalReflectionCount: reflections.length,
+      },
+    },
+    create: {
       user_id: userId,
       week_number: weekNumber,
-      day_number: dayNumber,
+      day_number: 7,
+      output,
+      patterns_detected: [],
+      contradictions: [],
+      input_snapshot: {
+        type: "resonance_weekly_cumulative_mirror",
+        evidenceSource: "participant_reflections_only",
+        currentWeekNumber: weekNumber,
+        journeyWeekOrder,
+        reflectionCountsByWeek,
+        totalReflectionCount: reflections.length,
+      },
+      tier: "full",
     },
-  },
-  update: {
-    output,
-    tier: mode,
-    patterns_detected: [],
-    contradictions: [],
-    input_snapshot: {
-      prewaveCount: 0,
-      priorJourneyCount: priorJourneyResponses.length,
-      currentDayCount: currentDayResponses.length,
+    select: {
+      id: true,
+      user_id: true,
+      week_number: true,
+      day_number: true,
+      output: true,
+      tier: true,
+      created_at: true,
     },
-  },
-  create: {
-    user_id: userId,
-    week_number: weekNumber,
-    day_number: dayNumber,
-    output,
-    patterns_detected: [],
-    contradictions: [],
-    input_snapshot: {
-      prewaveCount: 0,
-      priorJourneyCount: priorJourneyResponses.length,
-      currentDayCount: currentDayResponses.length,
-    },
-    tier: mode,
-  },
-  select: {
-    id: true,
-    user_id: true,
-    week_number: true,
-    day_number: true,
-    output: true,
-    tier: true,
-    created_at: true,
-  },
-});
+  });
 
   return {
     id: saved.id,
@@ -322,16 +445,17 @@ const priorJourneyResponses = allJourneyCompletions
     weekNumber: saved.week_number,
     dayNumber: saved.day_number,
     output: saved.output,
-    tier: saved.tier as "lite" | "full",
+    tier: "full",
     createdAt: saved.created_at.toISOString(),
   };
 }
 
-// ─── History ───────────────────────────────────────
-
 export async function getMirrorHistory(userId: string) {
   const rows = await prisma.mirror_responses.findMany({
-    where: { user_id: userId },
+    where: {
+      user_id: userId,
+      tier: "full",
+    },
     orderBy: { created_at: "desc" },
     select: {
       id: true,
@@ -344,13 +468,13 @@ export async function getMirrorHistory(userId: string) {
     },
   });
 
-  return rows.map((r) => ({
-    id: r.id,
-    userId: r.user_id,
-    weekNumber: r.week_number,
-    dayNumber: r.day_number,
-    output: r.output,
-    tier: r.tier as "lite" | "full",
-    createdAt: r.created_at.toISOString(),
+  return rows.map((row) => ({
+    id: row.id,
+    userId: row.user_id,
+    weekNumber: row.week_number,
+    dayNumber: row.day_number,
+    output: row.output,
+    tier: row.tier as "lite" | "full",
+    createdAt: row.created_at.toISOString(),
   }));
 }
