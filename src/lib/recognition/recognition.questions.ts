@@ -7,15 +7,15 @@ export type RecognitionQuestion = {
 export const RECOGNITION_QUESTIONS: RecognitionQuestion[] = [
   {
     key: "attention",
-    text: "What has been taking up the most space in your attention lately?",
+    text: "What has been taking up space in your attention lately?",
     support:
-      "Start wherever your mind keeps returning. Give it enough detail that someone reading your words could understand what has your attention.",
+      "Write every thought that comes up as you read this. You can begin with \"I don't know what to write.\" Then keep going with whatever comes after it. A person, conversation, decision, responsibility, idea, possibility, something unfinished, something changing, or several things at once can all belong here.",
   },
   {
     key: "reality",
-    text: "Stay with what you just named. What is actually happening around it right now?",
+    text: "Looking at what you just wrote, what is actually happening around what you named right now?",
     support:
-      "You can include what happened, who is involved, what has changed, and what keeps requiring your attention.",
+      "You can include what happened, who is involved, what has changed, what keeps needing your attention, and how the different parts connect.",
   },
   {
     key: "people",
@@ -37,9 +37,9 @@ export const RECOGNITION_QUESTIONS: RecognitionQuestion[] = [
   },
   {
     key: "weight",
-    text: "Which part of everything you have written carries the most weight for you?",
+    text: "Looking back at everything you've written, what matters most to you?",
     support:
-      "Stay with that part for a moment. What gives it its importance?",
+      "Stay with whatever your attention goes to first. What makes that matter to you?",
   },
   {
     key: "distinction",
