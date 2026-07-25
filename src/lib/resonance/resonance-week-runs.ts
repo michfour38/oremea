@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma";
 
-export type ResonanceWeekRunStatus = "active" | "completed" | "cancelled";
+export type ResonanceWeekRunStatus =
+  | "active"
+  | "completed"
+  | "preserved"
+  | "cancelled";
 
 export type ResonanceWeekRun = {
   id: string;
