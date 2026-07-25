@@ -2,7 +2,12 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { getResonanceWeekState } from "@/src/lib/resonance/resonance-week-state";
+import { getActiveResonanceRun } from "@/src/lib/resonance/resonance-week-run";
+import {
+  getRunContinuedDays,
+  getRunGuidance,
+  getRunPromptCompletions,
+} from "@/src/lib/resonance/resonance-run-data";
 
 function parseQuestions(output: string) {
   return output
@@ -65,26 +70,7 @@ ${reflections.join("\n\n")}
     : "";
 
   const questions = parseQuestions(text);
-
   return questions.length === 2 ? questions : null;
-}
-
-async function getCurrentActiveDay(userId: string, weekNumber: number) {
-  const continues = await prisma.resonance_day_continues.findMany({
-    where: {
-      user_id: userId,
-      week_number: weekNumber,
-    },
-    select: { day_number: true },
-  });
-
-  const completedDays = new Set(continues.map((row) => row.day_number));
-
-  for (let dayNumber = 1; dayNumber <= 7; dayNumber += 1) {
-    if (!completedDays.has(dayNumber)) return dayNumber;
-  }
-
-  return null;
 }
 
 async function assertActiveCompletedDay(
@@ -103,10 +89,19 @@ async function assertActiveCompletedDay(
     return null;
   }
 
-  const state = await getResonanceWeekState(userId);
-  if (state.activeWeek !== weekNumber) return null;
+  const activeRun = await getActiveResonanceRun(userId);
+  if (!activeRun || activeRun.weekNumber !== weekNumber) return null;
 
-  const currentDay = await getCurrentActiveDay(userId, weekNumber);
+  const completedDays = await getRunContinuedDays(activeRun.id);
+  let currentDay: number | null = null;
+
+  for (let candidate = 1; candidate <= 7; candidate += 1) {
+    if (!completedDays.has(candidate)) {
+      currentDay = candidate;
+      break;
+    }
+  }
+
   if (currentDay !== dayNumber) return null;
 
   const day = await prisma.resonance_days.findFirst({
@@ -121,31 +116,25 @@ async function assertActiveCompletedDay(
       day_prompts: {
         where: { is_published: true },
         orderBy: { prompt_order: "asc" },
-        select: {
-          id: true,
-          prompt_completions: {
-            where: { user_id: userId },
-            select: { response: true },
-          },
-        },
+        select: { id: true },
       },
     },
   });
 
   if (!day || day.day_prompts.length === 0) return null;
 
-  const allPromptsCompleted = day.day_prompts.every(
-    (prompt) => prompt.prompt_completions.length > 0,
-  );
+  const promptIds = day.day_prompts.map((prompt) => prompt.id);
+  const completions = await getRunPromptCompletions(activeRun.id, promptIds);
 
-  if (!allPromptsCompleted) return null;
+  if (promptIds.some((promptId) => !completions.has(promptId))) return null;
 
-  const reflections = day.day_prompts
-    .flatMap((prompt) => prompt.prompt_completions)
-    .map((completion) => completion.response?.trim())
-    .filter((value): value is string => Boolean(value));
+  const reflections = promptIds
+    .map((promptId) => completions.get(promptId)?.response.trim() ?? "")
+    .filter(Boolean);
 
-  return reflections.length > 0 ? reflections : null;
+  return reflections.length > 0
+    ? { runId: activeRun.id, reflections }
+    : null;
 }
 
 export async function GET(request: Request) {
@@ -163,22 +152,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ questions: [] }, { status: 400 });
   }
 
-  const existing = await prisma.resonance_day_guidance.findUnique({
-    where: {
-      user_id_week_number_day_number: {
-        user_id: userId,
-        week_number: weekNumber,
-        day_number: dayNumber,
-      },
-    },
-    select: {
-      question_one: true,
-      question_two: true,
-    },
-  });
+  const activeRun = await getActiveResonanceRun(userId);
+  if (!activeRun || activeRun.weekNumber !== weekNumber) {
+    return NextResponse.json({ questions: [] }, { status: 400 });
+  }
+
+  const existing = await getRunGuidance(activeRun.id, dayNumber);
 
   return NextResponse.json({
-    questions: existing ? [existing.question_one, existing.question_two] : [],
+    questions: existing ? [existing.questionOne, existing.questionTwo] : [],
   });
 }
 
@@ -197,40 +179,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid params" }, { status: 400 });
   }
 
-  const existing = await prisma.resonance_day_guidance.findUnique({
-    where: {
-      user_id_week_number_day_number: {
-        user_id: userId,
-        week_number: weekNumber,
-        day_number: dayNumber,
-      },
-    },
-    select: {
-      question_one: true,
-      question_two: true,
-    },
-  });
+  const activeRun = await getActiveResonanceRun(userId);
+  if (!activeRun || activeRun.weekNumber !== weekNumber) {
+    return NextResponse.json({ error: "This Resonance run is not active" }, { status: 400 });
+  }
 
+  const existing = await getRunGuidance(activeRun.id, dayNumber);
   if (existing) {
     return NextResponse.json({
-      questions: [existing.question_one, existing.question_two],
+      questions: [existing.questionOne, existing.questionTwo],
     });
   }
 
-  const reflections = await assertActiveCompletedDay(
+  const completedDay = await assertActiveCompletedDay(
     userId,
     weekNumber,
     dayNumber,
   );
 
-  if (!reflections) {
+  if (!completedDay) {
     return NextResponse.json(
       { error: "Complete the current day before generating questions" },
       { status: 400 },
     );
   }
 
-  const questions = await callQuestionAPI(reflections);
+  const questions = await callQuestionAPI(completedDay.reflections);
 
   if (!questions) {
     return NextResponse.json(
@@ -239,20 +213,40 @@ export async function POST(request: Request) {
     );
   }
 
-  await prisma.resonance_day_guidance.create({
-    data: {
-      user_id: userId,
-      week_number: weekNumber,
-      day_number: dayNumber,
-      question_one: questions[0],
-      question_two: questions[1],
-      input_snapshot: {
-        type: "two_questions",
-        reflections,
-        questions,
-      },
-    },
+  const inputSnapshot = JSON.stringify({
+    type: "two_questions",
+    runId: completedDay.runId,
+    reflections: completedDay.reflections,
+    questions,
   });
+
+  await prisma.$executeRaw`
+    INSERT INTO "resonance_day_guidance" (
+      "user_id",
+      "week_number",
+      "day_number",
+      "run_id",
+      "question_one",
+      "question_two",
+      "input_snapshot",
+      "generated_at",
+      "created_at",
+      "updated_at"
+    )
+    VALUES (
+      ${userId},
+      ${weekNumber},
+      ${dayNumber},
+      ${completedDay.runId}::uuid,
+      ${questions[0]},
+      ${questions[1]},
+      ${inputSnapshot}::jsonb,
+      CURRENT_TIMESTAMP,
+      CURRENT_TIMESTAMP,
+      CURRENT_TIMESTAMP
+    )
+    ON CONFLICT ("run_id", "day_number") DO NOTHING
+  `;
 
   return NextResponse.json({ questions });
 }
