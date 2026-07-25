@@ -32,9 +32,9 @@ export async function GET(request: Request) {
 
   const guidance = await getRunGuidance(activeRun.id, 7);
 
-  if (!guidance) {
+  if (!guidance?.answerOne?.trim() || !guidance.answerTwo?.trim()) {
     return NextResponse.redirect(
-      `${APP_URL}/resonance?mirror=questions-required#mirror`,
+      `${APP_URL}/resonance?mirror=answers-required#mirror`,
     );
   }
 
