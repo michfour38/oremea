@@ -69,6 +69,24 @@ ${reflections.join("\n\n")}
   return questions.length === 2 ? questions : null;
 }
 
+async function getCurrentActiveDay(userId: string, weekNumber: number) {
+  const continues = await prisma.resonance_day_continues.findMany({
+    where: {
+      user_id: userId,
+      week_number: weekNumber,
+    },
+    select: { day_number: true },
+  });
+
+  const completedDays = new Set(continues.map((row) => row.day_number));
+
+  for (let dayNumber = 1; dayNumber <= 7; dayNumber += 1) {
+    if (!completedDays.has(dayNumber)) return dayNumber;
+  }
+
+  return null;
+}
+
 async function assertActiveCompletedDay(
   userId: string,
   weekNumber: number,
@@ -87,6 +105,9 @@ async function assertActiveCompletedDay(
 
   const state = await getResonanceWeekState(userId);
   if (state.activeWeek !== weekNumber) return null;
+
+  const currentDay = await getCurrentActiveDay(userId, weekNumber);
+  if (currentDay !== dayNumber) return null;
 
   const day = await prisma.resonance_days.findFirst({
     where: {
