@@ -8,11 +8,20 @@ import { prisma } from "@/lib/prisma";
 import {
   activateResonanceWeek,
   completeResonanceWeek,
-  getResonanceWeekState,
 } from "@/src/lib/resonance/resonance-week-state";
+import {
+  completeResonanceRun,
+  getActiveResonanceRun,
+} from "@/src/lib/resonance/resonance-week-run";
+import {
+  getRunContinuedDays,
+  getRunGuidance,
+  getRunMirror,
+  getRunPromptCompletions,
+} from "@/src/lib/resonance/resonance-run-data";
+import { completeRunPrompt } from "@/src/lib/resonance/complete-run-prompt";
 
 import {
-  completePrompt,
   toggleWitness,
   toggleResonated,
   upsertAnalysis,
@@ -30,16 +39,8 @@ import {
   signalDepthAlignment,
 } from "../signals/signals.service";
 
-async function getCurrentActiveDay(userId: string, weekNumber: number) {
-  const continues = await prisma.resonance_day_continues.findMany({
-    where: {
-      user_id: userId,
-      week_number: weekNumber,
-    },
-    select: { day_number: true },
-  });
-
-  const completedDays = new Set(continues.map((row) => row.day_number));
+async function getCurrentActiveDay(runId: string) {
+  const completedDays = await getRunContinuedDays(runId);
 
   for (let dayNumber = 1; dayNumber <= 7; dayNumber += 1) {
     if (!completedDays.has(dayNumber)) return dayNumber;
@@ -53,19 +54,22 @@ async function assertActiveDay(
   weekNumber: number,
   dayNumber: number,
 ) {
-  const state = await getResonanceWeekState(userId);
-  if (state.activeWeek !== weekNumber) {
+  const activeRun = await getActiveResonanceRun(userId);
+
+  if (!activeRun || activeRun.weekNumber !== weekNumber) {
     throw new Error("This Resonance week is not active.");
   }
 
-  const currentDay = await getCurrentActiveDay(userId, weekNumber);
+  const currentDay = await getCurrentActiveDay(activeRun.id);
   if (currentDay !== dayNumber) {
     throw new Error("This Resonance day is not currently active.");
   }
+
+  return activeRun;
 }
 
 async function assertAllDayReflectionsComplete(
-  userId: string,
+  runId: string,
   weekNumber: number,
   dayNumber: number,
 ) {
@@ -80,13 +84,7 @@ async function assertAllDayReflectionsComplete(
     select: {
       day_prompts: {
         where: { is_published: true },
-        select: {
-          id: true,
-          prompt_completions: {
-            where: { user_id: userId },
-            select: { id: true },
-          },
-        },
+        select: { id: true },
       },
     },
   });
@@ -95,13 +93,42 @@ async function assertAllDayReflectionsComplete(
     throw new Error("This Resonance day is not available.");
   }
 
-  const allComplete = day.day_prompts.every(
-    (prompt) => prompt.prompt_completions.length > 0,
-  );
+  const promptIds = day.day_prompts.map((prompt) => prompt.id);
+  const completions = await getRunPromptCompletions(runId, promptIds);
 
-  if (!allComplete) {
+  if (promptIds.some((promptId) => !completions.has(promptId))) {
     throw new Error("Complete today's reflections before continuing.");
   }
+}
+
+async function continueRunDay(params: {
+  runId: string;
+  userId: string;
+  weekNumber: number;
+  dayNumber: number;
+}) {
+  const { runId, userId, weekNumber, dayNumber } = params;
+
+  await prisma.$executeRaw`
+    INSERT INTO "journey_day_continues" (
+      "user_id",
+      "week_number",
+      "day_number",
+      "run_id",
+      "continued_at",
+      "created_at"
+    )
+    VALUES (
+      ${userId},
+      ${weekNumber},
+      ${dayNumber},
+      ${runId}::uuid,
+      CURRENT_TIMESTAMP,
+      CURRENT_TIMESTAMP
+    )
+    ON CONFLICT ("run_id", "day_number")
+    DO UPDATE SET "continued_at" = CURRENT_TIMESTAMP
+  `;
 }
 
 export async function activateResonanceWeekAction(formData: FormData) {
@@ -111,6 +138,8 @@ export async function activateResonanceWeekAction(formData: FormData) {
   const weekNumber = Number(formData.get("weekNumber"));
   if (!weekNumber) return;
 
+  // Kept temporarily for legacy access while the purchase entry point is
+  // migrated to create a Resonance run directly.
   await activateResonanceWeek(userId, weekNumber);
 
   revalidatePath("/entry");
@@ -151,9 +180,14 @@ export async function submitPromptAction(formData: FormData) {
 
   const weekNumber = prompt.resonance_days.resonance_weeks.week_number;
   const dayNumber = prompt.resonance_days.day_number;
+  const activeRun = await assertActiveDay(userId, weekNumber, dayNumber);
 
-  await assertActiveDay(userId, weekNumber, dayNumber);
-  await completePrompt(promptId, userId, response, false);
+  await completeRunPrompt({
+    promptId,
+    userId,
+    runId: activeRun.id,
+    response,
+  });
 
   try {
     signalResonanceOnCompletion(userId, promptId, response);
@@ -289,40 +323,19 @@ export async function continueResonanceDayAction(formData: FormData) {
 
   if (!weekNumber || !dayNumber || dayNumber < 1 || dayNumber > 6) return;
 
-  await assertActiveDay(userId, weekNumber, dayNumber);
-  await assertAllDayReflectionsComplete(userId, weekNumber, dayNumber);
+  const activeRun = await assertActiveDay(userId, weekNumber, dayNumber);
+  await assertAllDayReflectionsComplete(activeRun.id, weekNumber, dayNumber);
 
-  const guidance = await prisma.resonance_day_guidance.findUnique({
-    where: {
-      user_id_week_number_day_number: {
-        user_id: userId,
-        week_number: weekNumber,
-        day_number: dayNumber,
-      },
-    },
-    select: { id: true },
-  });
-
+  const guidance = await getRunGuidance(activeRun.id, dayNumber);
   if (!guidance) {
     throw new Error("Complete today's 2Q before continuing.");
   }
 
-  await prisma.resonance_day_continues.upsert({
-    where: {
-      user_id_week_number_day_number: {
-        user_id: userId,
-        week_number: weekNumber,
-        day_number: dayNumber,
-      },
-    },
-    update: {
-      continued_at: new Date(),
-    },
-    create: {
-      user_id: userId,
-      week_number: weekNumber,
-      day_number: dayNumber,
-    },
+  await continueRunDay({
+    runId: activeRun.id,
+    userId,
+    weekNumber,
+    dayNumber,
   });
 
   revalidatePath("/resonance");
@@ -336,30 +349,12 @@ export async function completeResonanceWeekAction(formData: FormData) {
   const weekNumber = Number(formData.get("weekNumber"));
   if (!weekNumber) return;
 
-  await assertActiveDay(userId, weekNumber, 7);
-  await assertAllDayReflectionsComplete(userId, weekNumber, 7);
+  const activeRun = await assertActiveDay(userId, weekNumber, 7);
+  await assertAllDayReflectionsComplete(activeRun.id, weekNumber, 7);
 
   const [guidance, mirror] = await Promise.all([
-    prisma.resonance_day_guidance.findUnique({
-      where: {
-        user_id_week_number_day_number: {
-          user_id: userId,
-          week_number: weekNumber,
-          day_number: 7,
-        },
-      },
-      select: { id: true },
-    }),
-    prisma.mirror_responses.findUnique({
-      where: {
-        user_id_week_number_day_number: {
-          user_id: userId,
-          week_number: weekNumber,
-          day_number: 7,
-        },
-      },
-      select: { id: true, tier: true },
-    }),
+    getRunGuidance(activeRun.id, 7),
+    getRunMirror(activeRun.id, 7),
   ]);
 
   if (!guidance) {
@@ -370,22 +365,17 @@ export async function completeResonanceWeekAction(formData: FormData) {
     throw new Error("Open the weekly Mirror before completing the week.");
   }
 
-  await prisma.resonance_day_continues.upsert({
-    where: {
-      user_id_week_number_day_number: {
-        user_id: userId,
-        week_number: weekNumber,
-        day_number: 7,
-      },
-    },
-    update: { continued_at: new Date() },
-    create: {
-      user_id: userId,
-      week_number: weekNumber,
-      day_number: 7,
-    },
+  await continueRunDay({
+    runId: activeRun.id,
+    userId,
+    weekNumber,
+    dayNumber: 7,
   });
 
+  await completeResonanceRun(userId, activeRun.id);
+
+  // Keep the legacy entitlement ledger synchronized until /entry purchase
+  // selection is moved fully onto run purchases.
   await completeResonanceWeek(userId, weekNumber);
 
   revalidatePath("/entry");
