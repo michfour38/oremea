@@ -13,7 +13,7 @@ export function ExploreWhatIs() {
           </h2>
         </div>
 
-        <div className="space-y-8 text-base leading-8 text-zinc-400">
+        <div className="space-y-8 text-base leading-8 text-zinc-300">
           <p>
             Oremea is a structured self-awareness and relational
             intelligence ecosystem designed to help individuals and
