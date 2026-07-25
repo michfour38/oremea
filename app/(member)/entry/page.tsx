@@ -3,56 +3,20 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
-import { getResonanceWeekState } from "@/src/lib/resonance/resonance-week-state";
+import { getRunContinuedDays } from "@/src/lib/resonance/resonance-run-data";
+import {
+  getActiveResonanceRun,
+  getResonanceWeekRuns,
+} from "@/src/lib/resonance/resonance-week-run";
 import MemberNav from "../member-nav";
-import { activateResonanceWeekAction } from "../resonance/actions";
 
 export const dynamic = "force-dynamic";
 
-async function getActiveWeekDay(userId: string, weekNumber: number) {
-  const week = await prisma.resonance_weeks.findUnique({
-    where: { week_number: weekNumber },
-    include: {
-      resonance_days: {
-        orderBy: { day_number: "asc" },
-        include: {
-          day_prompts: {
-            where: { is_published: true },
-            include: {
-              prompt_completions: {
-                where: { user_id: userId },
-                select: { id: true },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
+async function getActiveRunDay(runId: string) {
+  const continuedDays = await getRunContinuedDays(runId);
 
-  if (!week) return 1;
-
-  const continued = await prisma.resonance_day_continues.findMany({
-    where: {
-      user_id: userId,
-      week_number: weekNumber,
-    },
-    select: { day_number: true },
-  });
-
-  const continuedDays = new Set(continued.map((row) => row.day_number));
-
-  for (const day of week.resonance_days) {
-    const prompts = day.day_prompts;
-    if (prompts.length === 0) continue;
-
-    const reflectionsComplete = prompts.every(
-      (prompt) => prompt.prompt_completions.length > 0,
-    );
-
-    if (!reflectionsComplete || !continuedDays.has(day.day_number)) {
-      return day.day_number;
-    }
+  for (let dayNumber = 1; dayNumber <= 7; dayNumber += 1) {
+    if (!continuedDays.has(dayNumber)) return dayNumber;
   }
 
   return 7;
@@ -87,7 +51,7 @@ export default async function EntryPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in?redirect_url=%2Fentry");
 
-  const [weeks, weekState] = await Promise.all([
+  const [weeks, activeRun, runs] = await Promise.all([
     prisma.resonance_weeks.findMany({
       orderBy: { week_number: "asc" },
       select: {
@@ -97,14 +61,18 @@ export default async function EntryPage() {
         is_published: true,
       },
     }),
-    getResonanceWeekState(userId),
+    getActiveResonanceRun(userId),
+    getResonanceWeekRuns(userId),
   ]);
 
-  const activeDay = weekState.activeWeek
-    ? await getActiveWeekDay(userId, weekState.activeWeek)
-    : null;
+  const activeDay = activeRun ? await getActiveRunDay(activeRun.id) : null;
 
-  const completedSet = new Set(weekState.completedWeeks);
+  const runsByWeek = new Map<number, typeof runs>();
+  for (const run of runs) {
+    const weekRuns = runsByWeek.get(run.weekNumber) ?? [];
+    weekRuns.push(run);
+    runsByWeek.set(run.weekNumber, weekRuns);
+  }
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-zinc-950 text-white">
@@ -155,25 +123,44 @@ export default async function EntryPage() {
               <p className="text-xs uppercase tracking-[0.3em] text-[#f1dfb4]/70">
                 Resonance
               </p>
-              <h2 className="mt-3 text-3xl font-light">Choose one week.</h2>
+              <h2 className="mt-3 text-3xl font-light">Choose a room.</h2>
               <p className="mt-4 text-base leading-8 text-zinc-300">
-                Each week is its own room. When no week is active, every unfinished
-                published week is available. Once you enter one, that week becomes
-                your Resonance space until its seventh day and cumulative Mirror are
-                complete.
+                Each purchase opens one seven-day Resonance run. When the run
+                closes, that visit remains available in the archive. Returning to
+                the same room later opens a new run while preserving the earlier
+                visit.
               </p>
             </div>
 
             <div className="mt-8 space-y-4">
               {weeks.map((week) => {
-                const isCompleted = completedSet.has(week.week_number);
-                const isActive = weekState.activeWeek === week.week_number;
-                const isAvailable =
-                  week.is_published &&
-                  weekState.activeWeek === null &&
-                  !isCompleted;
-                const isLocked =
-                  !isCompleted && !isActive && !isAvailable;
+                const weekRuns = runsByWeek.get(week.week_number) ?? [];
+                const completedRuns = weekRuns.filter(
+                  (run) => run.status === "completed",
+                );
+                const preservedRuns = weekRuns.filter(
+                  (run) => run.status === "preserved",
+                );
+                const hasArchivedHistory =
+                  completedRuns.length > 0 || preservedRuns.length > 0;
+                const isActive = activeRun?.weekNumber === week.week_number;
+                const canPurchase = week.is_published && activeRun === null;
+                const isLockedByActive =
+                  week.is_published && activeRun !== null && !isActive;
+
+                const status = isActive
+                  ? `Active · Run ${activeRun.runNumber} · Day ${activeDay ?? 1}`
+                  : completedRuns.length > 1
+                    ? `${completedRuns.length} completed visits`
+                    : completedRuns.length === 1
+                      ? `Completed · Run ${completedRuns[0].runNumber}`
+                      : preservedRuns.length > 0
+                        ? "Preserved visit"
+                        : isLockedByActive
+                          ? "Locked"
+                          : week.is_published
+                            ? "Available to purchase"
+                            : "Unavailable";
 
                 return (
                   <details
@@ -191,13 +178,7 @@ export default async function EntryPage() {
 
                       <div className="flex items-center gap-3">
                         <span className="rounded-full border border-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-zinc-400">
-                          {isCompleted
-                            ? "Completed"
-                            : isActive
-                              ? `Active · Day ${activeDay ?? 1}`
-                              : isAvailable
-                                ? "Available"
-                                : "Locked"}
+                          {status}
                         </span>
                         <span className="text-zinc-500 transition group-open:rotate-180">
                           ↓
@@ -216,40 +197,40 @@ export default async function EntryPage() {
                             href="/resonance"
                             className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-2.5 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/10"
                           >
-                            Continue Week {week.week_number}
+                            Continue Week {week.week_number} · Run {activeRun.runNumber}
                           </Link>
                         ) : null}
 
-                        {isAvailable ? (
-                          <form action={activateResonanceWeekAction}>
-                            <input
-                              type="hidden"
-                              name="weekNumber"
-                              value={week.week_number}
-                            />
-                            <button
-                              type="submit"
-                              className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-2.5 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/10"
-                            >
-                              Enter Week {week.week_number}
-                            </button>
-                          </form>
-                        ) : null}
-
-                        {isCompleted ? (
+                        {hasArchivedHistory ? (
                           <Link
-                            href="/resonance/archive?view=day"
+                            href="/resonance/archive?view=journey"
                             className="inline-flex rounded-xl border border-white/10 px-5 py-2.5 text-sm text-zinc-300 transition hover:border-white/20 hover:text-white"
                           >
-                            View in archive
+                            View previous visit{weekRuns.length === 1 ? "" : "s"}
                           </Link>
                         ) : null}
 
-                        {isLocked ? (
+                        {canPurchase ? (
+                          <Link
+                            href={`/resonance/purchase?week=${week.week_number}`}
+                            className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-2.5 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/10"
+                          >
+                            {hasArchivedHistory
+                              ? `Purchase Week ${week.week_number} again · $5`
+                              : `Purchase Week ${week.week_number} · $5`}
+                          </Link>
+                        ) : null}
+
+                        {isLockedByActive ? (
                           <p className="text-sm text-zinc-500">
-                            {week.is_published
-                              ? `Complete Week ${weekState.activeWeek} before choosing another week.`
-                              : "This week will open when it is published."}
+                            Complete Week {activeRun.weekNumber} · Run {activeRun.runNumber}
+                            {" "}before opening another room.
+                          </p>
+                        ) : null}
+
+                        {!week.is_published ? (
+                          <p className="text-sm text-zinc-500">
+                            This room will open when it is published.
                           </p>
                         ) : null}
                       </div>
