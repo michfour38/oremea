@@ -24,10 +24,6 @@ CREATE UNIQUE INDEX "resonance_week_runs_purchase_reference_key"
 ON "resonance_week_runs"("purchase_reference")
 WHERE "purchase_reference" IS NOT NULL;
 
-CREATE UNIQUE INDEX "resonance_week_runs_one_active_per_user_key"
-ON "resonance_week_runs"("user_id")
-WHERE "status" = 'active';
-
 CREATE INDEX "resonance_week_runs_user_id_week_number_idx"
 ON "resonance_week_runs"("user_id", "week_number");
 
@@ -37,7 +33,11 @@ ON "resonance_week_runs"("user_id", "status");
 -- Preserve existing Resonance history as Run 1. The actual reflections, 2Q,
 -- continues and Mirrors are attached to these rows in the follow-up migration.
 WITH activity AS (
-    SELECT pc."user_id", rw."week_number", MIN(pc."created_at") AS first_activity
+    SELECT
+        pc."user_id",
+        rw."week_number",
+        MIN(pc."created_at") AS first_activity,
+        MAX(GREATEST(pc."created_at", pc."updated_at")) AS last_activity
     FROM "prompt_completions" pc
     JOIN "day_prompts" dp ON dp."id" = pc."prompt_id"
     JOIN "journey_days" rd ON rd."id" = dp."day_id"
@@ -46,24 +46,40 @@ WITH activity AS (
 
     UNION ALL
 
-    SELECT rdc."user_id", rdc."week_number", MIN(rdc."created_at") AS first_activity
+    SELECT
+        rdc."user_id",
+        rdc."week_number",
+        MIN(rdc."created_at") AS first_activity,
+        MAX(rdc."continued_at") AS last_activity
     FROM "journey_day_continues" rdc
     GROUP BY rdc."user_id", rdc."week_number"
 
     UNION ALL
 
-    SELECT rdg."user_id", rdg."week_number", MIN(rdg."created_at") AS first_activity
+    SELECT
+        rdg."user_id",
+        rdg."week_number",
+        MIN(rdg."created_at") AS first_activity,
+        MAX(rdg."updated_at") AS last_activity
     FROM "resonance_day_guidance" rdg
     GROUP BY rdg."user_id", rdg."week_number"
 
     UNION ALL
 
-    SELECT mr."user_id", mr."week_number", MIN(mr."created_at") AS first_activity
+    SELECT
+        mr."user_id",
+        mr."week_number",
+        MIN(mr."created_at") AS first_activity,
+        MAX(mr."created_at") AS last_activity
     FROM "mirror_responses" mr
     GROUP BY mr."user_id", mr."week_number"
 ),
 legacy_weeks AS (
-    SELECT "user_id", "week_number", MIN(first_activity) AS first_activity
+    SELECT
+        "user_id",
+        "week_number",
+        MIN(first_activity) AS first_activity,
+        MAX(last_activity) AS last_activity
     FROM activity
     GROUP BY "user_id", "week_number"
 ),
@@ -88,14 +104,36 @@ SELECT
     lw."user_id",
     lw."week_number",
     1,
-    CASE WHEN lc.completed_at IS NULL THEN 'active' ELSE 'completed' END,
+    CASE WHEN lc.completed_at IS NULL THEN 'preserved' ELSE 'completed' END,
     'legacy',
     lw.first_activity,
     lc.completed_at,
     lw.first_activity,
-    COALESCE(lc.completed_at, lw.first_activity)
+    COALESCE(lc.completed_at, lw.last_activity)
 FROM legacy_weeks lw
 LEFT JOIN legacy_completion lc
     ON lc."user_id" = lw."user_id"
    AND lc."week_number" = lw."week_number"
 ON CONFLICT ("user_id", "week_number", "run_number") DO NOTHING;
+
+-- The old product could contain more than one unfinished historical week.
+-- Preserve them all, but resume only the most recently active unfinished one.
+WITH ranked_unfinished AS (
+    SELECT
+        "id",
+        ROW_NUMBER() OVER (
+            PARTITION BY "user_id"
+            ORDER BY "updated_at" DESC, "started_at" DESC, "week_number" DESC
+        ) AS position
+    FROM "resonance_week_runs"
+    WHERE "status" = 'preserved'
+)
+UPDATE "resonance_week_runs" r
+SET "status" = 'active'
+FROM ranked_unfinished ranked
+WHERE r."id" = ranked."id"
+  AND ranked.position = 1;
+
+CREATE UNIQUE INDEX "resonance_week_runs_one_active_per_user_key"
+ON "resonance_week_runs"("user_id")
+WHERE "status" = 'active';
