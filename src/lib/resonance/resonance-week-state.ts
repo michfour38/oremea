@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { backfillLegacyResonanceGuidance } from "@/src/lib/resonance/backfill-legacy-guidance";
 
 const RESONANCE_WEEK_PREFIX = "resonance-week:";
 const RESONANCE_WEEK_COUNT = 10;
@@ -145,6 +146,8 @@ async function getLegacyResonanceProgress(userId: string) {
 export async function getResonanceWeekState(
   userId: string,
 ): Promise<ResonanceWeekState> {
+  await backfillLegacyResonanceGuidance(userId);
+
   const rows = await prisma.oremea_entitlements.findMany({
     where: {
       user_id: userId,
