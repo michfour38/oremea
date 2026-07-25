@@ -1,16 +1,13 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+
 import { prisma } from "@/lib/prisma";
 import { getCurrentDayContent } from "@/src/lib/resonance/getCurrentDayContent";
 import { getResonanceWeekState } from "@/src/lib/resonance/resonance-week-state";
 import PromptCard from "./prompt-card";
 import MirrorCard from "./mirror-card";
 import MemberNav from "../member-nav";
-import { getMirrorAccess } from "@/app/(member)/mirror/mirror-access";
 import MirrorOutput from "../mirror/mirror-output";
-import { getMirrorHistory } from "../mirror/mirror.service";
-import { continueResonanceDayAction } from "./actions";
-import ContinueDayButton from "./continue-day-button";
 import AutoScrollToMirror from "./auto-scroll-to-mirror";
 
 export const dynamic = "force-dynamic";
@@ -123,7 +120,6 @@ async function getActiveResonancePosition(
         phase: activeWeek >= 9 ? ("INTEGRATION" as const) : ("CORE" as const),
         weekNumber: activeWeek,
         dayNumber: day.day_number,
-        completed: false,
       };
     }
   }
@@ -132,7 +128,6 @@ async function getActiveResonancePosition(
     phase: activeWeek >= 9 ? ("INTEGRATION" as const) : ("CORE" as const),
     weekNumber: activeWeek,
     dayNumber: 7,
-    completed: true,
   };
 }
 
@@ -198,56 +193,49 @@ export default async function ResonancePage() {
   }
 
   const backgrounds = getResonanceBackgrounds(
-    content?.weekNumber ?? progression.weekNumber ?? 1,
+    content?.weekNumber ?? progression.weekNumber,
   );
 
-  let liteMirrorEligible = false;
-  let fullMirrorEligible = false;
-  let liteMirrorUnlocked = false;
-  let fullMirrorUnlocked = false;
-  let currentMirror: Awaited<ReturnType<typeof getMirrorHistory>>[number] | null =
-    null;
-  let mirrorExerciseCompleted = false;
+  const reflectionsCompleted = Boolean(
+    content &&
+      content.prompts.length > 0 &&
+      content.prompts.every((prompt) => prompt.isCompleted),
+  );
 
-  if (content) {
-    try {
-      mirrorExerciseCompleted =
-        content.prompts.length > 0 &&
-        content.prompts.every((prompt) => prompt.isCompleted);
+  const foundMirror =
+    content?.dayNumber === 7
+      ? await prisma.mirror_responses.findUnique({
+          where: {
+            user_id_week_number_day_number: {
+              user_id: userId,
+              week_number: content.weekNumber,
+              day_number: 7,
+            },
+          },
+          select: {
+            id: true,
+            user_id: true,
+            week_number: true,
+            day_number: true,
+            tier: true,
+            output: true,
+            created_at: true,
+          },
+        })
+      : null;
 
-      const mirrorAccess = await getMirrorAccess(signedInEmail);
-
-      fullMirrorEligible = mirrorAccess.has2QOnly;
-      fullMirrorUnlocked = mirrorAccess.hasFullMirror;
-
-      const foundMirror = await prisma.mirror_responses.findFirst({
-        where: {
-          user_id: userId,
-          week_number: content.weekNumber,
-          day_number: content.dayNumber,
-          tier: "full",
-        },
-        orderBy: {
-          created_at: "desc",
-        },
-      });
-
-      currentMirror =
-        mirrorAccess.hasFullMirror && foundMirror
-          ? {
-              id: foundMirror.id,
-              userId: foundMirror.user_id,
-              weekNumber: foundMirror.week_number,
-              dayNumber: foundMirror.day_number,
-              tier: foundMirror.tier as "full" | "lite",
-              output: foundMirror.output,
-              createdAt: foundMirror.created_at.toISOString(),
-            }
-          : null;
-    } catch (error) {
-      console.error("Mirror state failed:", error);
-    }
-  }
+  const currentMirror =
+    foundMirror?.tier === "full"
+      ? {
+          id: foundMirror.id,
+          userId: foundMirror.user_id,
+          weekNumber: foundMirror.week_number,
+          dayNumber: foundMirror.day_number,
+          tier: "full" as const,
+          output: foundMirror.output,
+          createdAt: foundMirror.created_at.toISOString(),
+        }
+      : null;
 
   return (
     <main className="relative min-h-screen overflow-x-hidden text-white">
@@ -271,18 +259,20 @@ export default async function ResonancePage() {
             <header className="space-y-3">
               {content ? (
                 <>
+                  <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
+                    Week {content.weekNumber} · Day {content.dayNumber}
+                  </p>
                   <h1 className="text-4xl text-white">{content.weekTitle}</h1>
-                  <p className="text-zinc-300">Resonance by Oremea - Journey</p>
+                  <p className="text-zinc-300">Resonance by Oremea</p>
                   <p className="text-zinc-400">{content.weekTheme}</p>
                 </>
               ) : (
                 <div className="space-y-3">
-                  <h1 className="text-4xl text-white">Journey Active</h1>
-                  <p className="text-zinc-300">Resonance by Oremea - Journey</p>
+                  <h1 className="text-4xl text-white">Resonance</h1>
                   <p className="text-zinc-400">
                     {contentLoadFailed
-                      ? "Journey content could not be loaded yet."
-                      : "Journey content is not available yet."}
+                      ? "This day's reflections could not be loaded yet."
+                      : "This day's reflections are not available yet."}
                   </p>
                 </div>
               )}
@@ -306,43 +296,16 @@ export default async function ResonancePage() {
                   })}
                 </div>
 
-                <AutoScrollToMirror
-                  trigger={content.prompts.every((prompt) => prompt.isCompleted)}
-                />
+                <AutoScrollToMirror trigger={reflectionsCompleted} />
 
                 <div id="mirror" className="mt-10 scroll-mt-24">
                   <MirrorOutput
                     weekNumber={content.weekNumber}
                     dayNumber={content.dayNumber}
-                    liteMirrorEligible={liteMirrorEligible}
-                    fullMirrorEligible={fullMirrorEligible}
-                    liteMirrorUnlocked={liteMirrorUnlocked}
-                    fullMirrorUnlocked={fullMirrorUnlocked}
                     mirror={currentMirror}
-                    mirrorExerciseCompleted={mirrorExerciseCompleted}
+                    reflectionsCompleted={reflectionsCompleted}
                   />
                 </div>
-
-                {content.prompts.every((prompt) => prompt.isCompleted) &&
-                currentMirror ? (
-                  <form
-                    action={continueResonanceDayAction}
-                    className="mt-6 flex justify-end"
-                  >
-                    <input
-                      type="hidden"
-                      name="weekNumber"
-                      value={content.weekNumber}
-                    />
-                    <input
-                      type="hidden"
-                      name="dayNumber"
-                      value={content.dayNumber}
-                    />
-
-                    <ContinueDayButton />
-                  </form>
-                ) : null}
               </>
             ) : null}
           </div>
