@@ -11,7 +11,7 @@ export function ExploreRecognitionTools() {
             Optional deeper synthesis layers within the Oremea ecosystem.
           </h2>
 
-          <p className="mt-8 text-base leading-8 text-zinc-400">
+          <p className="mt-8 text-base leading-8 text-zinc-300">
             Some Oremea products include optional expanded recognition
             tools designed to provide deeper synthesis across reflective
             frameworks, communication patterns, recurring loops,
@@ -29,7 +29,7 @@ export function ExploreRecognitionTools() {
               Expanded recognition tools within Resonance.
             </h3>
 
-            <div className="mt-6 space-y-5 text-base leading-8 text-zinc-400">
+            <div className="mt-6 space-y-5 text-base leading-8 text-zinc-300">
               <p>
                 Mirror provides deeper reflective synthesis across
                 user-generated reflections throughout Resonance.
@@ -50,7 +50,7 @@ export function ExploreRecognitionTools() {
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-10">
-            <p className="text-sm uppercase tracking-[0.18em] text-zinc-500">
+            <p className="text-sm uppercase tracking-[0.18em] text-zinc-400">
               Etheric Loop
             </p>
 
@@ -58,7 +58,7 @@ export function ExploreRecognitionTools() {
               Expanded recognition tools supporting deeper relational synthesis.
             </h3>
 
-            <div className="mt-6 space-y-5 text-base leading-8 text-zinc-400">
+            <div className="mt-6 space-y-5 text-base leading-8 text-zinc-300">
               <p>
                 Etheric Loop is designed to support deeper synthesis
                 within Harmonize and future Oremea systems.
@@ -80,7 +80,7 @@ export function ExploreRecognitionTools() {
         </div>
 
         <div className="mt-14 rounded-3xl border border-white/10 bg-black/20 p-8">
-          <p className="text-base leading-8 text-zinc-400">
+          <p className="text-base leading-8 text-zinc-300">
             Expanded recognition tools are designed to support awareness,
             reflection, communication, and alignment without replacing
             personal responsibility, interpretation, or self-led decision-making.
