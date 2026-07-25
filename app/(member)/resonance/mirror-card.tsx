@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-import { DayPromptDTO } from "./resonance.service";
+import type { ResonancePromptDTO } from "@/src/lib/resonance/getCurrentDayContent";
 import { submitPromptAction } from "./actions";
 
 interface MirrorCardProps {
-  prompt: DayPromptDTO;
+  prompt: ResonancePromptDTO;
   progressRatio: number;
 }
 
