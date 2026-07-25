@@ -1,4 +1,4 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
@@ -16,21 +16,6 @@ import MirrorOutput from "../mirror/mirror-output";
 import AutoScrollToMirror from "./auto-scroll-to-mirror";
 
 export const dynamic = "force-dynamic";
-
-function normalizeEmail(email?: string | null) {
-  return email?.trim().toLowerCase() || "";
-}
-
-async function getSignedInEmail() {
-  const user = await currentUser();
-
-  const primaryEmail =
-    user?.emailAddresses.find(
-      (email) => email.id === user.primaryEmailAddressId,
-    )?.emailAddress ?? user?.emailAddresses[0]?.emailAddress ?? "";
-
-  return normalizeEmail(primaryEmail);
-}
 
 function getResonanceBackgrounds(weekNumber?: number) {
   const desktopMap: Record<number, string> = {
@@ -131,31 +116,8 @@ export default async function ResonancePage() {
     redirect("/sign-in");
   }
 
-  const signedInEmail = await getSignedInEmail();
-
-  if (!signedInEmail) {
-    redirect("/sign-in?redirect_url=%2Fresonance");
-  }
-
-  const resonanceAccess = await prisma.entry_leads.findUnique({
-    where: { email: signedInEmail },
-    select: {
-      resonance_access_granted: true,
-      entry_access_expires_at: true,
-    },
-  });
-
-  const hasEntryAccess =
-    resonanceAccess?.entry_access_expires_at &&
-    resonanceAccess.entry_access_expires_at.getTime() > Date.now();
-
-  const hasResonanceAccess =
-    Boolean(resonanceAccess?.resonance_access_granted) || Boolean(hasEntryAccess);
-
-  if (!hasResonanceAccess) {
-    redirect("/oremea/enter");
-  }
-
+  // A verified purchase creates the active run. The run itself is the access
+  // authority; the retired entry_leads blanket-access flag no longer gates use.
   const activeRun = await getActiveResonanceRun(userId);
 
   if (!activeRun) {
