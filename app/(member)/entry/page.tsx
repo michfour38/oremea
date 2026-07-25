@@ -22,31 +22,6 @@ async function getActiveRunDay(runId: string) {
   return 7;
 }
 
-function ProductCard({
-  title,
-  description,
-  href,
-  action,
-}: {
-  title: string;
-  description: string;
-  href: string;
-  action: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="block rounded-3xl border border-white/10 bg-black/35 p-7 backdrop-blur-[2px] transition hover:border-[#c8a96a]/40 hover:bg-black/45"
-    >
-      <p className="text-xs uppercase tracking-[0.24em] text-[#f1dfb4]/70">
-        {title}
-      </p>
-      <p className="mt-4 text-base leading-8 text-zinc-300">{description}</p>
-      <p className="mt-6 text-sm text-[#f1dfb4]">{action} →</p>
-    </Link>
-  );
-}
-
 export default async function EntryPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in?redirect_url=%2Fentry");
@@ -91,32 +66,10 @@ export default async function EntryPage() {
 
         <div className="mx-auto max-w-6xl px-6 py-12 md:py-16">
           <header className="max-w-3xl">
-            <p className="text-xs uppercase tracking-[0.3em] text-[#f1dfb4]/70">
-              Oremea
-            </p>
-            <h1 className="mt-4 text-4xl font-light tracking-tight md:text-5xl">
-              Enter where you are.
+            <h1 className="text-4xl font-light tracking-tight md:text-5xl">
+              Enter where you are
             </h1>
-            <p className="mt-5 max-w-2xl text-base leading-8 text-zinc-300">
-              Recognition helps you see yourself. Resonance helps you stay with
-              yourself. Compass helps you move.
-            </p>
           </header>
-
-          <section className="mt-10 grid gap-5 md:grid-cols-2">
-            <ProductCard
-              title="Recognition"
-              description="A focused private reflection for seeing what is already present in your own account."
-              href="/recognition"
-              action="Begin Recognition"
-            />
-            <ProductCard
-              title="Compass"
-              description="A structured space for direction, alignment, and executable movement."
-              href="/compass"
-              action="Enter Compass"
-            />
-          </section>
 
           <section className="mt-14">
             <div className="max-w-3xl">
