@@ -73,56 +73,19 @@ export function createRecursiveLayer({
 export function buildAdaptiveRecursiveQuestion({
   layer,
   selectedAreaLabel,
-  previousAnswer,
-  firstAnswer,
 }: {
   layer: number
   selectedAreaLabel: string
   previousAnswer: string
   firstAnswer?: string
 }): string {
-  const reference = cleanReference(previousAnswer || firstAnswer || "")
   const area = selectedAreaLabel.toLowerCase()
 
-  if (!reference) {
+  if (layer === 1) {
     return `Why does ${area} matter to you right now?`
   }
 
-  if (layer === 1) {
-    return `You chose ${area}. In your own words, why does “${reference}” matter to you right now?`
-  }
-
-  if (layer === 2) {
-    return `When you describe “${reference}”, what makes this significant enough to keep your attention?`
-  }
-
-  if (layer === 3) {
-    return `Under “${reference}”, what value, responsibility, standard, hope, or expectation gives this goal its weight?`
-  }
-
-  if (layer === 4) {
-    return `If “${reference}” became fully real in your life, what would become possible that feels difficult, unavailable, restricted, or out of reach right now?`
-  }
-
-  if (layer === 5) {
-    return `From the reality you described in “${reference}”, what would you be able to do, build, choose, protect, experience, or create?`
-  }
-
-  if (layer === 6) {
-    return `Looking at “${reference}”, what does this show you about what you are no longer willing to live without?`
-  }
-
-  return `After everything you have written, what is the core reality you are choosing to build through “${reference}”?`
-}
-
-function cleanReference(input: string): string {
-  const trimmed = input.trim().replace(/\s+/g, " ")
-
-  if (trimmed.length <= 110) {
-    return trimmed
-  }
-
-  return `${trimmed.slice(0, 110)}...`
+  return getRecursiveQuestion(layer)
 }
 
 function extractReasonWords(input: string): string[] {
