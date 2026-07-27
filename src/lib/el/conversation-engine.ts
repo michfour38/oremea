@@ -27,6 +27,7 @@ export type ELConversationResult = {
   reply: string
   shouldContinue: boolean
   suggestedNextStep: string | null
+  scopeCategory?: CompassScopeCategory
 }
 
 export async function runELConversation({
@@ -89,6 +90,7 @@ export async function runELConversation({
         reply: boundary ?? parsed.reply,
         shouldContinue: true,
         suggestedNextStep: null,
+        scopeCategory: parsed.scopeCategory,
       }
     }
 
