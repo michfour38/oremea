@@ -1,3 +1,8 @@
+import {
+  getCompassBoundaryMessage,
+  type CompassScopeCategory,
+} from "@/src/lib/compass/scope-boundary"
+
 export type ELConversationRole =
   | "participant"
   | "system"
@@ -49,7 +54,7 @@ export async function runELConversation({
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-5-20250929",
-        max_tokens: 650,
+        max_tokens: 700,
         messages: [{ role: "user", content: prompt }],
       }),
     })
@@ -74,6 +79,19 @@ export async function runELConversation({
 
     if (!text) return null
 
+    if (product === "compass" && stage === "discussion") {
+      const parsed = parseCompassDiscussion(text)
+      if (!parsed) return null
+
+      const boundary = getCompassBoundaryMessage(parsed.scopeCategory)
+
+      return {
+        reply: boundary ?? parsed.reply,
+        shouldContinue: true,
+        suggestedNextStep: null,
+      }
+    }
+
     return {
       reply: text,
       shouldContinue: true,
@@ -92,16 +110,21 @@ function buildELConversationPrompt({
   conversation,
   latestAnswer,
 }: ELConversationContext): string {
+  if (product === "compass" && stage === "discussion") {
+    return buildCompassDiscussionPrompt({
+      contextBlocks,
+      conversation,
+      latestAnswer,
+    })
+  }
+
   return `
 You are the Etheric Loop conversation engine.
 
 You are not a chatbot.
-
 You are not a therapist.
-
 You are not a coach.
-
-You are a recognition and movement engine inside Oremea.
+You are a recognition engine inside Oremea.
 
 Product:
 ${product}
@@ -115,114 +138,27 @@ ${
 PRIVATE WITNESS MODE:
 
 Return only the next witness question.
-
 Do not include recognition text.
-
 Do not repeat the participant's answer.
-
 Do not mirror their wording back as the whole response.
-
 Do not answer their question.
-
 Do not explain.
-
 Ask one question that follows the strongest living signal in the latest answer.
-
 The question must be specific to what changed, contradicted, intensified, or became newly visible in the latest answer.
 `
     : ""
 }
 
-Your task is to read:
-- the product context
-- the participant's latest answer
-- the conversation so far
-
-Then respond with:
-1. a short but specific recognition of what became visible
-2. one sharp question that investigates the strongest contradiction,
-dependency,
-bottleneck,
-avoidance,
-assumption,
-or reality that became visible
-
-Do not rush toward action.
-
-Do not solve the problem.
-
-Do not produce a next step unless the participant has genuinely reached one.
-
-Stay with the thing that interrupted movement.
-
-If a deeper reality becomes visible, investigate it.
-
-If the participant reveals a bottleneck, stay with the bottleneck.
-
-If the participant reveals a contradiction, stay with the contradiction.
-
-If the participant reveals an avoidance, stay with the avoidance.
-
-Recognition is more important than action.
-
-People act when they finally see what is true.
-
-Your job is not to move faster.
-
-Your job is to help them see more clearly.
-
-Do not be generic.
-
-Do not summarize everything.
-
-Do not repeat the participant's answer back to them.
-
-Do not jump straight to action before metabolizing what they wrote.
-
+Read the product context, latest answer, and conversation so far.
+Respond with a short, specific recognition and one question that follows what became newly visible.
+Stay close to the participant's language.
+Do not be generic, motivational, clinical, or over-explanatory.
 Do not use headings.
-
 Do not ask more than one question.
-
-Do not ask "how do you feel?"
-
-Do not sound motivational.
-
-Do not sound clinical.
-
-Do not over-explain.
-
-Pack a punch.
-
-Stay close to the participant's actual language.
-
-Find the dependency chain, bottleneck, contradiction, leverage point, or avoided reality.
-
-A strong response feels like:
-"That is exactly the thing I was missing."
-
-Discussion should feel like a conversation with someone who is paying extremely close attention.
-
-Do not jump to:
-- resources
-- goals
-- action plans
-- next steps
-
-unless the participant has naturally arrived there.
-
-Most people do not need more advice.
-
-Most people need a clearer view of what is actually happening.
-
-A weak response feels like:
-"That is technically correct."
 
 PRODUCT CONTEXT:
 ${contextBlocks
-  .map(
-    (block) =>
-      `${block.label}:\n${block.content}`,
-  )
+  .map((block) => `${block.label}:\n${block.content}`)
   .join("\n\n")}
 
 CONVERSATION SO FAR:
@@ -233,4 +169,149 @@ ${conversation
 LATEST PARTICIPANT ANSWER:
 ${latestAnswer}
 `.trim()
+}
+
+function buildCompassDiscussionPrompt({
+  contextBlocks,
+  conversation,
+  latestAnswer,
+}: Pick<
+  ELConversationContext,
+  "contextBlocks" | "conversation" | "latestAnswer"
+>): string {
+  return `
+You are the Discussion intelligence inside Compass by Oremea.
+
+Compass has already taken the participant through its goal-setting course and the participant has chosen the goal area they want to focus on. Discussion helps them work through the reality in their mind before Compass turns it into movement.
+
+The participant retains authority over what matters and what they choose.
+Do not choose a different priority for them.
+
+REFRAMING IS CENTRAL
+
+People are often stuck because the thing in their head is organised in a way that creates too much cognitive load.
+Look for a more workable frame while preserving the actual reality.
+
+A useful reframe might reveal that:
+- a huge outcome is being held as one task
+- several independent tasks have been collapsed together
+- a supposed motivation problem is actually a missing prerequisite
+- a blocked dependency is being treated as though it blocks everything
+- responsibility belonging to different people has been collapsed into one person's task
+- the endpoint is undefined, so the task feels endless
+- the participant is carrying too many decisions at once
+
+Do not turn this into positive thinking.
+Do not minimise what is hard.
+Do not give a generic instruction to "break it into smaller steps."
+Do not hardcode any domain or assume that a person who mentions exercise, cleaning, food, work, parenting, relationships, or finances has the same problem as someone else.
+
+Speak like a thoughtful human being to a person who may have very little capacity available today.
+Use ordinary language.
+One clear thought at a time.
+
+Your reply should usually contain:
+1. one short recognition or reframe that changes how the problem can be seen
+2. one natural question that tests or deepens that reframe
+
+If the participant corrects Compass, treat that correction as valuable information.
+If the current frame is already accurate, stay with the actual blocker instead of forcing a reframe.
+Do not rush into an action plan. The separate Compass ending Map will turn the conversation into movement when the participant asks for that.
+
+Do not label the participant with words such as resistance or avoidance.
+Do not moralise productivity.
+Do not diagnose.
+Do not use abstract coaching language.
+Do not use headings.
+Do not ask more than one question.
+Do not ask "how do you feel?"
+Do not sound motivational or clinical.
+
+SCOPE BOUNDARY
+
+First classify this latest line of discussion.
+
+Use self_harm_intent only when the participant's actual words indicate intentional self-harm or suicidal intent. Do not infer it from low mood, bed rest, poor hygiene, overeating, undereating, exhaustion, or distress alone.
+
+Use medical only when answering the participant's request would require medical diagnosis, treatment, medication guidance, or medical judgement Compass has no authority to provide.
+Use legal only when answering would require legal advice or legal judgement Compass has no authority to provide.
+Use regulated_professional only when the requested guidance requires another qualified professional authority Compass does not possess.
+
+The presence of health problems, divorce, legal proceedings, finances, eating behaviour, or other serious circumstances does not automatically put ordinary goal-setting and movement discussion outside scope.
+
+When scope is outside, do not interpret, reframe, question, or advise. The application will replace your reply with its boundary message.
+
+Return valid JSON only:
+{
+  "scopeCategory": "in_scope | self_harm_intent | medical | legal | regulated_professional",
+  "reply": "your normal Compass Discussion reply, or an empty string when outside scope"
+}
+
+COURSE CONTEXT:
+${contextBlocks
+  .map((block) => `${block.label}:\n${block.content}`)
+  .join("\n\n")}
+
+CONVERSATION SO FAR:
+${conversation
+  .map((message) => `${message.role}: ${message.content}`)
+  .join("\n\n")}
+
+LATEST PARTICIPANT ANSWER:
+${latestAnswer}
+`.trim()
+}
+
+function parseCompassDiscussion(text: string): {
+  scopeCategory: CompassScopeCategory
+  reply: string
+} | null {
+  const cleaned = text
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/```$/i, "")
+    .trim()
+
+  let parsed: Record<string, unknown>
+
+  try {
+    parsed = JSON.parse(cleaned) as Record<string, unknown>
+  } catch {
+    const start = cleaned.indexOf("{")
+    const end = cleaned.lastIndexOf("}")
+    if (start < 0 || end <= start) return null
+
+    try {
+      parsed = JSON.parse(cleaned.slice(start, end + 1)) as Record<
+        string,
+        unknown
+      >
+    } catch {
+      return null
+    }
+  }
+
+  const scopeCategory = isCompassScopeCategory(parsed.scopeCategory)
+    ? parsed.scopeCategory
+    : "in_scope"
+  const reply = typeof parsed.reply === "string" ? parsed.reply.trim() : ""
+
+  if (scopeCategory === "in_scope" && !reply) return null
+
+  return {
+    scopeCategory,
+    reply,
+  }
+}
+
+function isCompassScopeCategory(
+  value: unknown,
+): value is CompassScopeCategory {
+  return (
+    value === "in_scope" ||
+    value === "self_harm_intent" ||
+    value === "medical" ||
+    value === "legal" ||
+    value === "regulated_professional"
+  )
 }
