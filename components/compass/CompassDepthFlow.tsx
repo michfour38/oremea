@@ -1,7 +1,14 @@
-import type {
-  CompassAreaResponse,
-  CompassGoalArea,
-  CompassRecursiveLayer,
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+
+import {
+  buildAdaptiveRecursiveQuestion,
+  getRememberedAdaptiveRecursiveQuestion,
+  rememberAdaptiveRecursiveQuestion,
+  type CompassAreaResponse,
+  type CompassGoalArea,
+  type CompassRecursiveLayer,
 } from "@/src/lib/compass/session";
 
 import { CompassCard } from "./CompassCard";
@@ -38,28 +45,140 @@ export function CompassDepthIntro({
 
 export function CompassDepthFlow({
   selectedArea,
+  selectedAreaLabel,
   areaResponses,
   recursiveLayers,
   recursiveAnswer,
-  currentQuestion,
-  isQuestionLoading,
   onAnswerChange,
   onSubmitAnswer,
 }: {
   selectedArea: CompassGoalArea | null;
+  selectedAreaLabel: string;
   areaResponses: CompassAreaResponse[];
   recursiveLayers: CompassRecursiveLayer[];
   recursiveAnswer: string;
-  currentQuestion: string;
-  isQuestionLoading: boolean;
   onAnswerChange: (value: string) => void;
   onSubmitAnswer: () => void;
 }) {
-  const firstAnswer =
-    areaResponses.find((response) => response.area === selectedArea)?.answer ?? "";
+  const layerNumber = Math.min(recursiveLayers.length + 1, 7);
+  const firstAnswer = useMemo(
+    () =>
+      areaResponses.find((response) => response.area === selectedArea)?.answer ?? "",
+    [areaResponses, selectedArea],
+  );
   const previousAnswer = recursiveLayers[recursiveLayers.length - 1]?.answer ?? "";
   const carriedAnswer = previousAnswer || firstAnswer;
-  const layerNumber = Math.min(recursiveLayers.length + 1, 7);
+
+  const [currentQuestion, setCurrentQuestion] = useState("");
+  const [isQuestionLoading, setIsQuestionLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadQuestion() {
+      const remembered = getRememberedAdaptiveRecursiveQuestion({
+        layer: layerNumber,
+        sourceAnswer: carriedAnswer,
+      });
+
+      if (remembered) {
+        setCurrentQuestion(remembered);
+        setIsQuestionLoading(false);
+        return;
+      }
+
+      if (!selectedArea) {
+        setCurrentQuestion(
+          buildAdaptiveRecursiveQuestion({
+            layer: layerNumber,
+            selectedAreaLabel,
+            previousAnswer,
+            firstAnswer,
+          }),
+        );
+        setIsQuestionLoading(false);
+        return;
+      }
+
+      setCurrentQuestion("");
+      setIsQuestionLoading(true);
+
+      try {
+        const response = await fetch("/api/compass/descent-question", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            layer: layerNumber,
+            selectedArea,
+            areaResponses,
+            recursiveLayers,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (cancelled) return;
+
+        const generatedQuestion =
+          response.ok && data?.ok && typeof data.question === "string"
+            ? data.question.trim()
+            : "";
+
+        const question =
+          generatedQuestion ||
+          buildAdaptiveRecursiveQuestion({
+            layer: layerNumber,
+            selectedAreaLabel,
+            previousAnswer,
+            firstAnswer,
+          });
+
+        rememberAdaptiveRecursiveQuestion({
+          layer: layerNumber,
+          sourceAnswer: carriedAnswer,
+          question,
+        });
+
+        setCurrentQuestion(question);
+      } catch (error) {
+        if (cancelled) return;
+
+        console.error("Compass Descent question failed:", error);
+
+        const fallback = buildAdaptiveRecursiveQuestion({
+          layer: layerNumber,
+          selectedAreaLabel,
+          previousAnswer,
+          firstAnswer,
+        });
+
+        rememberAdaptiveRecursiveQuestion({
+          layer: layerNumber,
+          sourceAnswer: carriedAnswer,
+          question: fallback,
+        });
+
+        setCurrentQuestion(fallback);
+      } finally {
+        if (!cancelled) setIsQuestionLoading(false);
+      }
+    }
+
+    void loadQuestion();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    areaResponses,
+    carriedAnswer,
+    firstAnswer,
+    layerNumber,
+    previousAnswer,
+    recursiveLayers,
+    selectedArea,
+    selectedAreaLabel,
+  ]);
 
   return (
     <CompassCard
