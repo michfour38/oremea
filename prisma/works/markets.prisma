@@ -1,0 +1,26 @@
+enum WorksMarketLaunchStatus {
+  PLANNED
+  RESEARCHING
+  SEEDING
+  BETA
+  LIVE
+  PAUSED
+}
+
+model works_markets {
+  id              String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code            String                  @unique
+  slug            String                  @unique
+  name            String
+  local_name      String
+  default_locale  String
+  currency_code   String
+  currency_symbol String
+  calling_code    String?
+  active          Boolean                 @default(false)
+  launch_status   WorksMarketLaunchStatus @default(PLANNED)
+  created_at      DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime                @updatedAt @db.Timestamptz(6)
+
+  locales works_locales[]
+}
