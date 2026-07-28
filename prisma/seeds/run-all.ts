@@ -13,7 +13,22 @@ function getWeekNumber(fileName: string): number | null {
 async function run() {
   const seedsDir = path.resolve(process.cwd(), "prisma", "seeds");
 
-  // 1. Run seed-rooms.ts first
+  // 1. Seed isolated WORKS foundation data first.
+  const worksSeedPath = path.join(seedsDir, "works", "run.ts");
+  const worksSeedUrl = pathToFileURL(worksSeedPath).href;
+  const worksSeedMod = (await import(worksSeedUrl)) as SeedModule;
+
+  const worksSeedEntries = Object.entries(worksSeedMod).filter(
+    ([key, value]) => key.startsWith("seed") && typeof value === "function"
+  ) as Array<[string, () => Promise<unknown>]>;
+
+  for (const [exportName, seedFn] of worksSeedEntries) {
+    console.log(`Running works/run.ts → ${exportName}...`);
+    await seedFn();
+    console.log(`Done: works/run.ts → ${exportName}`);
+  }
+
+  // 2. Run seed-rooms.ts.
   const seedRoomsPath = path.join(seedsDir, "seed-rooms.ts");
   const seedRoomsUrl = pathToFileURL(seedRoomsPath).href;
   const seedRoomsMod = (await import(seedRoomsUrl)) as SeedModule;
@@ -28,7 +43,7 @@ async function run() {
     console.log(`Done: seed-rooms.ts → ${exportName}`);
   }
 
-  // 2. Then run all week seed files in order
+  // 3. Then run all week seed files in order.
   const entries = await fs.readdir(seedsDir, { withFileTypes: true });
 
   const seedFiles = entries
