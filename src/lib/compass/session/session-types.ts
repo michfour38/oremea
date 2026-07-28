@@ -43,6 +43,7 @@ export type CompassRecursiveLayer = {
   layer: number
   question: string
   answer: string
+  nextQuestion?: string
   detectedValueWords: string[]
   detectedReasonWords: string[]
 }
