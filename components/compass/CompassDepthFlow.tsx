@@ -1,24 +1,12 @@
-import {
-  buildAdaptiveRecursiveQuestion,
-  type CompassAreaResponse,
-  type CompassGoalArea,
-  type CompassRecursiveLayer,
+import type {
+  CompassAreaResponse,
+  CompassGoalArea,
+  CompassRecursiveLayer,
 } from "@/src/lib/compass/session";
 
 import { CompassCard } from "./CompassCard";
 
-const BODY_TEXT = "text-zinc-400";
-
-const AREA_LABELS: Record<CompassGoalArea, string> = {
-  relationships: "Relationships",
-  income: "Income",
-  health: "Health",
-  spirituality: "Spirituality",
-  investments: "Investments",
-  network: "Network",
-  knowledge: "Knowledge",
-  lifestyle: "Lifestyle",
-};
+const BODY_TEXT = "text-zinc-300";
 
 export function CompassDepthIntro({
   selectedAreaLabel,
@@ -33,22 +21,12 @@ export function CompassDepthIntro({
       description={`You have chosen ${selectedAreaLabel}. Now Compass begins identifying what matters most beneath the surface of that choice.`}
     >
       <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-        Over the next seven layers, Compass will approach this goal from several
-        different angles.
+        Over seven layers, Compass follows one thread deeper and deeper until the
+        reason beneath the goal becomes clearer.
       </p>
 
       <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-        Some questions may feel similar at first. This is intentional.
-      </p>
-
-      <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-        Each layer is designed to reveal something different: what matters, what
-        gives the goal its weight, what becomes possible, what you are unwilling
-        to live without, and the deeper reality your choices are pointing toward.
-      </p>
-
-      <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-        The purpose of The Descent is movement.
+        Each answer becomes the starting point for the next question.
       </p>
 
       <button onClick={onBegin} className="primary-button">
@@ -60,18 +38,20 @@ export function CompassDepthIntro({
 
 export function CompassDepthFlow({
   selectedArea,
-  selectedAreaLabel,
   areaResponses,
   recursiveLayers,
   recursiveAnswer,
+  currentQuestion,
+  isQuestionLoading,
   onAnswerChange,
   onSubmitAnswer,
 }: {
   selectedArea: CompassGoalArea | null;
-  selectedAreaLabel: string;
   areaResponses: CompassAreaResponse[];
   recursiveLayers: CompassRecursiveLayer[];
   recursiveAnswer: string;
+  currentQuestion: string;
+  isQuestionLoading: boolean;
   onAnswerChange: (value: string) => void;
   onSubmitAnswer: () => void;
 }) {
@@ -79,47 +59,51 @@ export function CompassDepthFlow({
     areaResponses.find((response) => response.area === selectedArea)?.answer ?? "";
   const previousAnswer = recursiveLayers[recursiveLayers.length - 1]?.answer ?? "";
   const carriedAnswer = previousAnswer || firstAnswer;
+  const layerNumber = Math.min(recursiveLayers.length + 1, 7);
 
   return (
     <CompassCard
-      eyebrow={`The Descent · Layer ${Math.min(recursiveLayers.length + 1, 7)} of 7`}
-      title={buildAdaptiveRecursiveQuestion({
-        layer: recursiveLayers.length + 1,
-        selectedAreaLabel,
-        previousAnswer,
-        firstAnswer,
-      })}
-      description={
-        recursiveLayers.length === 0
-          ? `The Descent will follow the deeper thread beneath your focus on ${selectedAreaLabel.toLowerCase()}.`
-          : ""
-      }
+      eyebrow={`The Descent · Layer ${layerNumber} of 7`}
+      title=""
+      description=""
     >
       {carriedAnswer ? (
-        <div className="rounded-[1.3rem] border border-zinc-800 bg-[#141414] p-5">
-          <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+        <div className="rounded-[1.3rem] border border-zinc-700 bg-[#141414] p-5">
+          <p className="text-xs uppercase tracking-[0.2em] text-zinc-300">
             You said
           </p>
-          <p className="mt-3 whitespace-pre-line text-sm leading-7 text-zinc-300 sm:text-base">
+          <p className="mt-3 whitespace-pre-line text-base leading-7 text-zinc-100 sm:text-lg">
             {carriedAnswer}
           </p>
         </div>
       ) : null}
 
-      <p className="text-sm leading-7 text-zinc-400">
-        Compass carries your previous answer forward while each question looks at
-        the same goal from another angle.
-      </p>
+      <div className="pt-2">
+        {isQuestionLoading ? (
+          <p className="font-serif text-2xl leading-tight text-zinc-100 sm:text-3xl">
+            Following the thread...
+          </p>
+        ) : (
+          <h2 className="font-serif text-3xl leading-tight text-[#d8b15f] sm:text-4xl">
+            {currentQuestion}
+          </h2>
+        )}
+      </div>
 
       <textarea
         value={recursiveAnswer}
         onChange={(event) => onAnswerChange(event.target.value)}
-        placeholder="Answer with as much specific reality as you can. What exists today, what needs attention, and what would create meaningful movement?"
+        placeholder="Answer in your own words."
         rows={7}
+        disabled={isQuestionLoading || !currentQuestion}
         className="compass-textarea"
       />
 
-      <button onClick={onSubmitAnswer} className="primary-button">
+      <button
+        onClick={onSubmitAnswer}
+        disabled={isQuestionLoading || !currentQuestion || !recursiveAnswer.trim()}
+        className="primary-button disabled:cursor-not-allowed disabled:opacity-50"
+      >
         Continue
       </button>
     </CompassCard>
