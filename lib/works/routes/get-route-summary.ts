@@ -73,7 +73,7 @@ export async function getRouteSummary(briefId: string, rank = 1) {
               provider_market: {
                 include: {
                   provider: {
-                    select: { id: true, name: true, slug: true },
+                    select: { id: true, name: true, slug: true, email: true },
                   },
                 },
               },
@@ -116,6 +116,7 @@ export async function getRouteSummary(briefId: string, rank = 1) {
       id: string;
       name: string;
       slug: string;
+      hasEmail: boolean;
       steps: string[];
       offerings: Set<string>;
     }
@@ -129,6 +130,7 @@ export async function getRouteSummary(briefId: string, rank = 1) {
         id: provider.id,
         name: provider.name,
         slug: provider.slug,
+        hasEmail: Boolean(provider.email),
         steps: [],
         offerings: new Set<string>(),
       };
@@ -149,6 +151,30 @@ export async function getRouteSummary(briefId: string, rank = 1) {
       explanation: assignment.explanation,
     };
   });
+
+  const outreachRows = providerGroups.size > 0
+    ? await prisma.works_provider_outreach.findMany({
+        where: {
+          brief_id: briefId,
+          provider_id: { in: [...providerGroups.keys()] },
+        },
+        select: {
+          provider_id: true,
+          status: true,
+          decision: true,
+          sent_at: true,
+          responded_at: true,
+          moq_value: true,
+          moq_unit: true,
+          lead_time_text: true,
+          capacity_date: true,
+          pricing_notes: true,
+          certification_notes: true,
+          provider_notes: true,
+        },
+      })
+    : [];
+  const outreachByProvider = new Map(outreachRows.map((row) => [row.provider_id, row]));
 
   const unresolved = new Map<
     string,
@@ -312,10 +338,28 @@ export async function getRouteSummary(briefId: string, rank = 1) {
     unresolvedStepCount: route.unresolved_step_count,
     unresolvedRequirementCount: route.unresolved_requirement_count,
     sequence,
-    providers: [...providerGroups.values()].map((provider) => ({
-      ...provider,
-      offerings: [...provider.offerings],
-    })),
+    providers: [...providerGroups.values()].map((provider) => {
+      const outreach = outreachByProvider.get(provider.id);
+      return {
+        ...provider,
+        offerings: [...provider.offerings],
+        outreach: outreach
+          ? {
+              status: outreach.status,
+              decision: outreach.decision,
+              sentAt: outreach.sent_at?.toISOString() ?? null,
+              respondedAt: outreach.responded_at?.toISOString() ?? null,
+              moqValue: outreach.moq_value == null ? null : Number(outreach.moq_value),
+              moqUnit: outreach.moq_unit,
+              leadTime: outreach.lead_time_text,
+              capacityDate: outreach.capacity_date?.toISOString().slice(0, 10) ?? null,
+              pricingNotes: outreach.pricing_notes,
+              certificationNotes: outreach.certification_notes,
+              providerNotes: outreach.provider_notes,
+            }
+          : null,
+      };
+    }),
     unresolved: [...unresolved.values()],
     nextQuestions,
     gaps,
