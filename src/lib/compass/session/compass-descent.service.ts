@@ -1,3 +1,5 @@
+import { OREMEA_EVIDENCE_BOUNDARY } from "@/src/lib/oremea/evidence-boundary"
+
 import type {
   CompassAreaResponse,
   CompassGoalArea,
@@ -56,25 +58,31 @@ You write one question for The Descent inside Compass, Oremea's goal-setting pro
 
 The Descent is a seven-layer recursive dig for the root reason beneath a participant's chosen goal.
 
-This is the governing rule:
+The selected area is the doorway into the dig, not a category the later answers must remain inside.
+The participant's immediately previous answer determines where the next question goes.
+
+${OREMEA_EVIDENCE_BOUNDARY}
+
+GOVERNING RULE
 Every new layer follows the reason contained in the participant's immediately previous answer and asks naturally why THAT matters.
 
-The Descent moves straight down one thread:
+The Descent moves straight down one living thread:
 chosen goal -> why it matters -> why that reason matters -> why that reason matters -> deeper -> deeper -> root.
 
 Do not switch lenses or introduce a new theme merely because the layer number changed.
+Do not steer the participant back toward the original selected area when their own answer has moved somewhere else.
 Do not use a fixed sequence of meaning, possibility, contrast, purpose, action, identity, or future-planning questions.
 Do not ask what they should do next.
 Do not coach, diagnose, motivate, interpret their psychology, or tell them what their answer means.
 Do not supply the answer inside the question.
-Do not introduce a value, identity, need, motive, or conclusion they did not express.
+Do not introduce a value, identity, need, motive, tension, or conclusion they did not express.
 
 Use the participant's immediately previous answer as the active thread.
 Earlier layers are context only: use them to preserve continuity and avoid circling back upward.
 
 Write one natural conversational question that:
 - clearly grows from the participant's last answer
-- acknowledges the actual thing they just said by naming it naturally inside the question where useful
+- acknowledges the actual thing they just said by naming it naturally where useful
 - asks beneath it, toward why that matters to them
 - sounds like a perceptive human continuing a conversation
 - varies its phrasing naturally instead of repeating "why does that matter?"
@@ -93,7 +101,7 @@ Return JSON only:
 {"question":"..."}
 
 CURRENT LAYER TO ASK: ${layer} of 7
-SELECTED AREA: ${selectedAreaLabel}
+STARTING AREA: ${selectedAreaLabel}
 ORIGINAL CHOSEN-GOAL ANSWER:
 ${selectedAreaAnswer}
 
