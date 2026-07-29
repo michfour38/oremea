@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { FounderConversation } from "@/components/works/intake/founder-conversation";
+import { FounderConversationV2 } from "@/components/works/intake/founder-conversation-v2";
 import { listMarketCategories } from "@/lib/works/categories/list-market-categories";
 import { resolveWorksMarket } from "@/lib/works/markets/resolve-market";
 
@@ -28,7 +28,7 @@ export default async function WorksMarketPage({
 
   return (
     <main className="min-h-screen bg-[#f3eee4] text-[#1f1c17]">
-      <FounderConversation
+      <FounderConversationV2
         market={{
           slug: market.slug,
           name: market.localName,
