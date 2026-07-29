@@ -1,22 +1,3 @@
-enum WorksRequirementPriority {
-  REQUIRED
-  PREFERRED
-  OPTIONAL
-}
-
-enum WorksProductionStepStatus {
-  COMPLETE
-  NEEDED
-  UNSURE
-  NOT_APPLICABLE
-}
-
-enum WorksProductionStepSource {
-  SYSTEM_GENERATED
-  USER_ADDED
-  SUPPLIER_RECOMMENDED
-}
-
 model works_product_briefs {
   id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   market_id           String   @db.Uuid
@@ -45,6 +26,7 @@ model works_product_briefs {
   search_session       works_search_sessions?
   procurement_request  works_procurement_requests?
   provider_outreach    works_provider_outreach[]
+  provider_reviews     works_provider_reviews[]
 
   @@index([market_id, status])
   @@index([category_id])
