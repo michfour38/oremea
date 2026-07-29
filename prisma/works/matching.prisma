@@ -1,0 +1,61 @@
+enum WorksMatchStatus {
+  MATCH
+  NO_MATCH
+  UNKNOWN
+}
+
+model works_matches {
+  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  brief_id           String           @db.Uuid
+  offering_id        String           @db.Uuid
+  status             WorksMatchStatus @default(UNKNOWN)
+  fit_score          Int?
+  covered_step_count Int              @default(0)
+  matched_count      Int              @default(0)
+  unknown_count      Int              @default(0)
+  failed_count       Int              @default(0)
+  algorithm_version  String           @default("v1")
+  is_current         Boolean          @default(true)
+  calculated_at      DateTime         @default(now()) @db.Timestamptz(6)
+  created_at         DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime         @updatedAt @db.Timestamptz(6)
+
+  brief    works_product_briefs @relation(fields: [brief_id], references: [id], onDelete: Cascade)
+  offering works_offerings      @relation(fields: [offering_id], references: [id], onDelete: Cascade)
+  outcomes works_match_outcomes[]
+
+  @@index([brief_id, is_current, status])
+  @@index([brief_id, offering_id, is_current])
+  @@index([offering_id])
+  @@index([fit_score])
+}
+
+model works_match_outcomes {
+  id              String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  match_id        String                    @db.Uuid
+  requirement_id  String?                   @db.Uuid
+  step_id         String?                   @db.Uuid
+  source_claim_id String?                   @db.Uuid
+  criterion_type  String
+  criterion_key   String
+  status          WorksMatchStatus
+  priority        WorksRequirementPriority?
+  hard_constraint Boolean                   @default(false)
+  score_delta     Int                       @default(0)
+  expected_value  Json?
+  actual_value    Json?
+  explanation     String
+  created_at      DateTime                  @default(now()) @db.Timestamptz(6)
+
+  match        works_matches           @relation(fields: [match_id], references: [id], onDelete: Cascade)
+  requirement  works_requirements?     @relation(fields: [requirement_id], references: [id], onDelete: SetNull)
+  step         works_production_steps? @relation(fields: [step_id], references: [id], onDelete: SetNull)
+  source_claim works_claims?           @relation(fields: [source_claim_id], references: [id], onDelete: SetNull)
+
+  @@index([match_id])
+  @@index([requirement_id])
+  @@index([step_id])
+  @@index([source_claim_id])
+  @@index([status])
+  @@index([criterion_type, criterion_key])
+}
