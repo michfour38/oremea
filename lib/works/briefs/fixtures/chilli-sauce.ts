@@ -25,8 +25,8 @@ export const CHILLI_SAUCE_BRIEF_FIXTURE = {
       requirementType: "PACKAGING",
       field: "packaging.format",
       value: "BOTTLE",
-      displayValue: "Bottle packaging is required for the packaging step.",
-      appliesToServiceKey: "PACKAGING",
+      displayValue: "Bottle packaging is required from the packaging-supply step.",
+      appliesToServiceKey: "PACKAGING_SUPPLY",
     },
     {
       requirementType: "CERTIFICATION",
