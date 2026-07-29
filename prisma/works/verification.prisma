@@ -93,6 +93,7 @@ model works_claims {
   superseded_by     works_claims[]           @relation("WorksClaimHistory")
   evidence          works_evidence[]
   credential_detail works_credential_claims?
+  match_outcomes    works_match_outcomes[]
 
   @@index([provider_id])
   @@index([offering_id])
