@@ -17,6 +17,8 @@ CREATE TABLE "works_product_briefs" (
     "stage" TEXT,
     "target_quantity" DECIMAL(14,3),
     "quantity_unit" TEXT,
+    "existing_assets" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "requested_services" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "location_preference" TEXT,
     "administrative_area" TEXT,
     "timeline_date" DATE,
