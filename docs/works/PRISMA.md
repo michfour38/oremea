@@ -15,20 +15,23 @@ prisma/
 │   ├── categories.prisma          # global categories, translations, market availability
 │   ├── providers.prisma           # canonical providers + market presence/location
 │   ├── provider-types.prisma      # provider roles, translations, provider/type links
-│   └── verification.prisma        # provider sources, versioned claims, evidence
+│   ├── verification.prisma        # provider sources, versioned claims, evidence
+│   └── credentials.prisma         # credential authorities, market links, credential claim detail
 ├── migrations/
 │   ├── 20260728113000_add_works_markets/
 │   ├── 20260728180000_add_works_locales/
 │   ├── 20260729070000_add_works_categories/
 │   ├── 20260729073000_add_works_providers/
 │   ├── 20260729080000_add_works_provider_types/
-│   └── 20260729083000_add_works_verification_spine/
+│   ├── 20260729083000_add_works_verification_spine/
+│   └── 20260729090000_add_works_credentials/
 └── seeds/
     └── works/
         ├── markets.ts
         ├── locales.ts
         ├── categories.ts
         ├── provider-types.ts
+        ├── credential-authorities.ts
         └── run.ts
 ```
 
@@ -52,6 +55,9 @@ prisma/
 - Use stable `field` keys for the identity of a versioned fact. Examples: `profile.website`, `commercial.moq.private_label_serum`, `credential.halaal.12345`.
 - `expires_at` is for facts with a real validity end date. `stale_after` is for facts that need rechecking even though they do not formally expire, such as MOQ, lead time, or current capacity.
 - Payment or profile tier must never modify a claim's verification status.
+- Credential authorities are canonical records. Their applicability to a country/market belongs in `works_credential_authority_markets`.
+- Credential details extend a versioned `works_claims` record through a one-to-one `works_credential_claims` row. Verification history remains in the generic claim/evidence chain.
+- An authority relationship identifies who can substantiate the credential; it does not automatically make the claim verified.
 
 ## Trust chain
 
@@ -61,9 +67,12 @@ works_providers
     │       └── works_evidence
     │               ↑
     └── works_claims ┘
-            ↓
-      claim history
-      via supersedes_claim_id
+            ├── claim history
+            │   via supersedes_claim_id
+            │
+            └── works_credential_claims
+                    └── works_credential_authorities
+                            └── works_credential_authority_markets
 ```
 
 Claim statuses:
@@ -79,7 +88,20 @@ CONFLICTING
 EXPIRED
 ```
 
-Verification methods describe how WORKS established the claim rather than who issued the underlying credential. The evidence/source record identifies the actual authority, registry, provider, document, or project record.
+Credential types:
+
+```text
+QUALIFICATION
+PROFESSIONAL_REGISTRATION
+LICENCE
+ACCREDITATION
+CERTIFICATION
+PROFESSIONAL_MEMBERSHIP
+SHORT_COURSE
+EXPERIENCE_CLAIM
+```
+
+Verification methods describe how WORKS established the claim rather than who issued the underlying credential. The credential authority identifies the body that can substantiate the credential, while the evidence/source record preserves the actual check, document, register match, or confirmation.
 
 ## Current dependency order
 
@@ -91,11 +113,14 @@ works_markets
     │
     ├── works_market_categories ← works_categories
     │
+    ├── works_credential_authority_markets ← works_credential_authorities
+    │
     └── works_provider_markets ← works_providers
                                   ├── works_provider_type_links → works_provider_types
                                   ├── works_provider_sources
                                   └── works_claims
-                                          └── works_evidence ← works_provider_sources
+                                          ├── works_evidence ← works_provider_sources
+                                          └── works_credential_claims → works_credential_authorities
 ```
 
-South Africa (`ZA`) is seeded first, followed by its default locale (`en-ZA`), the five launch categories, and the initial provider-type vocabulary. Real provider records can now be added with provenance from the first captured fact rather than being cleaned up later.
+South Africa (`ZA`) is seeded first, followed by its default locale (`en-ZA`), the five launch categories, provider-type vocabulary, and initial credential authorities. Real provider records can now be added with provenance and credential structure from the first captured fact rather than being cleaned up later.
