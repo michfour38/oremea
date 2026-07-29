@@ -9,7 +9,7 @@ export async function buildProviderBrief(briefId: string, providerId: string, ro
     include: {
       brief: {
         include: {
-          category: { select: { name: true, key: true } },
+          category: { select: { key: true } },
           requirements: {
             include: { applies_to_service: { select: { key: true } } },
             orderBy: { created_at: "asc" },
@@ -55,7 +55,7 @@ export async function buildProviderBrief(briefId: string, providerId: string, ro
     routeOptionId: route.id,
     product: route.brief.product_description,
     productType: route.brief.product_type,
-    category: route.brief.category?.name ?? route.brief.category?.key ?? null,
+    category: route.brief.category?.key ?? null,
     stage: route.brief.stage,
     quantity: {
       target: route.brief.target_quantity == null ? null : Number(route.brief.target_quantity),
