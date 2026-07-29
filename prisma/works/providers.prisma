@@ -33,6 +33,7 @@ model works_providers {
   claims              works_claims[]
   outreach            works_provider_outreach[]
   commercial_profile  works_provider_commercial_profiles?
+  memberships         works_provider_memberships[]
 
   @@index([name])
   @@index([profile_status])
