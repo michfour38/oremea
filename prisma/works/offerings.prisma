@@ -31,6 +31,7 @@ model works_offerings {
   packaging_formats works_offering_packaging_formats[]
   claims            works_claims[]
   matches           works_matches[]
+  route_assignments works_route_assignments[]
 
   @@unique([provider_market_id, slug])
   @@index([provider_market_id, active])
