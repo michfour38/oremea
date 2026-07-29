@@ -69,6 +69,7 @@ model works_provider_sources {
 model works_claims {
   id                   String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   provider_id          String                  @db.Uuid
+  offering_id          String?                 @db.Uuid
   claim_type           String
   field                String
   value                Json
@@ -87,13 +88,15 @@ model works_claims {
   updated_at           DateTime                @updatedAt @db.Timestamptz(6)
 
   provider          works_providers          @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+  offering          works_offerings?         @relation(fields: [offering_id], references: [id], onDelete: Cascade)
   supersedes        works_claims?            @relation("WorksClaimHistory", fields: [supersedes_claim_id], references: [id], onDelete: SetNull)
   superseded_by     works_claims[]           @relation("WorksClaimHistory")
   evidence          works_evidence[]
   credential_detail works_credential_claims?
 
   @@index([provider_id])
-  @@index([provider_id, field, is_current])
+  @@index([offering_id])
+  @@index([provider_id, offering_id, field, is_current])
   @@index([provider_id, claim_type])
   @@index([status])
   @@index([expires_at])
