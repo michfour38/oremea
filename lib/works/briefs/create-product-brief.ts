@@ -25,6 +25,7 @@ export type CreateProductBriefRequirement = {
   value: Prisma.InputJsonValue;
   displayValue?: string;
   priority?: WorksRequirementPriority;
+  appliesToServiceKey?: string;
 };
 
 export type CreateProductBriefInput = {
@@ -116,7 +117,12 @@ export async function createProductBrief(input: CreateProductBriefInput) {
   });
 
   const serviceKeys = Array.from(
-    new Set(pathDefinition.map((step) => step.serviceKey))
+    new Set([
+      ...pathDefinition.map((step) => step.serviceKey),
+      ...requirements
+        .map((requirement) => requirement.appliesToServiceKey)
+        .filter((key): key is string => Boolean(key)),
+    ])
   );
   const services = await prisma.works_services.findMany({
     where: { key: { in: serviceKeys }, active: true },
@@ -151,6 +157,9 @@ export async function createProductBrief(input: CreateProductBriefInput) {
         status: "ACTIVE",
         requirements: {
           create: requirements.map((requirement) => ({
+            applies_to_service_id: requirement.appliesToServiceKey
+              ? serviceIdByKey.get(requirement.appliesToServiceKey)
+              : undefined,
             requirement_type: requirement.requirementType,
             field: requirement.field,
             value: requirement.value,
@@ -192,7 +201,12 @@ export async function createProductBrief(input: CreateProductBriefInput) {
       where: { id: brief.id },
       include: {
         category: { select: { key: true, slug: true } },
-        requirements: { orderBy: { created_at: "asc" } },
+        requirements: {
+          orderBy: { created_at: "asc" },
+          include: {
+            applies_to_service: { select: { key: true, slug: true } },
+          },
+        },
         paths: {
           where: { is_current: true },
           include: {
