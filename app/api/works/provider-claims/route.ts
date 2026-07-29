@@ -4,6 +4,30 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 
+const PUBLIC_EMAIL_DOMAINS = new Set([
+  "gmail.com", "googlemail.com", "outlook.com", "hotmail.com", "live.com", "yahoo.com", "icloud.com", "me.com", "proton.me", "protonmail.com",
+]);
+
+function emailDomain(email: string) {
+  return email.split("@")[1]?.toLowerCase() ?? "";
+}
+
+function websiteDomain(website: string | null) {
+  if (!website) return null;
+  try {
+    const normalized = website.match(/^https?:\/\//i) ? website : `https://${website}`;
+    return new URL(normalized).hostname.toLowerCase().replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+}
+
+function sameOrganizationDomain(emailHost: string, siteHost: string) {
+  const cleanEmail = emailHost.replace(/^www\./, "");
+  const cleanSite = siteHost.replace(/^www\./, "");
+  return cleanEmail === cleanSite || cleanEmail.endsWith(`.${cleanSite}`) || cleanSite.endsWith(`.${cleanEmail}`);
+}
+
 export async function GET(request: NextRequest) {
   const { userId } = auth();
   if (!userId) {
@@ -79,7 +103,12 @@ export async function POST(request: NextRequest) {
 
   const provider = await prisma.works_providers.findFirst({
     where: { id: providerId, profile_status: { not: "ARCHIVED" } },
-    select: { id: true, name: true },
+    select: {
+      id: true,
+      name: true,
+      website: true,
+      memberships: { where: { active: true }, select: { id: true }, take: 1 },
+    },
   });
   if (!provider) return NextResponse.json({ error: "That WORKS provider profile could not be found." }, { status: 404 });
 
@@ -89,6 +118,32 @@ export async function POST(request: NextRequest) {
   });
   if (existingMembership) {
     return NextResponse.json({ error: "This provider profile is already connected to your account." }, { status: 409 });
+  }
+
+  // Once a business has an active WORKS manager/owner, additional access must come from
+  // that business's own access-management flow rather than the public claim doorway.
+  if (provider.memberships.length > 0) {
+    return NextResponse.json({ error: "This business is already managed on WORKS. Ask the business owner or manager to add you." }, { status: 409 });
+  }
+
+  const emailHost = emailDomain(businessEmail);
+  if (!emailHost || PUBLIC_EMAIL_DOMAINS.has(emailHost)) {
+    return NextResponse.json({ error: "Use an email address on the business's own domain so WORKS can verify the connection." }, { status: 400 });
+  }
+
+  const siteHost = websiteDomain(provider.website);
+  if (siteHost && !sameOrganizationDomain(emailHost, siteHost)) {
+    return NextResponse.json({
+      error: `Use an email address connected to ${provider.name}'s business domain. A different-domain claim cannot be approved through this doorway.`,
+    }, { status: 400 });
+  }
+
+  // A missing website removes the strongest automatic signal, so require useful evidence
+  // and leave the request pending for manual verification. No membership is created here.
+  if (!siteHost && (!note || note.length < 12)) {
+    return NextResponse.json({
+      error: "WORKS does not yet have a business domain for this provider. Add a short note explaining your role so the claim can be manually verified.",
+    }, { status: 400 });
   }
 
   const claim = await prisma.works_provider_claims.upsert({
@@ -118,6 +173,6 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     claim,
-    message: `Claim request received for ${provider.name}. WORKS will verify the connection before profile access is granted.`,
+    message: `Claim request received for ${provider.name}. The request remains pending until WORKS verifies that the account genuinely represents the business. No profile access has been granted.`,
   });
 }
