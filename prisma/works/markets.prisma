@@ -22,5 +22,6 @@ model works_markets {
   created_at      DateTime                @default(now()) @db.Timestamptz(6)
   updated_at      DateTime                @updatedAt @db.Timestamptz(6)
 
-  locales works_locales[]
+  locales    works_locales[]
+  categories works_market_categories[]
 }
