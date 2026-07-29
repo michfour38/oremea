@@ -1,0 +1,59 @@
+model works_packaging_formats {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key        String   @unique
+  slug       String   @unique
+  sort_order Int      @default(0)
+  active     Boolean  @default(true)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  translations works_packaging_format_translations[]
+  categories   works_packaging_format_categories[]
+  offerings    works_offering_packaging_formats[]
+
+  @@index([active, sort_order])
+}
+
+model works_packaging_format_translations {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  packaging_format_id String   @db.Uuid
+  locale_id           String   @db.Uuid
+  name                String
+  description         String?
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime @updatedAt @db.Timestamptz(6)
+
+  packaging_format works_packaging_formats @relation(fields: [packaging_format_id], references: [id], onDelete: Cascade)
+  locale           works_locales           @relation(fields: [locale_id], references: [id], onDelete: Cascade)
+
+  @@unique([packaging_format_id, locale_id])
+  @@index([locale_id])
+}
+
+model works_packaging_format_categories {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  packaging_format_id String   @db.Uuid
+  category_id         String   @db.Uuid
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+
+  packaging_format works_packaging_formats @relation(fields: [packaging_format_id], references: [id], onDelete: Cascade)
+  category         works_categories        @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  @@unique([packaging_format_id, category_id])
+  @@index([packaging_format_id])
+  @@index([category_id])
+}
+
+model works_offering_packaging_formats {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  offering_id         String   @db.Uuid
+  packaging_format_id String   @db.Uuid
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+
+  offering         works_offerings         @relation(fields: [offering_id], references: [id], onDelete: Cascade)
+  packaging_format works_packaging_formats @relation(fields: [packaging_format_id], references: [id], onDelete: Cascade)
+
+  @@unique([offering_id, packaging_format_id])
+  @@index([offering_id])
+  @@index([packaging_format_id])
+}
