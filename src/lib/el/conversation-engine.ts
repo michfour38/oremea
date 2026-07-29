@@ -29,6 +29,8 @@ export type ELConversationResult = {
   shouldContinue: boolean
   suggestedNextStep: string | null
   scopeCategory?: CompassScopeCategory
+  movementReady?: boolean
+  retirePriorFrame?: boolean
 }
 
 export async function runELConversation({
@@ -46,6 +48,44 @@ export async function runELConversation({
     latestAnswer,
   })
 
+  const attemptCount = product === "compass" && stage === "discussion" ? 2 : 1
+
+  for (let attempt = 0; attempt < attemptCount; attempt += 1) {
+    const text = await callConversationModel(
+      attempt === 0
+        ? prompt
+        : `${prompt}\n\nRETRY FORMAT REQUIREMENT\nReturn the requested valid JSON object only. Preserve the participant's latest meaning and do not ask them to repeat information they already supplied.`,
+    )
+
+    if (!text) continue
+
+    if (product === "compass" && stage === "discussion") {
+      const parsed = parseCompassDiscussion(text)
+      if (!parsed) continue
+
+      const boundary = getCompassBoundaryMessage(parsed.scopeCategory)
+
+      return {
+        reply: boundary ?? parsed.reply,
+        shouldContinue: true,
+        suggestedNextStep: null,
+        scopeCategory: parsed.scopeCategory,
+        movementReady: parsed.movementReady,
+        retirePriorFrame: parsed.retirePriorFrame,
+      }
+    }
+
+    return {
+      reply: text,
+      shouldContinue: true,
+      suggestedNextStep: null,
+    }
+  }
+
+  return null
+}
+
+async function callConversationModel(prompt: string): Promise<string | null> {
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -79,27 +119,7 @@ export async function runELConversation({
           .trim()
       : ""
 
-    if (!text) return null
-
-    if (product === "compass" && stage === "discussion") {
-      const parsed = parseCompassDiscussion(text)
-      if (!parsed) return null
-
-      const boundary = getCompassBoundaryMessage(parsed.scopeCategory)
-
-      return {
-        reply: boundary ?? parsed.reply,
-        shouldContinue: true,
-        suggestedNextStep: null,
-        scopeCategory: parsed.scopeCategory,
-      }
-    }
-
-    return {
-      reply: text,
-      shouldContinue: true,
-      suggestedNextStep: null,
-    }
+    return text || null
   } catch (error) {
     console.error("EL Conversation request failed:", error)
     return null
@@ -197,6 +217,14 @@ DISCUSSION EVIDENCE ORDER
 - area answers preserve the wider goal field
 - generated Compass reflections are context only and never proof about the participant
 
+CURRENT-REALITY AUTHORITY
+- when the participant corrects Compass, their correction immediately outranks the earlier generated frame
+- when the participant says a blocker has changed, ended, or no longer applies, retire that blocker as a current premise
+- never keep asking a question whose premise the participant has already answered or corrected
+- never manufacture a blocker merely because Compass is a movement product
+- if the participant says they already know what they are doing or are already moving, recognise that current reality and follow what is actually next
+- an answered question becomes conversation history; ask only the one question that is current now
+
 REFRAMING
 Reframing is useful when the participant's own account supports a more workable structure.
 A reframe is a hypothesis to place beside their reality, not a declaration of what their problem really is.
@@ -224,9 +252,18 @@ Your reply should usually contain:
 1. one short recognition or evidence-grounded reframe
 2. one natural question that tests, deepens, or corrects it
 
-If the participant corrects Compass, the correction outranks the earlier frame.
-If the current frame is already accurate, stay with the actual blocker instead of forcing a reframe.
-Do not rush into an action plan. The separate Compass ending Map will turn the conversation into movement when the participant asks for that.
+If the current frame is already accurate, stay with the participant's actual situation rather than forcing a reframe.
+Do not rush into an action plan. The separate Compass ending Map will turn the conversation into movement when the participant has actually supplied something workable.
+
+MOVEMENT READINESS
+Return movementReady true only when the current Discussion contains a participant-owned situation that would genuinely benefit from structuring into movement: a current difficulty, decision, dependency, uncertainty, overload, desired movement, or a direct request for help deciding what to do next.
+A named goal or action by itself does not earn movementReady. If the participant already knows what they are doing and has not expressed friction, choice, uncertainty, or a wish for help structuring it, keep movementReady false and continue the live conversation.
+Keep movementReady false when the material is still mainly recognition, possibility, or description and there is not yet an honest movement problem to work with.
+
+CORRECTION FLAG
+Return retirePriorFrame true when the latest participant message explicitly corrects, replaces, or makes obsolete a prior Compass premise, blocker, interpretation, reframe, or proposed movement.
+Otherwise return false.
+When retirePriorFrame is true, your reply must follow the corrected reality and must not repeat the retired question or premise.
 
 Do not label the participant with words such as resistance or avoidance.
 Do not moralise productivity.
@@ -251,7 +288,9 @@ When scope is outside, do not interpret, reframe, question, or advise. The appli
 Return valid JSON only:
 {
   "scopeCategory": "in_scope | self_harm_intent | medical | legal | regulated_professional",
-  "reply": "your normal Compass Discussion reply, or an empty string when outside scope"
+  "reply": "your normal Compass Discussion reply, or an empty string when outside scope",
+  "movementReady": false,
+  "retirePriorFrame": false
 }
 
 COURSE CONTEXT:
@@ -272,6 +311,8 @@ ${latestAnswer}
 function parseCompassDiscussion(text: string): {
   scopeCategory: CompassScopeCategory
   reply: string
+  movementReady: boolean
+  retirePriorFrame: boolean
 } | null {
   const cleaned = text
     .replace(/^```json\s*/i, "")
@@ -302,12 +343,16 @@ function parseCompassDiscussion(text: string): {
     ? parsed.scopeCategory
     : "in_scope"
   const reply = typeof parsed.reply === "string" ? parsed.reply.trim() : ""
+  const movementReady = parsed.movementReady === true
+  const retirePriorFrame = parsed.retirePriorFrame === true
 
   if (scopeCategory === "in_scope" && !reply) return null
 
   return {
     scopeCategory,
     reply,
+    movementReady,
+    retirePriorFrame,
   }
 }
 
