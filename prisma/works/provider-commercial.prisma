@@ -1,0 +1,37 @@
+enum WorksProviderPlan {
+  FREE
+  VERIFIED
+  GROWTH
+  ENTERPRISE
+}
+
+enum WorksProviderCapacityStatus {
+  OPEN
+  LIMITED
+  FULL
+  PAUSED
+}
+
+model works_provider_commercial_profiles {
+  id                    String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider_id           String                      @unique @db.Uuid
+  plan                  WorksProviderPlan           @default(FREE)
+  marketing_opt_in      Boolean                     @default(false)
+  wants_more_work       Boolean                     @default(false)
+  capacity_status       WorksProviderCapacityStatus @default(OPEN)
+  capacity_note         String?
+  target_service_keys   String[]                    @default([])
+  target_category_keys  String[]                    @default([])
+  marketing_note        String?
+  activated_at          DateTime?                   @db.Timestamptz(6)
+  plan_started_at       DateTime?                   @db.Timestamptz(6)
+  plan_ends_at          DateTime?                   @db.Timestamptz(6)
+  created_at            DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime                    @updatedAt @db.Timestamptz(6)
+
+  provider works_providers @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+
+  @@index([plan])
+  @@index([marketing_opt_in, wants_more_work])
+  @@index([capacity_status])
+}
