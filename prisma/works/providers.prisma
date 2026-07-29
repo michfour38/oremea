@@ -28,6 +28,7 @@ model works_providers {
   updated_at               DateTime                   @updatedAt @db.Timestamptz(6)
 
   markets works_provider_markets[]
+  types   works_provider_type_links[]
 
   @@index([name])
   @@index([profile_status])
