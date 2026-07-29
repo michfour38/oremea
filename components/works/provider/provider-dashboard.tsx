@@ -3,6 +3,8 @@
 import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { useEffect, useMemo, useState } from "react";
 
+import { ProviderIntelligence } from "@/components/works/provider/provider-intelligence";
+
 const SERVICES = [
   ["PRODUCT_DEVELOPMENT", "Product development"], ["FORMULATION", "Formulation / recipe work"], ["TESTING", "Testing / analysis"],
   ["REGULATORY_SUPPORT", "Compliance support"], ["RAW_MATERIAL_SOURCING", "Ingredients / materials sourcing"], ["MANUFACTURING", "Manufacturing"],
@@ -38,7 +40,7 @@ export function WorksProviderDashboard() {
       {providers.length > 1 ? <div className="mb-8 flex flex-wrap gap-2">{providers.map((provider) => <button key={provider.id} type="button" onClick={() => chooseProvider(provider)} className={`rounded-full border px-4 py-2 text-sm ${selected.id === provider.id ? "border-[#1f1c17] bg-[#1f1c17] text-white" : "border-black/15 bg-white"}`}>{provider.name}</button>)}</div> : null}
       <div className="grid gap-8 lg:grid-cols-[1fr_1.35fr]">
         <section className="space-y-5">
-          <div><p className="text-xs uppercase tracking-[0.18em] text-black/40">{selected.commercial.plan} plan</p><h1 className="mt-2 font-serif text-4xl text-[#1f1c17]">{selected.name}</h1><a href={`/works/providers/${selected.slug}`} className="mt-3 inline-block text-sm underline underline-offset-4">View public profile →</a></div>
+          <div><p className="text-xs uppercase tracking-[0.18em] text-black/40">{selected.commercial.plan} plan</p><h1 className="mt-2 font-serif text-4xl text-[#1f1c17]">{selected.name}</h1><div className="mt-3 flex flex-wrap gap-4"><a href={`/works/providers/${selected.slug}`} className="text-sm underline underline-offset-4">View public profile →</a><a href="/works/provider/inbox" className="text-sm underline underline-offset-4">Provider inbox →</a></div></div>
           <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><div className="flex items-center justify-between gap-4"><p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Business profile</p><span className="text-xs text-black/35">Editable</span></div><div className="mt-4 grid gap-3">
             <input value={edit.name} onChange={(e) => setEdit(v => v ? {...v,name:e.target.value}:v)} placeholder="Business name" className="rounded-xl border border-black/10 bg-white px-4 py-3" />
             <input value={edit.legalName} onChange={(e) => setEdit(v => v ? {...v,legalName:e.target.value}:v)} placeholder="Legal name (optional)" className="rounded-xl border border-black/10 bg-white px-4 py-3" />
@@ -61,6 +63,7 @@ export function WorksProviderDashboard() {
           {message?<p className="rounded-2xl bg-[#eef7f1] p-4 text-sm leading-6">{message}</p>:null}{error?<p className="text-sm text-red-700">{error}</p>:null}<button type="button" onClick={save} disabled={saving} className="rounded-full bg-[#1f1c17] px-6 py-3 text-sm font-medium text-white disabled:opacity-50">{saving?"Saving…":"Save provider profile →"}</button>
         </section>
       </div>
+      <div className="mt-10"><ProviderIntelligence key={selected.id} providerId={selected.id} /></div>
     </main> : null}</SignedIn>
   </div>;
 }
