@@ -53,6 +53,7 @@ export type CompassEndingState = {
   version: 1
   selectedArea: string | null
   mapItems: CompassMapItem[]
+  mapReviewed: boolean
   movements: CompassMovement[]
   currentMovementId: string | null
   reframe: string | null
@@ -91,6 +92,7 @@ export function createEmptyCompassEndingState(
     version: 1,
     selectedArea,
     mapItems: [],
+    mapReviewed: false,
     movements: [],
     currentMovementId: null,
     reframe: null,

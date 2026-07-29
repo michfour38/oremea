@@ -13,13 +13,13 @@ export default async function CompassArchivePage() {
     redirect("/sign-in");
   }
 
-  const sessions = await prisma.compass_sessions.findMany({
+  await prisma.compass_sessions.findMany({
     where: {
-  user_id: userId,
-  status: {
-    in: ["active", "complete"],
-  },
-},
+      user_id: userId,
+      status: {
+        in: ["active", "complete"],
+      },
+    },
     orderBy: {
       updated_at: "desc",
     },
@@ -38,12 +38,12 @@ export default async function CompassArchivePage() {
       <section className="relative mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl flex-col items-center justify-center px-5 py-10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(216,177,95,0.12),transparent_38%),linear-gradient(180deg,rgba(9,9,9,0.4),rgba(9,9,9,1))]" />
 
-<Link
-  href="/compass"
-  className="relative z-10 self-start text-sm text-zinc-500 underline underline-offset-4 transition hover:text-[#d8b15f]"
->
-  ← Return to Compass
-</Link>
+        <Link
+          href="/compass"
+          className="relative z-10 self-start text-sm text-zinc-500 underline underline-offset-4 transition hover:text-[#d8b15f]"
+        >
+          ← Return to Compass
+        </Link>
 
         <div className="relative z-10 text-center">
           <p className="text-xs uppercase tracking-[0.32em] text-[#d8b15f]">
@@ -55,14 +55,12 @@ export default async function CompassArchivePage() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-zinc-400">
-            Return to the goals, decisions, and directions you have already moved through.
+            Return to previous goal sets, conversations, and movements.
           </p>
         </div>
 
         <CompassArchiveWheel />
-
       </section>
-
     </main>
   );
 }

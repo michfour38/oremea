@@ -142,6 +142,7 @@ function readEndingState(
     mapItems: Array.isArray(row.mapItems)
       ? (row.mapItems as CompassEndingState["mapItems"])
       : [],
+    mapReviewed: row.mapReviewed === true,
     movements: Array.isArray(row.movements)
       ? (row.movements as CompassEndingState["movements"])
       : [],
@@ -150,6 +151,7 @@ function readEndingState(
     reframe: typeof row.reframe === "string" ? row.reframe : null,
     followUpQuestion:
       typeof row.followUpQuestion === "string" ? row.followUpQuestion : null,
+    movementReady: row.movementReady === true,
     scopeCategory: isScopeCategory(row.scopeCategory)
       ? row.scopeCategory
       : "in_scope",
