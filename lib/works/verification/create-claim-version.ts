@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 
 type CreateClaimVersionInput = {
   providerId: string;
+  offeringId?: string | null;
   claimType: string;
   field: string;
   value: Prisma.InputJsonValue;
@@ -24,9 +25,29 @@ type CreateClaimVersionInput = {
 
 export async function createClaimVersion(input: CreateClaimVersionInput) {
   return prisma.$transaction(async (tx) => {
+    if (input.offeringId) {
+      const offering = await tx.works_offerings.findUnique({
+        where: { id: input.offeringId },
+        select: {
+          provider_market: {
+            select: { provider_id: true },
+          },
+        },
+      });
+
+      if (!offering) {
+        throw new Error(`WORKS offering ${input.offeringId} was not found.`);
+      }
+
+      if (offering.provider_market.provider_id !== input.providerId) {
+        throw new Error("WORKS claim provider does not own the supplied offering.");
+      }
+    }
+
     const currentClaim = await tx.works_claims.findFirst({
       where: {
         provider_id: input.providerId,
+        offering_id: input.offeringId ?? null,
         field: input.field,
         is_current: true,
       },
@@ -44,6 +65,7 @@ export async function createClaimVersion(input: CreateClaimVersionInput) {
     return tx.works_claims.create({
       data: {
         provider_id: input.providerId,
+        offering_id: input.offeringId ?? null,
         claim_type: input.claimType,
         field: input.field,
         value: input.value,
