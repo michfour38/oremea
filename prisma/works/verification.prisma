@@ -1,0 +1,127 @@
+enum WorksProviderSourceType {
+  PROVIDER_WEBSITE
+  PUBLIC_REGISTRY
+  PROFESSIONAL_REGISTER
+  ACCREDITATION_BODY
+  CERTIFICATION_BODY
+  EDUCATION_PROVIDER
+  ASSOCIATION
+  PROVIDER_CONFIRMATION
+  DOCUMENT
+  PROJECT_EVIDENCE
+  WORKS_RESEARCH
+  OTHER
+}
+
+enum WorksClaimStatus {
+  UNKNOWN
+  SELF_REPORTED
+  EVIDENCE_SUPPLIED
+  SOURCE_CONFIRMED
+  AUTHORITY_VERIFIED
+  STALE
+  CONFLICTING
+  EXPIRED
+}
+
+enum WorksVerificationMethod {
+  NONE
+  SOURCE_REVIEW
+  PUBLIC_REGISTER
+  AUTHORITY_CONFIRMED
+  QUALIFICATION_AUTHORITY
+  DOCUMENT_REVIEW
+  PROVIDER_CONFIRMED
+  PROJECT_EVIDENCE
+}
+
+enum WorksEvidenceType {
+  SOURCE_SNAPSHOT
+  DOCUMENT
+  REGISTER_MATCH
+  PROVIDER_CONFIRMATION
+  AUTHORITY_CONFIRMATION
+  PROJECT_RECORD
+  OTHER
+}
+
+model works_provider_sources {
+  id                 String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider_id        String                  @db.Uuid
+  source_type        WorksProviderSourceType
+  name               String
+  url                String?
+  external_reference String?
+  discovered_at      DateTime                @default(now()) @db.Timestamptz(6)
+  checked_at         DateTime?               @db.Timestamptz(6)
+  active             Boolean                 @default(true)
+  created_at         DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime                @updatedAt @db.Timestamptz(6)
+
+  provider works_providers @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+  evidence works_evidence[]
+
+  @@index([provider_id])
+  @@index([provider_id, source_type])
+  @@index([active])
+}
+
+model works_claims {
+  id                   String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider_id          String                  @db.Uuid
+  claim_type           String
+  field                String
+  value                Json
+  display_value        String?
+  unit                 String?
+  scope                String?
+  status               WorksClaimStatus        @default(UNKNOWN)
+  verification_method  WorksVerificationMethod @default(NONE)
+  verified_at          DateTime?               @db.Timestamptz(6)
+  valid_from           DateTime?               @db.Timestamptz(6)
+  expires_at           DateTime?               @db.Timestamptz(6)
+  stale_after          DateTime?               @db.Timestamptz(6)
+  supersedes_claim_id  String?                 @unique @db.Uuid
+  is_current           Boolean                 @default(true)
+  created_at           DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime                @updatedAt @db.Timestamptz(6)
+
+  provider      works_providers @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+  supersedes    works_claims?   @relation("WorksClaimHistory", fields: [supersedes_claim_id], references: [id], onDelete: SetNull)
+  superseded_by works_claims[]  @relation("WorksClaimHistory")
+  evidence      works_evidence[]
+
+  @@index([provider_id])
+  @@index([provider_id, field, is_current])
+  @@index([provider_id, claim_type])
+  @@index([status])
+  @@index([expires_at])
+  @@index([stale_after])
+}
+
+model works_evidence {
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  claim_id          String            @db.Uuid
+  source_id         String?           @db.Uuid
+  evidence_type     WorksEvidenceType
+  summary           String?
+  url               String?
+  storage_reference String?
+  snapshot          Json?
+  captured_at       DateTime          @default(now()) @db.Timestamptz(6)
+  checked_at        DateTime?         @db.Timestamptz(6)
+  valid_from        DateTime?         @db.Timestamptz(6)
+  expires_at        DateTime?         @db.Timestamptz(6)
+  confidence        Decimal?          @db.Decimal(5, 4)
+  verified_by       String?
+  created_at        DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime          @updatedAt @db.Timestamptz(6)
+
+  claim  works_claims           @relation(fields: [claim_id], references: [id], onDelete: Cascade)
+  source works_provider_sources? @relation(fields: [source_id], references: [id], onDelete: SetNull)
+
+  @@index([claim_id])
+  @@index([source_id])
+  @@index([evidence_type])
+  @@index([expires_at])
+}
