@@ -62,8 +62,10 @@ lib/
       config.ts                # Market configuration contract
       resolve-market.ts        # Market/locale resolution
       za.ts                    # South Africa defaults
+    categories/
+      list-market-categories.ts
     providers/
-      types.ts
+      list-provider-types.ts
       profile-readiness.ts
     matching/
       eligibility.ts
@@ -73,8 +75,8 @@ lib/
       build-production-path.ts
       dependencies.ts
     verification/
-      claim-status.ts
-      expiry.ts
+      claim-status.ts          # Effective stale/expired/conflicting state
+      create-claim-version.ts  # Preserve claim history when facts change
     permissions/
       policy.ts
     intelligence/
@@ -89,26 +91,32 @@ UI should consume this domain layer rather than reproducing matching or verifica
 
 The existing Prisma schema already contains multiple Oremea product domains. WORKS tables therefore use a `works_` prefix rather than generic global names such as `Market`, `Provider`, or `Match`.
 
-Initial foundation:
+Foundation currently implemented:
 
 ```text
 works_markets
 works_locales
 works_categories
+works_category_translations
+works_market_categories
 works_providers
 works_provider_markets
+works_provider_types
+works_provider_type_translations
+works_provider_type_links
+works_provider_sources
+works_claims
+works_evidence
 ```
 
-Supply graph:
+Supply graph next:
 
 ```text
-works_provider_types
 works_services
 works_offerings
 works_capabilities
+works_credential_authorities
 works_credential_claims
-works_evidence
-works_provider_sources
 ```
 
 Demand and paths:
@@ -132,17 +140,28 @@ works_opportunities
 
 ## Prisma location
 
+WORKS uses Prisma's schema-folder support so the existing Oremea schema remains readable.
+
 ```text
 prisma/
-  schema.prisma               # Canonical schema; WORKS models stay grouped together
-  migrations/                 # Generated Prisma migrations
+  schema.prisma               # Shared generator/datasource + existing Oremea models
+  works/
+    markets.prisma
+    locales.prisma
+    categories.prisma
+    providers.prisma
+    provider-types.prisma
+    verification.prisma
+  migrations/                 # Shared migration history
   seeds/
     works/
-      run.ts                  # Dedicated WORKS seed runner
+      run.ts
       markets.ts
+      locales.ts
       categories.ts
+      provider-types.ts
       providers/
-        za/                   # South African provider seed/research imports
+        za/                   # South African provider research imports later
 ```
 
 WORKS gets a dedicated seed runner instead of being mixed into the current Resonance room/week seed sequence.
@@ -173,6 +192,7 @@ Private/internal:
 
 ```text
 provider graph
+claim/evidence history
 credential evidence
 match outcomes
 demand aggregation
@@ -186,21 +206,46 @@ The public interface should never expose internal provider lists, raw demand rec
 
 WORKS verifies specific claims rather than declaring an entire provider universally "verified".
 
-Examples:
+Core chain:
 
 ```text
-REGISTER_MATCHED
-ISSUER_CONFIRMED
-QUALIFICATION_VERIFIED
-DOCUMENT_REVIEWED
-PROVIDER_REPORTED
-PROJECT_EVIDENCED
-SCOPE_CONFIRMED
-VERIFICATION_EXPIRED
+Provider
+  ├── Source
+  └── Claim
+        ├── Evidence -> Source
+        └── supersedes -> previous Claim
+```
+
+Stored claim states:
+
+```text
+UNKNOWN
+SELF_REPORTED
+EVIDENCE_SUPPLIED
+SOURCE_CONFIRMED
+AUTHORITY_VERIFIED
+STALE
+CONFLICTING
+EXPIRED
+```
+
+Public language can translate those states into context-specific labels such as:
+
+```text
+REGISTER MATCHED
+ISSUER CONFIRMED
+QUALIFICATION VERIFIED
+DOCUMENT REVIEWED
+PROVIDER REPORTED
+PROJECT EVIDENCED
+SCOPE CONFIRMED
+VERIFICATION EXPIRED
 UNKNOWN
 ```
 
 Every material verification status should be traceable to evidence, source, check date, and where relevant scope/expiry.
+
+A changing fact is versioned rather than overwritten. `expires_at` represents a true validity end date; `stale_after` represents a recheck date for dynamic information such as MOQ, lead time, and current capacity.
 
 ## Profile progress rule
 
@@ -213,15 +258,17 @@ Progress is weighted by matching usefulness. Paid features never count toward pr
 
 ## First implementation sequence
 
-1. `works_markets`
-2. `works_locales`
-3. `works_categories`
-4. `works_providers`
-5. `works_provider_markets`
-6. South Africa market seed
-7. Supply graph
-8. Product brief + production path
-9. Matching
-10. Evidence/credential workflows
-11. Internal demand/capacity intelligence
-12. Public WORKS face
+1. `works_markets` ✓
+2. `works_locales` ✓
+3. `works_categories` + translations/market availability ✓
+4. `works_providers` + `works_provider_markets` ✓
+5. `works_provider_types` + translations/links ✓
+6. `works_provider_sources` + versioned `works_claims` + `works_evidence` ✓
+7. Credential authorities + credential claims
+8. Services, capabilities, and offerings
+9. First South African provider research set with provenance
+10. Product brief + production path
+11. Matching
+12. Provider claim/onboarding workflow
+13. Internal demand/capacity intelligence
+14. Public WORKS face
