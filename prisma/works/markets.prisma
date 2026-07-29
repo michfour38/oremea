@@ -27,4 +27,5 @@ model works_markets {
   provider_markets       works_provider_markets[]
   credential_authorities works_credential_authority_markets[]
   product_briefs         works_product_briefs[]
+  search_sessions        works_search_sessions[]
 }
