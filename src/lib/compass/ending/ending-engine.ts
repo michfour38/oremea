@@ -175,6 +175,14 @@ Include:
 - decisions they actually identified
 - things waiting on another person or event
 
+Return the COMPLETE current active Map each time, not only new items.
+The order of the returned array is meaningful.
+When the participant explicitly supplied an order, dependency, or first/then/after sequence, place those items in that first → next → later order.
+Place broader independent or ongoing goals after an explicit current sequence.
+Never manufacture an order the participant did not supply.
+Existing active or waiting Map items may contain wording the participant edited themselves. Preserve that participant-edited wording unless newer participant material corrects, completes, releases, or clearly supersedes it.
+Semantically deduplicate different phrasings that refer to the same underlying object.
+
 Do not turn emotions, identity statements, distress, or ordinary description into fake tasks.
 "I feel exhausted" is context unless the participant makes a goal or decision around it.
 "I am a failure" is not a Map item.
