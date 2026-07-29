@@ -34,6 +34,8 @@ type LocalEndingQuestion = {
   content: string;
 };
 
+type FinalizationStage = "idle" | "execution" | "confirm";
+
 export function CompassDiscussionFlow({
   discussionMessages,
   discussionInput,
@@ -55,6 +57,9 @@ export function CompassDiscussionFlow({
   const [localEndingQuestions, setLocalEndingQuestions] = useState<
     LocalEndingQuestion[]
   >([]);
+  const [finalizationStage, setFinalizationStage] =
+    useState<FinalizationStage>("idle");
+  const [finalDraft, setFinalDraft] = useState("");
 
   const currentMovement = useMemo(() => {
     if (!endingState?.currentMovementId) return null;
@@ -236,7 +241,22 @@ export function CompassDiscussionFlow({
     setView("discussion");
   }
 
-  async function finishCompass(movementInstruction: string) {
+  function beginFinalization(movementInstruction: string) {
+    setFinalDraft(movementInstruction);
+    setEndingError("");
+    setFinalizationStage("execution");
+  }
+
+  function confirmFinalDraft() {
+    if (!finalDraft.trim()) return;
+    setFinalDraft(finalDraft.trim());
+    setFinalizationStage("confirm");
+  }
+
+  async function finishCompass() {
+    const movementInstruction = finalDraft.trim();
+    if (!movementInstruction) return;
+
     setEndingBusy(true);
     setEndingError("");
 
@@ -248,6 +268,7 @@ export function CompassDiscussionFlow({
         },
         body: JSON.stringify({
           phase: "complete",
+          discussionMessages,
           finalStep: movementInstruction,
         }),
       });
@@ -290,6 +311,51 @@ export function CompassDiscussionFlow({
       !discussionInput.trim() &&
       !endingBusy,
   );
+
+  if (finalizationStage === "execution") {
+    return (
+      <CompassExecutionCheck
+        executionFeeling={finalDraft}
+        onExecutionFeelingChange={setFinalDraft}
+        onFinalize={confirmFinalDraft}
+      />
+    );
+  }
+
+  if (finalizationStage === "confirm") {
+    return (
+      <CompassCard
+        title="Your next movement"
+        description="One real movement you can carry from here."
+      >
+        <div className="rounded-[1.5rem] border border-[#3A3224] bg-[#17130D] p-5 text-sm leading-relaxed whitespace-pre-line text-zinc-300">
+          {finalDraft}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => void finishCompass()}
+          disabled={endingBusy}
+          className="primary-button disabled:cursor-wait disabled:opacity-60"
+        >
+          {endingBusy ? "Closing Compass..." : "Complete Compass"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setFinalizationStage("execution")}
+          disabled={endingBusy}
+          className="secondary-button disabled:opacity-60"
+        >
+          Edit movement
+        </button>
+
+        {endingError ? (
+          <p className="text-sm leading-6 text-amber-200/80">{endingError}</p>
+        ) : null}
+      </CompassCard>
+    );
+  }
 
   return (
     <CompassCard
@@ -416,11 +482,11 @@ export function CompassDiscussionFlow({
 
               <button
                 type="button"
-                onClick={() => void finishCompass(currentMovement.instruction)}
+                onClick={() => beginFinalization(currentMovement.instruction)}
                 disabled={endingBusy}
                 className="primary-button disabled:cursor-wait disabled:opacity-60"
               >
-                Finish Compass with this
+                Use this as my next movement
               </button>
               <button
                 type="button"
