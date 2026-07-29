@@ -16,6 +16,9 @@ export type WorksBridgeQuestion = {
 export type WorksBridgeQuestionContext = {
   productType?: string | null;
   targetQuantity?: number | null;
+  quantityMinimum?: number | null;
+  quantityPreferred?: number | null;
+  quantityMaximum?: number | null;
   quantityUnit?: string | null;
   quantityFlexibility?: string | null;
   packagingFormat?: string | null;
@@ -39,14 +42,29 @@ function providerLabel(context: WorksBridgeQuestionContext) {
   return context.providerName?.trim() || "the provider";
 }
 
+function hasQuantityRange(context: WorksBridgeQuestionContext) {
+  return context.quantityMinimum != null && context.quantityMaximum != null;
+}
+
 function quantityNeedsBridge(context: WorksBridgeQuestionContext) {
   return (
-    context.targetQuantity != null &&
+    (context.targetQuantity != null || context.quantityMinimum != null) &&
     context.quantityUnit === "UNITS" &&
     context.providerMinimumValue != null &&
     Boolean(context.providerMinimumUnit) &&
     context.providerMinimumUnit !== "UNITS"
   );
+}
+
+function quantityLabel(context: WorksBridgeQuestionContext) {
+  if (hasQuantityRange(context)) {
+    const preferred =
+      context.quantityPreferred != null
+        ? `, preferably ${context.quantityPreferred}`
+        : "";
+    return `${context.quantityMinimum}-${context.quantityMaximum} finished units${preferred}`;
+  }
+  return `${context.targetQuantity} finished units`;
 }
 
 export function buildBridgeQuestions(
@@ -57,7 +75,7 @@ export function buildBridgeQuestions(
   const provider = providerLabel(context);
 
   if (quantityNeedsBridge(context)) {
-    if (!context.quantityFlexibility) {
+    if (!hasQuantityRange(context) && !context.quantityFlexibility) {
       questions.push({
         key: "FOUNDER_QUANTITY_FLEXIBILITY",
         audience: "FOUNDER",
@@ -81,7 +99,7 @@ export function buildBridgeQuestions(
             ? "How much product should each finished bottle contain?"
             : "What is the target fill size for each finished unit?",
         purpose:
-          "A finished-unit target cannot be compared safely with a provider minimum expressed as mass, volume or batch size until the pack size is known.",
+          "Finished-unit quantities need a pack size before WORKS can compare them with a provider minimum expressed as mass, volume or batch size.",
         requiredToResolve: ["QUANTITY_COMPARISON"],
         answerField:
           context.packagingFormat === "BOTTLE"
@@ -97,7 +115,7 @@ export function buildBridgeQuestions(
       kind: "TEXT",
       prompt: `For this ${product}, what production minimum actually applies: ${context.providerMinimumValue} ${context.providerMinimumUnit}, litres, kilograms, or another batch basis?`,
       purpose:
-        "Provider marketing pages can describe vessel capacity and minimum production quantity in different units. WORKS needs the commercial minimum that applies to this exact product/process.",
+        "Provider marketing pages can describe vessel capacity and commercial minimums differently. WORKS needs the minimum that applies to this exact product and process.",
       requiredToResolve: ["QUANTITY_COMPARISON"],
       answerField: "provider.minimum_batch_basis",
     });
@@ -112,7 +130,7 @@ export function buildBridgeQuestions(
         kind: "NUMBER",
         prompt: `At a ${fill} finished fill size, how many saleable units does your minimum production batch of this ${product} yield?`,
         purpose:
-          "This converts the provider's production minimum into the same finished-unit language as the founder's target without assuming product density or process loss.",
+          "This converts the provider's production minimum into the same finished-unit language as the founder's range without assuming product density or process loss.",
         requiredToResolve: ["QUANTITY_COMPARISON"],
         answerField: "provider.minimum_batch_finished_units",
         unit: "UNITS",
@@ -122,9 +140,9 @@ export function buildBridgeQuestions(
         key: "PROVIDER_PARTIAL_FILL_POLICY",
         audience: "PROVIDER",
         kind: "TEXT",
-        prompt: `The target first run is ${context.targetQuantity} finished units. If your minimum batch yields more than that, can you fill only the requested quantity, and how is the remaining product handled?`,
+        prompt: `The workable first run is ${quantityLabel(context)}. If your minimum batch yields more than that range, can you fill within the requested range, and how is the remaining product handled?`,
         purpose:
-          "A minimum cooking batch and a minimum finished-unit order are not necessarily the same commercial constraint.",
+          "A minimum cooking batch and a minimum finished-unit order can be different commercial constraints.",
         requiredToResolve: ["QUANTITY_VIABILITY"],
         answerField: "provider.excess_batch_policy",
       });
