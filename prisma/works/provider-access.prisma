@@ -3,6 +3,13 @@ enum WorksProviderMembershipRole {
   MANAGER
 }
 
+enum WorksProviderClaimStatus {
+  PENDING
+  APPROVED
+  DECLINED
+  CANCELLED
+}
+
 model works_provider_memberships {
   id            String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   provider_id   String                      @db.Uuid
@@ -17,4 +24,24 @@ model works_provider_memberships {
   @@unique([provider_id, clerk_user_id])
   @@index([clerk_user_id, active])
   @@index([provider_id, active])
+}
+
+model works_provider_claims {
+  id             String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider_id    String                   @db.Uuid
+  clerk_user_id  String
+  business_email String
+  requested_role WorksProviderMembershipRole @default(OWNER)
+  note           String?
+  status         WorksProviderClaimStatus @default(PENDING)
+  reviewed_at    DateTime?                @db.Timestamptz(6)
+  created_at     DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime                 @updatedAt @db.Timestamptz(6)
+
+  provider works_providers @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+
+  @@unique([provider_id, clerk_user_id])
+  @@index([clerk_user_id, status])
+  @@index([provider_id, status])
+  @@index([business_email])
 }
