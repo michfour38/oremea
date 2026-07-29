@@ -15,6 +15,12 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/recognition(.*)",
   "/api/recognition(.*)",
+  // WORKS begins anonymously. Public founder search, provider profiles,
+  // provider response links and onboarding surfaces must render without
+  // Clerk forcing a platform sign-in. Sensitive WORKS APIs enforce their
+  // own account/session/token authorization inside each route.
+  "/works(.*)",
+  "/api/works(.*)",
 ]);
 
 export default clerkMiddleware((auth, req) => {
