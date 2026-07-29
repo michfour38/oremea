@@ -22,7 +22,8 @@ model works_markets {
   created_at      DateTime                @default(now()) @db.Timestamptz(6)
   updated_at      DateTime                @updatedAt @db.Timestamptz(6)
 
-  locales          works_locales[]
-  categories       works_market_categories[]
-  provider_markets works_provider_markets[]
+  locales                works_locales[]
+  categories             works_market_categories[]
+  provider_markets       works_provider_markets[]
+  credential_authorities works_credential_authority_markets[]
 }
