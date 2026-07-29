@@ -26,6 +26,8 @@ model works_product_briefs {
   stage               String?
   target_quantity     Decimal? @db.Decimal(14, 3)
   quantity_unit       String?
+  existing_assets     String[] @default([])
+  requested_services  String[] @default([])
   location_preference String?
   administrative_area String?
   timeline_date       DateTime? @db.Date
