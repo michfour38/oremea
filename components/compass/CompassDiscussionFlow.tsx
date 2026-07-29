@@ -188,7 +188,7 @@ export function CompassDiscussionFlow({
     }, 50);
   }
 
-  const focusLabel = endingState?.selectedArea
+  const startingAreaLabel = endingState?.selectedArea
     ? AREA_LABELS[endingState.selectedArea] ?? endingState.selectedArea
     : null;
 
@@ -293,9 +293,9 @@ export function CompassDiscussionFlow({
         </>
       ) : (
         <div className="space-y-5">
-          {focusLabel ? (
+          {startingAreaLabel ? (
             <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
-              Current focus · {focusLabel}
+              Started in · {startingAreaLabel}
             </p>
           ) : null}
 
@@ -390,7 +390,7 @@ export function CompassDiscussionFlow({
 
               {!endingBusy && activeMapItems.length === 0 && !boundaryMessage ? (
                 <div className="rounded-2xl border border-zinc-800 p-5 text-sm leading-6 text-zinc-500">
-                  Open Discussion and keep talking, or ask Compass to make the current goal workable. The Map will build from what you have already said.
+                  Open Discussion and keep talking, or ask Compass to make what is current workable. The Map will build from what you have already said.
                 </div>
               ) : null}
 
