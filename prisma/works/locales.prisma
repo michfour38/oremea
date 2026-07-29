@@ -14,6 +14,8 @@ model works_locales {
   market                     works_markets                      @relation(fields: [market_id], references: [id], onDelete: Cascade)
   category_translations      works_category_translations[]
   provider_type_translations works_provider_type_translations[]
+  service_translations       works_service_translations[]
+  capability_translations    works_capability_translations[]
 
   @@unique([market_id, code])
   @@index([market_id])
