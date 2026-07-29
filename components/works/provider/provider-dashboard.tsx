@@ -4,210 +4,59 @@ import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { useEffect, useMemo, useState } from "react";
 
 const SERVICES = [
-  ["PRODUCT_DEVELOPMENT", "Product development"],
-  ["FORMULATION", "Formulation / recipe work"],
-  ["TESTING", "Testing / analysis"],
-  ["REGULATORY_SUPPORT", "Compliance support"],
-  ["RAW_MATERIAL_SOURCING", "Ingredients / materials sourcing"],
-  ["MANUFACTURING", "Manufacturing"],
-  ["PACKAGING_SUPPLY", "Packaging supply"],
-  ["PACKAGING", "Filling / packing"],
-  ["PRINTING", "Labels / printed packaging"],
-  ["WAREHOUSING", "Warehousing"],
-  ["FULFILMENT", "Fulfilment"],
-  ["LOGISTICS", "Logistics"],
+  ["PRODUCT_DEVELOPMENT", "Product development"], ["FORMULATION", "Formulation / recipe work"], ["TESTING", "Testing / analysis"],
+  ["REGULATORY_SUPPORT", "Compliance support"], ["RAW_MATERIAL_SOURCING", "Ingredients / materials sourcing"], ["MANUFACTURING", "Manufacturing"],
+  ["PACKAGING_SUPPLY", "Packaging supply"], ["PACKAGING", "Filling / packing"], ["PRINTING", "Labels / printed packaging"],
+  ["WAREHOUSING", "Warehousing"], ["FULFILMENT", "Fulfilment"], ["LOGISTICS", "Logistics"],
 ] as const;
 
-const CATEGORIES = [
-  ["FOOD", "Food"],
-  ["BEVERAGE", "Beverage"],
-  ["SKINCARE", "Skincare"],
-  ["PERSONAL_CARE", "Personal care"],
-  ["SUPPLEMENTS", "Supplements"],
-] as const;
+const CATEGORIES = [["FOOD", "Food"], ["BEVERAGE", "Beverage"], ["SKINCARE", "Skincare"], ["PERSONAL_CARE", "Personal care"], ["SUPPLEMENTS", "Supplements"]] as const;
 
-type Commercial = {
-  plan: "FREE" | "VERIFIED" | "GROWTH" | "ENTERPRISE";
-  marketing_opt_in: boolean;
-  wants_more_work: boolean;
-  capacity_status: "OPEN" | "LIMITED" | "FULL" | "PAUSED";
-  capacity_note: string | null;
-  target_service_keys: string[];
-  target_category_keys: string[];
-  marketing_note: string | null;
-};
+type Commercial = { plan: "FREE" | "VERIFIED" | "GROWTH" | "ENTERPRISE"; marketing_opt_in: boolean; wants_more_work: boolean; capacity_status: "OPEN" | "LIMITED" | "FULL" | "PAUSED"; capacity_note: string | null; target_service_keys: string[]; target_category_keys: string[]; marketing_note: string | null; };
+type Review = { id: string; reviewer_name: string; reviewer_company: string | null; rating: number; body: string; verified_brief: boolean; provider_response: string | null; created_at: string; };
+type Provider = { id: string; name: string; slug: string; legalName: string | null; website: string | null; email: string | null; phone: string | null; description: string | null; profileStatus: string; role: "OWNER" | "MANAGER"; commercial: Commercial; reviews: Review[]; };
+type EditState = { name: string; legalName: string; website: string; email: string; phone: string; description: string; marketingOptIn: boolean; wantsMoreWork: boolean; capacityStatus: Commercial["capacity_status"]; capacityNote: string; marketingNote: string; targetServiceKeys: string[]; targetCategoryKeys: string[]; };
 
-type Provider = {
-  id: string;
-  name: string;
-  slug: string;
-  website: string | null;
-  email: string | null;
-  phone: string | null;
-  profileStatus: string;
-  role: "OWNER" | "MANAGER";
-  commercial: Commercial;
-};
-
-type EditState = {
-  marketingOptIn: boolean;
-  wantsMoreWork: boolean;
-  capacityStatus: Commercial["capacity_status"];
-  capacityNote: string;
-  marketingNote: string;
-  targetServiceKeys: string[];
-  targetCategoryKeys: string[];
-};
-
-function toEdit(provider: Provider): EditState {
-  return {
-    marketingOptIn: provider.commercial.marketing_opt_in,
-    wantsMoreWork: provider.commercial.wants_more_work,
-    capacityStatus: provider.commercial.capacity_status,
-    capacityNote: provider.commercial.capacity_note ?? "",
-    marketingNote: provider.commercial.marketing_note ?? "",
-    targetServiceKeys: provider.commercial.target_service_keys,
-    targetCategoryKeys: provider.commercial.target_category_keys,
-  };
-}
-
-function toggle(list: string[], value: string) {
-  return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
-}
+function toEdit(provider: Provider): EditState { return { name: provider.name, legalName: provider.legalName ?? "", website: provider.website ?? "", email: provider.email ?? "", phone: provider.phone ?? "", description: provider.description ?? "", marketingOptIn: provider.commercial.marketing_opt_in, wantsMoreWork: provider.commercial.wants_more_work, capacityStatus: provider.commercial.capacity_status, capacityNote: provider.commercial.capacity_note ?? "", marketingNote: provider.commercial.marketing_note ?? "", targetServiceKeys: provider.commercial.target_service_keys, targetCategoryKeys: provider.commercial.target_category_keys }; }
+function toggle(list: string[], value: string) { return list.includes(value) ? list.filter((item) => item !== value) : [...list, value]; }
 
 export function WorksProviderDashboard() {
-  const [providers, setProviders] = useState<Provider[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [edit, setEdit] = useState<EditState | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-
+  const [providers, setProviders] = useState<Provider[]>([]); const [selectedId, setSelectedId] = useState<string | null>(null); const [edit, setEdit] = useState<EditState | null>(null);
+  const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [message, setMessage] = useState(""); const [error, setError] = useState("");
   const selected = useMemo(() => providers.find((provider) => provider.id === selectedId) ?? null, [providers, selectedId]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const response = await fetch("/api/works/provider/me");
-        if (response.status === 401) return;
-        const data = await response.json();
-        if (!response.ok) throw new Error(data?.error ?? "WORKS could not load this provider profile.");
-        if (cancelled) return;
-        const rows = (data.providers ?? []) as Provider[];
-        setProviders(rows);
-        if (rows[0]) {
-          setSelectedId(rows[0].id);
-          setEdit(toEdit(rows[0]));
-        }
-      } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : "WORKS could not load this provider profile.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    load();
-    return () => { cancelled = true; };
-  }, []);
+  useEffect(() => { let cancelled = false; (async () => { try { const response = await fetch("/api/works/provider/me"); if (response.status === 401) return; const data = await response.json(); if (!response.ok) throw new Error(data?.error ?? "WORKS could not load this provider profile."); if (cancelled) return; const rows = (data.providers ?? []) as Provider[]; setProviders(rows); if (rows[0]) { setSelectedId(rows[0].id); setEdit(toEdit(rows[0])); } } catch (err) { if (!cancelled) setError(err instanceof Error ? err.message : "WORKS could not load this provider profile."); } finally { if (!cancelled) setLoading(false); } })(); return () => { cancelled = true; }; }, []);
 
-  function chooseProvider(provider: Provider) {
-    setSelectedId(provider.id);
-    setEdit(toEdit(provider));
-    setMessage("");
-    setError("");
-  }
+  function chooseProvider(provider: Provider) { setSelectedId(provider.id); setEdit(toEdit(provider)); setMessage(""); setError(""); }
+  async function save() { if (!selected || !edit) return; try { setSaving(true); setMessage(""); setError(""); const response = await fetch("/api/works/provider/me", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ providerId: selected.id, ...edit }) }); const data = await response.json(); if (!response.ok) throw new Error(data?.error ?? "WORKS could not save these changes."); setProviders((current) => current.map((provider) => provider.id === selected.id ? { ...provider, ...data.provider, commercial: data.commercial } : provider)); setMessage("Updated. Your public profile, capacity and marketing direction are current."); } catch (err) { setError(err instanceof Error ? err.message : "WORKS could not save these changes."); } finally { setSaving(false); } }
 
-  async function save() {
-    if (!selected || !edit) return;
-    try {
-      setSaving(true);
-      setMessage("");
-      setError("");
-      const response = await fetch("/api/works/provider/me", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ providerId: selected.id, ...edit }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data?.error ?? "WORKS could not save these changes.");
-      setProviders((current) => current.map((provider) => provider.id === selected.id ? { ...provider, commercial: data.commercial } : provider));
-      setMessage("Updated. WORKS now has your current capacity and the work you want more of.");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "WORKS could not save these changes.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <div className="mx-auto min-h-screen w-full max-w-6xl px-5 py-8 md:px-8 md:py-12">
-      <header className="flex items-center justify-between border-b border-black/10 pb-5">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#8b6a31]">WORKS</p>
-          <p className="mt-1 text-xs text-black/40">Provider workspace · by Oremea</p>
-        </div>
-        <SignedIn><UserButton afterSignOutUrl="/works/za" /></SignedIn>
-      </header>
-
-      <SignedOut>
-        <main className="py-16">
-          <h1 className="max-w-2xl font-serif text-4xl leading-tight text-[#1f1c17] md:text-5xl">Manage the capacity you want WORKS to put into the market.</h1>
-          <p className="mt-5 max-w-xl text-sm leading-6 text-black/55">Sign in with the account connected to your provider profile.</p>
-          <SignInButton mode="modal"><button className="mt-7 rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Sign in →</button></SignInButton>
-        </main>
-      </SignedOut>
-
-      <SignedIn>
-        {loading ? <p className="py-12 text-sm text-black/40">Loading provider workspace…</p> : providers.length === 0 ? (
-          <main className="py-16">
-            <h1 className="font-serif text-4xl text-[#1f1c17]">Your WORKS account is ready.</h1>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-black/55">A provider profile still needs to be connected to this account before capacity can be managed here.</p>
-          </main>
-        ) : selected && edit ? (
-          <main className="py-10 md:py-14">
-            {providers.length > 1 ? <div className="mb-8 flex flex-wrap gap-2">{providers.map((provider) => <button key={provider.id} type="button" onClick={() => chooseProvider(provider)} className={`rounded-full border px-4 py-2 text-sm ${selected.id === provider.id ? "border-[#1f1c17] bg-[#1f1c17] text-white" : "border-black/15 bg-white"}`}>{provider.name}</button>)}</div> : null}
-
-            <div className="grid gap-8 lg:grid-cols-[1fr_1.35fr]">
-              <section>
-                <p className="text-xs uppercase tracking-[0.18em] text-black/40">{selected.commercial.plan} plan</p>
-                <h1 className="mt-2 font-serif text-4xl text-[#1f1c17]">{selected.name}</h1>
-                <p className="mt-4 max-w-md text-sm leading-6 text-black/55">Tell WORKS what capacity is available and which work would strengthen your operation. Matching still follows genuine production fit.</p>
-
-                <div className="mt-7 rounded-2xl border border-black/10 bg-white/65 p-5">
-                  <p className="text-sm font-medium">Current capacity</p>
-                  <div className="mt-3 flex flex-wrap gap-2">{(["OPEN", "LIMITED", "FULL", "PAUSED"] as const).map((status) => <button key={status} type="button" onClick={() => setEdit((value) => value ? { ...value, capacityStatus: status } : value)} className={`rounded-full border px-4 py-2 text-sm ${edit.capacityStatus === status ? "border-[#1f1c17] bg-[#1f1c17] text-white" : "border-black/15 bg-white"}`}>{status.charAt(0) + status.slice(1).toLowerCase()}</button>)}</div>
-                  <textarea value={edit.capacityNote} onChange={(event) => setEdit((value) => value ? { ...value, capacityNote: event.target.value } : value)} rows={3} placeholder="Anything WORKS should know about current capacity, timing or constraints…" className="mt-4 w-full resize-none rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:border-[#8b6a31]" />
-                </div>
-
-                <label className="mt-5 flex items-start gap-3 rounded-2xl border border-black/10 bg-white/65 p-5"><input type="checkbox" checked={edit.wantsMoreWork} onChange={(event) => setEdit((value) => value ? { ...value, wantsMoreWork: event.target.checked } : value)} className="mt-1" /><span><span className="block text-sm font-medium">We want more work</span><span className="mt-1 block text-xs leading-5 text-black/45">Lets WORKS treat your available capacity as an active demand-generation target.</span></span></label>
-                <label className="mt-3 flex items-start gap-3 rounded-2xl border border-black/10 bg-white/65 p-5"><input type="checkbox" checked={edit.marketingOptIn} onChange={(event) => setEdit((value) => value ? { ...value, marketingOptIn: event.target.checked } : value)} className="mt-1" /><span><span className="block text-sm font-medium">Actively market our capabilities</span><span className="mt-1 block text-xs leading-5 text-black/45">WORKS can create demand around the capabilities and categories selected here.</span></span></label>
-              </section>
-
-              <section className="space-y-7">
-                <div className="rounded-3xl border border-black/10 bg-white/70 p-6">
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#8b6a31]">What work do you want more of?</p>
-                  <div className="mt-4 flex flex-wrap gap-2">{SERVICES.map(([key, label]) => <button key={key} type="button" onClick={() => setEdit((value) => value ? { ...value, targetServiceKeys: toggle(value.targetServiceKeys, key) } : value)} className={`rounded-full border px-4 py-2.5 text-sm ${edit.targetServiceKeys.includes(key) ? "border-[#1f1c17] bg-[#1f1c17] text-white" : "border-black/15 bg-white"}`}>{label}</button>)}</div>
-                </div>
-
-                <div className="rounded-3xl border border-black/10 bg-white/70 p-6">
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#8b6a31]">Which product categories?</p>
-                  <div className="mt-4 flex flex-wrap gap-2">{CATEGORIES.map(([key, label]) => <button key={key} type="button" onClick={() => setEdit((value) => value ? { ...value, targetCategoryKeys: toggle(value.targetCategoryKeys, key) } : value)} className={`rounded-full border px-4 py-2.5 text-sm ${edit.targetCategoryKeys.includes(key) ? "border-[#1f1c17] bg-[#1f1c17] text-white" : "border-black/15 bg-white"}`}>{label}</button>)}</div>
-                </div>
-
-                <div className="rounded-3xl border border-black/10 bg-white/70 p-6">
-                  <label className="text-xs font-medium uppercase tracking-[0.18em] text-[#8b6a31]">Anything specific WORKS should market?</label>
-                  <textarea value={edit.marketingNote} onChange={(event) => setEdit((value) => value ? { ...value, marketingNote: event.target.value } : value)} rows={4} placeholder="For example: private-label sauces, 500–5,000 unit skincare runs, available September–November…" className="mt-4 w-full resize-none rounded-xl border border-black/10 bg-white px-4 py-3 text-sm leading-6 outline-none focus:border-[#8b6a31]" />
-                </div>
-
-                {message ? <p className="rounded-2xl bg-[#f3eee4] p-4 text-sm leading-6">{message}</p> : null}
-                {error ? <p className="text-sm text-red-700">{error}</p> : null}
-                <button type="button" onClick={save} disabled={saving} className="rounded-full bg-[#1f1c17] px-6 py-3 text-sm font-medium text-white disabled:opacity-50">{saving ? "Saving…" : "Update what WORKS markets →"}</button>
-              </section>
-            </div>
-          </main>
-        ) : null}
-      </SignedIn>
-    </div>
-  );
+  return <div className="mx-auto min-h-screen w-full max-w-6xl px-5 py-8 md:px-8 md:py-12">
+    <header className="flex items-center justify-between border-b border-black/10 pb-5"><div><p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#16834f]">WORKS</p><p className="mt-1 text-xs text-black/40">Provider workspace · by Oremea</p></div><SignedIn><UserButton afterSignOutUrl="/works/za" /></SignedIn></header>
+    <SignedOut><main className="py-16"><h1 className="max-w-2xl font-serif text-4xl leading-tight text-[#1f1c17] md:text-5xl">Put your available capacity to work.</h1><p className="mt-5 max-w-xl text-sm leading-6 text-black/55">Claim or sign in to your WORKS provider profile, keep your capabilities current, and tell WORKS what work you want more of.</p><SignInButton mode="modal"><button className="mt-7 rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Sign in →</button></SignInButton></main></SignedOut>
+    <SignedIn>{loading ? <p className="py-12 text-sm text-black/40">Loading provider workspace…</p> : providers.length === 0 ? <main className="py-16"><h1 className="font-serif text-4xl text-[#1f1c17]">Your WORKS account is ready.</h1><p className="mt-4 max-w-xl text-sm leading-6 text-black/55">A provider profile still needs to be claimed or connected to this account.</p></main> : selected && edit ? <main className="py-10 md:py-14">
+      {providers.length > 1 ? <div className="mb-8 flex flex-wrap gap-2">{providers.map((provider) => <button key={provider.id} type="button" onClick={() => chooseProvider(provider)} className={`rounded-full border px-4 py-2 text-sm ${selected.id === provider.id ? "border-[#1f1c17] bg-[#1f1c17] text-white" : "border-black/15 bg-white"}`}>{provider.name}</button>)}</div> : null}
+      <div className="grid gap-8 lg:grid-cols-[1fr_1.35fr]">
+        <section className="space-y-5">
+          <div><p className="text-xs uppercase tracking-[0.18em] text-black/40">{selected.commercial.plan} plan</p><h1 className="mt-2 font-serif text-4xl text-[#1f1c17]">{selected.name}</h1><a href={`/works/providers/${selected.slug}`} className="mt-3 inline-block text-sm underline underline-offset-4">View public profile →</a></div>
+          <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Public profile</p><div className="mt-4 grid gap-3">
+            <input value={edit.name} onChange={(e) => setEdit(v => v ? {...v,name:e.target.value}:v)} placeholder="Business name" className="rounded-xl border border-black/10 bg-white px-4 py-3" />
+            <input value={edit.legalName} onChange={(e) => setEdit(v => v ? {...v,legalName:e.target.value}:v)} placeholder="Legal name (optional)" className="rounded-xl border border-black/10 bg-white px-4 py-3" />
+            <input value={edit.website} onChange={(e) => setEdit(v => v ? {...v,website:e.target.value}:v)} placeholder="Website" className="rounded-xl border border-black/10 bg-white px-4 py-3" />
+            <div className="grid gap-3 sm:grid-cols-2"><input value={edit.email} onChange={(e) => setEdit(v => v ? {...v,email:e.target.value}:v)} placeholder="Contact email" className="rounded-xl border border-black/10 bg-white px-4 py-3" /><input value={edit.phone} onChange={(e) => setEdit(v => v ? {...v,phone:e.target.value}:v)} placeholder="Phone" className="rounded-xl border border-black/10 bg-white px-4 py-3" /></div>
+            <textarea value={edit.description} onChange={(e) => setEdit(v => v ? {...v,description:e.target.value}:v)} rows={5} placeholder="Describe what you make, who you serve and what makes your operation useful to founders." className="resize-none rounded-xl border border-black/10 bg-white px-4 py-3 text-sm leading-6" />
+          </div></div>
+          <div className="rounded-2xl border border-black/10 bg-white/65 p-5"><p className="text-sm font-medium">Current capacity</p><div className="mt-3 flex flex-wrap gap-2">{(["OPEN","LIMITED","FULL","PAUSED"] as const).map(status => <button key={status} type="button" onClick={() => setEdit(v => v ? {...v,capacityStatus:status}:v)} className={`rounded-full border px-4 py-2 text-sm ${edit.capacityStatus===status?"border-[#1f1c17] bg-[#1f1c17] text-white":"border-black/15 bg-white"}`}>{status.charAt(0)+status.slice(1).toLowerCase()}</button>)}</div><textarea value={edit.capacityNote} onChange={(e)=>setEdit(v=>v?{...v,capacityNote:e.target.value}:v)} rows={3} placeholder="Timing, line availability, constraints…" className="mt-4 w-full resize-none rounded-xl border border-black/10 bg-white px-4 py-3 text-sm" /></div>
+          <label className="flex items-start gap-3 rounded-2xl border border-black/10 bg-white/65 p-5"><input type="checkbox" checked={edit.wantsMoreWork} onChange={e=>setEdit(v=>v?{...v,wantsMoreWork:e.target.checked}:v)} className="mt-1"/><span><span className="block text-sm font-medium">We want more work</span><span className="mt-1 block text-xs leading-5 text-black/45">Treat our available capacity as an active demand target.</span></span></label>
+          <label className="flex items-start gap-3 rounded-2xl border border-black/10 bg-white/65 p-5"><input type="checkbox" checked={edit.marketingOptIn} onChange={e=>setEdit(v=>v?{...v,marketingOptIn:e.target.checked}:v)} className="mt-1"/><span><span className="block text-sm font-medium">Actively market our capabilities</span><span className="mt-1 block text-xs leading-5 text-black/45">WORKS can create demand around the genuine capabilities selected here.</span></span></label>
+        </section>
+        <section className="space-y-7">
+          <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">What work do you want more of?</p><div className="mt-4 flex flex-wrap gap-2">{SERVICES.map(([key,label])=><button key={key} type="button" onClick={()=>setEdit(v=>v?{...v,targetServiceKeys:toggle(v.targetServiceKeys,key)}:v)} className={`rounded-full border px-4 py-2.5 text-sm ${edit.targetServiceKeys.includes(key)?"border-[#1f1c17] bg-[#1f1c17] text-white":"border-black/15 bg-white"}`}>{label}</button>)}</div></div>
+          <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Which product categories?</p><div className="mt-4 flex flex-wrap gap-2">{CATEGORIES.map(([key,label])=><button key={key} type="button" onClick={()=>setEdit(v=>v?{...v,targetCategoryKeys:toggle(v.targetCategoryKeys,key)}:v)} className={`rounded-full border px-4 py-2.5 text-sm ${edit.targetCategoryKeys.includes(key)?"border-[#1f1c17] bg-[#1f1c17] text-white":"border-black/15 bg-white"}`}>{label}</button>)}</div></div>
+          <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><label className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Anything specific WORKS should market?</label><textarea value={edit.marketingNote} onChange={e=>setEdit(v=>v?{...v,marketingNote:e.target.value}:v)} rows={4} placeholder="Private-label sauces, 500–5,000 unit skincare runs, capacity September–November…" className="mt-4 w-full resize-none rounded-xl border border-black/10 bg-white px-4 py-3 text-sm leading-6"/></div>
+          <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><div className="flex items-end justify-between gap-4"><div><p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Reviews</p><p className="mt-2 text-sm text-black/50">Published founder feedback appears on your public profile.</p></div><span className="text-sm text-black/40">{selected.reviews.length}</span></div>{selected.reviews.length ? <div className="mt-5 space-y-4">{selected.reviews.slice(0,4).map(review=><article key={review.id} className="border-t border-black/8 pt-4 first:border-0 first:pt-0"><p className="text-sm">{"★".repeat(review.rating)}<span className="text-black/15">{"★".repeat(5-review.rating)}</span></p><p className="mt-2 text-sm leading-6">{review.body}</p><p className="mt-2 text-xs text-black/40">{review.reviewer_name}{review.reviewer_company?` · ${review.reviewer_company}`:""}{review.verified_brief?" · Verified WORKS brief":""}</p></article>)}</div> : <p className="mt-5 text-sm text-black/40">Reviews from completed WORKS production relationships will appear here.</p>}</div>
+          {message?<p className="rounded-2xl bg-[#eef7f1] p-4 text-sm leading-6">{message}</p>:null}{error?<p className="text-sm text-red-700">{error}</p>:null}<button type="button" onClick={save} disabled={saving} className="rounded-full bg-[#1f1c17] px-6 py-3 text-sm font-medium text-white disabled:opacity-50">{saving?"Saving…":"Save provider profile →"}</button>
+        </section>
+      </div>
+    </main> : null}</SignedIn>
+  </div>;
 }
