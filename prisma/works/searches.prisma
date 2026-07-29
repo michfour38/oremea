@@ -19,6 +19,7 @@ model works_search_sessions {
   id                 String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   market_id          String                   @db.Uuid
   browser_session_id String?
+  clerk_user_id      String?
   answers            Json                     @default("{}")
   current_step       String?
   status             WorksSearchSessionStatus @default(IN_PROGRESS)
@@ -33,6 +34,7 @@ model works_search_sessions {
 
   @@index([market_id, status])
   @@index([browser_session_id])
+  @@index([clerk_user_id, updated_at])
   @@index([updated_at])
 }
 
