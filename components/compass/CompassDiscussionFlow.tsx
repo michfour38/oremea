@@ -39,8 +39,6 @@ export function CompassDiscussionFlow({
   discussionInput,
   onDiscussionInputChange,
   onSend,
-  onReady,
-  onAppendCompassMessage,
 }: {
   discussionMessages: CompassDiscussionMessage[];
   discussionInput: string;
@@ -164,11 +162,6 @@ export function CompassDiscussionFlow({
     const latest = discussionMessages[discussionMessages.length - 1];
     if (latest?.role === "compass" && latest.content.trim() === question) return;
 
-    if (onAppendCompassMessage) {
-      onAppendCompassMessage(question);
-      return;
-    }
-
     setLocalEndingQuestions((current) => {
       if (current.some((item) => item.content === question)) return current;
       return [
@@ -241,6 +234,35 @@ export function CompassDiscussionFlow({
     if (!state) return;
     appendEndingQuestion(state);
     setView("discussion");
+  }
+
+  async function finishCompass(movementInstruction: string) {
+    setEndingBusy(true);
+    setEndingError("");
+
+    try {
+      const response = await fetch("/api/compass/session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phase: "complete",
+          finalStep: movementInstruction,
+        }),
+      });
+
+      if (!response.ok) {
+        setEndingError("Compass could not close this run yet.");
+        return;
+      }
+
+      window.location.href = "https://www.oremea.com";
+    } catch {
+      setEndingError("Compass could not close this run yet.");
+    } finally {
+      setEndingBusy(false);
+    }
   }
 
   function jumpToDiscussion(item: CompassMapItem) {
@@ -394,11 +416,11 @@ export function CompassDiscussionFlow({
 
               <button
                 type="button"
-                onClick={() => onReady(currentMovement.instruction)}
+                onClick={() => void finishCompass(currentMovement.instruction)}
                 disabled={endingBusy}
                 className="primary-button disabled:cursor-wait disabled:opacity-60"
               >
-                Use this as my next step
+                Finish Compass with this
               </button>
               <button
                 type="button"
