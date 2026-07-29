@@ -117,11 +117,13 @@ export function buildProductionPath(
       "REGULATORY_SUPPORT",
       assets.has("REGULATORY") || assets.has("CERTIFICATIONS")
         ? "COMPLETE"
-        : "NEEDED",
+        : requested.has("REGULATORY_SUPPORT")
+          ? "NEEDED"
+          : "UNSURE",
       {
         dependencyKeys: ["FORMULATION"],
         notes: hasComplianceRequirement
-          ? "A required compliance or certification condition exists on this brief."
+          ? "Regulatory support may be needed if the required compliance condition is not already satisfied by the chosen production route."
           : undefined,
       }
     );
