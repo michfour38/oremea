@@ -29,6 +29,14 @@ function toInputJson(value: unknown): Prisma.InputJsonValue | undefined {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 }
 
+function requirementNumber(
+  requirements: Array<{ field: string; value: unknown }>,
+  field: string
+) {
+  const value = requirements.find((item) => item.field === field)?.value;
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
 export async function calculateBriefMatches(briefId: string) {
   const brief = await prisma.works_product_briefs.findUniqueOrThrow({
     where: { id: briefId },
@@ -115,6 +123,18 @@ export async function calculateBriefMatches(briefId: string) {
   const normalizedBrief = {
     categoryKey: brief.category?.key,
     targetQuantity: brief.target_quantity == null ? null : Number(brief.target_quantity),
+    minimumQuantity: requirementNumber(
+      brief.requirements,
+      "commercial.quantity.minimum"
+    ),
+    preferredQuantity: requirementNumber(
+      brief.requirements,
+      "commercial.quantity.preferred"
+    ),
+    maximumQuantity: requirementNumber(
+      brief.requirements,
+      "commercial.quantity.maximum"
+    ),
     quantityUnit: brief.quantity_unit,
     locationPreference: brief.location_preference,
     administrativeArea: brief.administrative_area,
