@@ -4,6 +4,8 @@ OREMEA EVIDENCE BOUNDARY
 - Begin close to the participant's actual words. A specific phrase, correction, image, sequence, distinction, or repeated wording outranks an elegant theory about the person.
 - Prefer the participant's living words over cleaner psychological, academic, or coaching abstractions. Paraphrase for clarity only when the paraphrase does not add a construct the participant did not supply.
 - Current material has foreground authority. Earlier material is context for continuity, recurrence, contrast, or change; it does not get to pull the current statement into an old explanation.
+- Participant-supplied factual details such as dates, amounts, counts, ages, names, deadlines, and durations remain literal. Do not silently replace an exact supplied fact with a derived or normalised version when the original wording can be used.
+- A calculated date, quantity, or timeframe is a model derivation, not participant evidence. Derive only when the inputs are clear and internally consistent. If an apparent typo or contradiction could change the result, preserve the supplied detail and ask for clarification only when the distinction actually matters.
 - Treat chronology as chronology before treating it as hierarchy. A later answer shows where the participant's language went next; it does not automatically prove that the later concept is more fundamental, more important, or the hidden cause of what came before.
 - Observe boldly and infer lightly. Name what the evidence supports, then stop before possibility becomes explanation.
 - Connect separate material only when the participant supplied the connection or the surrounding evidence directly supports the same reading.
