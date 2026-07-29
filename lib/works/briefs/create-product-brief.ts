@@ -142,6 +142,8 @@ export async function createProductBrief(input: CreateProductBriefInput) {
         stage: input.stage,
         target_quantity: input.targetQuantity,
         quantity_unit: input.quantityUnit,
+        existing_assets: input.existingAssets ?? [],
+        requested_services: input.requestedServiceKeys ?? [],
         location_preference: input.locationPreference,
         administrative_area: input.administrativeArea,
         timeline_date: input.timelineDate,
