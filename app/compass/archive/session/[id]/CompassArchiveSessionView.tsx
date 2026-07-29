@@ -108,7 +108,7 @@ export function CompassArchiveSessionView({
         <div className="mt-6 space-y-6">
           {endingState?.selectedArea ? (
             <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
-              Focus · {AREA_LABELS[endingState.selectedArea] ?? endingState.selectedArea}
+              Started in · {AREA_LABELS[endingState.selectedArea] ?? endingState.selectedArea}
             </p>
           ) : null}
 
