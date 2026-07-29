@@ -1,0 +1,79 @@
+model works_offerings {
+  id                        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider_market_id        String   @db.Uuid
+  name                      String
+  slug                      String
+  description               String?
+  production_model          String?
+  moq_value                 Decimal? @db.Decimal(14, 3)
+  moq_unit                  String?
+  max_run_value             Decimal? @db.Decimal(14, 3)
+  max_run_unit              String?
+  lead_time_min_days        Int?
+  lead_time_max_days        Int?
+  sample_available          Boolean?
+  sample_cost_amount        Decimal? @db.Decimal(14, 2)
+  sample_cost_currency      String?
+  startup_friendly          Boolean?
+  quote_required            Boolean  @default(true)
+  pricing_model             String?
+  packaging_supplied        Boolean?
+  client_packaging_accepted Boolean?
+  active                    Boolean  @default(true)
+  created_at                DateTime @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime @updatedAt @db.Timestamptz(6)
+
+  provider_market works_provider_markets     @relation(fields: [provider_market_id], references: [id], onDelete: Cascade)
+  categories      works_offering_categories[]
+  services        works_offering_services[]
+  capabilities    works_offering_capabilities[]
+  claims          works_claims[]
+
+  @@unique([provider_market_id, slug])
+  @@index([provider_market_id, active])
+  @@index([production_model])
+  @@index([moq_value])
+  @@index([lead_time_min_days, lead_time_max_days])
+}
+
+model works_offering_categories {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  offering_id String   @db.Uuid
+  category_id String   @db.Uuid
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  offering works_offerings  @relation(fields: [offering_id], references: [id], onDelete: Cascade)
+  category works_categories @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  @@unique([offering_id, category_id])
+  @@index([offering_id])
+  @@index([category_id])
+}
+
+model works_offering_services {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  offering_id String   @db.Uuid
+  service_id  String   @db.Uuid
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  offering works_offerings @relation(fields: [offering_id], references: [id], onDelete: Cascade)
+  service  works_services  @relation(fields: [service_id], references: [id], onDelete: Cascade)
+
+  @@unique([offering_id, service_id])
+  @@index([offering_id])
+  @@index([service_id])
+}
+
+model works_offering_capabilities {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  offering_id   String   @db.Uuid
+  capability_id String   @db.Uuid
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  offering   works_offerings    @relation(fields: [offering_id], references: [id], onDelete: Cascade)
+  capability works_capabilities @relation(fields: [capability_id], references: [id], onDelete: Cascade)
+
+  @@unique([offering_id, capability_id])
+  @@index([offering_id])
+  @@index([capability_id])
+}
