@@ -141,7 +141,7 @@ export const zaServiceProviders: ProviderSeed[] = [
         slug: "glass-plastic-packaging",
         description:
           "Stock packaging supply across glass and plastic containers for product brands of varying sizes.",
-        categories: ["FOOD", "BEVERAGE", "SKINCARE", "PERSONAL_CARE", "SUPPLEMENTS"],
+        categories: ["FOOD", "BEVERAGE", "SKINCARE", "PERSONAL_CARE"],
         services: ["PACKAGING"],
         packagingFormats: ["BOTTLE", "JAR", "DROPPER"],
       },
@@ -149,7 +149,7 @@ export const zaServiceProviders: ProviderSeed[] = [
         name: "Bottle printing",
         slug: "bottle-printing",
         description: "On-site bottle printing offered as part of Bonpak's packaging services.",
-        categories: ["FOOD", "BEVERAGE", "SKINCARE", "PERSONAL_CARE", "SUPPLEMENTS"],
+        categories: ["FOOD", "BEVERAGE", "SKINCARE", "PERSONAL_CARE"],
         services: ["PRINTING"],
         packagingFormats: ["BOTTLE"],
       },
@@ -362,7 +362,7 @@ export const zaServiceProviders: ProviderSeed[] = [
         slug: "3pl-warehousing-fulfilment",
         description:
           "Stock holding, kitting, over-packing, fulfilment, distribution and real-time reporting through a national warehousing footprint.",
-        categories: ["FOOD", "BEVERAGE", "SKINCARE", "PERSONAL_CARE", "SUPPLEMENTS"],
+        categories: [],
         services: ["WAREHOUSING", "FULFILMENT", "LOGISTICS"],
       },
       {
@@ -371,7 +371,7 @@ export const zaServiceProviders: ProviderSeed[] = [
         description:
           "Primary and secondary co-packing for products, promotional packaging, launch packs and samples.",
         productionModel: "CO_PACKING",
-        categories: ["FOOD", "BEVERAGE", "SKINCARE", "PERSONAL_CARE", "SUPPLEMENTS"],
+        categories: [],
         services: ["PACKAGING", "FULFILMENT"],
       },
     ],
