@@ -34,12 +34,15 @@ export function CompassDiscussionFlow({
   discussionInput,
   onDiscussionInputChange,
   onSend,
+  onReady,
+  onAppendCompassMessage,
 }: {
   discussionMessages: CompassDiscussionMessage[];
   discussionInput: string;
   onDiscussionInputChange: (value: string) => void;
   onSend: () => void;
-  onReady: () => void;
+  onReady: (movementInstruction: string) => void;
+  onAppendCompassMessage: (content: string) => void;
 }) {
   const [view, setView] = useState<"discussion" | "map">("discussion");
   const [endingState, setEndingState] = useState<CompassEndingState | null>(null);
@@ -67,6 +70,12 @@ export function CompassDiscussionFlow({
   useEffect(() => {
     void loadEnding();
   }, []);
+
+  useEffect(() => {
+    const latest = discussionMessages[discussionMessages.length - 1];
+    if (!latest || latest.content === "...") return;
+    void loadEnding();
+  }, [discussionMessages]);
 
   async function loadEnding() {
     try {
@@ -118,6 +127,16 @@ export function CompassDiscussionFlow({
     }
   }
 
+  function appendEndingQuestion(state: CompassEndingState) {
+    const question = state.followUpQuestion?.trim();
+    if (!question) return;
+
+    const latest = discussionMessages[discussionMessages.length - 1];
+    if (latest?.role === "compass" && latest.content.trim() === question) return;
+
+    onAppendCompassMessage(question);
+  }
+
   async function openMap() {
     setView("map");
 
@@ -146,6 +165,7 @@ export function CompassDiscussionFlow({
       return;
     }
 
+    appendEndingQuestion(state);
     setView("discussion");
   }
 
@@ -166,6 +186,7 @@ export function CompassDiscussionFlow({
   async function completeMovement() {
     const state = await runEndingAction("complete_movement");
     if (!state) return;
+    appendEndingQuestion(state);
     setView("discussion");
   }
 
@@ -174,6 +195,7 @@ export function CompassDiscussionFlow({
   ) {
     const state = await runEndingAction("movement_feedback", { feedback });
     if (!state) return;
+    appendEndingQuestion(state);
     setView("discussion");
   }
 
@@ -196,12 +218,19 @@ export function CompassDiscussionFlow({
     boundaryMessage && endingState?.scopeCategory !== "in_scope",
   );
 
+  const canMakeWorkable = Boolean(
+    !discussionBlocked &&
+      endingState?.movementReady &&
+      !discussionInput.trim() &&
+      !endingBusy,
+  );
+
   return (
     <CompassCard
       title={view === "discussion" ? "Discussion" : "Map"}
       description={
         view === "discussion"
-          ? "Work through what is making movement difficult. Compass will hold what you have already named while you talk."
+          ? "Stay with what has become visible. Compass will hold what you have already named while you clarify what has your attention now."
           : "Compass is holding the goals, dependencies, decisions, and other things already asking for your attention. You only need to carry the movement in front of you."
       }
     >
@@ -260,12 +289,6 @@ export function CompassDiscussionFlow({
             ))}
           </div>
 
-          {!discussionBlocked && endingState?.followUpQuestion ? (
-            <div className="rounded-[1.4rem] border border-[#3A3224] bg-[#17130D] p-5 text-sm leading-relaxed text-[#E7C98B]">
-              {endingState.followUpQuestion}
-            </div>
-          ) : null}
-
           {!discussionBlocked ? (
             <>
               <textarea
@@ -280,14 +303,15 @@ export function CompassDiscussionFlow({
                 Continue discussion
               </button>
 
-              <button
-                type="button"
-                onClick={() => void makeWorkable()}
-                disabled={endingBusy}
-                className="secondary-button disabled:cursor-wait disabled:opacity-60"
-              >
-                {endingBusy ? "Reading the whole picture..." : "Make this workable"}
-              </button>
+              {canMakeWorkable ? (
+                <button
+                  type="button"
+                  onClick={() => void makeWorkable()}
+                  className="secondary-button"
+                >
+                  Make this workable
+                </button>
+              ) : null}
             </>
           ) : null}
         </>
@@ -326,11 +350,19 @@ export function CompassDiscussionFlow({
 
               <button
                 type="button"
-                onClick={() => void completeMovement()}
+                onClick={() => onReady(currentMovement.instruction)}
                 disabled={endingBusy}
                 className="primary-button disabled:cursor-wait disabled:opacity-60"
               >
-                Done
+                Use this as my next step
+              </button>
+              <button
+                type="button"
+                onClick={() => void completeMovement()}
+                disabled={endingBusy}
+                className="secondary-button disabled:cursor-wait disabled:opacity-60"
+              >
+                I already did this
               </button>
               <button
                 type="button"
@@ -357,14 +389,13 @@ export function CompassDiscussionFlow({
                 That&apos;s not it
               </button>
             </section>
-          ) : !boundaryMessage ? (
+          ) : canMakeWorkable ? (
             <button
               type="button"
               onClick={() => void makeWorkable()}
-              disabled={endingBusy}
-              className="primary-button disabled:cursor-wait disabled:opacity-60"
+              className="primary-button"
             >
-              {endingBusy ? "Reading the whole picture..." : "Make this workable"}
+              Make this workable
             </button>
           ) : null}
 
@@ -390,7 +421,9 @@ export function CompassDiscussionFlow({
 
               {!endingBusy && activeMapItems.length === 0 && !boundaryMessage ? (
                 <div className="rounded-2xl border border-zinc-800 p-5 text-sm leading-6 text-zinc-500">
-                  Open Discussion and keep talking, or ask Compass to make what is current workable. The Map will build from what you have already said.
+                  {canMakeWorkable
+                    ? "The current discussion is ready to turn into movement when you are."
+                    : "Keep talking in Discussion. The Map will build from what you have already said as the current picture becomes clearer."}
                 </div>
               ) : null}
 
@@ -495,8 +528,8 @@ export function CompassComplete({
 }) {
   return (
     <CompassCard
-      title="Your next completed action"
-      description="One real movement. Not the entire transformation."
+      title="Your next movement"
+      description="One real movement you can carry from here."
     >
       <div className="rounded-[1.5rem] border border-[#3A3224] bg-[#17130D] p-5 text-sm leading-relaxed whitespace-pre-line text-zinc-300">
         {finalStep}
