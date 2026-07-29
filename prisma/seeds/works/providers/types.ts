@@ -51,6 +51,8 @@ export type ProviderOfferingSeed = {
   services?: string[];
   capabilities?: string[];
   packagingFormats?: string[];
+  sourceKey: string;
+  evidenceSummary: string;
 };
 
 export type ProviderSeed = {
