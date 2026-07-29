@@ -44,6 +44,7 @@ model works_product_briefs {
   route_options        works_route_options[]
   search_session       works_search_sessions?
   procurement_request  works_procurement_requests?
+  provider_outreach    works_provider_outreach[]
 
   @@index([market_id, status])
   @@index([category_id])
