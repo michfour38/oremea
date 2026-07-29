@@ -9,6 +9,13 @@ const ALGORITHM_VERSION = "v1";
 const MAX_CANDIDATES_PER_STEP = 5;
 const BEAM_WIDTH = 20;
 const ROUTE_LIMIT = 3;
+const QUANTITY_RELEVANT_ROUTE_SERVICES = new Set([
+  "MANUFACTURING",
+  "PACKAGING",
+  "PRINTING",
+  "LABELLING",
+  "RAW_MATERIAL_SOURCING",
+]);
 
 type Candidate = {
   stepId: string;
@@ -66,11 +73,11 @@ function previousProviderId(route: RouteDraft) {
   return null;
 }
 
-function extendRoute(route: RouteDraft, candidate: Candidate | null, step: {
-  id: string;
-  title: string;
-  position: number;
-}): RouteDraft {
+function extendRoute(
+  route: RouteDraft,
+  candidate: Candidate | null,
+  step: { id: string; title: string; position: number }
+): RouteDraft {
   if (!candidate) {
     return {
       assignments: [
@@ -124,7 +131,9 @@ function routeMetrics(route: RouteDraft) {
       Boolean(assignment.candidate)
   );
 
-  const providerIds = assigned.map((assignment) => assignment.candidate.providerId);
+  const providerIds = assigned.map(
+    (assignment) => assignment.candidate.providerId
+  );
   const distinctProviders = new Set(providerIds);
 
   let handoffCount = 0;
@@ -186,7 +195,9 @@ export async function planBriefRoutes(briefId: string) {
   }
 
   if (path.steps.length === 0) {
-    throw new Error(`WORKS brief ${briefId} has no required open production steps.`);
+    throw new Error(
+      `WORKS brief ${briefId} has no required open production steps.`
+    );
   }
 
   const matches = await prisma.works_matches.findMany({
@@ -237,30 +248,45 @@ export async function planBriefRoutes(briefId: string) {
       );
       if (!coversStep) continue;
 
-      const hardUnknownOutcomes = match.outcomes.filter(
-        (outcome) =>
-          outcome.hard_constraint &&
-          outcome.status === WorksMatchStatus.UNKNOWN &&
-          (!outcome.requirement?.applies_to_service?.key ||
-            outcome.requirement.applies_to_service.key === step.service?.key ||
-            outcome.criterion_type === "QUANTITY")
-      );
+      const hardUnknownOutcomes = match.outcomes.filter((outcome) => {
+        if (
+          !outcome.hard_constraint ||
+          outcome.status !== WorksMatchStatus.UNKNOWN
+        ) {
+          return false;
+        }
+
+        const scopedService = outcome.requirement?.applies_to_service?.key;
+        if (scopedService) return scopedService === step.service?.key;
+
+        if (outcome.criterion_type === "QUANTITY") {
+          return Boolean(
+            step.service?.key &&
+              QUANTITY_RELEVANT_ROUTE_SERVICES.has(step.service.key)
+          );
+        }
+
+        return true;
+      });
 
       const evidenceBackedMatches = match.outcomes.filter(
         (outcome) =>
-          outcome.status === WorksMatchStatus.MATCH && Boolean(outcome.source_claim_id)
+          outcome.status === WorksMatchStatus.MATCH &&
+          Boolean(outcome.source_claim_id)
       ).length;
       const geographyMatch = match.outcomes.some(
         (outcome) =>
           outcome.criterion_type === "GEOGRAPHY" &&
           outcome.status === WorksMatchStatus.MATCH
       );
+      const candidateStatus: Candidate["status"] =
+        hardUnknownOutcomes.length > 0 ? "UNKNOWN" : "MATCH";
 
       const fitContribution = Math.round(
         clamp(match.fit_score ?? 0, -20, 60) / 4
       );
       const candidateScore =
-        (match.status === WorksMatchStatus.MATCH ? 42 : 22) +
+        (candidateStatus === "MATCH" ? 42 : 22) +
         fitContribution +
         (geographyMatch ? 5 : 0) +
         Math.min(evidenceBackedMatches * 2, 8) -
@@ -277,15 +303,16 @@ export async function planBriefRoutes(briefId: string) {
         offeringName: match.offering.name,
         providerId: provider.id,
         providerName: provider.name,
-        status: match.status === WorksMatchStatus.MATCH ? "MATCH" : "UNKNOWN",
+        status: candidateStatus,
         candidateScore,
         hardUnknownKeys: hardUnknownOutcomes.map(
-          (outcome) => `${match.id}:${outcome.criterion_type}:${outcome.criterion_key}`
+          (outcome) =>
+            `${match.id}:${outcome.criterion_type}:${outcome.criterion_key}`
         ),
         explanation:
-          match.status === WorksMatchStatus.MATCH
+          candidateStatus === "MATCH"
             ? `${provider.name} has a confirmed fit for ${step.title} through ${match.offering.name}.`
-            : `${provider.name} can cover ${step.title} through ${match.offering.name}, with unresolved hard facts still attached to this offering.`,
+            : `${provider.name} can cover ${step.title} through ${match.offering.name}, with unresolved hard facts that matter to this step.`,
       });
     }
 
@@ -344,7 +371,10 @@ export async function planBriefRoutes(briefId: string) {
       if (a.metrics.providerCount !== b.metrics.providerCount) {
         return a.metrics.providerCount - b.metrics.providerCount;
       }
-      if (a.metrics.unresolvedRequirementCount !== b.metrics.unresolvedRequirementCount) {
+      if (
+        a.metrics.unresolvedRequirementCount !==
+        b.metrics.unresolvedRequirementCount
+      ) {
         return (
           a.metrics.unresolvedRequirementCount -
           b.metrics.unresolvedRequirementCount
@@ -425,13 +455,20 @@ export async function planBriefRoutes(briefId: string) {
           match: {
             include: {
               outcomes: {
-                where: { hard_constraint: true, status: WorksMatchStatus.UNKNOWN },
+                where: {
+                  hard_constraint: true,
+                  status: WorksMatchStatus.UNKNOWN,
+                },
                 include: {
                   requirement: {
                     select: { field: true, display_value: true },
                   },
                   source_claim: {
-                    select: { field: true, display_value: true, status: true },
+                    select: {
+                      field: true,
+                      display_value: true,
+                      status: true,
+                    },
                   },
                 },
               },
