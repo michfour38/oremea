@@ -37,6 +37,9 @@ export type MatchClaim = {
 export type MatchBrief = {
   categoryKey?: string | null;
   targetQuantity?: number | null;
+  minimumQuantity?: number | null;
+  preferredQuantity?: number | null;
+  maximumQuantity?: number | null;
   quantityUnit?: string | null;
   locationPreference?: string | null;
   administrativeArea?: string | null;
@@ -125,6 +128,13 @@ function evaluateRequirement(
   requirement: MatchBriefRequirement,
   offering: MatchOffering
 ): MatchOutcomeDraft | null {
+  if (
+    requirement.field.startsWith("commercial.quantity.") ||
+    requirement.requirementType === "TAXONOMY_INPUT"
+  ) {
+    return null;
+  }
+
   if (
     requirement.appliesToServiceKey &&
     !offering.serviceKeys.includes(requirement.appliesToServiceKey)
@@ -331,83 +341,97 @@ export function evaluateOfferingFit(
     QUANTITY_BEARING_SERVICES.has(service)
   );
 
-  if (quantityRelevant && brief.targetQuantity != null && brief.quantityUnit) {
-    if (!offering.moqValue && !offering.maxRunValue) {
+  const minimumQuantity = brief.minimumQuantity ?? brief.targetQuantity ?? null;
+  const preferredQuantity = brief.preferredQuantity ?? brief.targetQuantity ?? null;
+  const maximumQuantity = brief.maximumQuantity ?? brief.targetQuantity ?? null;
+
+  if (
+    quantityRelevant &&
+    minimumQuantity != null &&
+    maximumQuantity != null &&
+    brief.quantityUnit
+  ) {
+    const expectedRange = {
+      minimum: minimumQuantity,
+      preferred: preferredQuantity,
+      maximum: maximumQuantity,
+      unit: brief.quantityUnit,
+    };
+
+    const providerUnit = offering.moqUnit ?? offering.maxRunUnit ?? null;
+    const unitsConflict = Boolean(
+      (offering.moqUnit && offering.moqUnit !== brief.quantityUnit) ||
+      (offering.maxRunUnit && offering.maxRunUnit !== brief.quantityUnit)
+    );
+
+    if (offering.moqValue == null && offering.maxRunValue == null) {
       outcomes.push({
         criterionType: "QUANTITY",
-        criterionKey: "target_quantity",
+        criterionKey: "quantity_range",
         status: "UNKNOWN",
         hardConstraint: true,
         scoreDelta: 0,
-        expectedValue: { value: brief.targetQuantity, unit: brief.quantityUnit },
+        expectedValue: expectedRange,
         explanation: `The offering's supported production quantity is not yet confirmed.`,
       });
-    } else if (
-      offering.moqValue != null &&
-      offering.moqUnit &&
-      offering.moqUnit !== brief.quantityUnit
-    ) {
+    } else if (unitsConflict) {
       outcomes.push({
         criterionType: "QUANTITY",
-        criterionKey: "target_quantity",
+        criterionKey: "quantity_range",
         status: "UNKNOWN",
         hardConstraint: true,
         scoreDelta: 0,
-        expectedValue: { value: brief.targetQuantity, unit: brief.quantityUnit },
-        actualValue: { value: offering.moqValue, unit: offering.moqUnit },
-        explanation: `The brief and offering use different quantity units, so WORKS cannot compare them safely yet.`,
-      });
-    } else if (
-      offering.maxRunValue != null &&
-      offering.maxRunUnit &&
-      offering.maxRunUnit !== brief.quantityUnit
-    ) {
-      outcomes.push({
-        criterionType: "QUANTITY",
-        criterionKey: "target_quantity",
-        status: "UNKNOWN",
-        hardConstraint: true,
-        scoreDelta: 0,
-        expectedValue: { value: brief.targetQuantity, unit: brief.quantityUnit },
-        actualValue: { value: offering.maxRunValue, unit: offering.maxRunUnit },
-        explanation: `The maximum run size uses a different quantity unit, so WORKS cannot compare it safely yet.`,
-      });
-    } else if (offering.moqValue != null && brief.targetQuantity < offering.moqValue) {
-      outcomes.push({
-        criterionType: "QUANTITY",
-        criterionKey: "target_quantity",
-        status: "NO_MATCH",
-        hardConstraint: true,
-        scoreDelta: -100,
-        expectedValue: { value: brief.targetQuantity, unit: brief.quantityUnit },
-        actualValue: { value: offering.moqValue, unit: offering.moqUnit },
-        explanation: `The target quantity is below this offering's confirmed minimum order quantity.`,
-      });
-    } else if (offering.maxRunValue != null && brief.targetQuantity > offering.maxRunValue) {
-      outcomes.push({
-        criterionType: "QUANTITY",
-        criterionKey: "target_quantity",
-        status: "NO_MATCH",
-        hardConstraint: true,
-        scoreDelta: -100,
-        expectedValue: { value: brief.targetQuantity, unit: brief.quantityUnit },
-        actualValue: { value: offering.maxRunValue, unit: offering.maxRunUnit },
-        explanation: `The target quantity exceeds this offering's confirmed maximum run size.`,
-      });
-    } else {
-      outcomes.push({
-        criterionType: "QUANTITY",
-        criterionKey: "target_quantity",
-        status: "MATCH",
-        hardConstraint: true,
-        scoreDelta: 14,
-        expectedValue: { value: brief.targetQuantity, unit: brief.quantityUnit },
+        expectedValue: expectedRange,
         actualValue: {
           minimum: offering.moqValue,
           maximum: offering.maxRunValue,
-          unit: offering.moqUnit ?? offering.maxRunUnit ?? brief.quantityUnit,
+          unit: providerUnit,
         },
-        explanation: `The confirmed quantity range can accommodate this brief.`,
+        explanation: `The brief and offering use different quantity units, so WORKS needs a conversion fact before comparing them safely.`,
+      });
+    } else if (offering.moqValue != null && offering.moqValue > maximumQuantity) {
+      outcomes.push({
+        criterionType: "QUANTITY",
+        criterionKey: "quantity_range",
+        status: "NO_MATCH",
+        hardConstraint: true,
+        scoreDelta: -100,
+        expectedValue: expectedRange,
+        actualValue: { minimum: offering.moqValue, unit: providerUnit },
+        explanation: `The provider's confirmed minimum is above the founder's maximum workable first run.`,
+      });
+    } else if (offering.maxRunValue != null && offering.maxRunValue < minimumQuantity) {
+      outcomes.push({
+        criterionType: "QUANTITY",
+        criterionKey: "quantity_range",
+        status: "NO_MATCH",
+        hardConstraint: true,
+        scoreDelta: -100,
+        expectedValue: expectedRange,
+        actualValue: { maximum: offering.maxRunValue, unit: providerUnit },
+        explanation: `The provider's confirmed maximum is below the founder's minimum workable first run.`,
+      });
+    } else {
+      const preferredFits =
+        preferredQuantity != null &&
+        (offering.moqValue == null || preferredQuantity >= offering.moqValue) &&
+        (offering.maxRunValue == null || preferredQuantity <= offering.maxRunValue);
+
+      outcomes.push({
+        criterionType: "QUANTITY",
+        criterionKey: "quantity_range",
+        status: "MATCH",
+        hardConstraint: true,
+        scoreDelta: preferredFits ? 16 : 14,
+        expectedValue: expectedRange,
+        actualValue: {
+          minimum: offering.moqValue,
+          maximum: offering.maxRunValue,
+          unit: providerUnit ?? brief.quantityUnit,
+        },
+        explanation: preferredFits
+          ? `The provider's confirmed quantity range includes the founder's preferred first run.`
+          : `The provider's confirmed quantity range overlaps the founder's workable first-run range.`,
       });
     }
   }
