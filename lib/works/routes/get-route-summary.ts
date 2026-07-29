@@ -251,6 +251,11 @@ export async function getRouteSummary(briefId: string, rank = 1) {
     (outcome) => outcome.criterion_type === "QUANTITY"
   );
   const providerMinimum = quantityActual(quantityOutcome?.actual_value);
+  const halaalNeedsResolution = Boolean(
+    manufacturingAssignment?.match?.outcomes.some((outcome) =>
+      outcome.requirement?.field?.startsWith("credential.HALAAL")
+    )
+  );
 
   const nextQuestions = buildBridgeQuestions({
     productType: route.brief.product_type,
@@ -267,7 +272,7 @@ export async function getRouteSummary(briefId: string, rank = 1) {
     providerMinimumUnit: providerMinimum?.unit ?? null,
     fillVolumeMl,
     fillWeightG,
-    halaalRequired,
+    halaalRequired: halaalRequired && halaalNeedsResolution,
     halaalAuthorityRequirement,
     halaalSpecificAuthority,
     halaalLogoRequired:
