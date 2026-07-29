@@ -220,14 +220,24 @@ export async function getRouteSummary(briefId: string, rank = 1) {
       (item) => item.field === "packaging.fill_weight_g"
     )?.value
   );
+  const quantityFlexibility = jsonString(
+    route.brief.requirements.find(
+      (item) => item.field === "commercial.target_quantity_flexibility"
+    )?.value
+  );
   const halaalRequired = route.brief.requirements.some(
     (item) =>
       item.priority === WorksRequirementPriority.REQUIRED &&
-      item.field.startsWith("credential.HALAAL")
+      item.field === "credential.HALAAL"
   );
   const halaalAuthorityRequirement = jsonString(
     route.brief.requirements.find(
       (item) => item.field === "credential.HALAAL.authority_requirement"
+    )?.value
+  );
+  const halaalSpecificAuthority = jsonString(
+    route.brief.requirements.find(
+      (item) => item.field === "credential.HALAAL.specific_authority"
     )?.value
   );
   const halaalLogoRequirement = route.brief.requirements.find(
@@ -249,6 +259,7 @@ export async function getRouteSummary(briefId: string, rank = 1) {
         ? null
         : Number(route.brief.target_quantity),
     quantityUnit: route.brief.quantity_unit,
+    quantityFlexibility,
     packagingFormat,
     providerName:
       manufacturingAssignment?.offering?.provider_market.provider.name ?? null,
@@ -257,9 +268,8 @@ export async function getRouteSummary(briefId: string, rank = 1) {
     fillVolumeMl,
     fillWeightG,
     halaalRequired,
-    halaalAuthorityPreferenceKnown:
-      Boolean(halaalAuthorityRequirement) &&
-      halaalAuthorityRequirement !== "UNSURE",
+    halaalAuthorityRequirement,
+    halaalSpecificAuthority,
     halaalLogoPreferenceKnown: typeof halaalLogoRequirement === "boolean",
     printingNeeded:
       route.brief.requested_services.includes("PRINTING") ||
