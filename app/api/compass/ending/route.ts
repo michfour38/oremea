@@ -67,6 +67,16 @@ export async function POST(request: Request) {
 
     let state = readState(session.detected_patterns, session.selected_area)
 
+    if (action === "make_workable" && !state.movementReady) {
+      return NextResponse.json(
+        {
+          error: "Discussion has not yet supplied a current movement problem to make workable.",
+          state,
+        },
+        { status: 409 },
+      )
+    }
+
     if (action === "refresh_map" || action === "make_workable") {
       const result = await runCompassEndingEngine({
         mode: action === "make_workable" ? "movement" : "map",
@@ -129,6 +139,7 @@ export async function POST(request: Request) {
         state.reframe = null
         state.followUpQuestion = null
         state.currentMovementId = null
+        state.movementReady = false
       }
     } else if (action === "complete_item") {
       const itemId = typeof body.itemId === "string" ? body.itemId : ""
@@ -173,6 +184,7 @@ export async function POST(request: Request) {
       )
       state.currentMovementId = null
       state.reframe = null
+      state.movementReady = false
       state.followUpQuestion =
         "Great. That's done. What changed, or what has your attention now?"
       state.updatedAt = now
@@ -187,6 +199,7 @@ export async function POST(request: Request) {
             : movement,
         )
         state.currentMovementId = null
+        state.movementReady = false
         state.followUpQuestion = "Okay. What did I get wrong?"
       } else if (feedback === "blocked") {
         state.movements = state.movements.map((movement) =>
@@ -195,8 +208,10 @@ export async function POST(request: Request) {
             : movement,
         )
         state.currentMovementId = null
+        state.movementReady = false
         state.followUpQuestion = "What's getting in the way of this one?"
       } else if (feedback === "easier") {
+        state.movementReady = false
         state.followUpQuestion = "What part of this still feels like too much?"
       }
 
@@ -267,6 +282,7 @@ function readState(
     reframe: typeof row.reframe === "string" ? row.reframe : null,
     followUpQuestion:
       typeof row.followUpQuestion === "string" ? row.followUpQuestion : null,
+    movementReady: row.movementReady === true,
     scopeCategory,
     discussionCount:
       typeof row.discussionCount === "number" ? row.discussionCount : 0,
