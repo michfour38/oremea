@@ -270,7 +270,8 @@ export async function getRouteSummary(briefId: string, rank = 1) {
     halaalRequired,
     halaalAuthorityRequirement,
     halaalSpecificAuthority,
-    halaalLogoPreferenceKnown: typeof halaalLogoRequirement === "boolean",
+    halaalLogoRequired:
+      typeof halaalLogoRequirement === "boolean" ? halaalLogoRequirement : null,
     printingNeeded:
       route.brief.requested_services.includes("PRINTING") ||
       route.assignments.some(
