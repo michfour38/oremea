@@ -39,6 +39,7 @@ model works_provider_outreach {
   procurement_request works_procurement_requests @relation(fields: [procurement_request_id], references: [id], onDelete: Cascade)
   brief               works_product_briefs       @relation(fields: [brief_id], references: [id], onDelete: Cascade)
   provider            works_providers            @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+  review              works_provider_reviews?
 
   @@unique([procurement_request_id, provider_id])
   @@index([brief_id, status])
