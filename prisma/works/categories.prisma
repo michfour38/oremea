@@ -8,6 +8,9 @@ model works_categories {
 
   translations works_category_translations[]
   markets      works_market_categories[]
+  services     works_service_categories[]
+  capabilities works_capability_categories[]
+  offerings    works_offering_categories[]
 }
 
 model works_category_translations {
