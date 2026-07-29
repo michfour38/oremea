@@ -9,6 +9,7 @@ import {
   createProductBrief,
   type CreateProductBriefRequirement,
 } from "@/lib/works/briefs/create-product-brief";
+import { normalizeQuantityRange } from "@/lib/works/briefs/quantity";
 import { recalculateProductBrief } from "@/lib/works/briefs/recalculate-product-brief";
 
 const STRING_ARRAY_LIMIT = 20;
@@ -45,9 +46,8 @@ export async function POST(req: NextRequest) {
     const productDescription = stringValue(body?.productDescription);
     const categoryKey = optionalString(body?.categoryKey)?.toUpperCase();
     const stage = optionalString(body?.stage)?.toUpperCase();
-    const targetQuantity = positiveNumber(body?.targetQuantity);
-    const quantityUnit = optionalString(body?.quantityUnit)?.toUpperCase();
     const packagingFormat = optionalString(body?.packagingFormat)?.toUpperCase();
+    const packagingOther = optionalString(body?.packagingOther);
     const locationPreference = optionalString(body?.locationPreference)?.toUpperCase();
     const administrativeArea = optionalString(body?.administrativeArea);
     const contactEmail = optionalString(body?.contactEmail)?.toLowerCase();
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     if (productDescription.length < 3) {
       return NextResponse.json(
-        { error: "Tell WORKS what you are trying to make." },
+        { error: "Tell WORKS what you are making." },
         { status: 400 }
       );
     }
@@ -98,16 +98,78 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (targetQuantity == null || !quantityUnit) {
+    const hasRange = body?.quantityMinimum != null || body?.quantityMaximum != null;
+    const legacyTargetQuantity = positiveNumber(body?.targetQuantity);
+    const legacyQuantityUnit = optionalString(body?.quantityUnit)?.toUpperCase();
+
+    const quantity = hasRange
+      ? normalizeQuantityRange({
+          minimum: body?.quantityMinimum,
+          preferred: body?.quantityPreferred,
+          maximum: body?.quantityMaximum,
+          basis: body?.quantityBasis,
+          amountPerBasis: body?.quantityBasisAmount,
+          amountUnit: body?.quantityBasisUnit,
+        })
+      : legacyTargetQuantity && legacyQuantityUnit
+        ? {
+            minimum: legacyTargetQuantity,
+            preferred: legacyTargetQuantity,
+            maximum: legacyTargetQuantity,
+            unit: legacyQuantityUnit as "UNITS" | "KG" | "LITRES",
+            raw: {
+              minimum: legacyTargetQuantity,
+              preferred: legacyTargetQuantity,
+              maximum: legacyTargetQuantity,
+              basis: "MEASUREMENT" as const,
+              amountPerBasis: null,
+              amountUnit: legacyQuantityUnit as "UNITS" | "KG" | "LITRES",
+            },
+          }
+        : null;
+
+    if (!quantity) {
       return NextResponse.json(
-        { error: "Add a target production quantity." },
+        { error: "Add the first-run quantity range." },
         { status: 400 }
       );
     }
 
-    const requirements: CreateProductBriefRequirement[] = [];
+    const requirements: CreateProductBriefRequirement[] = [
+      {
+        requirementType: "COMMERCIAL",
+        field: "commercial.quantity.minimum",
+        value: quantity.minimum as Prisma.InputJsonValue,
+        displayValue: `Minimum first run: ${quantity.minimum} ${quantity.unit.toLowerCase()}.`,
+        priority: WorksRequirementPriority.REQUIRED,
+      },
+      {
+        requirementType: "COMMERCIAL",
+        field: "commercial.quantity.maximum",
+        value: quantity.maximum as Prisma.InputJsonValue,
+        displayValue: `Maximum first run: ${quantity.maximum} ${quantity.unit.toLowerCase()}.`,
+        priority: WorksRequirementPriority.REQUIRED,
+      },
+      {
+        requirementType: "COMMERCIAL",
+        field: "commercial.quantity.input_basis",
+        value: quantity.raw as unknown as Prisma.InputJsonValue,
+        displayValue: "The founder's original quantity basis and measurement.",
+        priority: WorksRequirementPriority.OPTIONAL,
+      },
+    ];
 
-    if (packagingFormat && packagingFormat !== "UNSURE") {
+    if (quantity.preferred != null) {
+      requirements.push({
+        requirementType: "COMMERCIAL",
+        field: "commercial.quantity.preferred",
+        value: quantity.preferred as Prisma.InputJsonValue,
+        displayValue: `Preferred first run: ${quantity.preferred} ${quantity.unit.toLowerCase()}.`,
+        priority: WorksRequirementPriority.PREFERRED,
+      });
+    }
+
+    if (packagingFormat && packagingFormat !== "UNSURE" && packagingFormat !== "OTHER") {
       requirements.push({
         requirementType: "PACKAGING",
         field: "packaging.format",
@@ -132,6 +194,23 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    if (packagingFormat === "OTHER") {
+      if (!packagingOther) {
+        return NextResponse.json(
+          { error: "Tell WORKS what packaging format you are looking for." },
+          { status: 400 }
+        );
+      }
+      requirements.push({
+        requirementType: "TAXONOMY_INPUT",
+        field: "taxonomy.packaging.other",
+        value: packagingOther as Prisma.InputJsonValue,
+        displayValue: `Founder entered packaging format: ${packagingOther}.`,
+        priority: WorksRequirementPriority.OPTIONAL,
+        appliesToServiceKey: "PACKAGING_SUPPLY",
+      });
+    }
+
     if (halaalRequired) {
       requirements.push({
         requirementType: "CERTIFICATION",
@@ -143,6 +222,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    const targetQuantity =
+      quantity.preferred ?? quantity.minimum ?? quantity.maximum;
+
     const brief = await createProductBrief({
       marketSlug,
       categoryKey,
@@ -150,7 +232,7 @@ export async function POST(req: NextRequest) {
       productType: productDescription.slice(0, 120),
       stage: stage as never,
       targetQuantity,
-      quantityUnit: quantityUnit as never,
+      quantityUnit: quantity.unit as never,
       locationPreference: locationPreference as never,
       administrativeArea,
       contactEmail,
