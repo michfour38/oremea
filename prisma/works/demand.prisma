@@ -1,3 +1,22 @@
+enum WorksRequirementPriority {
+  REQUIRED
+  PREFERRED
+  OPTIONAL
+}
+
+enum WorksProductionStepStatus {
+  COMPLETE
+  NEEDED
+  UNSURE
+  NOT_APPLICABLE
+}
+
+enum WorksProductionStepSource {
+  SYSTEM_GENERATED
+  USER_ADDED
+  SUPPLIER_RECOMMENDED
+}
+
 model works_product_briefs {
   id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   market_id           String   @db.Uuid
