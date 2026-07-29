@@ -1,0 +1,25 @@
+model works_provider_locations {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider_market_id  String   @db.Uuid
+  key                 String
+  label               String?
+  location_type       String?
+  address_line_1      String?
+  address_line_2      String?
+  administrative_area String?
+  locality            String?
+  postal_code         String?
+  latitude            Decimal? @db.Decimal(9, 6)
+  longitude           Decimal? @db.Decimal(9, 6)
+  is_primary          Boolean  @default(false)
+  active              Boolean  @default(true)
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime @updatedAt @db.Timestamptz(6)
+
+  provider_market works_provider_markets @relation(fields: [provider_market_id], references: [id], onDelete: Cascade)
+
+  @@unique([provider_market_id, key])
+  @@index([provider_market_id, active])
+  @@index([administrative_area])
+  @@index([locality])
+}
