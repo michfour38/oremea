@@ -1,0 +1,62 @@
+enum WorksProviderKind {
+  ORGANIZATION
+  INDIVIDUAL
+}
+
+enum WorksProviderProfileStatus {
+  RESEARCHED
+  CLAIM_INVITED
+  CLAIMED
+  ACTIVE
+  ARCHIVED
+}
+
+model works_providers {
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  kind                     WorksProviderKind          @default(ORGANIZATION)
+  name                     String
+  slug                     String                     @unique
+  legal_name               String?
+  website                  String?
+  email                    String?
+  phone                    String?
+  description              String?
+  profile_status           WorksProviderProfileStatus @default(RESEARCHED)
+  founding_provider        Boolean                    @default(false)
+  last_profile_reviewed_at DateTime?                  @db.Timestamptz(6)
+  created_at               DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime                   @updatedAt @db.Timestamptz(6)
+
+  markets works_provider_markets[]
+
+  @@index([name])
+  @@index([profile_status])
+  @@index([founding_provider])
+}
+
+model works_provider_markets {
+  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider_id            String   @db.Uuid
+  market_id              String   @db.Uuid
+  administrative_area    String?
+  locality               String?
+  latitude               Decimal? @db.Decimal(9, 6)
+  longitude              Decimal? @db.Decimal(9, 6)
+  serves_nationally      Boolean?
+  accepts_remote_clients Boolean?
+  exports                Boolean?
+  export_regions         String[] @default([])
+  active                 Boolean  @default(true)
+  created_at             DateTime @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime @updatedAt @db.Timestamptz(6)
+
+  provider works_providers @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+  market   works_markets   @relation(fields: [market_id], references: [id], onDelete: Cascade)
+
+  @@unique([provider_id, market_id])
+  @@index([provider_id])
+  @@index([market_id])
+  @@index([market_id, administrative_area])
+  @@index([market_id, locality])
+  @@index([market_id, active])
+}
