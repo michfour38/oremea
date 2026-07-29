@@ -10,6 +10,7 @@ import {
   type MatchClaim,
   type WorksMatchStatusValue,
 } from "@/lib/works/matching/eligibility";
+import { compareWorksMatches } from "@/lib/works/matching/ranking";
 
 const ALGORITHM_VERSION = "v1";
 
@@ -108,10 +109,7 @@ export async function calculateBriefMatches(briefId: string) {
         },
       },
     },
-    orderBy: [
-      { provider_market: { provider: { name: "asc" } } },
-      { name: "asc" },
-    ],
+    orderBy: { name: "asc" },
   });
 
   const normalizedBrief = {
@@ -221,9 +219,8 @@ export async function calculateBriefMatches(briefId: string) {
     }
   });
 
-  return prisma.works_matches.findMany({
+  const matches = await prisma.works_matches.findMany({
     where: { brief_id: brief.id, is_current: true },
-    orderBy: [{ status: "asc" }, { fit_score: "desc" }],
     include: {
       offering: {
         include: {
@@ -246,4 +243,6 @@ export async function calculateBriefMatches(briefId: string) {
       },
     },
   });
+
+  return matches.sort(compareWorksMatches);
 }
