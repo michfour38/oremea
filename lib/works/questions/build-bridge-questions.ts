@@ -27,7 +27,7 @@ export type WorksBridgeQuestionContext = {
   halaalRequired?: boolean;
   halaalAuthorityRequirement?: string | null;
   halaalSpecificAuthority?: string | null;
-  halaalLogoPreferenceKnown?: boolean;
+  halaalLogoRequired?: boolean | null;
   printingNeeded?: boolean;
 };
 
@@ -167,7 +167,7 @@ export function buildBridgeQuestions(
       });
     }
 
-    if (context.printingNeeded && !context.halaalLogoPreferenceKnown) {
+    if (context.printingNeeded && context.halaalLogoRequired == null) {
       questions.push({
         key: "FOUNDER_HALAAL_MARK_ON_LABEL",
         audience: "FOUNDER",
@@ -213,7 +213,7 @@ export function buildBridgeQuestions(
       }
     );
 
-    if (context.printingNeeded) {
+    if (context.printingNeeded && context.halaalLogoRequired === true) {
       questions.push({
         key: "AUTHORITY_HALAAL_LOGO_AUTHORIZATION",
         audience: "AUTHORITY",
