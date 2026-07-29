@@ -1,0 +1,45 @@
+model works_capabilities {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key        String   @unique
+  slug       String   @unique
+  sort_order Int      @default(0)
+  active     Boolean  @default(true)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  translations works_capability_translations[]
+  categories   works_capability_categories[]
+  offerings    works_offering_capabilities[]
+
+  @@index([active, sort_order])
+}
+
+model works_capability_translations {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  capability_id String   @db.Uuid
+  locale_id     String   @db.Uuid
+  name          String
+  description   String?
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime @updatedAt @db.Timestamptz(6)
+
+  capability works_capabilities @relation(fields: [capability_id], references: [id], onDelete: Cascade)
+  locale     works_locales      @relation(fields: [locale_id], references: [id], onDelete: Cascade)
+
+  @@unique([capability_id, locale_id])
+  @@index([locale_id])
+}
+
+model works_capability_categories {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  capability_id String   @db.Uuid
+  category_id   String   @db.Uuid
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  capability works_capabilities @relation(fields: [capability_id], references: [id], onDelete: Cascade)
+  category   works_categories   @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  @@unique([capability_id, category_id])
+  @@index([capability_id])
+  @@index([category_id])
+}
