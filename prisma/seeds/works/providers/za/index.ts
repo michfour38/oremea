@@ -1,5 +1,6 @@
 import { seedWorksProvider } from "../seed-provider";
 import { zaManufacturingProviders } from "./manufacturing";
+import { applyWorksZaResearchCorrections } from "./research-corrections";
 import { zaServiceProviders } from "./services";
 
 export async function seedWorksZaProviders() {
@@ -11,4 +12,6 @@ export async function seedWorksZaProviders() {
     await seedWorksProvider(provider);
     console.log(`  ✓ ${provider.name}`);
   }
+
+  await applyWorksZaResearchCorrections();
 }
