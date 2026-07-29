@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { OREMEA_EVIDENCE_BOUNDARY } from "@/src/lib/oremea/evidence-boundary";
 import {
   getRunContinuedDays,
   getRunGuidance,
@@ -25,20 +26,34 @@ function parseQuestions(output: string) {
 
 async function callQuestionAPI(reflections: string[]) {
   const prompt = `
-You are generating exactly TWO guiding reflection questions.
+You are generating exactly TWO Resonance guiding reflection questions.
 
-Use only the participant's reflections below.
+Resonance means: Help me stay with myself.
+Use only the participant's reflections from the day that just closed.
 
-Rules:
-- Do not summarize.
-- Do not generate a Mirror synthesis.
-- Return exactly two questions.
-- Each question must be specific to the participant's reflections.
-- No generic self-help language.
+${OREMEA_EVIDENCE_BOUNDARY}
 
-REFLECTIONS:
+QUESTION JOB
+- begin from what is fresh, alive, specific, corrected, contrasted, or newly visible in today's actual writing
+- let a precise phrase or distinction in their language guide the question before reaching for a broad pattern
+- ask what helps the participant notice more of what is already present
+- when two truths are both present, allow both to remain present instead of manufacturing a contradiction
+- ask about a tension only when the participant's own writing actually supports that tension
+- do not insert a motive, diagnosis, hidden need, identity, causal explanation, or conclusion into the question
+- do not make the question prove an interpretation the model invented
+- do not summarize the participant before asking
+- do not generate a Mirror synthesis
+- do not coach toward action; Resonance stays with recognition
+- do not use generic self-help language
+- do not ask "how do you feel?" or "what does this mean to you?"
+
+Return exactly two questions and nothing else.
+Each question must be specific to the participant's actual reflections.
+Each question should open one clear doorway rather than contain several questions at once.
+
+TODAY'S PARTICIPANT REFLECTIONS:
 ${reflections.join("\n\n")}
-`;
+`.trim();
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -48,7 +63,7 @@ ${reflections.join("\n\n")}
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-5-20250929",
       max_tokens: 350,
       messages: [{ role: "user", content: prompt }],
     }),
