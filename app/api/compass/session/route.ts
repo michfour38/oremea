@@ -23,7 +23,18 @@ export async function GET() {
       );
     }
 
-    const session = await getActiveCompassSession(userId);
+    const activeSession = await getActiveCompassSession(userId);
+    const session =
+      activeSession ??
+      (await prisma.compass_sessions.findFirst({
+        where: {
+          user_id: userId,
+          status: "complete",
+        },
+        orderBy: {
+          updated_at: "desc",
+        },
+      }));
 
     return NextResponse.json({
       success: true,
@@ -56,12 +67,23 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     if (body.action === "new_discussion") {
-      const existing = await getActiveCompassSession(userId);
-      const currentGoals = Array.isArray(existing?.area_responses)
-        ? existing.area_responses
+      const activeSession = await getActiveCompassSession(userId);
+      const sourceSession =
+        activeSession ??
+        (await prisma.compass_sessions.findFirst({
+          where: {
+            user_id: userId,
+            status: "complete",
+          },
+          orderBy: {
+            updated_at: "desc",
+          },
+        }));
+      const currentGoals = Array.isArray(sourceSession?.area_responses)
+        ? sourceSession.area_responses
         : [];
 
-      if (!existing || currentGoals.length < 8) {
+      if (!sourceSession || currentGoals.length < 8) {
         return NextResponse.json(
           { error: "A complete Compass goal set is required first." },
           { status: 409 },
@@ -75,20 +97,32 @@ export async function POST(request: Request) {
         },
       ];
 
-      const session = await prisma.compass_sessions.update({
-        where: { id: existing.id },
-        data: {
-          phase: "discussion",
-          recursive_layers: [],
-          possibility_answers: [],
-          resistance_map: Prisma.JsonNull,
-          discussion_messages: discussionMessages,
-          proposed_step: null,
-          final_step: null,
-          detected_patterns: createEmptyCompassEndingState(
-            existing.selected_area,
-          ) as object,
-        },
+      const session = await prisma.$transaction(async (transaction) => {
+        if (sourceSession.status === "active") {
+          await transaction.compass_sessions.update({
+            where: { id: sourceSession.id },
+            data: { status: "complete" },
+          });
+        }
+
+        return transaction.compass_sessions.create({
+          data: {
+            user_id: userId,
+            status: "active",
+            phase: "discussion",
+            selected_area: null,
+            area_responses: currentGoals as Prisma.InputJsonValue,
+            recursive_layers: [],
+            possibility_answers: [],
+            resistance_map: Prisma.JsonNull,
+            discussion_messages: discussionMessages,
+            proposed_step: null,
+            final_step: null,
+            detected_patterns: createEmptyCompassEndingState(
+              null,
+            ) as Prisma.InputJsonValue,
+          },
+        });
       });
 
       return NextResponse.json({
