@@ -15,6 +15,20 @@ function optionalString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+function visibilityValue(value: unknown, fallback: boolean) {
+  return typeof value === "boolean" ? value : fallback;
+}
+
+const DEFAULT_VISIBILITY = {
+  show_legal_name: false,
+  show_website: true,
+  show_email: false,
+  show_phone: false,
+  show_description: true,
+  show_location: false,
+  show_capacity: false,
+};
+
 export async function GET() {
   const { userId } = auth();
   if (!userId) return NextResponse.json({ error: "Sign in to manage a WORKS provider profile." }, { status: 401 });
@@ -26,6 +40,7 @@ export async function GET() {
       provider: {
         include: {
           commercial_profile: true,
+          public_settings: true,
           reviews: { where: { status: "PUBLISHED" }, orderBy: { created_at: "desc" }, take: 20 },
         },
       },
@@ -45,6 +60,7 @@ export async function GET() {
       profileStatus: membership.provider.profile_status,
       role: membership.role,
       reviews: membership.provider.reviews,
+      visibility: membership.provider.public_settings ?? DEFAULT_VISIBILITY,
       commercial: membership.provider.commercial_profile ?? {
         plan: "FREE",
         marketing_opt_in: false,
@@ -87,7 +103,21 @@ export async function PATCH(request: Request) {
   const name = typeof body?.name === "string" && body.name.trim().length >= 2 ? body.name.trim() : null;
   if (!name) return NextResponse.json({ error: "Add your business name." }, { status: 400 });
 
-  const [provider, commercial] = await prisma.$transaction([
+  const visibility = body?.visibility && typeof body.visibility === "object" && !Array.isArray(body.visibility)
+    ? body.visibility as Record<string, unknown>
+    : {};
+
+  const visibilityData = {
+    show_legal_name: visibilityValue(visibility.show_legal_name, false),
+    show_website: visibilityValue(visibility.show_website, true),
+    show_email: visibilityValue(visibility.show_email, false),
+    show_phone: visibilityValue(visibility.show_phone, false),
+    show_description: visibilityValue(visibility.show_description, true),
+    show_location: visibilityValue(visibility.show_location, false),
+    show_capacity: visibilityValue(visibility.show_capacity, false),
+  };
+
+  const [provider, commercial, publicSettings] = await prisma.$transaction([
     prisma.works_providers.update({
       where: { id: providerId },
       data: {
@@ -124,6 +154,11 @@ export async function PATCH(request: Request) {
         activated_at: marketingOptIn || wantsMoreWork ? undefined : null,
       },
     }),
+    prisma.works_provider_public_settings.upsert({
+      where: { provider_id: providerId },
+      create: { provider_id: providerId, ...visibilityData },
+      update: visibilityData,
+    }),
   ]);
 
   return NextResponse.json({
@@ -137,5 +172,6 @@ export async function PATCH(request: Request) {
       description: provider.description,
     },
     commercial,
+    visibility: publicSettings,
   });
 }
