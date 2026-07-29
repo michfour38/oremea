@@ -17,6 +17,7 @@ export type WorksBridgeQuestionContext = {
   productType?: string | null;
   targetQuantity?: number | null;
   quantityUnit?: string | null;
+  quantityFlexibility?: string | null;
   packagingFormat?: string | null;
   providerName?: string | null;
   providerMinimumValue?: number | null;
@@ -24,7 +25,8 @@ export type WorksBridgeQuestionContext = {
   fillVolumeMl?: number | null;
   fillWeightG?: number | null;
   halaalRequired?: boolean;
-  halaalAuthorityPreferenceKnown?: boolean;
+  halaalAuthorityRequirement?: string | null;
+  halaalSpecificAuthority?: string | null;
   halaalLogoPreferenceKnown?: boolean;
   printingNeeded?: boolean;
 };
@@ -55,6 +57,20 @@ export function buildBridgeQuestions(
   const provider = providerLabel(context);
 
   if (quantityNeedsBridge(context)) {
+    if (!context.quantityFlexibility) {
+      questions.push({
+        key: "FOUNDER_QUANTITY_FLEXIBILITY",
+        audience: "FOUNDER",
+        kind: "CHOICE",
+        prompt: `How flexible is your target of ${context.targetQuantity} finished units?`,
+        purpose:
+          "A supplier minimum can be workable when the founder is comfortable receiving more than the initial target, while an exact or maximum quantity creates a different constraint.",
+        requiredToResolve: ["QUANTITY_VIABILITY"],
+        answerField: "commercial.target_quantity_flexibility",
+        choices: ["EXACT", "APPROXIMATE", "AT_LEAST", "MAXIMUM"],
+      });
+    }
+
     if (!context.fillVolumeMl && !context.fillWeightG) {
       questions.push({
         key: "FOUNDER_TARGET_PACK_SIZE",
@@ -116,7 +132,7 @@ export function buildBridgeQuestions(
   }
 
   if (context.halaalRequired) {
-    if (!context.halaalAuthorityPreferenceKnown) {
+    if (!context.halaalAuthorityRequirement) {
       questions.push({
         key: "FOUNDER_HALAAL_AUTHORITY_REQUIREMENT",
         audience: "FOUNDER",
@@ -127,7 +143,27 @@ export function buildBridgeQuestions(
           "A current recognised Halaal certification may be sufficient for one route while a retailer or export market can require a specific authority or scheme.",
         requiredToResolve: ["HALAAL_ACCEPTABILITY"],
         answerField: "credential.HALAAL.authority_requirement",
-        choices: ["ANY_RECOGNISED_CURRENT_CERTIFICATION", "SPECIFIC_AUTHORITY_REQUIRED", "UNSURE"],
+        choices: [
+          "ANY_RECOGNISED_CURRENT_CERTIFICATION",
+          "SPECIFIC_AUTHORITY_REQUIRED",
+          "UNSURE",
+        ],
+      });
+    }
+
+    if (
+      context.halaalAuthorityRequirement === "SPECIFIC_AUTHORITY_REQUIRED" &&
+      !context.halaalSpecificAuthority
+    ) {
+      questions.push({
+        key: "FOUNDER_HALAAL_SPECIFIC_AUTHORITY",
+        audience: "FOUNDER",
+        kind: "TEXT",
+        prompt: "Which Halaal certifying authority or scheme is required?",
+        purpose:
+          "WORKS needs the actual required authority before a provider credential can be treated as satisfying that route condition.",
+        requiredToResolve: ["HALAAL_ACCEPTABILITY"],
+        answerField: "credential.HALAAL.specific_authority",
       });
     }
 
