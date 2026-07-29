@@ -11,6 +11,14 @@ type Search = {
   market: { slug: string; name: string };
   brief: { id: string; productDescription: string; status: string } | null;
   sourcingStatus: string | null;
+  reviewableProviders: Array<{
+    outreachId: string;
+    providerName: string;
+    providerSlug: string;
+    outreachStatus: string;
+    decision: string | null;
+    review: { id: string; status: string; rating: number } | null;
+  }>;
 };
 
 function statusLabel(search: Search) {
@@ -36,7 +44,6 @@ async function attachLocalSearches() {
       body: JSON.stringify({ browserSessionId }),
     });
 
-    // A stale/missing local session should never block the rest of My WORKS.
     if (response.status === 404) window.localStorage.removeItem(key);
   }
 }
@@ -122,6 +129,19 @@ export function MyWorksDashboard() {
                     </div>
                     <a href={`/works/my/${search.id}`} className="text-sm underline underline-offset-4">Open in WORKS →</a>
                   </div>
+
+                  {search.reviewableProviders.length ? (
+                    <div className="mt-5 border-t border-black/8 pt-5">
+                      <p className="text-xs font-medium uppercase tracking-[0.16em] text-[#16834f]">Provider feedback</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {search.reviewableProviders.map((provider) => (
+                          <a key={provider.outreachId} href={`/works/reviews/new?outreach=${encodeURIComponent(provider.outreachId)}`} className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm text-black/65">
+                            {provider.review ? `${provider.providerName} · ${"★".repeat(provider.review.rating)} · ${provider.review.status.toLowerCase()}` : `Review ${provider.providerName} →`}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </article>
               ))}
             </div>
