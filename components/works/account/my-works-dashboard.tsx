@@ -120,7 +120,7 @@ export function MyWorksDashboard() {
                       <h2 className="mt-2 font-serif text-2xl text-[#1f1c17]">{search.brief?.productDescription ?? "Production search in progress"}</h2>
                       <p className="mt-3 text-sm capitalize text-black/50">{statusLabel(search)}</p>
                     </div>
-                    <a href={`/works/${search.market.slug}`} className="text-sm underline underline-offset-4">Open in WORKS →</a>
+                    <a href={`/works/my/${search.id}`} className="text-sm underline underline-offset-4">Open in WORKS →</a>
                   </div>
                 </article>
               ))}
