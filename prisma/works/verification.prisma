@@ -88,7 +88,7 @@ model works_claims {
   updated_at           DateTime                @updatedAt @db.Timestamptz(6)
 
   provider          works_providers          @relation(fields: [provider_id], references: [id], onDelete: Cascade)
-  offering          works_offerings?         @relation(fields: [offering_id], references: [id], onDelete: Cascade)
+  offering          works_offerings?         @relation(fields: [offering_id], references: [id], onDelete: SetNull)
   supersedes        works_claims?            @relation("WorksClaimHistory", fields: [supersedes_claim_id], references: [id], onDelete: SetNull)
   superseded_by     works_claims[]           @relation("WorksClaimHistory")
   evidence          works_evidence[]
