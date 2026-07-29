@@ -20,6 +20,21 @@ export async function POST(request: Request) {
     })
 
     if (!result) {
+      if (product === "compass" && stage === "discussion") {
+        return NextResponse.json({
+          ok: true,
+          result: {
+            reply:
+              "Compass hit a processing pause. Your reply is still part of the conversation. Continue from there when you're ready.",
+            shouldContinue: true,
+            suggestedNextStep: null,
+            scopeCategory: "in_scope",
+            movementReady: false,
+            retirePriorFrame: false,
+          },
+        })
+      }
+
       return NextResponse.json(
         { ok: false, error: "EL conversation returned no result." },
         { status: 500 },
