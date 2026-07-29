@@ -14,13 +14,15 @@ prisma/
 │   ├── locales.prisma             # works_locales
 │   ├── categories.prisma          # global categories, translations, market availability
 │   ├── providers.prisma           # canonical providers + market presence/location
-│   └── provider-types.prisma      # provider roles, translations, provider/type links
+│   ├── provider-types.prisma      # provider roles, translations, provider/type links
+│   └── verification.prisma        # provider sources, versioned claims, evidence
 ├── migrations/
 │   ├── 20260728113000_add_works_markets/
 │   ├── 20260728180000_add_works_locales/
 │   ├── 20260729070000_add_works_categories/
 │   ├── 20260729073000_add_works_providers/
-│   └── 20260729080000_add_works_provider_types/
+│   ├── 20260729080000_add_works_provider_types/
+│   └── 20260729083000_add_works_verification_spine/
 └── seeds/
     └── works/
         ├── markets.ts
@@ -45,6 +47,39 @@ prisma/
 - Providers can be organizations or individuals because WORKS matches both businesses and professionals.
 - A provider type describes what the provider is in the production ecosystem. Services and capabilities describe the work it can actually perform. Keep those layers separate.
 - Provider type labels and descriptions are locale-linked; provider records store type relationships, not presentation copy.
+- Provider facts are claims. A claim must retain its source/evidence trail and its verification state.
+- Updating a claim creates a new version linked through `supersedes_claim_id`; old values remain queryable for audit/history.
+- Use stable `field` keys for the identity of a versioned fact. Examples: `profile.website`, `commercial.moq.private_label_serum`, `credential.halaal.12345`.
+- `expires_at` is for facts with a real validity end date. `stale_after` is for facts that need rechecking even though they do not formally expire, such as MOQ, lead time, or current capacity.
+- Payment or profile tier must never modify a claim's verification status.
+
+## Trust chain
+
+```text
+works_providers
+    ├── works_provider_sources
+    │       └── works_evidence
+    │               ↑
+    └── works_claims ┘
+            ↓
+      claim history
+      via supersedes_claim_id
+```
+
+Claim statuses:
+
+```text
+UNKNOWN
+SELF_REPORTED
+EVIDENCE_SUPPLIED
+SOURCE_CONFIRMED
+AUTHORITY_VERIFIED
+STALE
+CONFLICTING
+EXPIRED
+```
+
+Verification methods describe how WORKS established the claim rather than who issued the underlying credential. The evidence/source record identifies the actual authority, registry, provider, document, or project record.
 
 ## Current dependency order
 
@@ -57,8 +92,10 @@ works_markets
     ├── works_market_categories ← works_categories
     │
     └── works_provider_markets ← works_providers
-                                  │
-                                  └── works_provider_type_links → works_provider_types
+                                  ├── works_provider_type_links → works_provider_types
+                                  ├── works_provider_sources
+                                  └── works_claims
+                                          └── works_evidence ← works_provider_sources
 ```
 
-South Africa (`ZA`) is seeded first, followed by its default locale (`en-ZA`), the five launch categories, and the initial provider-type vocabulary. Real provider records are intentionally not seeded until the evidence/source layer exists, so research data lands with provenance from the beginning.
+South Africa (`ZA`) is seeded first, followed by its default locale (`en-ZA`), the five launch categories, and the initial provider-type vocabulary. Real provider records can now be added with provenance from the first captured fact rather than being cleaned up later.
