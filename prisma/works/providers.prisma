@@ -53,9 +53,10 @@ model works_provider_markets {
   created_at             DateTime @default(now()) @db.Timestamptz(6)
   updated_at             DateTime @updatedAt @db.Timestamptz(6)
 
-  provider  works_providers  @relation(fields: [provider_id], references: [id], onDelete: Cascade)
-  market    works_markets    @relation(fields: [market_id], references: [id], onDelete: Cascade)
+  provider  works_providers          @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+  market    works_markets            @relation(fields: [market_id], references: [id], onDelete: Cascade)
   offerings works_offerings[]
+  locations works_provider_locations[]
 
   @@unique([provider_id, market_id])
   @@index([provider_id])
