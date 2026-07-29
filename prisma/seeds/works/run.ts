@@ -1,4 +1,5 @@
 import { seedWorksCategories } from "./categories";
+import { seedWorksCredentialAuthorities } from "./credential-authorities";
 import { seedWorksLocales } from "./locales";
 import { seedWorksMarkets } from "./markets";
 import { seedWorksProviderTypes } from "./provider-types";
@@ -9,5 +10,6 @@ export async function seedWorks() {
   await seedWorksLocales();
   await seedWorksCategories();
   await seedWorksProviderTypes();
+  await seedWorksCredentialAuthorities();
   console.log("Done: WORKS seeds");
 }
