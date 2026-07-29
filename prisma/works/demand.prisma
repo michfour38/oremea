@@ -40,6 +40,7 @@ model works_product_briefs {
   category     works_categories?       @relation(fields: [category_id], references: [id], onDelete: SetNull)
   requirements works_requirements[]
   paths        works_production_paths[]
+  matches      works_matches[]
 
   @@index([market_id, status])
   @@index([category_id])
@@ -48,21 +49,25 @@ model works_product_briefs {
 }
 
 model works_requirements {
-  id               String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  brief_id         String                   @db.Uuid
-  requirement_type String
-  field            String
-  value            Json
-  display_value    String?
-  priority         WorksRequirementPriority @default(REQUIRED)
-  created_at       DateTime                 @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime                 @updatedAt @db.Timestamptz(6)
+  id                    String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  brief_id              String                   @db.Uuid
+  applies_to_service_id String?                  @db.Uuid
+  requirement_type      String
+  field                 String
+  value                 Json
+  display_value         String?
+  priority              WorksRequirementPriority @default(REQUIRED)
+  created_at            DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime                 @updatedAt @db.Timestamptz(6)
 
-  brief works_product_briefs @relation(fields: [brief_id], references: [id], onDelete: Cascade)
+  brief              works_product_briefs @relation(fields: [brief_id], references: [id], onDelete: Cascade)
+  applies_to_service works_services?      @relation(fields: [applies_to_service_id], references: [id], onDelete: SetNull)
+  match_outcomes     works_match_outcomes[]
 
   @@index([brief_id])
   @@index([brief_id, field])
   @@index([brief_id, priority])
+  @@index([applies_to_service_id])
   @@index([requirement_type])
 }
 
@@ -95,8 +100,9 @@ model works_production_steps {
   created_at      DateTime                  @default(now()) @db.Timestamptz(6)
   updated_at      DateTime                  @updatedAt @db.Timestamptz(6)
 
-  path    works_production_paths @relation(fields: [path_id], references: [id], onDelete: Cascade)
-  service works_services?        @relation(fields: [service_id], references: [id], onDelete: SetNull)
+  path           works_production_paths @relation(fields: [path_id], references: [id], onDelete: Cascade)
+  service        works_services?        @relation(fields: [service_id], references: [id], onDelete: SetNull)
+  match_outcomes works_match_outcomes[]
 
   @@index([path_id, position])
   @@index([service_id])
