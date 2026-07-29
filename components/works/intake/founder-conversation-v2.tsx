@@ -4,6 +4,7 @@ import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { useEffect, useMemo, useState } from "react";
 
 import type { WorksMarketCategory } from "@/lib/works/categories/list-market-categories";
+import { ProviderOutreachPanel } from "@/components/works/outreach/provider-outreach-panel";
 
 type MarketView = {
   slug: string;
@@ -23,6 +24,28 @@ type BridgeQuestion = {
   choices?: string[];
 };
 
+type RouteProvider = {
+  id: string;
+  name: string;
+  slug: string;
+  hasEmail: boolean;
+  steps: string[];
+  offerings: string[];
+  outreach: {
+    status: string;
+    decision: string | null;
+    sentAt: string | null;
+    respondedAt: string | null;
+    moqValue: number | null;
+    moqUnit: string | null;
+    leadTime: string | null;
+    capacityDate: string | null;
+    pricingNotes: string | null;
+    certificationNotes: string | null;
+    providerNotes: string | null;
+  } | null;
+};
+
 type RouteSummary = {
   id: string;
   status: "VIABLE" | "POTENTIAL" | "INCOMPLETE";
@@ -38,6 +61,7 @@ type RouteSummary = {
     offering: string | null;
     explanation: string;
   }>;
+  providers: RouteProvider[];
   unresolved: Array<{
     key: string;
     provider: string | null;
@@ -669,6 +693,14 @@ export function FounderConversationV2({
                   </div>
                 ))}
               </section>
+
+              {route.providers.length > 0 ? (
+                <ProviderOutreachPanel
+                  briefId={briefId}
+                  searchSessionId={searchSessionId}
+                  providers={route.providers}
+                />
+              ) : null}
 
               {founderQuestions.length > 0 ? (
                 <section className="mt-8 rounded-3xl border border-[#8b6a31]/20 bg-[#f8f0df] p-6">
