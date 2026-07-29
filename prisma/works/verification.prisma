@@ -86,10 +86,11 @@ model works_claims {
   created_at           DateTime                @default(now()) @db.Timestamptz(6)
   updated_at           DateTime                @updatedAt @db.Timestamptz(6)
 
-  provider      works_providers @relation(fields: [provider_id], references: [id], onDelete: Cascade)
-  supersedes    works_claims?   @relation("WorksClaimHistory", fields: [supersedes_claim_id], references: [id], onDelete: SetNull)
-  superseded_by works_claims[]  @relation("WorksClaimHistory")
-  evidence      works_evidence[]
+  provider          works_providers          @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+  supersedes        works_claims?            @relation("WorksClaimHistory", fields: [supersedes_claim_id], references: [id], onDelete: SetNull)
+  superseded_by     works_claims[]           @relation("WorksClaimHistory")
+  evidence          works_evidence[]
+  credential_detail works_credential_claims?
 
   @@index([provider_id])
   @@index([provider_id, field, is_current])
