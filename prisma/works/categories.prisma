@@ -1,0 +1,45 @@
+model works_categories {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key        String   @unique
+  slug       String   @unique
+  active     Boolean  @default(true)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  translations works_category_translations[]
+  markets      works_market_categories[]
+}
+
+model works_category_translations {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  category_id String   @db.Uuid
+  locale_id   String   @db.Uuid
+  name        String
+  description String?
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @updatedAt @db.Timestamptz(6)
+
+  category works_categories @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  locale   works_locales    @relation(fields: [locale_id], references: [id], onDelete: Cascade)
+
+  @@unique([category_id, locale_id])
+  @@index([category_id])
+  @@index([locale_id])
+}
+
+model works_market_categories {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  market_id   String   @db.Uuid
+  category_id String   @db.Uuid
+  enabled     Boolean  @default(true)
+  sort_order  Int      @default(0)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @updatedAt @db.Timestamptz(6)
+
+  market   works_markets    @relation(fields: [market_id], references: [id], onDelete: Cascade)
+  category works_categories @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  @@unique([market_id, category_id])
+  @@index([market_id, enabled, sort_order])
+  @@index([category_id])
+}
