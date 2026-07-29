@@ -54,6 +54,13 @@ const services = [
     categories: ALL_LAUNCH_CATEGORIES,
   },
   {
+    key: "PACKAGING_SUPPLY",
+    slug: "packaging-supply",
+    name: "Packaging supply",
+    description: "Supplies bottles, jars, pouches, cartons and other empty packaging components needed before filling or packing.",
+    categories: ALL_LAUNCH_CATEGORIES,
+  },
+  {
     key: "MANUFACTURING",
     slug: "manufacturing",
     name: "Manufacturing",
@@ -63,8 +70,8 @@ const services = [
   {
     key: "PACKAGING",
     slug: "packaging",
-    name: "Packaging",
-    description: "Packs or fills the product into production-ready containers or formats.",
+    name: "Packaging and filling",
+    description: "Fills or packs the finished product into its production-ready container or format.",
     categories: ALL_LAUNCH_CATEGORIES,
   },
   {
