@@ -27,15 +27,16 @@ model works_providers {
   created_at               DateTime                   @default(now()) @db.Timestamptz(6)
   updated_at               DateTime                   @updatedAt @db.Timestamptz(6)
 
-  markets             works_provider_markets[]
-  types               works_provider_type_links[]
-  sources             works_provider_sources[]
-  claims              works_claims[]
-  outreach            works_provider_outreach[]
-  commercial_profile  works_provider_commercial_profiles?
-  memberships         works_provider_memberships[]
-  public_settings     works_provider_public_settings?
-  reviews             works_provider_reviews[]
+  markets                works_provider_markets[]
+  types                  works_provider_type_links[]
+  sources                works_provider_sources[]
+  claims                 works_claims[]
+  outreach               works_provider_outreach[]
+  commercial_profile     works_provider_commercial_profiles?
+  memberships            works_provider_memberships[]
+  profile_claim_requests works_provider_claims[]
+  public_settings        works_provider_public_settings?
+  reviews                works_provider_reviews[]
 
   @@index([name])
   @@index([profile_status])
