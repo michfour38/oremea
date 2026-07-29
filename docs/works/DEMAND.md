@@ -36,15 +36,24 @@ PREFERRED
 OPTIONAL
 ```
 
+A requirement can also be scoped to the production service it constrains. This prevents a requirement from being applied to unrelated route contributors.
+
 Examples:
 
 ```text
 capability.BOTTLING = BOTTLING
+  applies to PACKAGING
+
 packaging.format = BOTTLE
+  applies to PACKAGING_SUPPLY
+
 credential.HALAAL = HALAAL
+  applies to MANUFACTURING
 ```
 
-Eligibility and ranking will consume these requirements later. A missing fact must remain UNKNOWN rather than being treated as either a match or failure.
+A label printer therefore does not need a Halaal credential merely because Halaal is required somewhere in the production route.
+
+Eligibility and ranking consume these requirements later. A missing fact must remain UNKNOWN rather than being treated as either a match or failure.
 
 ## Production paths
 
@@ -69,6 +78,15 @@ SUPPLIER_RECOMMENDED
 
 A step can reference a standard WORKS service or remain custom. User-added steps therefore do not require taxonomy changes.
 
+`PACKAGING_SUPPLY` and `PACKAGING` are deliberately separate:
+
+```text
+PACKAGING_SUPPLY = obtain the empty bottle, jar, pouch, carton, etc.
+PACKAGING        = fill or pack the finished product into that format.
+```
+
+A packaging supplier can therefore satisfy the bottle-supply step without being represented as a bottling facility.
+
 ## First fixture: 500-bottle chilli sauce
 
 Input:
@@ -82,9 +100,9 @@ Quantity: 500 UNITS
 Location: Gauteng preferred
 Already have: FORMULA
 Requested: MANUFACTURING, PACKAGING, PRINTING
-Required capability: BOTTLING
-Required packaging: BOTTLE
-Required certification: HALAAL
+Required capability: BOTTLING -> PACKAGING
+Required packaging: BOTTLE -> PACKAGING_SUPPLY
+Required certification: HALAAL -> MANUFACTURING
 ```
 
 Expected generated path:
@@ -92,13 +110,14 @@ Expected generated path:
 ```text
 ✓ Formula or recipe
 ? Testing and analysis
-○ Compliance and certification
+? Compliance and certification
+○ Packaging supply
 ○ Manufacturing
 ○ Packaging and filling
 ○ Labels and printed packaging
 ```
 
-The path deliberately leaves testing uncertain and marks Halaal/compliance as needed. Matching must determine what the current provider graph can actually satisfy.
+Testing remains uncertain because the founder has not yet established whether additional testing is needed. Compliance support is also uncertain: a suitable manufacturing route may already satisfy the Halaal requirement without a separate consultant. Halaal itself remains a hard manufacturing requirement.
 
 ## Editing
 
