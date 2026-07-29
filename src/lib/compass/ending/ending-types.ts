@@ -57,6 +57,7 @@ export type CompassEndingState = {
   currentMovementId: string | null
   reframe: string | null
   followUpQuestion: string | null
+  movementReady: boolean
   scopeCategory: CompassScopeCategory
   discussionCount: number
   updatedAt: string
@@ -94,6 +95,7 @@ export function createEmptyCompassEndingState(
     currentMovementId: null,
     reframe: null,
     followUpQuestion: null,
+    movementReady: false,
     scopeCategory: "in_scope",
     discussionCount: 0,
     updatedAt: new Date().toISOString(),
