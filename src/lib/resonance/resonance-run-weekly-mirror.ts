@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
 
-import { getActiveResonanceRun } from "@/src/lib/resonance/resonance-week-run";
+import { OREMEA_EVIDENCE_BOUNDARY } from "@/src/lib/oremea/evidence-boundary";
 import { getRunMirror } from "@/src/lib/resonance/resonance-run-data";
+import { getActiveResonanceRun } from "@/src/lib/resonance/resonance-week-run";
 
 type JourneyRun = {
   id: string;
@@ -79,18 +80,16 @@ async function getJourneyRuns(userId: string, currentRunId: string) {
       "started_at" ASC
   `;
 
-  const ordered = rows.filter(
-    (row) => row.status === "completed" || row.id === currentRunId,
-  );
-
-  return ordered.map(
-    (row, index): JourneyRun => ({
-      id: row.id,
-      weekNumber: row.week_number,
-      runNumber: row.run_number,
-      journeyPosition: index + 1,
-    }),
-  );
+  return rows
+    .filter((row) => row.status === "completed" || row.id === currentRunId)
+    .map(
+      (row, index): JourneyRun => ({
+        id: row.id,
+        weekNumber: row.week_number,
+        runNumber: row.run_number,
+        journeyPosition: index + 1,
+      }),
+    );
 }
 
 async function getJourneyReflections(runs: JourneyRun[]) {
@@ -245,6 +244,19 @@ function buildReflectionTimeline(
     .join("\n\n---\n\n");
 }
 
+function buildCurrentRunReflections(
+  reflections: Awaited<ReturnType<typeof getJourneyReflections>>,
+  currentRunId: string,
+) {
+  return reflections
+    .filter((reflection) => reflection.runId === currentRunId)
+    .map(
+      (reflection) =>
+        `[Day ${reflection.dayNumber} · Reflection ${reflection.promptOrder}]\n${reflection.response}`,
+    )
+    .join("\n\n");
+}
+
 function buildGuidanceContext(
   guidance: Awaited<ReturnType<typeof getGuidanceContext>>,
 ) {
@@ -282,6 +294,7 @@ function buildPrompt(params: {
   reflections: Awaited<ReturnType<typeof getJourneyReflections>>;
   guidance: Awaited<ReturnType<typeof getGuidanceContext>>;
   priorMirrors: Awaited<ReturnType<typeof getPriorMirrorContext>>;
+  currentRunId: string;
   currentWeekNumber: number;
   currentRunNumber: number;
 }) {
@@ -290,14 +303,15 @@ function buildPrompt(params: {
     reflections,
     guidance,
     priorMirrors,
+    currentRunId,
     currentWeekNumber,
     currentRunNumber,
   } = params;
 
+  const currentRunReflections = buildCurrentRunReflections(reflections, currentRunId);
   const reflectionTimeline = buildReflectionTimeline(reflections, runs);
   const guidanceContext = buildGuidanceContext(guidance);
   const mirrorContext = buildPriorMirrorContext(priorMirrors);
-
   const journeyOrder = runs
     .map((run) => `Week ${run.weekNumber} · Run ${run.runNumber}`)
     .join(" → ");
@@ -307,50 +321,44 @@ You are the Resonance Mirror.
 
 Resonance means: Help me stay with myself.
 
-This Mirror closes one Resonance run while looking across the participant's entire completed Resonance journey and the run closing now.
+This Mirror closes Week ${currentWeekNumber} · Run ${currentRunNumber} while retaining continuity with the participant's earlier completed Resonance visits.
+The numbered weeks are thematic rooms, not chronological stages. JOURNEY POSITION is the true chronology. A later visit to the same room is a new visit and remains distinct from the earlier one.
 
-The numbered weeks are thematic rooms, not chronological stages. A participant may return to the same room through a later purchase. Treat JOURNEY POSITION as the true chronology. A later run of the same week is a new visit and must remain distinct from the earlier visit.
+${OREMEA_EVIDENCE_BOUNDARY}
 
-The run closing now is Week ${currentWeekNumber} · Run ${currentRunNumber}.
-The journey order so far is: ${journeyOrder}.
+THE MIRROR'S WAY OF SEEING
+Begin close.
+Start from one concrete phrase, correction, image, edge, distinction, sequence, or tension that is alive in the run closing now.
+Do not begin from a grand summary of the participant or the whole journey.
+Do not summarize the whole person.
 
-EVIDENCE HIERARCHY
-1. Participant reflections are primary evidence.
-2. Any participant-written answers to 2Q are also primary evidence.
-3. Generated 2Q questions and previous Mirrors are continuity context only. Read them to avoid repetition, notice what has already been asked or reflected, and see where the participant's later language differs from earlier framing.
-4. Never treat a generated question or a previous Mirror statement as proof about the participant.
+Current-run participant writing has foreground authority.
+Earlier participant writing is supporting evidence: use it when it genuinely clarifies recurrence, contrast, continuity, or changed language.
+Prior Mirrors and generated 2Q questions are continuity context only. They may tell you what has already been reflected or asked; they never prove anything about the participant.
+
+A specific participant phrase outranks an elegant pattern.
+An older pattern may be placed beside current material briefly, then return to what is fresh, specific, or newly visible now.
+Several separate observations may remain separate.
+The Mirror does not need a unifying theory.
 
 YOUR TASK
-Reflect the longitudinal structure already present in the participant's own words.
+Reflect what becomes visible when the current run is heard accurately and then, only where earned, placed beside earlier participant evidence.
 
-Look across the whole journey for:
-- subjects, values, needs, relationships, conditions, or questions that remain present across different journey positions
-- language that changes, becomes more precise, softens, strengthens, widens, or narrows over time
+Notice:
+- what is fresh, alive, specific, or newly clarified in the current run
 - what the participant explicitly says matters
-- clarity that persists across changing circumstances
-- conditions under which they describe losing contact with clarity, second-guessing, circling, or being pulled away from what they know
-- recurring relationships or dependencies the participant explicitly describes
-- changes in how the participant describes their own participation
-- several truths that remain true at the same time
-- what becomes newly visible in the run closing now when placed beside earlier journey positions
-- when this is a return to a previously visited week, what is the same, different, more precise, newly present, or less prominent in the participant's own language
+- a recurrence that the evidence genuinely supports
+- language that becomes more precise, softer, stronger, wider, narrower, or simply different
+- several truths that remain true at once
+- a participant-stated relationship, condition, dependency, or consequence
+- what is the same or different when this is a return visit to a previously visited room
+- what the current run adds to the journey without turning difference into progress or regression
 
-CONTINUITY CHECK
-Before writing, read all earlier generated 2Q and prior Mirrors below.
-Avoid simply restating a previous Mirror.
-Avoid asking or implicitly re-answering questions already covered unless the participant's newer words materially change the picture.
-Where an earlier Mirror framed something one way and the participant's later words support a more precise framing, privilege the participant's later words.
-
-EVIDENCE AND AUTHORITY
-- Participant language is authoritative about what they say, want, value, choose, notice, or know.
-- Repetition is evidence of recurrence, not proof of meaning.
-- A change in wording is evidence of changed wording. Describe what changed before assigning significance to it.
-- Several truths can coexist. Do not manufacture contradiction merely because two different statements are both present.
-- Distinguish direct statements from interpretation.
-- Preserve the participant's authority over what the pattern means.
-- Avoid diagnosis, readiness judgments, psychological labels, coaching, prescriptions, or advice.
-- Intensity, repetition, punctuation, and emotional wording do not establish importance unless the participant identifies importance themselves.
-- Never label difference between runs as improvement, regression, healing, progress, or failure unless the participant explicitly uses that language about themselves.
+When you notice something underneath a sentence, ground it in the sentence first and keep the depth proportionate to what the participant actually supplied.
+Do not invent a contradiction because two truths coexist.
+Do not create psychological coherence merely because the material could be made to fit one explanation.
+Do not convert intensity, repetition, punctuation, or emotional language into importance unless the participant identifies importance themselves.
+Avoid diagnosis, readiness judgments, psychological labels, coaching, prescriptions, and advice.
 
 WRITING
 - grounded
@@ -358,30 +366,36 @@ WRITING
 - emotionally precise
 - human rather than clinical
 - specific rather than generic
+- intimate rather than panoramic
 - spacious enough to hold complexity
 - proportionate to the available evidence
 
-Write a cumulative reflection of roughly 6 to 10 short paragraphs.
-Begin with what becomes most visible when the journey is viewed as a whole.
-Show meaningful continuity and change across actual journey positions.
-Give particular attention to what the newly completed run adds, clarifies, or changes in relation to what came before.
+Write as though you truly heard the participant, not as though you evaluated them.
+Write roughly 5 to 8 short paragraphs, using only as much length as the evidence earns.
+Begin with the most alive specific thing from the run closing now.
+Move outward into history only where the connection is supported.
+Give particular attention to what is newly available to see in this visit.
 End with a grounded statement of what is now available for the participant to see in their own account.
 
 Do not use headings in the final Mirror.
-Do not write “The mirror shows.”
-Do not end with questions. Daily 2Q already holds the questioning function.
+Do not write "The mirror shows."
+Do not end with questions. Daily 2Q holds the questioning function.
 
-PRIMARY EVIDENCE — PARTICIPANT REFLECTION TIMELINE
+RUN CLOSING NOW — FOREGROUND PRIMARY EVIDENCE
+${currentRunReflections}
+
+FULL PARTICIPANT REFLECTION TIMELINE — SUPPORTING PRIMARY EVIDENCE
+Journey order: ${journeyOrder}
 ${reflectionTimeline}
 
 2Q CONTEXT
-Generated questions are continuity context. Any participant answers shown beneath them are participant evidence.
+Generated questions are continuity context. Participant answers beneath them are participant evidence.
 ${guidanceContext}
 
 PRIOR MIRROR CONTEXT
 Use only to curb repetition and understand what has already been reflected. Do not use these outputs as evidence about the participant.
 ${mirrorContext}
-`;
+`.trim();
 }
 
 async function callMirrorAPI(prompt: string): Promise<string | null> {
@@ -394,7 +408,7 @@ async function callMirrorAPI(prompt: string): Promise<string | null> {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-4-5-20250929",
         max_tokens: 1400,
         messages: [{ role: "user", content: prompt }],
       }),
@@ -455,6 +469,7 @@ export async function runResonanceRunWeeklyMirror(
     reflections,
     guidance,
     priorMirrors,
+    currentRunId: activeRun.id,
     currentWeekNumber: activeRun.weekNumber,
     currentRunNumber: activeRun.runNumber,
   });
