@@ -86,7 +86,7 @@ export function CompassArchiveSessionView({
         <div className="mt-6 space-y-4">
           {discussionMessages.length === 0 ? (
             <div className="rounded-2xl border border-zinc-800 p-5 text-sm text-zinc-500">
-              No Discussion was saved in this Compass session.
+              No conversation was saved in this Compass run.
             </div>
           ) : null}
 
@@ -124,8 +124,8 @@ export function CompassArchiveSessionView({
           ) : null}
 
           <ArchiveList
-            title="Held on the Map"
-            empty="No active Map items were saved."
+            title="Current Map"
+            empty="No current Map items were saved."
             items={heldItems.map((item) => ({
               id: item.id,
               content: item.content,
@@ -136,8 +136,8 @@ export function CompassArchiveSessionView({
           />
 
           <ArchiveList
-            title="Completed"
-            empty="No Map items were completed in this session."
+            title="Completed Map items"
+            empty="No Map items were completed in this run."
             items={completedItems.map((item) => ({
               id: item.id,
               content: item.content,
@@ -148,8 +148,8 @@ export function CompassArchiveSessionView({
           />
 
           <ArchiveList
-            title="Movements"
-            empty="No completed movements were saved in this session."
+            title="Completed movements"
+            empty="No completed movements were saved in this run."
             items={completedMovements.map((movement) => ({
               id: movement.id,
               content: movement.instruction,
