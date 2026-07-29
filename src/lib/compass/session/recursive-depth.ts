@@ -32,15 +32,17 @@ const VALUE_WORDS = [
   "movement",
 ]
 
+const DESCENT_QUESTION_KEY = "oremea-compass-descent-question"
+
 export function getRecursiveQuestion(layer: number): string {
   const questions = [
     "Why does this matter to you right now?",
-    "What makes this goal significant enough to keep your attention?",
-    "What value, responsibility, standard, hope, or expectation gives this goal its weight?",
-    "If this became fully real in your life, what would become possible that feels difficult, unavailable, restricted, or out of reach right now?",
-    "What would you be able to do, build, choose, protect, experience, or create from that reality?",
-    "What does this show you about what you are no longer willing to live without?",
-    "After everything you have written, what is the core reality you are choosing to build?",
+    "What is it about what you just described that matters to you?",
+    "What makes that important to you?",
+    "Why does that matter to you?",
+    "What is underneath that for you?",
+    "What makes that matter so deeply to you?",
+    "Why does that matter at the deepest level for you?",
   ]
 
   return questions[layer - 1] ?? questions[questions.length - 1]
@@ -70,6 +72,61 @@ export function createRecursiveLayer({
   }
 }
 
+export function rememberAdaptiveRecursiveQuestion({
+  layer,
+  sourceAnswer,
+  question,
+}: {
+  layer: number
+  sourceAnswer: string
+  question: string
+}) {
+  if (typeof window === "undefined") return
+
+  window.sessionStorage.setItem(
+    DESCENT_QUESTION_KEY,
+    JSON.stringify({
+      layer,
+      sourceAnswer: normalizeSource(sourceAnswer),
+      question: question.trim(),
+    }),
+  )
+}
+
+export function getRememberedAdaptiveRecursiveQuestion({
+  layer,
+  sourceAnswer,
+}: {
+  layer: number
+  sourceAnswer: string
+}): string | null {
+  if (typeof window === "undefined") return null
+
+  const raw = window.sessionStorage.getItem(DESCENT_QUESTION_KEY)
+  if (!raw) return null
+
+  try {
+    const stored = JSON.parse(raw) as {
+      layer?: unknown
+      sourceAnswer?: unknown
+      question?: unknown
+    }
+
+    if (
+      stored.layer === layer &&
+      stored.sourceAnswer === normalizeSource(sourceAnswer) &&
+      typeof stored.question === "string" &&
+      stored.question.trim()
+    ) {
+      return stored.question.trim()
+    }
+  } catch {
+    return null
+  }
+
+  return null
+}
+
 export function buildAdaptiveRecursiveQuestion({
   layer,
   selectedAreaLabel,
@@ -81,48 +138,23 @@ export function buildAdaptiveRecursiveQuestion({
   previousAnswer: string
   firstAnswer?: string
 }): string {
-  const reference = cleanReference(previousAnswer || firstAnswer || "")
-  const area = selectedAreaLabel.toLowerCase()
+  const sourceAnswer = previousAnswer || firstAnswer || ""
+  const remembered = getRememberedAdaptiveRecursiveQuestion({
+    layer,
+    sourceAnswer,
+  })
 
-  if (!reference) {
-    return `Why does ${area} matter to you right now?`
-  }
+  if (remembered) return remembered
 
   if (layer === 1) {
-    return `You chose ${area}. In your own words, why does “${reference}” matter to you right now?`
+    return `Why does ${selectedAreaLabel.toLowerCase()} matter to you right now?`
   }
 
-  if (layer === 2) {
-    return `When you describe “${reference}”, what makes this significant enough to keep your attention?`
-  }
-
-  if (layer === 3) {
-    return `Under “${reference}”, what value, responsibility, standard, hope, or expectation gives this goal its weight?`
-  }
-
-  if (layer === 4) {
-    return `If “${reference}” became fully real in your life, what would become possible that feels difficult, unavailable, restricted, or out of reach right now?`
-  }
-
-  if (layer === 5) {
-    return `From the reality you described in “${reference}”, what would you be able to do, build, choose, protect, experience, or create?`
-  }
-
-  if (layer === 6) {
-    return `Looking at “${reference}”, what does this show you about what you are no longer willing to live without?`
-  }
-
-  return `After everything you have written, what is the core reality you are choosing to build through “${reference}”?`
+  return getRecursiveQuestion(layer)
 }
 
-function cleanReference(input: string): string {
-  const trimmed = input.trim().replace(/\s+/g, " ")
-
-  if (trimmed.length <= 110) {
-    return trimmed
-  }
-
-  return `${trimmed.slice(0, 110)}...`
+function normalizeSource(input: string): string {
+  return input.trim().replace(/\s+/g, " ")
 }
 
 function extractReasonWords(input: string): string[] {

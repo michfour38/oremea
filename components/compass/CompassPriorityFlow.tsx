@@ -36,8 +36,13 @@ export function CompassPriorityFlow({
   onChooseArea?: (area: CompassGoalArea) => void;
   showAreaChoices?: boolean;
 }) {
+  const displayTitle = showAreaChoices ? "Where do you want to begin?" : title;
+  const displayDescription = showAreaChoices
+    ? "You have named several things that matter. Choose the area you want Compass to follow more deeply."
+    : description;
+
   return (
-    <CompassCard title={title} description={description}>
+    <CompassCard title={displayTitle} description={displayDescription}>
       <details className="rounded-2xl border border-zinc-800 bg-[#131313] p-4">
         <summary className={`cursor-pointer text-sm ${BODY_TEXT}`}>
           {reviewLabel}
@@ -47,13 +52,13 @@ export function CompassPriorityFlow({
           {areaResponses.map((response) => (
             <div
               key={response.area}
-              className="rounded-xl border border-zinc-800 p-4"
+              className="rounded-xl border border-zinc-800 bg-[#101010] p-4"
             >
               <p className="text-sm font-medium text-[#d8b15f]">
                 {AREA_LABELS[response.area]}
               </p>
 
-              <p className={`mt-2 whitespace-pre-line text-sm ${BODY_TEXT}`}>
+              <p className={`mt-2 whitespace-pre-line text-sm leading-7 ${BODY_TEXT}`}>
                 {response.answer}
               </p>
             </div>

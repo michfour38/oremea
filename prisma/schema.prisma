@@ -190,16 +190,19 @@ model cohorts {
 }
 
 model resonance_day_continues {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id      String
-  week_number  Int
-  day_number   Int
-  continued_at DateTime @default(now()) @db.Timestamptz(6)
-  created_at   DateTime @default(now()) @db.Timestamptz(6)
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id             String
+  week_number         Int
+  day_number          Int
+  run_id              String              @db.Uuid
+  continued_at        DateTime            @default(now()) @db.Timestamptz(6)
+  created_at          DateTime            @default(now()) @db.Timestamptz(6)
+  resonance_week_runs resonance_week_runs @relation(fields: [run_id], references: [id], onDelete: Cascade)
 
-  @@unique([user_id, week_number, day_number])
+  @@unique([run_id, day_number])
   @@index([user_id])
   @@index([week_number, day_number])
+  @@index([run_id])
   @@map("journey_day_continues")
 }
 
@@ -222,24 +225,50 @@ model oremea_entitlements {
   @@index([status])
 }
 
-model resonance_day_guidance {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id        String
-  week_number    Int
-  day_number     Int
-  question_one   String
-  question_two   String
-  answer_one     String?
-  answer_two     String?
-  input_snapshot Json      @default("{}")
-  generated_at   DateTime  @default(now()) @db.Timestamptz(6)
-  answered_at    DateTime? @db.Timestamptz(6)
-  created_at     DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime  @updatedAt @db.Timestamptz(6)
+model resonance_week_runs {
+  id                   String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id              String
+  week_number          Int
+  run_number           Int
+  status               String                   @default("active")
+  purchase_source      String?
+  purchase_reference   String?
+  purchased_at         DateTime?                @db.Timestamptz(6)
+  started_at           DateTime                 @default(now()) @db.Timestamptz(6)
+  completed_at         DateTime?                @db.Timestamptz(6)
+  created_at           DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime                 @default(now()) @db.Timestamptz(6)
+  prompt_completions   prompt_completions[]
+  resonance_guidance   resonance_day_guidance[]
+  resonance_continues  resonance_day_continues[]
+  mirror_responses     mirror_responses[]
 
-  @@unique([user_id, week_number, day_number])
+  @@unique([user_id, week_number, run_number])
+  @@index([user_id, week_number])
+  @@index([user_id, status])
+}
+
+model resonance_day_guidance {
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id             String
+  week_number         Int
+  day_number          Int
+  run_id              String              @db.Uuid
+  question_one        String
+  question_two        String
+  answer_one          String?
+  answer_two          String?
+  input_snapshot      Json                @default("{}")
+  generated_at        DateTime            @default(now()) @db.Timestamptz(6)
+  answered_at         DateTime?           @db.Timestamptz(6)
+  created_at          DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime            @updatedAt @db.Timestamptz(6)
+  resonance_week_runs resonance_week_runs @relation(fields: [run_id], references: [id], onDelete: Cascade)
+
+  @@unique([run_id, day_number])
   @@index([user_id])
   @@index([week_number, day_number])
+  @@index([run_id])
 }
 
 model inquiry_sessions {
@@ -323,21 +352,24 @@ model day_prompts {
 }
 
 model prompt_completions {
-  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  prompt_id        String             @db.Uuid
-  user_id          String
-  response         String
-  is_shared        Boolean            @default(false)
-  created_at       DateTime           @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime           @updatedAt @db.Timestamptz(6)
-  prompt_analyses  prompt_analyses[]
-  day_prompts      day_prompts        @relation(fields: [prompt_id], references: [id])
-  profiles         profiles           @relation(fields: [user_id], references: [id])
-  prompt_reactions prompt_reactions[]
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  prompt_id           String              @db.Uuid
+  user_id             String
+  run_id              String              @db.Uuid
+  response            String
+  is_shared           Boolean             @default(false)
+  created_at          DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime            @updatedAt @db.Timestamptz(6)
+  prompt_analyses     prompt_analyses[]
+  day_prompts         day_prompts         @relation(fields: [prompt_id], references: [id])
+  profiles            profiles            @relation(fields: [user_id], references: [id])
+  prompt_reactions    prompt_reactions[]
+  resonance_week_runs resonance_week_runs @relation(fields: [run_id], references: [id], onDelete: Cascade)
 
-  @@unique([prompt_id, user_id])
+  @@unique([prompt_id, run_id])
   @@index([prompt_id])
   @@index([user_id])
+  @@index([run_id])
 }
 
 model notifications {
@@ -353,21 +385,24 @@ model notifications {
 }
 
 model mirror_responses {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id           String
-  week_number       Int
-  day_number        Int
-  input_snapshot    Json
-  output            String
-  patterns_detected String[]
-  contradictions    String[]
-  created_at        DateTime @default(now()) @db.Timestamptz(6)
-  tier              String   @default("lite")
-  profiles          profiles @relation(fields: [user_id], references: [id])
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id             String
+  week_number         Int
+  day_number          Int
+  run_id              String              @db.Uuid
+  input_snapshot      Json
+  output              String
+  patterns_detected   String[]
+  contradictions      String[]
+  created_at          DateTime            @default(now()) @db.Timestamptz(6)
+  tier                String              @default("lite")
+  profiles            profiles            @relation(fields: [user_id], references: [id])
+  resonance_week_runs resonance_week_runs @relation(fields: [run_id], references: [id], onDelete: Cascade)
 
-  @@unique([user_id, week_number, day_number])
+  @@unique([run_id, day_number])
   @@index([user_id])
   @@index([user_id, week_number, day_number])
+  @@index([run_id])
 }
 
 model profiles {
@@ -493,23 +528,23 @@ model mirror_unlocks {
 }
 
 model entry_leads {
-  id                      String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email                   String                  @unique
-  first_name              String?
-  source                  String?
-  pathway                 Pathway?
-  intro_started_at        DateTime?               @db.Timestamptz(6)
-  last_seen_panel         Int?
-  last_seen_panel_key     String?
-  last_seen_panel_at      DateTime?               @db.Timestamptz(6)
-  intro_completed_at      DateTime?               @db.Timestamptz(6)
-  created_at              DateTime                @default(now()) @db.Timestamptz(6)
-  updated_at              DateTime                @updatedAt @db.Timestamptz(6)
-  entry_paid_at           DateTime?               @db.Timestamptz(6)
-  entry_access_expires_at DateTime?               @db.Timestamptz(6)
-  resonance_paid_at       DateTime?               @map("journey_paid_at") @db.Timestamptz(6)
-  resonance_access_granted Boolean                @default(false) @map("journey_access_granted")
-  entry_mirror_sessions   entry_mirror_sessions[]
+  id                       String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                    String                  @unique
+  first_name               String?
+  source                   String?
+  pathway                  Pathway?
+  intro_started_at         DateTime?               @db.Timestamptz(6)
+  last_seen_panel          Int?
+  last_seen_panel_key      String?
+  last_seen_panel_at       DateTime?               @db.Timestamptz(6)
+  intro_completed_at       DateTime?               @db.Timestamptz(6)
+  created_at               DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime                @updatedAt @db.Timestamptz(6)
+  entry_paid_at            DateTime?               @db.Timestamptz(6)
+  entry_access_expires_at  DateTime?               @db.Timestamptz(6)
+  resonance_paid_at        DateTime?               @map("journey_paid_at") @db.Timestamptz(6)
+  resonance_access_granted Boolean                  @default(false) @map("journey_access_granted")
+  entry_mirror_sessions    entry_mirror_sessions[]
 
   @@index([email])
   @@index([source])
@@ -626,7 +661,7 @@ model harmonize_participants {
   consent_snapshot        Json      @default("{}")
   consent_acknowledged_at DateTime? @db.Timestamptz(6)
 
-  is_minor             Boolean @default(false)
+  is_minor Boolean @default(false)
 
   birthdate            DateTime? @db.Date
   minor_access_enabled Boolean   @default(false)

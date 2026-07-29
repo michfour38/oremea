@@ -29,58 +29,37 @@ export function buildCompassTrajectoryMirror({
     : "the area you chose"
 
   const selectedAreaAnswer =
-    areaResponses.find((response) => response.area === selectedArea)?.answer ??
+    areaResponses.find((response) => response.area === selectedArea)?.answer.trim() ??
     ""
 
   const usableLayers = recursiveLayers.filter((layer) => layer.answer.trim())
-  const openingLayers = usableLayers.slice(0, 2)
-  const middleLayers = usableLayers.slice(2, 5)
-  const deepestLayers = usableLayers.slice(-3)
 
-  const openingText = cleanJoin([
-    selectedAreaAnswer,
-    ...openingLayers.map((layer) => layer.answer),
-  ])
+  if (usableLayers.length === 0) {
+    return selectedAreaAnswer
+      ? `You began in ${selectedAreaLabel} with: “${cleanReference(selectedAreaAnswer)}”`
+      : "Compass needs more of your own words before it can reflect the Descent back accurately."
+  }
 
-  const middleText = cleanJoin(middleLayers.map((layer) => layer.answer))
+  const firstLayer = usableLayers[0]
+  const middleLayer = usableLayers[Math.floor((usableLayers.length - 1) / 2)]
+  const finalLayer = usableLayers[usableLayers.length - 1]
 
-  const deepestText = cleanJoin(deepestLayers.map((layer) => layer.answer))
+  const pieces = [
+    `You began in ${selectedAreaLabel}${selectedAreaAnswer ? ` with: “${cleanReference(selectedAreaAnswer)}”` : "."}`,
+    firstLayer
+      ? `At the first layer, you wrote: “${cleanReference(firstLayer.answer)}”`
+      : null,
+    middleLayer && middleLayer.layer !== firstLayer?.layer && middleLayer.layer !== finalLayer?.layer
+      ? `Further down, you wrote: “${cleanReference(middleLayer.answer)}”`
+      : null,
+    finalLayer
+      ? `By Layer ${finalLayer.layer}, your own words had arrived here: “${cleanReference(finalLayer.answer)}”`
+      : null,
+    "The starting area tells Compass where the Descent began. Your answers show where the thread went.",
+    "What has your attention now that you can see that path together?",
+  ].filter((value): value is string => Boolean(value))
 
-  return `
-A deeper reality is beginning to take shape.
-
-You began with ${selectedAreaLabel.toLowerCase()}.
-
-At first, the focus appeared to be:
-
-“${cleanReference(openingText)}”
-
-As you moved deeper, the focus began to shift:
-
-“${cleanReference(middleText)}”
-
-By the final layers, the strongest thread was no longer only the original goal:
-
-“${cleanReference(deepestText)}”
-
-This is the point of The Descent.
-
-The original goal is not dismissed.
-
-It becomes the doorway.
-
-What matters now is the trajectory your answers revealed.
-
-As more of this reality becomes available in your life, what becomes possible that is difficult, restricted, or unavailable today?
-`.trim()
-}
-
-function cleanJoin(values: string[]): string {
-  return values
-    .filter(Boolean)
-    .map((value) => value.trim())
-    .filter(Boolean)
-    .join(" ")
+  return pieces.join("\n\n")
 }
 
 function cleanReference(input: string): string {

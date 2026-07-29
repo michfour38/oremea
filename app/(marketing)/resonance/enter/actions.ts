@@ -1,6 +1,7 @@
 "use server";
 
 import { currentUser } from "@clerk/nextjs/server";
+
 import { prisma } from "@/lib/prisma";
 
 type UpsertEntryLeadInput = {
@@ -15,10 +16,9 @@ function normalizeEmail(email?: string | null) {
 
 async function getSignedInEmail() {
   const user = await currentUser();
-
   const primaryEmail =
     user?.emailAddresses.find(
-      (email) => email.id === user.primaryEmailAddressId
+      (email) => email.id === user.primaryEmailAddressId,
     )?.emailAddress ?? user?.emailAddresses[0]?.emailAddress ?? "";
 
   return normalizeEmail(primaryEmail);
@@ -26,61 +26,39 @@ async function getSignedInEmail() {
 
 export async function upsertEntryLead(input: UpsertEntryLeadInput) {
   const email = normalizeEmail(input.email);
+  if (!email) return;
+
   const firstName = input.firstName?.trim() || undefined;
   const source = input.source?.trim() || undefined;
-
-  if (!email) return;
 
   await prisma.entry_leads.upsert({
     where: { email },
     update: {
       first_name: firstName,
       source,
-      pathway: "discover",
     },
     create: {
       email,
       first_name: firstName,
       source,
-      pathway: "discover",
     },
   });
 }
 
-export async function grantResonanceAccess(input?: { email?: string; plan?: string }) {
+export async function grantResonanceAccess(input?: {
+  email?: string;
+  plan?: string;
+}) {
   const fallbackEmail = normalizeEmail(input?.email);
   const signedInEmail = await getSignedInEmail();
+  const email = fallbackEmail || signedInEmail || null;
 
-  // IMPORTANT:
-  // Payment success must attach to the payment email first.
-  // Only fall back to Clerk email if no payment email was passed.
-  const email = fallbackEmail || signedInEmail;
-
-  if (!email) {
-    return {
-      hasAccess: false,
-      email: null as string | null,
-    };
-  }
-
-  await prisma.entry_leads.upsert({
-  where: { email },
-  update: {
-    resonance_access_granted: true,
-    resonance_paid_at: new Date(),
-    pathway: input?.plan === "mirror" ? "relate" : "discover",
-  },
-  create: {
-    email,
-    resonance_access_granted: true,
-    resonance_paid_at: new Date(),
-    pathway: input?.plan === "mirror" ? "relate" : "discover",
-  },
-});
-
+  // Retired deliberately. A payment-return URL may never create blanket
+  // Resonance access. Verified week purchases create resonance_week_runs.
   return {
-    hasAccess: true,
+    hasAccess: false,
     email,
+    retired: true as const,
   };
 }
 
@@ -91,11 +69,9 @@ export async function markIntroCompleted(input?: { email?: string }) {
 
   if (!email) return;
 
-  await prisma.entry_leads.update({
+  await prisma.entry_leads.updateMany({
     where: { email },
-    data: {
-      intro_completed_at: new Date(),
-    },
+    data: { intro_completed_at: new Date() },
   });
 }
 
@@ -104,29 +80,13 @@ export async function getEntryResumeState({
 }: {
   email: string;
 }) {
-  if (!email) {
+  const normalized = normalizeEmail(email);
+
+  if (!normalized) {
     return { destination: "enter" as const };
   }
 
-  const lead = await prisma.entry_leads.findUnique({
-    where: { email },
-  });
-
-  // ❌ No record → treat as new
-  if (!lead) {
-    return { destination: "enter" as const };
-  }
-
-  // ❌ Not paid yet
-  if (!lead.resonance_access_granted) {
-    return { destination: "enter" as const };
-  }
-
-  // 🔥 Paid but NOT completed /begin
-  if (!lead.intro_completed_at) {
-    return { destination: "begin" as const };
-  }
-
-  // ✅ Paid + completed /begin
-  return { destination: "resonance" as const };
+  // The old paid/begin/resonance resume ladder is retired. The authenticated
+  // product home decides access from the participant's Resonance runs.
+  return { destination: "entry" as const };
 }

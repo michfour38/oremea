@@ -1,7 +1,12 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { runMirrorSynthesis } from "@/app/(member)/mirror/mirror.service";
+
+import { getActiveResonanceRun } from "@/src/lib/resonance/resonance-week-run";
+import {
+  getRunGuidance,
+  getRunMirror,
+} from "@/src/lib/resonance/resonance-run-data";
+import { runResonanceRunWeeklyMirror } from "@/src/lib/resonance/resonance-run-weekly-mirror";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://app.oremea.com";
 
@@ -15,32 +20,31 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const weekNumber = Number(url.searchParams.get("weekNumber") ?? "0");
   const dayNumber = Number(url.searchParams.get("dayNumber") ?? "0");
-  const tier = url.searchParams.get("tier") === "full" ? "full" : "lite";
 
-  if (!weekNumber || !dayNumber) {
+  if (!weekNumber || dayNumber !== 7) {
     return NextResponse.redirect(`${APP_URL}/resonance?mirror=invalid#mirror`);
   }
 
-  const existing = await prisma.mirror_responses.findFirst({
-    where: {
-      user_id: userId,
-      week_number: weekNumber,
-      day_number: dayNumber,
-      tier,
-    },
-    orderBy: { created_at: "desc" },
-  });
+  const activeRun = await getActiveResonanceRun(userId);
+  if (!activeRun || activeRun.weekNumber !== weekNumber) {
+    return NextResponse.redirect(`${APP_URL}/resonance?mirror=invalid#mirror`);
+  }
 
-  if (existing) {
+  const guidance = await getRunGuidance(activeRun.id, 7);
+
+  if (!guidance?.answerOne?.trim() || !guidance.answerTwo?.trim()) {
+    return NextResponse.redirect(
+      `${APP_URL}/resonance?mirror=answers-required#mirror`,
+    );
+  }
+
+  const existing = await getRunMirror(activeRun.id, 7);
+
+  if (existing?.tier === "full") {
     return NextResponse.redirect(`${APP_URL}/resonance?mirror=success#mirror`);
   }
 
-  const result = await runMirrorSynthesis(
-  userId,
-  weekNumber,
-  dayNumber,
-  tier
-);
+  const result = await runResonanceRunWeeklyMirror(userId, weekNumber, 7);
 
   if (!result) {
     return NextResponse.redirect(`${APP_URL}/resonance?mirror=error#mirror`);

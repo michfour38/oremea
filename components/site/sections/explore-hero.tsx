@@ -13,7 +13,7 @@ export function ExploreHero() {
           direction, communication, and intentional connection.
         </h1>
 
-        <p className="mx-auto mt-8 max-w-2xl text-base leading-8 text-zinc-400 md:text-lg">
+        <p className="mx-auto mt-8 max-w-2xl text-base leading-8 text-zinc-300 md:text-lg">
           Self-guided reflective frameworks supported by expanded
           recognition tools.
         </p>

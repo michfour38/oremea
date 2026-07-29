@@ -1,36 +1,21 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+
 import { prisma } from "@/lib/prisma";
 import { getCurrentDayContent } from "@/src/lib/resonance/getCurrentDayContent";
-import { getPromptThread, PromptThreadDTO } from "./resonance.service";
+import { getActiveResonanceRun } from "@/src/lib/resonance/resonance-week-run";
+import {
+  getRunContinuedDays,
+  getRunMirror,
+  getRunPromptCompletions,
+} from "@/src/lib/resonance/resonance-run-data";
 import PromptCard from "./prompt-card";
 import MirrorCard from "./mirror-card";
 import MemberNav from "../member-nav";
-import { getMirrorAccess } from "@/app/(member)/mirror/mirror-access";
 import MirrorOutput from "../mirror/mirror-output";
-import { getMirrorHistory } from "../mirror/mirror.service";
-import { continueResonanceDayAction } from "./actions";
-import ContinueDayButton from "./continue-day-button";
 import AutoScrollToMirror from "./auto-scroll-to-mirror";
 
 export const dynamic = "force-dynamic";
-
-const PAYSTACK_CURRENT_URL = "https://paystack.shop/pay/ey9b56zykb";
-
-function normalizeEmail(email?: string | null) {
-  return email?.trim().toLowerCase() || "";
-}
-
-async function getSignedInEmail() {
-  const user = await currentUser();
-
-  const primaryEmail =
-    user?.emailAddresses.find(
-      (email) => email.id === user.primaryEmailAddressId
-    )?.emailAddress ?? user?.emailAddresses[0]?.emailAddress ?? "";
-
-  return normalizeEmail(primaryEmail);
-}
 
 function getResonanceBackgrounds(weekNumber?: number) {
   const desktopMap: Record<number, string> = {
@@ -67,23 +52,9 @@ function getResonanceBackgrounds(weekNumber?: number) {
   };
 }
 
-// 🔒🔒🔒 TESTING DAY LOCK — REMOVE BEFORE PRODUCTION 🔒🔒🔒
-function getTestingResonanceOverride() {
-  const enabled = false;
-
-  if (!enabled) return null;
-
-  return {
-    phase: "INTEGRATION" as const,
-    weekNumber: 10,
-    dayNumber: 7,
-  };
-}
-
-async function getSelfPacedResonancePosition(userId: string) {
-  const weeks = await prisma.resonance_weeks.findMany({
-    where: { is_published: true },
-    orderBy: { week_number: "asc" },
+async function getActiveResonancePosition(runId: string, activeWeek: number) {
+  const week = await prisma.resonance_weeks.findUnique({
+    where: { week_number: activeWeek },
     include: {
       resonance_days: {
         orderBy: { day_number: "asc" },
@@ -91,180 +62,72 @@ async function getSelfPacedResonancePosition(userId: string) {
           day_prompts: {
             where: { is_published: true },
             orderBy: { prompt_order: "asc" },
-            include: {
-              prompt_completions: {
-                where: { user_id: userId },
-                select: { id: true },
-              },
-            },
+            select: { id: true },
           },
         },
       },
     },
   });
 
-  for (const week of weeks) {
-    for (const day of week.resonance_days) {
-      const prompts = day.day_prompts;
+  if (!week?.is_published) {
+    throw new Error("The active Resonance week is not available.");
+  }
 
-      if (prompts.length === 0) continue;
+  const promptIds = week.resonance_days.flatMap((day) =>
+    day.day_prompts.map((prompt) => prompt.id),
+  );
 
-const allPromptsDone = prompts.every(
-  (prompt) => prompt.prompt_completions.length > 0
-);
+  const [completionByPrompt, continuedDayNumbers] = await Promise.all([
+    getRunPromptCompletions(runId, promptIds),
+    getRunContinuedDays(runId),
+  ]);
 
-const continued = await prisma.resonance_day_continues.findUnique({
-  where: {
-    user_id_week_number_day_number: {
-      user_id: userId,
-      week_number: week.week_number,
-      day_number: day.day_number,
-    },
-  },
-  select: { id: true },
-});
+  for (const day of week.resonance_days) {
+    const prompts = day.day_prompts;
+    if (prompts.length === 0) continue;
 
-const allDone = allPromptsDone && Boolean(continued);
+    const allPromptsDone = prompts.every((prompt) =>
+      completionByPrompt.has(prompt.id),
+    );
 
-      if (!allDone) {
-        return {
-          phase: week.week_number >= 9 ? "INTEGRATION" as const : "CORE" as const,
-          weekNumber: week.week_number,
-          dayNumber: day.day_number,
-          completed: false,
-        };
-      }
+    const allDone =
+      allPromptsDone && continuedDayNumbers.has(day.day_number);
+
+    if (!allDone) {
+      return {
+        phase: activeWeek >= 9 ? ("INTEGRATION" as const) : ("CORE" as const),
+        weekNumber: activeWeek,
+        dayNumber: day.day_number,
+      };
     }
   }
 
   return {
-    phase: "COMPLETED" as const,
-    weekNumber: 10,
+    phase: activeWeek >= 9 ? ("INTEGRATION" as const) : ("CORE" as const),
+    weekNumber: activeWeek,
     dayNumber: 7,
-    completed: true,
   };
 }
 
-export default async function ResonancePage({
-  searchParams,
-}: {
-  searchParams?: {
-    mirror?: string;
-  };
-}) {
+export default async function ResonancePage() {
   const { userId } = await auth();
 
   if (!userId) {
     redirect("/sign-in");
   }
 
-const signedInEmail = await getSignedInEmail();
+  // A verified purchase creates the active run. The run itself is the access
+  // authority; the retired entry_leads blanket-access flag no longer gates use.
+  const activeRun = await getActiveResonanceRun(userId);
 
-if (!signedInEmail) {
-  redirect("/sign-in?redirect_url=%2Fresonance");
-}
-
-const shouldActivateMirror =
-  typeof searchParams?.mirror === "string" &&
-  searchParams.mirror === "generate";
-
-if (shouldActivateMirror) {
-  await prisma.entry_leads.updateMany({
-    where: { email: signedInEmail },
-    data: {
-      pathway: "relate",
-      resonance_access_granted: true,
-      resonance_paid_at: new Date(),
-    },
-  });
-}
-
-// 👇 ADD THIS BLOCK RIGHT HERE
-const entryLead = await prisma.entry_leads.findUnique({
-  where: { email: signedInEmail },
-  select: {
-    pathway: true,
-  },
-});
-
-const pathway =
-  entryLead?.pathway === "relate" ? "relate" : "discover";
-
-await prisma.profiles.upsert({
-  where: { id: userId },
-  update: {
-    pathway,
-    updated_at: new Date(),
-  },
-  create: {
-    id: userId,
-    display_name: signedInEmail.split("@")[0],
-    pathway,
-    updated_at: new Date(),
-  },
-});
-  const resonanceAccess = await prisma.entry_leads.findUnique({
-  where: { email: signedInEmail },
-  select: {
-    resonance_access_granted: true,
-    entry_access_expires_at: true,
-  },
-});
-
-const hasEntryAccess =
-  resonanceAccess?.entry_access_expires_at &&
-  resonanceAccess.entry_access_expires_at.getTime() > Date.now();
-
-const hasResonanceAccess =
-  Boolean(resonanceAccess?.resonance_access_granted) || Boolean(hasEntryAccess);
-
-if (!hasResonanceAccess) {
-  redirect("/oremea/enter");
-}
-
-  const testingOverride = getTestingResonanceOverride();
-
-  console.log("TEST LOCK ACTIVE", testingOverride);
-
-  const selfPacedPosition = await getSelfPacedResonancePosition(userId);
-
-const progression = testingOverride ?? selfPacedPosition;
-
-  if (progression.phase === "COMPLETED") {
-    const backgrounds = getResonanceBackgrounds(10);
-
-    return (
-      <main className="relative min-h-screen overflow-x-hidden text-white">
-        <div
-          className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat md:hidden"
-          style={{ backgroundImage: `url(${backgrounds.mobile})` }}
-        />
-
-        <div
-          className="fixed inset-0 z-0 hidden bg-cover bg-center bg-no-repeat md:block"
-          style={{ backgroundImage: `url(${backgrounds.desktop})` }}
-        />
-
-        <div className="fixed inset-0 z-10 bg-black/55" />
-
-        <div className="relative z-20 min-h-screen">
-          <MemberNav />
-
-          <div className="px-6 py-6">
-            <div className="mx-auto max-w-2xl">
-              <header className="space-y-3">
-                <h1 className="text-4xl text-white">Journey Complete</h1>
-                <p className="text-zinc-300">Resonance by Oremea - Journey</p>
-                <p className="text-zinc-400">
-                  Your 10-week Resonance journey has completed.
-                </p>
-              </header>
-            </div>
-          </div>
-        </div>
-      </main>
-    );
+  if (!activeRun) {
+    redirect("/entry");
   }
+
+  const progression = await getActiveResonancePosition(
+    activeRun.id,
+    activeRun.weekNumber,
+  );
 
   let content: Awaited<ReturnType<typeof getCurrentDayContent>> | null = null;
   let contentLoadFailed = false;
@@ -275,90 +138,41 @@ const progression = testingOverride ?? selfPacedPosition;
   try {
     content = await getCurrentDayContent({
       phase: resonancePhase,
-      weekNumber: progression.weekNumber!,
-      dayNumber: progression.dayNumber!,
+      weekNumber: progression.weekNumber,
+      dayNumber: progression.dayNumber,
       userId,
+      runId: activeRun.id,
     });
   } catch (error) {
     contentLoadFailed = true;
-    console.error("Journey content failed to load:", error);
+    console.error("Resonance content failed to load:", error);
   }
 
   const backgrounds = getResonanceBackgrounds(
-    content?.weekNumber ?? progression.weekNumber ?? 1
+    content?.weekNumber ?? progression.weekNumber,
   );
 
-  let liteMirrorEligible = false;
-  let fullMirrorEligible = false;
-  let liteMirrorUnlocked = false;
-  let fullMirrorUnlocked = false;
-  let currentMirror: Awaited<ReturnType<typeof getMirrorHistory>>[number] | null =
-    null;
-  let mirrorExerciseCompleted = false;
-  const threadMap = new Map<string, PromptThreadDTO | null>();
-
-    if (content) {
-    try {
-      mirrorExerciseCompleted =
-        content.prompts.length > 0 &&
-        content.prompts.every((prompt) => prompt.isCompleted);
-
-      await Promise.all(
-        content.prompts
-          .filter(
-            (prompt) => prompt.type === "thread_prompt" && prompt.isCompleted
-          )
-          .map(async (prompt) => {
-            const thread = await getPromptThread(prompt.id, userId);
-            threadMap.set(prompt.id, thread);
-          })
-      );
-
-const mirrorAccess = await getMirrorAccess(signedInEmail);
-
-liteMirrorEligible = false;
-
-fullMirrorEligible = mirrorAccess.has2QOnly;
-
-liteMirrorUnlocked = false;
-
-fullMirrorUnlocked = mirrorAccess.hasFullMirror;
-      const foundMirror = await prisma.mirror_responses.findFirst({
-  where: {
-    user_id: userId,
-    week_number: content.weekNumber,
-    day_number: content.dayNumber,
-    tier: "full",
-  },
-  orderBy: {
-    created_at: "desc",
-  },
-});
-
-currentMirror =
-  mirrorAccess.hasFullMirror && foundMirror
-    ? {
-  id: foundMirror.id,
-  userId: foundMirror.user_id,
-  weekNumber: foundMirror.week_number,
-  dayNumber: foundMirror.day_number,
-  tier: foundMirror.tier as "full" | "lite",
-  output: foundMirror.output,
-  createdAt: foundMirror.created_at.toISOString(),
-}
-    : null;
-    } catch (error) {
-      console.error("Mirror state failed:", error);
-    }
-  }
-
-  const showCurrentUnlockCard = Boolean(
+  const reflectionsCompleted = Boolean(
     content &&
-      content.weekNumber === 10 &&
-      content.dayNumber === 7 &&
-      mirrorExerciseCompleted &&
-      currentMirror
+      content.prompts.length > 0 &&
+      content.prompts.every((prompt) => prompt.isCompleted),
   );
+
+  const foundMirror =
+    content?.dayNumber === 7 ? await getRunMirror(activeRun.id, 7) : null;
+
+  const currentMirror =
+    foundMirror?.tier === "full"
+      ? {
+          id: foundMirror.id,
+          userId: foundMirror.userId,
+          weekNumber: foundMirror.weekNumber,
+          dayNumber: foundMirror.dayNumber,
+          tier: "full" as const,
+          output: foundMirror.output,
+          createdAt: foundMirror.createdAt.toISOString(),
+        }
+      : null;
 
   return (
     <main className="relative min-h-screen overflow-x-hidden text-white">
@@ -382,22 +196,20 @@ currentMirror =
             <header className="space-y-3">
               {content ? (
                 <>
-  <h1 className="text-4xl text-white">{content.weekTitle}</h1>
-
-  <p className="text-zinc-300">
-    Resonance by Oremea - Journey
-  </p>
-
-  <p className="text-zinc-400">{content.weekTheme}</p>
-</>
+                  <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
+                    Week {content.weekNumber} · Run {activeRun.runNumber} · Day {content.dayNumber}
+                  </p>
+                  <h1 className="text-4xl text-white">{content.weekTitle}</h1>
+                  <p className="text-zinc-300">Resonance by Oremea</p>
+                  <p className="text-zinc-400">{content.weekTheme}</p>
+                </>
               ) : (
                 <div className="space-y-3">
-                  <h1 className="text-4xl text-white">Journey Active</h1>
-                  <p className="text-zinc-300">Resonance by Oremea - Journey</p>
+                  <h1 className="text-4xl text-white">Resonance</h1>
                   <p className="text-zinc-400">
                     {contentLoadFailed
-                      ? "Journey content could not be loaded yet."
-                      : "Journey content is not available yet."}
+                      ? "This day's reflections could not be loaded yet."
+                      : "This day's reflections are not available yet."}
                   </p>
                 </div>
               )}
@@ -406,7 +218,7 @@ currentMirror =
             {content ? (
               <>
                 <div className="mt-10 space-y-6">
-                  {content.prompts.map((prompt, index) => {
+                  {content.prompts.map((prompt) => {
                     if (prompt.type === "mirror_exercise") {
                       return (
                         <MirrorCard
@@ -417,87 +229,20 @@ currentMirror =
                       );
                     }
 
-                    return (
-                      <PromptCard
-                        key={prompt.id}
-                        prompt={prompt}
-                        index={index}
-                        thread={threadMap.get(prompt.id) ?? null}
-                        currentPathway={pathway}
-                      />
-                    );
+                    return <PromptCard key={prompt.id} prompt={prompt} />;
                   })}
                 </div>
 
-<AutoScrollToMirror
-  trigger={content.prompts.every((prompt) => prompt.isCompleted)}
-/>
+                <AutoScrollToMirror trigger={reflectionsCompleted} />
 
-<div id="mirror" className="mt-10 scroll-mt-24">
-  <MirrorOutput
+                <div id="mirror" className="mt-10 scroll-mt-24">
+                  <MirrorOutput
                     weekNumber={content.weekNumber}
                     dayNumber={content.dayNumber}
-                    liteMirrorEligible={liteMirrorEligible}
-                    fullMirrorEligible={fullMirrorEligible}
-                    liteMirrorUnlocked={liteMirrorUnlocked}
-                    fullMirrorUnlocked={fullMirrorUnlocked}
                     mirror={currentMirror}
-                    mirrorExerciseCompleted={mirrorExerciseCompleted}
+                    reflectionsCompleted={reflectionsCompleted}
                   />
                 </div>
-
-{content.prompts.every((prompt) => prompt.isCompleted) &&
-currentMirror ? (
-  <form action={continueResonanceDayAction} className="mt-6 flex justify-end">
-    <input type="hidden" name="weekNumber" value={content.weekNumber} />
-    <input type="hidden" name="dayNumber" value={content.dayNumber} />
-
-    <ContinueDayButton />
-
-  </form>
-) : null}
-
-                {showCurrentUnlockCard ? (
-                  <div className="mt-8 rounded-3xl border border-emerald-400/40 bg-emerald-400/10 p-6 md:p-8">
-                    <p className="text-xs uppercase tracking-[0.25em] text-emerald-300">
-                      The Current
-                    </p>
-
-                    <h2 className="mt-3 text-2xl font-semibold text-white">
-                      You’re ready for The Current.
-                    </h2>
-
-                    <p className="mt-4 text-base leading-8 text-zinc-100">
-                      Over the course of this journey, something in you has
-                      clarified.
-                    </p>
-
-                    <p className="mt-4 text-base leading-8 text-zinc-200">
-                      Not everyone reaches this point with the same honesty,
-                      steadiness, or willingness to be changed by what they’ve
-                      seen.
-                    </p>
-
-                    <p className="mt-4 text-base leading-8 text-zinc-200">
-                      What may be opening now is a quiet readiness to meet
-                      others more deeply, from where you are now.
-                    </p>
-
-                    <p className="mt-4 text-base leading-8 text-zinc-200">
-                      The Current is a space for people who have done the work —
-                      and want to meet others who have done the same.
-                    </p>
-
-                    <div className="mt-6 flex flex-wrap gap-3">
-                      <a
-                        href={PAYSTACK_CURRENT_URL}
-                        className="inline-flex items-center justify-center rounded-xl border border-emerald-400/50 px-5 py-3 text-sm text-emerald-200 transition hover:bg-emerald-400/10"
-                      >
-                        Enter The Current — R900
-                      </a>
-                    </div>
-                  </div>
-                ) : null}
               </>
             ) : null}
           </div>

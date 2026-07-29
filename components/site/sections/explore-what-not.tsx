@@ -14,7 +14,7 @@ export function ExploreWhatNot() {
 
         <div className="mt-16 grid gap-6 md:grid-cols-2">
           <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-8">
-            <p className="mb-6 text-sm uppercase tracking-[0.18em] text-zinc-500">
+            <p className="mb-6 text-sm uppercase tracking-[0.18em] text-zinc-400">
               Oremea is not
             </p>
 

@@ -1,5 +1,11 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+
 import {
   buildAdaptiveRecursiveQuestion,
+  getRememberedAdaptiveRecursiveQuestion,
+  rememberAdaptiveRecursiveQuestion,
   type CompassAreaResponse,
   type CompassGoalArea,
   type CompassRecursiveLayer,
@@ -7,18 +13,7 @@ import {
 
 import { CompassCard } from "./CompassCard";
 
-const BODY_TEXT = "text-zinc-400";
-
-const AREA_LABELS: Record<CompassGoalArea, string> = {
-  relationships: "Relationships",
-  income: "Income",
-  health: "Health",
-  spirituality: "Spirituality",
-  investments: "Investments",
-  network: "Network",
-  knowledge: "Knowledge",
-  lifestyle: "Lifestyle",
-};
+const BODY_TEXT = "text-zinc-300";
 
 export function CompassDepthIntro({
   selectedAreaLabel,
@@ -33,28 +28,13 @@ export function CompassDepthIntro({
       description={`You have chosen ${selectedAreaLabel}. Now Compass begins identifying what matters most beneath the surface of that choice.`}
     >
       <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-  Over the next seven layers, Compass will approach this goal from several
-  different angles.
-</p>
+        Over seven layers, Compass follows one thread deeper and deeper until the
+        reason beneath the goal becomes clearer.
+      </p>
 
-<p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-  Some questions may feel similar at first. This is intentional.
-</p>
-
-<p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-  Each layer is designed to reveal something different:
-  what matters,
-  what gives the goal its weight,
-  what becomes possible,
-  what you are unwilling to live without,
-  and the deeper reality your choices are pointing toward.
-</p>
-
-<p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-  The purpose of The Descent is not understanding for its own sake.
-
-  The purpose is movement.
-</p>
+      <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
+        Each answer becomes the starting point for the next question.
+      </p>
 
       <button onClick={onBegin} className="primary-button">
         Begin The Descent
@@ -80,44 +60,169 @@ export function CompassDepthFlow({
   onAnswerChange: (value: string) => void;
   onSubmitAnswer: () => void;
 }) {
+  const layerNumber = Math.min(recursiveLayers.length + 1, 7);
+  const firstAnswer = useMemo(
+    () =>
+      areaResponses.find((response) => response.area === selectedArea)?.answer ?? "",
+    [areaResponses, selectedArea],
+  );
+  const previousAnswer = recursiveLayers[recursiveLayers.length - 1]?.answer ?? "";
+  const carriedAnswer = previousAnswer || firstAnswer;
+
+  const [currentQuestion, setCurrentQuestion] = useState("");
+  const [isQuestionLoading, setIsQuestionLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadQuestion() {
+      const remembered = getRememberedAdaptiveRecursiveQuestion({
+        layer: layerNumber,
+        sourceAnswer: carriedAnswer,
+      });
+
+      if (remembered) {
+        setCurrentQuestion(remembered);
+        setIsQuestionLoading(false);
+        return;
+      }
+
+      if (!selectedArea) {
+        setCurrentQuestion(
+          buildAdaptiveRecursiveQuestion({
+            layer: layerNumber,
+            selectedAreaLabel,
+            previousAnswer,
+            firstAnswer,
+          }),
+        );
+        setIsQuestionLoading(false);
+        return;
+      }
+
+      setCurrentQuestion("");
+      setIsQuestionLoading(true);
+
+      try {
+        const response = await fetch("/api/compass/descent-question", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            layer: layerNumber,
+            selectedArea,
+            areaResponses,
+            recursiveLayers,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (cancelled) return;
+
+        const generatedQuestion =
+          response.ok && data?.ok && typeof data.question === "string"
+            ? data.question.trim()
+            : "";
+
+        const question =
+          generatedQuestion ||
+          buildAdaptiveRecursiveQuestion({
+            layer: layerNumber,
+            selectedAreaLabel,
+            previousAnswer,
+            firstAnswer,
+          });
+
+        rememberAdaptiveRecursiveQuestion({
+          layer: layerNumber,
+          sourceAnswer: carriedAnswer,
+          question,
+        });
+
+        setCurrentQuestion(question);
+      } catch (error) {
+        if (cancelled) return;
+
+        console.error("Compass Descent question failed:", error);
+
+        const fallback = buildAdaptiveRecursiveQuestion({
+          layer: layerNumber,
+          selectedAreaLabel,
+          previousAnswer,
+          firstAnswer,
+        });
+
+        rememberAdaptiveRecursiveQuestion({
+          layer: layerNumber,
+          sourceAnswer: carriedAnswer,
+          question: fallback,
+        });
+
+        setCurrentQuestion(fallback);
+      } finally {
+        if (!cancelled) setIsQuestionLoading(false);
+      }
+    }
+
+    void loadQuestion();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    areaResponses,
+    carriedAnswer,
+    firstAnswer,
+    layerNumber,
+    previousAnswer,
+    recursiveLayers,
+    selectedArea,
+    selectedAreaLabel,
+  ]);
+
   return (
     <CompassCard
-      eyebrow={`The Descent · Layer ${Math.min(recursiveLayers.length + 1, 7)} of 7`}
-      title={buildAdaptiveRecursiveQuestion({
-        layer: recursiveLayers.length + 1,
-        selectedAreaLabel,
-        previousAnswer:
-          recursiveLayers[recursiveLayers.length - 1]?.answer ?? "",
-        firstAnswer:
-          areaResponses.find((response) => response.area === selectedArea)
-            ?.answer ?? "",
-      })}
-      description={
-  recursiveLayers.length === 0
-    ? `The Descent will follow the deeper thread beneath your focus on ${selectedAreaLabel.toLowerCase()}.`
-    : ""
-}
+      eyebrow={`The Descent · Layer ${layerNumber} of 7`}
+      title=""
+      description=""
     >
+      {carriedAnswer ? (
+        <div className="rounded-[1.3rem] border border-zinc-700 bg-[#141414] p-5">
+          <p className="text-xs uppercase tracking-[0.2em] text-zinc-300">
+            You said
+          </p>
+          <p className="mt-3 whitespace-pre-line text-base leading-7 text-zinc-100 sm:text-lg">
+            {carriedAnswer}
+          </p>
+        </div>
+      ) : null}
 
-<div className="mb-4 rounded-[1.2rem] border border-[#d8b15f]/25 bg-[#17130D] p-4 text-sm leading-relaxed text-[#d8b15f]">
-  <span className="font-semibold">NB:</span> Compass is using your previous
-  answer to shape the next question.
-
-  Some questions may feel similar. This is intentional.
-
-  Compass is following the same topic from different angles to uncover the
-  deeper pattern beneath your goal.
-</div>
+      <div className="pt-2">
+        {isQuestionLoading ? (
+          <p className="font-serif text-2xl leading-tight text-zinc-100 sm:text-3xl">
+            Following the thread...
+          </p>
+        ) : (
+          <h2 className="font-serif text-3xl leading-tight text-[#d8b15f] sm:text-4xl">
+            {currentQuestion}
+          </h2>
+        )}
+      </div>
 
       <textarea
         value={recursiveAnswer}
         onChange={(event) => onAnswerChange(event.target.value)}
-        placeholder="Answer with as much specific reality as you can. What exists today, what needs attention, and what would create meaningful movement?"
+        placeholder="Answer in your own words."
         rows={7}
+        disabled={isQuestionLoading || !currentQuestion}
         className="compass-textarea"
       />
 
-      <button onClick={onSubmitAnswer} className="primary-button">
+      <button
+        onClick={onSubmitAnswer}
+        disabled={isQuestionLoading || !currentQuestion || !recursiveAnswer.trim()}
+        className="primary-button disabled:cursor-not-allowed disabled:opacity-50"
+      >
         Continue
       </button>
     </CompassCard>

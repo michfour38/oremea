@@ -1,106 +1,107 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MirrorResponseDTO } from "./mirror.service";
-import { continueResonanceDayAction } from "../resonance/actions";
+
+import {
+  completeResonanceWeekAction,
+  continueResonanceDayAction,
+} from "../resonance/actions";
 import ContinueDayButton from "../resonance/continue-day-button";
+
+type MirrorDisplay = {
+  id: string;
+  userId: string;
+  weekNumber: number;
+  dayNumber: number;
+  tier: "full";
+  output: string;
+  createdAt: string;
+};
 
 interface MirrorOutputProps {
   weekNumber: number;
   dayNumber: number;
-  liteMirrorEligible: boolean;
-  fullMirrorEligible: boolean;
-  liteMirrorUnlocked: boolean;
-  fullMirrorUnlocked: boolean;
-  mirror: Omit<MirrorResponseDTO, "inputSnapshot"> | null;
-  mirrorExerciseCompleted: boolean;
+  mirror: MirrorDisplay | null;
+  reflectionsCompleted: boolean;
+}
+
+function LoadingDots() {
+  return (
+    <span className="inline-flex items-center gap-1">
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.2s]" />
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.1s]" />
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current" />
+    </span>
+  );
+}
+
+function cleanMirrorOutput(text: string) {
+  return text
+    .replace(/\*\*The mirror shows:\*\*/gi, "")
+    .replace(/The mirror shows:/gi, "")
+    .replace(/\*\*Two questions:\*\*/gi, "")
+    .replace(/Two questions:/gi, "")
+    .trim();
 }
 
 export default function MirrorOutput({
   weekNumber,
   dayNumber,
-  fullMirrorUnlocked,
   mirror,
-  mirrorExerciseCompleted,
+  reflectionsCompleted,
 }: MirrorOutputProps) {
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [feedbackState, setFeedbackState] = useState<
-    "idle" | "saving" | "saved" | "error"
-  >("idle");
-  const [selectedFeedback, setSelectedFeedback] = useState<
-    "yes" | "not_quite" | null
-  >(null);
-  const [note, setNote] = useState("");
   const [questions, setQuestions] = useState<string[]>([]);
+  const [answerOne, setAnswerOne] = useState("");
+  const [answerTwo, setAnswerTwo] = useState("");
+  const [answersSaved, setAnswersSaved] = useState(false);
+  const [answersSaving, setAnswersSaving] = useState(false);
+  const [answersError, setAnswersError] = useState(false);
   const [questionsLoading, setQuestionsLoading] = useState(false);
   const [questionsError, setQuestionsError] = useState(false);
+  const [isGeneratingMirror, setIsGeneratingMirror] = useState(false);
 
-useEffect(() => {
-  if (fullMirrorUnlocked || questions.length > 0) return;
-
-  async function loadSavedQuestions() {
-    try {
-      const res = await fetch(
-        `/api/mirror/questions?weekNumber=${weekNumber}&dayNumber=${dayNumber}`,
-        { method: "GET" }
-      );
-
-      if (!res.ok) return;
-
-      const data = await res.json();
-
-      if (Array.isArray(data?.questions) && data.questions.length === 2) {
-        setQuestions(data.questions);
-      }
-    } catch (error) {
-      console.error("Saved 2Q load failed:", error);
-    }
-  }
-
-  loadSavedQuestions();
-}, [fullMirrorUnlocked, questions.length, weekNumber, dayNumber]);
+  const isWeekClose = dayNumber === 7;
 
   useEffect(() => {
-    if (!isGenerating) return;
+    if (!reflectionsCompleted || questions.length > 0) return;
 
-    const timer = setTimeout(() => {
-      window.location.href = `/api/mirror/generate?weekNumber=${weekNumber}&dayNumber=${dayNumber}&tier=full`;
+    async function loadSavedQuestions() {
+      try {
+        const res = await fetch(
+          `/api/mirror/questions?weekNumber=${weekNumber}&dayNumber=${dayNumber}`,
+          { method: "GET" },
+        );
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        if (Array.isArray(data?.questions) && data.questions.length === 2) {
+          setQuestions(data.questions);
+        }
+
+        if (Array.isArray(data?.answers) && data.answers.length === 2) {
+          setAnswerOne(typeof data.answers[0] === "string" ? data.answers[0] : "");
+          setAnswerTwo(typeof data.answers[1] === "string" ? data.answers[1] : "");
+        }
+
+        setAnswersSaved(data?.answered === true);
+      } catch (error) {
+        console.error("Saved 2Q load failed:", error);
+      }
+    }
+
+    void loadSavedQuestions();
+  }, [dayNumber, questions.length, reflectionsCompleted, weekNumber]);
+
+  useEffect(() => {
+    if (!isGeneratingMirror) return;
+
+    const timer = window.setTimeout(() => {
+      window.location.href = `/api/mirror/generate?weekNumber=${weekNumber}&dayNumber=7`;
     }, 350);
 
-    return () => clearTimeout(timer);
-  }, [isGenerating, weekNumber, dayNumber]);
-
-useEffect(() => {
-  if (typeof window === "undefined") return;
-
-  const params = new URLSearchParams(window.location.search);
-  const shouldGenerate = params.get("mirror") === "generate";
-
-  if (shouldGenerate && fullMirrorUnlocked && !mirror && !isGenerating) {
-    setIsGenerating(true);
-  }
-}, [fullMirrorUnlocked, mirror, isGenerating]);
-
-useEffect(() => {
-  if (typeof window === "undefined") return;
-
-  const params = new URLSearchParams(window.location.search);
-
-  const shouldGenerate = params.get("mirror") === "generate";
-
-  if (
-    shouldGenerate &&
-    fullMirrorUnlocked &&
-    !mirror &&
-    !isGenerating
-  ) {
-    setIsGenerating(true);
-  }
-}, [fullMirrorUnlocked, mirror, isGenerating]);
-
-  function startGenerate() {
-    setIsGenerating(true);
-  }
+    return () => window.clearTimeout(timer);
+  }, [isGeneratingMirror, weekNumber]);
 
   async function generateQuestions() {
     if (questionsLoading || questions.length > 0) return;
@@ -111,18 +112,24 @@ useEffect(() => {
     try {
       const res = await fetch(
         `/api/mirror/questions?weekNumber=${weekNumber}&dayNumber=${dayNumber}`,
-        { method: "POST" }
+        { method: "POST" },
       );
 
       if (!res.ok) throw new Error("Questions request failed");
 
       const data = await res.json();
-
-      if (Array.isArray(data?.questions)) {
-        setQuestions(data.questions);
-      } else {
+      if (!Array.isArray(data?.questions) || data.questions.length !== 2) {
         throw new Error("Questions response was invalid");
       }
+
+      setQuestions(data.questions);
+
+      if (Array.isArray(data?.answers) && data.answers.length === 2) {
+        setAnswerOne(typeof data.answers[0] === "string" ? data.answers[0] : "");
+        setAnswerTwo(typeof data.answers[1] === "string" ? data.answers[1] : "");
+      }
+
+      setAnswersSaved(data?.answered === true);
     } catch (error) {
       console.error("Questions generation failed:", error);
       setQuestionsError(true);
@@ -131,283 +138,188 @@ useEffect(() => {
     }
   }
 
-  async function submitFeedback(feedback: "yes" | "not_quite", customNote = "") {
-    if (feedbackState === "saving") return;
+  async function saveAnswers() {
+    if (answersSaving || !answerOne.trim() || !answerTwo.trim()) return;
 
-    setFeedbackState("saving");
-    setSelectedFeedback(feedback);
+    setAnswersSaving(true);
+    setAnswersError(false);
 
     try {
-      const res = await fetch("/api/mirror/feedback", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const res = await fetch("/api/mirror/questions", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           weekNumber,
           dayNumber,
-          feedback,
-          note: feedback === "not_quite" ? customNote : "",
+          answerOne,
+          answerTwo,
         }),
       });
 
-      if (!res.ok) throw new Error("Feedback request failed");
+      if (!res.ok) throw new Error("2Q answers could not be saved");
 
-      setFeedbackState("saved");
+      const data = await res.json();
+      if (!Array.isArray(data?.answers) || data.answers.length !== 2) {
+        throw new Error("2Q answer response was invalid");
+      }
+
+      setAnswerOne(data.answers[0]);
+      setAnswerTwo(data.answers[1]);
+      setAnswersSaved(data?.answered === true);
     } catch (error) {
-      console.error("Mirror feedback failed:", error);
-      setFeedbackState("error");
+      console.error("2Q answer save failed:", error);
+      setAnswersError(true);
+    } finally {
+      setAnswersSaving(false);
     }
   }
 
-  if (!mirrorExerciseCompleted) return null;
-
-  if (!fullMirrorUnlocked) {
-    return (
-      <div className="space-y-5 rounded-3xl border border-[#6d5b2b]/35 bg-[#17130d] px-6 py-6">
-        <div className="space-y-3">
-          <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#b6a36a]">
-            Reflection Questions
-          </p>
-
-          {questions.length > 0 ? (
-            <div className="space-y-3 text-sm leading-7 text-[#efe4c6]">
-              {questions.map((question, index) => (
-                <p key={index}>{question}</p>
-              ))}
-            </div>
-          ) : (
-            <>
-              <p className="text-sm leading-7 text-[#ddd1ad]">
-                When you’re ready, generate your two guiding questions for
-                today.
-              </p>
-
-              <button
-                type="button"
-                onClick={generateQuestions}
-                disabled={questionsLoading}
-                className="inline-block rounded-xl border border-[#8a7331]/50 bg-[#2a2210] px-4 py-2 text-sm text-[#f3e7bf] transition-colors hover:bg-[#352b15] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {questionsLoading
-                  ? "Preparing your questions..."
-                  : "Generate my 2 guiding questions"}
-              </button>
-            </>
-          )}
-
-          {questionsError ? (
-            <p className="text-xs text-red-400">
-              Couldn’t generate questions. Try again.
-            </p>
-          ) : null}
-        </div>
-
-        {questions.length > 0 ? (
-          <>
-            <p className="text-xs text-zinc-500">
-              These are drawn directly from what you’ve reflected today.
-            </p>
-
-            <div className="rounded-2xl border border-[#6d5b2b]/35 bg-black/25 p-5">
-              <div className="space-y-4">
-                <p className="text-[11px] uppercase tracking-[0.22em] text-[#c8a96a]">
-                  Mirror possibility
-                </p>
-
-                <div className="relative overflow-hidden rounded-2xl border border-[#6d5b2b]/25 bg-black/30 p-5">
-                  <div className="pointer-events-none select-none space-y-3 blur-[4px]">
-                    <p className="text-sm leading-7 text-[#efe4c6]">
-                      There is a deeper pattern forming across the way you are
-                      describing closeness, protection, and what becomes
-                      difficult to name.
-                    </p>
-
-                    <p className="text-sm leading-7 text-[#efe4c6]">
-                      The Mirror would look across your reflections to track
-                      repetition, contradiction, emotional movement, and
-                      relational meaning over time.
-                    </p>
-
-                    <p className="text-sm leading-7 text-[#efe4c6]">
-                      This is where your answers begin to become a map, not just
-                      separate moments.
-                    </p>
-
-                  </div>
-
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#17130d]/65 to-[#17130d]" />
-<a
-  href={`https://paystack.shop/pay/3utxqlehqj?email=${encodeURIComponent(window.location.href)}`}
-  className="absolute left-1/2 top-1/2 z-10 inline-flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-xl border border-[#8b6b2f]/70 bg-[#241b10]/95 px-5 py-3 text-sm text-[#f1dfb4] shadow-[0_0_30px_rgba(0,0,0,0.45)] transition hover:bg-[#2f2314]"
->
-  Unlock Mirror — R720
-</a>
-                </div>
-
-                <div className="space-y-3">
-                  
-                  <p className="text-sm leading-7 text-zinc-300">
-                    Your 2 questions point to the next layer. Mirror follows the
-                    deeper continuity across your reflections and reveals the
-                    pattern forming over time.
-                  </p>
-
-                </div>
-              </div>
-            </div>
-
-            <form
-              action={continueResonanceDayAction}
-              className="mt-5 flex justify-end"
-            >
-              <input type="hidden" name="weekNumber" value={weekNumber} />
-              <input type="hidden" name="dayNumber" value={dayNumber} />
-
-              <ContinueDayButton />
-            </form>
-          </>
-        ) : null}
-      </div>
-    );
-  }
-
-  if (fullMirrorUnlocked && !mirror) {
-    return (
-      <div className="space-y-5 rounded-3xl border border-[#6d5b2b]/35 bg-[#15120c] px-6 py-6">
-        <div className="space-y-1">
-          <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#b6a36a]">
-            Full Mirror
-          </p>
-        </div>
-
-        {!isGenerating ? (
-          <>
-            <p className="text-sm leading-7 text-[#f1e7c8]">
-              Your reflection has finished processing.
-            </p>
-
-            <button
-              type="button"
-              onClick={startGenerate}
-              className="inline-block rounded-xl border border-[#8a7331]/50 bg-[#2a2210] px-4 py-2 text-sm text-[#f3e7bf] transition-colors hover:bg-[#352b15]"
-            >
-              Enter
-            </button>
-          </>
-        ) : (
-          <div className="rounded-2xl border border-[#6d5b2b]/30 bg-[#211b10] px-4 py-4">
-            <p className="text-sm text-[#f1e7c8]">Opening your Mirror...</p>
-
-            <div className="mt-4 flex items-center gap-2">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-[#f0ddb0]" />
-              <span className="h-2 w-2 animate-pulse rounded-full bg-[#d9c089] [animation-delay:150ms]" />
-              <span className="h-2 w-2 animate-pulse rounded-full bg-[#b9974f] [animation-delay:300ms]" />
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
+  if (!reflectionsCompleted) return null;
 
   return (
-    <div className="space-y-6 rounded-3xl border border-[#6d5b2b]/35 bg-[#15120c] px-6 py-6">
-      <div className="space-y-1">
-        <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#b6a36a]">
-          Full Mirror
-        </p>
-        <p className="text-xs text-[#9f9474]">
-          Week {weekNumber} · Day {dayNumber}
-        </p>
-      </div>
-
-      <div className="space-y-4">
-        {mirror?.output
-          .replace(/\*\*The mirror shows:\*\*/gi, "")
-          .replace(/The mirror shows:/gi, "")
-          .replace(/\*\*Two questions:\*\*/gi, "")
-          .replace(/Two questions:/gi, "")
-          .trim()
-          .split("\n\n")
-          .map((paragraph, i) => (
-            <p
-              key={i}
-              className="whitespace-pre-wrap text-sm leading-7 text-[#efe4c6]"
-            >
-              {paragraph}
-            </p>
-          ))}
-      </div>
-
-      <div className="space-y-3 border-t border-zinc-800 pt-4">
-        <p className="text-xs text-zinc-500">Did this feel accurate?</p>
-
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => submitFeedback("yes")}
-            disabled={feedbackState === "saving" || feedbackState === "saved"}
-            className={`rounded-lg border px-3 py-1.5 text-xs transition-colors ${
-              selectedFeedback === "yes"
-                ? "border-[#8a7331]/60 bg-[#2a2210] text-[#f3e7bf]"
-                : "border-zinc-700 text-zinc-300 hover:border-zinc-500"
-            }`}
-          >
-            Yes
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedFeedback("not_quite");
-              setFeedbackState("idle");
-            }}
-            disabled={feedbackState === "saving" || feedbackState === "saved"}
-            className={`rounded-lg border px-3 py-1.5 text-xs transition-colors ${
-              selectedFeedback === "not_quite"
-                ? "border-[#8a7331]/60 bg-[#2a2210] text-[#f3e7bf]"
-                : "border-zinc-700 text-zinc-300 hover:border-zinc-500"
-            }`}
-          >
-            Not quite
-          </button>
+    <div className="space-y-6">
+      <section className="space-y-5 rounded-3xl border border-[#6d5b2b]/35 bg-[#17130d] px-6 py-6">
+        <div className="space-y-2">
+          <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#b6a36a]">
+            Today&apos;s 2Q
+          </p>
+          <p className="text-sm leading-7 text-[#ddd1ad]">
+            Two questions drawn directly from what you reflected today.
+          </p>
         </div>
 
-        {selectedFeedback === "not_quite" && feedbackState !== "saved" ? (
-          <div className="space-y-3">
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              rows={3}
-              placeholder="What felt off?"
-              className="w-full resize-none rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm leading-7 text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-700"
-            />
+        {questions.length === 2 ? (
+          <div className="space-y-5">
+            <div className="space-y-3">
+              <p className="text-sm leading-7 text-[#efe4c6]">{questions[0]}</p>
+              <textarea
+                value={answerOne}
+                onChange={(event) => {
+                  setAnswerOne(event.target.value);
+                  setAnswersSaved(false);
+                }}
+                rows={4}
+                placeholder="Stay with this question..."
+                className="w-full resize-none rounded-2xl border border-[#6d5b2b]/35 bg-black/35 px-4 py-3 text-sm leading-7 text-[#efe4c6] placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-[#8a7331]/50"
+              />
+            </div>
 
-            <div className="flex justify-end">
+            <div className="space-y-3">
+              <p className="text-sm leading-7 text-[#efe4c6]">{questions[1]}</p>
+              <textarea
+                value={answerTwo}
+                onChange={(event) => {
+                  setAnswerTwo(event.target.value);
+                  setAnswersSaved(false);
+                }}
+                rows={4}
+                placeholder="Stay with this question..."
+                className="w-full resize-none rounded-2xl border border-[#6d5b2b]/35 bg-black/35 px-4 py-3 text-sm leading-7 text-[#efe4c6] placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-[#8a7331]/50"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+              <div className="text-xs text-zinc-500">
+                {answersSaved ? "2Q saved" : "Answer both questions to continue."}
+              </div>
               <button
                 type="button"
-                onClick={() => submitFeedback("not_quite", note)}
-                disabled={feedbackState === "saving"}
-                className="text-xs text-zinc-400 transition-colors hover:text-zinc-200"
+                onClick={() => void saveAnswers()}
+                disabled={answersSaving || !answerOne.trim() || !answerTwo.trim()}
+                className="inline-flex min-w-[110px] items-center justify-center rounded-xl border border-[#8a7331]/50 bg-[#2a2210] px-4 py-2 text-sm text-[#f3e7bf] transition-colors hover:bg-[#352b15] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Send feedback
+                {answersSaving ? <LoadingDots /> : answersSaved ? "Saved" : "Save 2Q"}
               </button>
             </div>
           </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => void generateQuestions()}
+            disabled={questionsLoading}
+            className="inline-flex min-w-[180px] items-center justify-center rounded-xl border border-[#8a7331]/50 bg-[#2a2210] px-4 py-2 text-sm text-[#f3e7bf] transition-colors hover:bg-[#352b15] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {questionsLoading ? <LoadingDots /> : "Generate today's 2Q"}
+          </button>
+        )}
+
+        {questionsError ? (
+          <p className="text-xs text-red-400">Couldn&apos;t generate questions. Try again.</p>
         ) : null}
 
-        {feedbackState === "saved" ? (
-          <p className="text-xs text-zinc-500">
-            Thanks. That helps refine the Mirror.
-          </p>
+        {answersError ? (
+          <p className="text-xs text-red-400">Couldn&apos;t save your 2Q. Try again.</p>
         ) : null}
 
-        {feedbackState === "error" ? (
-          <p className="text-xs text-red-400">
-            Couldn’t save feedback. Try again.
-          </p>
+        {answersSaved && !isWeekClose ? (
+          <form action={continueResonanceDayAction} className="flex justify-end pt-2">
+            <input type="hidden" name="weekNumber" value={weekNumber} />
+            <input type="hidden" name="dayNumber" value={dayNumber} />
+            <ContinueDayButton />
+          </form>
         ) : null}
-      </div>
+      </section>
+
+      {answersSaved && isWeekClose ? (
+        <section className="space-y-5 rounded-3xl border border-[#6d5b2b]/35 bg-[#15120c] px-6 py-6">
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#b6a36a]">
+              Weekly Mirror
+            </p>
+            <p className="text-sm leading-7 text-[#ddd1ad]">
+              Your Mirror reflects the Resonance journey you have completed so far.
+            </p>
+          </div>
+
+          {!mirror ? (
+            !isGeneratingMirror ? (
+              <button
+                type="button"
+                onClick={() => setIsGeneratingMirror(true)}
+                className="inline-flex min-w-[150px] items-center justify-center rounded-xl border border-[#8a7331]/50 bg-[#2a2210] px-4 py-2 text-sm text-[#f3e7bf] transition-colors hover:bg-[#352b15]"
+              >
+                Open my Mirror
+              </button>
+            ) : (
+              <div className="rounded-2xl border border-[#6d5b2b]/30 bg-[#211b10] px-4 py-4">
+                <p className="text-sm text-[#f1e7c8]">Opening your Mirror...</p>
+                <div className="mt-4">
+                  <LoadingDots />
+                </div>
+              </div>
+            )
+          ) : (
+            <>
+              <div className="space-y-4">
+                {cleanMirrorOutput(mirror.output)
+                  .split("\n\n")
+                  .filter(Boolean)
+                  .map((paragraph, index) => (
+                    <p
+                      key={index}
+                      className="whitespace-pre-wrap text-sm leading-7 text-[#efe4c6]"
+                    >
+                      {paragraph}
+                    </p>
+                  ))}
+              </div>
+
+              <form
+                action={completeResonanceWeekAction}
+                className="flex justify-end border-t border-zinc-800 pt-5"
+              >
+                <input type="hidden" name="weekNumber" value={weekNumber} />
+                <button
+                  type="submit"
+                  className="min-w-[150px] rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/10"
+                >
+                  Complete week
+                </button>
+              </form>
+            </>
+          )}
+        </section>
+      ) : null}
     </div>
   );
 }

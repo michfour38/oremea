@@ -161,9 +161,17 @@ export default async function CompassAreaArchivePage({ params }: Props) {
                   key={session.id}
                   className="rounded-[2rem] border border-zinc-800/80 bg-black/40 px-6 py-7"
                 >
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-                    {formatDate(session.updated_at)}
-                  </p>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">
+                      {formatDate(session.updated_at)}
+                    </p>
+                    <Link
+                      href={`/compass/archive/session/${session.id}`}
+                      className="text-xs text-[#E7C98B] underline underline-offset-4 transition hover:text-[#f1dfb4]"
+                    >
+                      Discussion ↔ Map
+                    </Link>
+                  </div>
 
                   <div className="mt-6 space-y-6">
                     {areaAnswer ? (
@@ -215,17 +223,17 @@ export default async function CompassAreaArchivePage({ params }: Props) {
                       </p>
 
                       {session.final_step || session.proposed_step ? (
-  <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-300">
-    {session.final_step || session.proposed_step}
-  </p>
-) : (
-  <Link
-    href="/compass"
-    className="mt-3 inline-block text-sm leading-7 text-[#E7C98B] underline underline-offset-4 transition hover:text-[#f1dfb4]"
-  >
-    This Compass session ended before a Final Step was chosen.
-  </Link>
-)}
+                        <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-300">
+                          {session.final_step || session.proposed_step}
+                        </p>
+                      ) : (
+                        <Link
+                          href="/compass"
+                          className="mt-3 inline-block text-sm leading-7 text-[#E7C98B] underline underline-offset-4 transition hover:text-[#f1dfb4]"
+                        >
+                          This Compass session ended before a Final Step was chosen.
+                        </Link>
+                      )}
                     </section>
                   </div>
                 </article>

@@ -26,6 +26,26 @@
   }
 }
 
+/*
+ * Oremea products are predominantly dark surfaces. The default Tailwind zinc
+ * steps were too subdued on black, especially on phones. Keep hierarchy through
+ * size, weight, spacing, and opacity rather than making useful copy difficult to
+ * read.
+ */
+@layer utilities {
+  .text-zinc-400 {
+    color: rgb(212 212 216);
+  }
+
+  .text-zinc-500 {
+    color: rgb(190 190 199);
+  }
+
+  .text-zinc-600 {
+    color: rgb(161 161 170);
+  }
+}
+
 html,
 body {
   margin: 0;

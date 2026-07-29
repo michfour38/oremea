@@ -1,8 +1,3 @@
-import {
-  detectDependencyClusters,
-  formatAreaList,
-} from "./dependency-cluster-engine"
-
 import type { CompassAreaResponse } from "./session-types"
 
 export type CompassAreaELObservation = {
@@ -15,63 +10,18 @@ export type CompassAreaELObservation = {
 export function buildAreaELObservation(
   responses: CompassAreaResponse[],
 ): CompassAreaELObservation {
-  const clusters = detectDependencyClusters(responses)
-  const strongestCluster = clusters[0] ?? null
-
-  const leverageArea =
-    strongestCluster?.supportingAreas[0] ?? responses[0]?.area ?? null
-
-  const dependencyCluster = strongestCluster?.label ?? null
-
-  const reflection = buildReflection({
-    responses,
-    strongestCluster,
-  })
-
-  const bridgeQuestion = dependencyCluster
-    ? `Which area would create the strongest bridge between your current reality and the reality ${dependencyCluster} is helping you build?`
-    : "Which area would create the strongest bridge between your current reality and the reality you want to create?"
-
-  return {
-    dependencyCluster,
-    leverageArea,
-    bridgeQuestion,
-    reflection,
-  }
-}
-
-function buildReflection({
-  responses,
-  strongestCluster,
-}: {
-  responses: CompassAreaResponse[]
-  strongestCluster: ReturnType<typeof detectDependencyClusters>[number] | null
-}): string {
   const strongestQuotes = getUniqueAreaQuotes(responses)
 
-  if (!strongestCluster) {
-    return `
+  return {
+    dependencyCluster: null,
+    leverageArea: null,
+    bridgeQuestion: "Where do you want to begin?",
+    reflection: `
 ${strongestQuotes}
 
-Some themes appear stronger than others.
-
-A clear direction has not fully emerged yet.
-
-Where does movement create the greatest change?
-`.trim()
+These are separate things you have named as important. Some may connect as you continue; others may simply matter alongside one another.
+`.trim(),
   }
-
-  return `
-${strongestQuotes}
-
-Several of your answers appear connected through ${strongestCluster.label}.
-
-This appears across ${formatAreaList(strongestCluster.supportingAreas)}.
-
-Movement in one area can sometimes create movement across several others.
-
-Where does movement create the greatest change?
-`.trim()
 }
 
 function getUniqueAreaQuotes(

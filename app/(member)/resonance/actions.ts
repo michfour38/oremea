@@ -1,29 +1,121 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
-
+import { completeRunPrompt } from "@/src/lib/resonance/complete-run-prompt";
 import {
-  completePrompt,
-  toggleWitness,
-  toggleResonated,
-  upsertAnalysis,
-  requestAnalysisPublic,
-  withdrawAnalysisPublicRequest,
-  approveAnalysisPublic,
-  declineAnalysisPublic,
-  makeAnalysisPrivateAgain,
-} from "./resonance.service";
-
+  getRunContinuedDays,
+  getRunGuidance,
+  getRunMirror,
+  getRunPromptCompletions,
+} from "@/src/lib/resonance/resonance-run-data";
 import {
-  signalReaction,
-  signalAnalyze,
-  signalResonanceOnCompletion,
-  signalDepthAlignment,
-} from "../signals/signals.service";
+  completeResonanceRun,
+  getActiveResonanceRun,
+} from "@/src/lib/resonance/resonance-week-run";
+
+async function getCurrentActiveDay(runId: string) {
+  const completedDays = await getRunContinuedDays(runId);
+
+  for (let dayNumber = 1; dayNumber <= 7; dayNumber += 1) {
+    if (!completedDays.has(dayNumber)) return dayNumber;
+  }
+
+  return null;
+}
+
+async function assertActiveDay(
+  userId: string,
+  weekNumber: number,
+  dayNumber: number,
+) {
+  const activeRun = await getActiveResonanceRun(userId);
+
+  if (!activeRun || activeRun.weekNumber !== weekNumber) {
+    throw new Error("This Resonance week is not active.");
+  }
+
+  const currentDay = await getCurrentActiveDay(activeRun.id);
+  if (currentDay !== dayNumber) {
+    throw new Error("This Resonance day is not currently active.");
+  }
+
+  return activeRun;
+}
+
+async function assertAllDayReflectionsComplete(
+  runId: string,
+  weekNumber: number,
+  dayNumber: number,
+) {
+  const day = await prisma.resonance_days.findFirst({
+    where: {
+      day_number: dayNumber,
+      resonance_weeks: {
+        week_number: weekNumber,
+        is_published: true,
+      },
+    },
+    select: {
+      day_prompts: {
+        where: { is_published: true },
+        select: { id: true },
+      },
+    },
+  });
+
+  if (!day || day.day_prompts.length === 0) {
+    throw new Error("This Resonance day is not available.");
+  }
+
+  const promptIds = day.day_prompts.map((prompt) => prompt.id);
+  const completions = await getRunPromptCompletions(runId, promptIds);
+
+  if (promptIds.some((promptId) => !completions.has(promptId))) {
+    throw new Error("Complete today's reflections before continuing.");
+  }
+}
+
+function assertGuidanceAnswered(
+  guidance: Awaited<ReturnType<typeof getRunGuidance>>,
+) {
+  if (!guidance?.answerOne?.trim() || !guidance.answerTwo?.trim()) {
+    throw new Error("Answer both of today's 2Q before continuing.");
+  }
+}
+
+async function continueRunDay(params: {
+  runId: string;
+  userId: string;
+  weekNumber: number;
+  dayNumber: number;
+}) {
+  const { runId, userId, weekNumber, dayNumber } = params;
+
+  await prisma.$executeRaw`
+    INSERT INTO "journey_day_continues" (
+      "user_id",
+      "week_number",
+      "day_number",
+      "run_id",
+      "continued_at",
+      "created_at"
+    )
+    VALUES (
+      ${userId},
+      ${weekNumber},
+      ${dayNumber},
+      ${runId}::uuid,
+      CURRENT_TIMESTAMP,
+      CURRENT_TIMESTAMP
+    )
+    ON CONFLICT ("run_id", "day_number")
+    DO UPDATE SET "continued_at" = CURRENT_TIMESTAMP
+  `;
+}
 
 export async function submitPromptAction(formData: FormData) {
   const { userId } = await auth();
@@ -31,152 +123,44 @@ export async function submitPromptAction(formData: FormData) {
 
   const promptId = String(formData.get("promptId") ?? "");
   const response = String(formData.get("response") ?? "").trim();
-  const isShared = formData.get("isShared") === "true";
-  const pathwayTransition = String(formData.get("pathwayTransition") ?? "").trim();
 
   if (!promptId || !response) return;
 
-  await completePrompt(promptId, userId, response, isShared);
+  const prompt = await prisma.day_prompts.findUnique({
+    where: { id: promptId },
+    select: {
+      is_published: true,
+      resonance_days: {
+        select: {
+          day_number: true,
+          resonance_weeks: {
+            select: {
+              week_number: true,
+              is_published: true,
+            },
+          },
+        },
+      },
+    },
+  });
 
-  try {
-    if (pathwayTransition === "discover_to_relate") {
-      await prisma.profiles.update({
-        where: { id: userId },
-        data: { pathway: "relate" },
-      });
-    }
-
-    if (pathwayTransition === "relate_to_discover") {
-      await prisma.profiles.update({
-        where: { id: userId },
-        data: { pathway: "discover" },
-      });
-    }
-  } catch (error) {
-    console.error("Pathway update failed:", error);
+  if (!prompt?.is_published || !prompt.resonance_days.resonance_weeks.is_published) {
+    throw new Error("This Resonance reflection is not available.");
   }
 
-  try {
-    signalResonanceOnCompletion(userId, promptId, response);
-    signalDepthAlignment(userId, promptId, response);
-  } catch (error) {
-    console.error("Signal side effects failed:", error);
-  }
+  const weekNumber = prompt.resonance_days.resonance_weeks.week_number;
+  const dayNumber = prompt.resonance_days.day_number;
+  const activeRun = await assertActiveDay(userId, weekNumber, dayNumber);
 
-  revalidatePath("/resonance");
-  redirect("/resonance");
-}
-
-export async function toggleWitnessAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const completionId = String(formData.get("completionId"));
-  if (!completionId) return;
-
-  await toggleWitness(completionId, userId);
-  signalReaction(userId, completionId, "witness");
-
-  revalidatePath("/resonance");
-}
-
-export async function toggleResonatedAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const completionId = String(formData.get("completionId"));
-  if (!completionId) return;
-
-  await toggleResonated(completionId, userId);
-  signalReaction(userId, completionId, "resonated");
-
-  revalidatePath("/resonance");
-}
-
-export async function submitAnalysisAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const completionId = String(formData.get("completionId"));
-  const content = String(formData.get("content") ?? "").trim();
-
-  if (!completionId || !content) return;
-
-  await upsertAnalysis(completionId, userId, content);
-  signalAnalyze(userId, completionId);
-
-  revalidatePath("/resonance");
-}
-
-export async function requestAnalysisPublicAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const analysisId = String(formData.get("analysisId"));
-  if (!analysisId) return;
-
-  await requestAnalysisPublic(analysisId, userId);
-  revalidatePath("/resonance");
-}
-
-export async function withdrawAnalysisPublicRequestAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const analysisId = String(formData.get("analysisId"));
-  if (!analysisId) return;
-
-  await withdrawAnalysisPublicRequest(analysisId, userId);
-  revalidatePath("/resonance");
-}
-
-export async function approveAnalysisPublicAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const analysisId = String(formData.get("analysisId"));
-  if (!analysisId) return;
-
-  await approveAnalysisPublic(analysisId, userId);
-  revalidatePath("/resonance");
-}
-
-export async function declineAnalysisPublicAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const analysisId = String(formData.get("analysisId"));
-  if (!analysisId) return;
-
-  await declineAnalysisPublic(analysisId, userId);
-  revalidatePath("/resonance");
-}
-
-export async function makeAnalysisPrivateAgainAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const analysisId = String(formData.get("analysisId"));
-  if (!analysisId) return;
-
-  await makeAnalysisPrivateAgain(analysisId, userId);
-  revalidatePath("/resonance");
-}
-
-export async function updatePathwayAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const pathway = String(formData.get("pathway") ?? "").trim();
-
-  if (pathway !== "discover" && pathway !== "relate") return;
-
-  await prisma.profiles.update({
-    where: { id: userId },
-    data: { pathway },
+  await completeRunPrompt({
+    promptId,
+    userId,
+    runId: activeRun.id,
+    response,
   });
 
   revalidatePath("/resonance");
+  redirect("/resonance");
 }
 
 export async function continueResonanceDayAction(formData: FormData) {
@@ -186,26 +170,57 @@ export async function continueResonanceDayAction(formData: FormData) {
   const weekNumber = Number(formData.get("weekNumber"));
   const dayNumber = Number(formData.get("dayNumber"));
 
-  if (!weekNumber || !dayNumber) return;
+  if (!weekNumber || !dayNumber || dayNumber < 1 || dayNumber > 6) return;
 
-  await prisma.resonance_day_continues.upsert({
-    where: {
-      user_id_week_number_day_number: {
-        user_id: userId,
-        week_number: weekNumber,
-        day_number: dayNumber,
-      },
-    },
-    update: {
-      continued_at: new Date(),
-    },
-    create: {
-      user_id: userId,
-      week_number: weekNumber,
-      day_number: dayNumber,
-    },
+  const activeRun = await assertActiveDay(userId, weekNumber, dayNumber);
+  await assertAllDayReflectionsComplete(activeRun.id, weekNumber, dayNumber);
+
+  const guidance = await getRunGuidance(activeRun.id, dayNumber);
+  assertGuidanceAnswered(guidance);
+
+  await continueRunDay({
+    runId: activeRun.id,
+    userId,
+    weekNumber,
+    dayNumber,
   });
 
   revalidatePath("/resonance");
   redirect("/resonance");
+}
+
+export async function completeResonanceWeekAction(formData: FormData) {
+  const { userId } = await auth();
+  if (!userId) redirect("/sign-in");
+
+  const weekNumber = Number(formData.get("weekNumber"));
+  if (!weekNumber) return;
+
+  const activeRun = await assertActiveDay(userId, weekNumber, 7);
+  await assertAllDayReflectionsComplete(activeRun.id, weekNumber, 7);
+
+  const [guidance, mirror] = await Promise.all([
+    getRunGuidance(activeRun.id, 7),
+    getRunMirror(activeRun.id, 7),
+  ]);
+
+  assertGuidanceAnswered(guidance);
+
+  if (!mirror || mirror.tier !== "full") {
+    throw new Error("Open the weekly Mirror before completing the week.");
+  }
+
+  await continueRunDay({
+    runId: activeRun.id,
+    userId,
+    weekNumber,
+    dayNumber: 7,
+  });
+
+  await completeResonanceRun(userId, activeRun.id);
+
+  revalidatePath("/entry");
+  revalidatePath("/resonance");
+  revalidatePath("/resonance/archive");
+  redirect("/entry");
 }
