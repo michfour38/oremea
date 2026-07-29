@@ -122,6 +122,7 @@ CREATE TABLE "works_offering_capabilities" (
 
 -- Offering-scoped claim provenance
 ALTER TABLE "works_claims" ADD COLUMN "offering_id" UUID;
+DROP INDEX "works_claims_provider_id_field_is_current_idx";
 
 -- Unique indexes
 CREATE UNIQUE INDEX "works_services_key_key" ON "works_services"("key");
@@ -175,4 +176,4 @@ ALTER TABLE "works_offering_services" ADD CONSTRAINT "works_offering_services_of
 ALTER TABLE "works_offering_services" ADD CONSTRAINT "works_offering_services_service_id_fkey" FOREIGN KEY ("service_id") REFERENCES "works_services"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "works_offering_capabilities" ADD CONSTRAINT "works_offering_capabilities_offering_id_fkey" FOREIGN KEY ("offering_id") REFERENCES "works_offerings"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "works_offering_capabilities" ADD CONSTRAINT "works_offering_capabilities_capability_id_fkey" FOREIGN KEY ("capability_id") REFERENCES "works_capabilities"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "works_claims" ADD CONSTRAINT "works_claims_offering_id_fkey" FOREIGN KEY ("offering_id") REFERENCES "works_offerings"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "works_claims" ADD CONSTRAINT "works_claims_offering_id_fkey" FOREIGN KEY ("offering_id") REFERENCES "works_offerings"("id") ON DELETE SET NULL ON UPDATE CASCADE;
