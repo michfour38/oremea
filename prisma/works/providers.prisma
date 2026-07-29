@@ -29,6 +29,8 @@ model works_providers {
 
   markets works_provider_markets[]
   types   works_provider_type_links[]
+  sources works_provider_sources[]
+  claims  works_claims[]
 
   @@index([name])
   @@index([profile_status])
