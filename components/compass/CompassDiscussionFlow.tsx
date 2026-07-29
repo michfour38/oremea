@@ -29,6 +29,11 @@ type EndingResponse = {
   error?: string;
 };
 
+type LocalEndingQuestion = {
+  afterMessageCount: number;
+  content: string;
+};
+
 export function CompassDiscussionFlow({
   discussionMessages,
   discussionInput,
@@ -41,14 +46,17 @@ export function CompassDiscussionFlow({
   discussionInput: string;
   onDiscussionInputChange: (value: string) => void;
   onSend: () => void;
-  onReady: (movementInstruction: string) => void;
-  onAppendCompassMessage: (content: string) => void;
+  onReady: (movementInstruction?: string) => void;
+  onAppendCompassMessage?: (content: string) => void;
 }) {
   const [view, setView] = useState<"discussion" | "map">("discussion");
   const [endingState, setEndingState] = useState<CompassEndingState | null>(null);
   const [boundaryMessage, setBoundaryMessage] = useState<string | null>(null);
   const [endingBusy, setEndingBusy] = useState(false);
   const [endingError, setEndingError] = useState("");
+  const [localEndingQuestions, setLocalEndingQuestions] = useState<
+    LocalEndingQuestion[]
+  >([]);
 
   const currentMovement = useMemo(() => {
     if (!endingState?.currentMovementId) return null;
@@ -66,6 +74,28 @@ export function CompassDiscussionFlow({
       ) ?? [],
     [endingState],
   );
+
+  const displayMessages = useMemo(() => {
+    const output: Array<CompassDiscussionMessage & { localKey?: string }> = [];
+
+    for (let index = 0; index <= discussionMessages.length; index += 1) {
+      localEndingQuestions
+        .filter((question) => question.afterMessageCount === index)
+        .forEach((question, questionIndex) => {
+          output.push({
+            role: "compass",
+            content: question.content,
+            localKey: `ending-${index}-${questionIndex}-${question.content}`,
+          });
+        });
+
+      if (index < discussionMessages.length) {
+        output.push(discussionMessages[index]);
+      }
+    }
+
+    return output;
+  }, [discussionMessages, localEndingQuestions]);
 
   useEffect(() => {
     void loadEnding();
@@ -134,7 +164,21 @@ export function CompassDiscussionFlow({
     const latest = discussionMessages[discussionMessages.length - 1];
     if (latest?.role === "compass" && latest.content.trim() === question) return;
 
-    onAppendCompassMessage(question);
+    if (onAppendCompassMessage) {
+      onAppendCompassMessage(question);
+      return;
+    }
+
+    setLocalEndingQuestions((current) => {
+      if (current.some((item) => item.content === question)) return current;
+      return [
+        ...current,
+        {
+          afterMessageCount: discussionMessages.length,
+          content: question,
+        },
+      ];
+    });
   }
 
   async function openMap() {
@@ -268,10 +312,10 @@ export function CompassDiscussionFlow({
       {view === "discussion" ? (
         <>
           <div className="space-y-4">
-            {discussionMessages.map((message, index) => (
+            {displayMessages.map((message, index) => (
               <div
                 id={`compass-discussion-${index}`}
-                key={`${message.role}-${index}`}
+                key={message.localKey ?? `${message.role}-${index}`}
                 className={`rounded-[1.4rem] p-5 text-sm leading-relaxed ${
                   message.role === "compass"
                     ? "bg-[#12100D]"
@@ -524,7 +568,7 @@ export function CompassComplete({
   resonanceReflection: string | null;
   resonanceCtaHref: string | null;
   resonanceCtaLabel: string | null;
-  onComplete: () => void;
+  onComplete: () => void | Promise<void>;
 }) {
   return (
     <CompassCard
@@ -535,7 +579,13 @@ export function CompassComplete({
         {finalStep}
       </div>
 
-      <button onClick={onComplete} className="primary-button">
+      <button
+        onClick={async () => {
+          await onComplete();
+          window.location.href = "https://www.oremea.com";
+        }}
+        className="primary-button"
+      >
         Complete Compass
       </button>
 
