@@ -33,7 +33,7 @@ function jsonNumber(value: unknown) {
 function quantityActual(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const record = value as Record<string, unknown>;
-  const quantity = jsonNumber(record.value);
+  const quantity = jsonNumber(record.minimum) ?? jsonNumber(record.value);
   const unit = jsonString(record.unit);
   return quantity != null && unit ? { value: quantity, unit } : null;
 }
@@ -220,6 +220,21 @@ export async function getRouteSummary(briefId: string, rank = 1) {
       (item) => item.field === "packaging.fill_weight_g"
     )?.value
   );
+  const quantityMinimum = jsonNumber(
+    route.brief.requirements.find(
+      (item) => item.field === "commercial.quantity.minimum"
+    )?.value
+  );
+  const quantityPreferred = jsonNumber(
+    route.brief.requirements.find(
+      (item) => item.field === "commercial.quantity.preferred"
+    )?.value
+  );
+  const quantityMaximum = jsonNumber(
+    route.brief.requirements.find(
+      (item) => item.field === "commercial.quantity.maximum"
+    )?.value
+  );
   const quantityFlexibility = jsonString(
     route.brief.requirements.find(
       (item) => item.field === "commercial.target_quantity_flexibility"
@@ -263,6 +278,9 @@ export async function getRouteSummary(briefId: string, rank = 1) {
       route.brief.target_quantity == null
         ? null
         : Number(route.brief.target_quantity),
+    quantityMinimum,
+    quantityPreferred,
+    quantityMaximum,
     quantityUnit: route.brief.quantity_unit,
     quantityFlexibility,
     packagingFormat,
