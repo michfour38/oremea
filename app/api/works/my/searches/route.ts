@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { WorksProviderOutreachStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
@@ -15,7 +16,28 @@ export async function GET() {
     take: 100,
     include: {
       market: { select: { slug: true, name: true } },
-      brief: { select: { id: true, product_description: true, status: true } },
+      brief: {
+        select: {
+          id: true,
+          product_description: true,
+          status: true,
+          provider_outreach: {
+            where: {
+              status: {
+                in: [WorksProviderOutreachStatus.RESPONDED, WorksProviderOutreachStatus.DECLINED],
+              },
+            },
+            orderBy: { responded_at: "desc" },
+            select: {
+              id: true,
+              status: true,
+              decision: true,
+              provider: { select: { name: true, slug: true } },
+              review: { select: { id: true, status: true, rating: true } },
+            },
+          },
+        },
+      },
       procurement_request: { select: { status: true, created_at: true } },
     },
   });
@@ -35,6 +57,16 @@ export async function GET() {
           }
         : null,
       sourcingStatus: search.procurement_request?.status ?? null,
+      reviewableProviders: search.brief?.provider_outreach.map((outreach) => ({
+        outreachId: outreach.id,
+        providerName: outreach.provider.name,
+        providerSlug: outreach.provider.slug,
+        outreachStatus: outreach.status,
+        decision: outreach.decision,
+        review: outreach.review
+          ? { id: outreach.review.id, status: outreach.review.status, rating: outreach.review.rating }
+          : null,
+      })) ?? [],
     })),
   });
 }
