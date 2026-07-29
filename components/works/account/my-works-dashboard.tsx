@@ -1,6 +1,6 @@
 "use client";
 
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignInButton, SignedIn, SignedOut, UserButton, useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 
 type Search = {
@@ -18,17 +18,47 @@ function statusLabel(search: Search) {
   return search.status.replaceAll("_", " ").toLowerCase();
 }
 
+async function attachLocalSearches() {
+  const sessionSuffix = ":search-session";
+  const prefix = "oremea:works:";
+  const keys = Array.from({ length: window.localStorage.length }, (_, index) => window.localStorage.key(index))
+    .filter((key): key is string => Boolean(key && key.startsWith(prefix) && key.endsWith(sessionSuffix)));
+
+  for (const key of keys) {
+    const marketSlug = key.slice(prefix.length, -sessionSuffix.length);
+    const sessionId = window.localStorage.getItem(key);
+    const browserSessionId = window.localStorage.getItem(`${prefix}${marketSlug}:browser-session`);
+    if (!sessionId || !browserSessionId) continue;
+
+    const response = await fetch(`/api/works/search-sessions/${sessionId}/claim`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ browserSessionId }),
+    });
+
+    // A stale/missing local session should never block the rest of My WORKS.
+    if (response.status === 404) window.localStorage.removeItem(key);
+  }
+}
+
 export function MyWorksDashboard() {
+  const { isLoaded, isSignedIn } = useAuth();
   const [searches, setSearches] = useState<Search[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
     async function load() {
       try {
+        await attachLocalSearches();
         const response = await fetch("/api/works/my/searches");
-        if (response.status === 401) return;
         const data = await response.json();
         if (!response.ok) throw new Error(data?.error ?? "WORKS could not load your saved searches.");
         if (!cancelled) setSearches(data.searches ?? []);
@@ -40,7 +70,7 @@ export function MyWorksDashboard() {
     }
     load();
     return () => { cancelled = true; };
-  }, []);
+  }, [isLoaded, isSignedIn]);
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl px-5 py-8 md:px-8 md:py-12">
@@ -76,7 +106,7 @@ export function MyWorksDashboard() {
           {!loading && !error && searches.length === 0 ? (
             <div className="mt-10 rounded-3xl border border-black/10 bg-white/65 p-7">
               <p className="font-serif text-2xl">Nothing saved here yet.</p>
-              <p className="mt-3 max-w-xl text-sm leading-7 text-black/50">Anonymous searches stay on the browser that created them. When a search is attached to My WORKS, it will appear here.</p>
+              <p className="mt-3 max-w-xl text-sm leading-7 text-black/50">You can search WORKS anonymously. Open My WORKS after signing in and searches from this browser are attached to your WORKS account.</p>
             </div>
           ) : null}
 
