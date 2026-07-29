@@ -11,6 +11,7 @@ model works_offerings {
   max_run_unit              String?
   lead_time_min_days        Int?
   lead_time_max_days        Int?
+  lead_time_basis           String?
   sample_available          Boolean?
   sample_cost_amount        Decimal? @db.Decimal(14, 2)
   sample_cost_currency      String?
