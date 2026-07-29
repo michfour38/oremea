@@ -34,6 +34,7 @@ model works_providers {
   outreach            works_provider_outreach[]
   commercial_profile  works_provider_commercial_profiles?
   memberships         works_provider_memberships[]
+  public_settings     works_provider_public_settings?
   reviews             works_provider_reviews[]
 
   @@index([name])
