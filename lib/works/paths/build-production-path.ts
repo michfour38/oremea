@@ -28,6 +28,7 @@ const SERVICE_TITLES: Record<string, string> = {
   TESTING: "Testing and analysis",
   REGULATORY_SUPPORT: "Compliance and certification",
   RAW_MATERIAL_SOURCING: "Ingredients and raw materials",
+  PACKAGING_SUPPLY: "Packaging supply",
   MANUFACTURING: "Manufacturing",
   PACKAGING: "Packaging and filling",
   LABELLING: "Label application",
@@ -52,6 +53,10 @@ export function buildProductionPath(
       ["COMPLIANCE", "CERTIFICATION", "CREDENTIAL", "REGULATORY"].includes(
         requirement.requirementType
       )
+  );
+  const hasPackagingRequirement = requirements.some(
+    (requirement) =>
+      requirement.priority === "REQUIRED" && requirement.requirementType === "PACKAGING"
   );
 
   function addStep(
@@ -130,6 +135,23 @@ export function buildProductionPath(
     );
   }
 
+  if (
+    assets.has("PACKAGING") ||
+    requested.has("PACKAGING_SUPPLY") ||
+    hasPackagingRequirement
+  ) {
+    addStep(
+      "PACKAGING_SUPPLY",
+      assets.has("PACKAGING") ? "COMPLETE" : "NEEDED",
+      {
+        dependencyKeys: ["FORMULATION"],
+        notes: hasPackagingRequirement
+          ? "A required packaging format exists on this brief."
+          : undefined,
+      }
+    );
+  }
+
   const manufacturingStatus =
     input.stage === "CURRENT_MANUFACTURER" && !requested.has("MANUFACTURING")
       ? "COMPLETE"
@@ -143,11 +165,7 @@ export function buildProductionPath(
 
   addStep(
     "PACKAGING",
-    assets.has("PACKAGING")
-      ? "COMPLETE"
-      : requested.has("PACKAGING")
-        ? "NEEDED"
-        : "UNSURE",
+    requested.has("PACKAGING") ? "NEEDED" : "UNSURE",
     { dependencyKeys: ["MANUFACTURING"] }
   );
 
@@ -164,10 +182,13 @@ export function buildProductionPath(
     addStep(serviceKey, "NEEDED", {
       dependencyKeys:
         serviceKey === "PRINTING" || serviceKey === "LABELLING"
-          ? ["PACKAGING"]
+          ? ["PACKAGING_SUPPLY"]
           : ["MANUFACTURING"],
     });
   }
 
-  return steps.map((step, index) => ({ ...step, stepKey: step.stepKey || `STEP_${index + 1}` }));
+  return steps.map((step, index) => ({
+    ...step,
+    stepKey: step.stepKey || `STEP_${index + 1}`,
+  }));
 }
