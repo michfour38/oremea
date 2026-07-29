@@ -30,6 +30,7 @@ model works_offerings {
   capabilities      works_offering_capabilities[]
   packaging_formats works_offering_packaging_formats[]
   claims            works_claims[]
+  matches           works_matches[]
 
   @@unique([provider_market_id, slug])
   @@index([provider_market_id, active])
