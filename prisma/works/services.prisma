@@ -7,9 +7,10 @@ model works_services {
   created_at DateTime @default(now()) @db.Timestamptz(6)
   updated_at DateTime @updatedAt @db.Timestamptz(6)
 
-  translations works_service_translations[]
-  categories   works_service_categories[]
-  offerings    works_offering_services[]
+  translations    works_service_translations[]
+  categories      works_service_categories[]
+  offerings       works_offering_services[]
+  production_steps works_production_steps[]
 
   @@index([active, sort_order])
 }
