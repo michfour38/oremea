@@ -3,8 +3,6 @@
 import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { useEffect, useMemo, useState } from "react";
 
-import { ProviderIntelligence } from "@/components/works/provider/provider-intelligence";
-
 const SERVICES = [
   ["PRODUCT_DEVELOPMENT", "Product development"], ["FORMULATION", "Formulation / recipe work"], ["TESTING", "Testing / analysis"],
   ["REGULATORY_SUPPORT", "Compliance support"], ["RAW_MATERIAL_SOURCING", "Ingredients / materials sourcing"], ["MANUFACTURING", "Manufacturing"],
@@ -16,65 +14,113 @@ const CATEGORIES = [["FOOD", "Food"], ["BEVERAGE", "Beverage"], ["SKINCARE", "Sk
 
 type Commercial = { plan: "FREE" | "VERIFIED" | "GROWTH" | "ENTERPRISE"; marketing_opt_in: boolean; wants_more_work: boolean; capacity_status: "OPEN" | "LIMITED" | "FULL" | "PAUSED"; capacity_note: string | null; target_service_keys: string[]; target_category_keys: string[]; marketing_note: string | null; };
 type Visibility = { show_legal_name: boolean; show_website: boolean; show_email: boolean; show_phone: boolean; show_description: boolean; show_location: boolean; show_capacity: boolean; };
-type Review = { id: string; reviewer_name: string | null; reviewer_company: string | null; public_identity: boolean; rating: number; body: string; verified_brief: boolean; provider_response: string | null; created_at: string; };
-type Provider = { id: string; name: string; slug: string; legalName: string | null; website: string | null; email: string | null; phone: string | null; description: string | null; profileStatus: string; role: "OWNER" | "MANAGER"; commercial: Commercial; visibility: Visibility; reviews: Review[]; };
+type Provider = { id: string; name: string; slug: string; legalName: string | null; website: string | null; email: string | null; phone: string | null; description: string | null; profileStatus: string; role: "OWNER" | "MANAGER"; commercial: Commercial; visibility: Visibility; };
 type EditState = { name: string; legalName: string; website: string; email: string; phone: string; description: string; marketingOptIn: boolean; wantsMoreWork: boolean; capacityStatus: Commercial["capacity_status"]; capacityNote: string; marketingNote: string; targetServiceKeys: string[]; targetCategoryKeys: string[]; visibility: Visibility; };
-type Section = "profile" | "demand" | "reviews";
 
-function toEdit(provider: Provider): EditState { return { name: provider.name, legalName: provider.legalName ?? "", website: provider.website ?? "", email: provider.email ?? "", phone: provider.phone ?? "", description: provider.description ?? "", marketingOptIn: provider.commercial.marketing_opt_in, wantsMoreWork: provider.commercial.wants_more_work, capacityStatus: provider.commercial.capacity_status, capacityNote: provider.commercial.capacity_note ?? "", marketingNote: provider.commercial.marketing_note ?? "", targetServiceKeys: provider.commercial.target_service_keys, targetCategoryKeys: provider.commercial.target_category_keys, visibility: provider.visibility }; }
-function toggle(list: string[], value: string) { return list.includes(value) ? list.filter((item) => item !== value) : [...list, value]; }
+function toEdit(provider: Provider): EditState {
+  return { name: provider.name, legalName: provider.legalName ?? "", website: provider.website ?? "", email: provider.email ?? "", phone: provider.phone ?? "", description: provider.description ?? "", marketingOptIn: provider.commercial.marketing_opt_in, wantsMoreWork: provider.commercial.wants_more_work, capacityStatus: provider.commercial.capacity_status, capacityNote: provider.commercial.capacity_note ?? "", marketingNote: provider.commercial.marketing_note ?? "", targetServiceKeys: provider.commercial.target_service_keys, targetCategoryKeys: provider.commercial.target_category_keys, visibility: provider.visibility };
+}
+
+function toggle(list: string[], value: string) {
+  return list.includes(value) ? list.filter(item => item !== value) : [...list, value];
+}
 
 export function WorksProviderDashboard() {
-  const [providers, setProviders] = useState<Provider[]>([]); const [selectedId, setSelectedId] = useState<string | null>(null); const [edit, setEdit] = useState<EditState | null>(null);
-  const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [message, setMessage] = useState(""); const [error, setError] = useState("");
-  const [section, setSection] = useState<Section>("profile");
-  const selected = useMemo(() => providers.find((provider) => provider.id === selectedId) ?? null, [providers, selectedId]);
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [edit, setEdit] = useState<EditState | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const selected = useMemo(() => providers.find(provider => provider.id === selectedId) ?? null, [providers, selectedId]);
 
-  useEffect(() => { let cancelled = false; (async () => { try { const response = await fetch("/api/works/provider/me"); if (response.status === 401) return; const data = await response.json(); if (!response.ok) throw new Error(data?.error ?? "WORKS could not load this provider profile."); if (cancelled) return; const rows = (data.providers ?? []) as Provider[]; setProviders(rows); if (rows[0]) { setSelectedId(rows[0].id); setEdit(toEdit(rows[0])); } } catch (err) { if (!cancelled) setError(err instanceof Error ? err.message : "WORKS could not load this provider profile."); } finally { if (!cancelled) setLoading(false); } })(); return () => { cancelled = true; }; }, []);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await fetch("/api/works/provider/me");
+        if (response.status === 401) return;
+        const data = await response.json();
+        if (!response.ok) throw new Error(data?.error ?? "WORKS could not load this provider profile.");
+        if (cancelled) return;
+        const rows = (data.providers ?? []) as Provider[];
+        setProviders(rows);
+        if (rows[0]) { setSelectedId(rows[0].id); setEdit(toEdit(rows[0])); }
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : "WORKS could not load this provider profile.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
-  function chooseProvider(provider: Provider) { setSelectedId(provider.id); setEdit(toEdit(provider)); setSection("profile"); setMessage(""); setError(""); }
-  async function save() { if (!selected || !edit) return; try { setSaving(true); setMessage(""); setError(""); const response = await fetch("/api/works/provider/me", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ providerId: selected.id, ...edit }) }); const data = await response.json(); if (!response.ok) throw new Error(data?.error ?? "WORKS could not save these changes."); setProviders((current) => current.map((provider) => provider.id === selected.id ? { ...provider, ...data.provider, commercial: data.commercial, visibility: data.visibility } : provider)); setMessage("Updated. Your private WORKS data is saved and your public profile follows the visibility choices below."); } catch (err) { setError(err instanceof Error ? err.message : "WORKS could not save these changes."); } finally { setSaving(false); } }
+  function chooseProvider(provider: Provider) {
+    setSelectedId(provider.id);
+    setEdit(toEdit(provider));
+    setMessage("");
+    setError("");
+  }
+
+  async function save() {
+    if (!selected || !edit) return;
+    try {
+      setSaving(true);
+      setMessage("");
+      setError("");
+      const response = await fetch("/api/works/provider/me", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ providerId: selected.id, ...edit }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error ?? "WORKS could not save these changes.");
+      setProviders(current => current.map(provider => provider.id === selected.id ? { ...provider, ...data.provider, commercial: data.commercial, visibility: data.visibility } : provider));
+      setMessage("Saved.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "WORKS could not save these changes.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return <div className="mx-auto min-h-screen w-full max-w-6xl px-5 py-8 md:px-8 md:py-12">
-    <header className="flex items-center justify-between border-b border-black/10 pb-5"><div><p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#16834f]">WORKS</p><p className="mt-1 text-xs text-black/40">Provider workspace · by Oremea</p></div><SignedIn><UserButton afterSignOutUrl="/works/za" /></SignedIn></header>
-    <SignedOut><main className="py-16"><h1 className="max-w-2xl font-serif text-4xl leading-tight text-[#1f1c17] md:text-5xl">Put your available capacity to work.</h1><p className="mt-5 max-w-xl text-sm leading-6 text-black/55">Claim or sign in to your WORKS provider profile, keep your capabilities current, and tell WORKS what work you want more of.</p><SignInButton mode="modal"><button className="mt-7 rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Sign in →</button></SignInButton></main></SignedOut>
-    <SignedIn>{loading ? <p className="py-12 text-sm text-black/40">Loading provider workspace…</p> : providers.length === 0 ? <main className="py-16"><h1 className="font-serif text-4xl text-[#1f1c17]">Your WORKS account is ready.</h1><p className="mt-4 max-w-xl text-sm leading-6 text-black/55">A provider profile still needs to be claimed or connected to this account.</p></main> : selected && edit ? <main className="py-10 md:py-14">
-      {providers.length > 1 ? <div className="mb-8 flex flex-wrap gap-2">{providers.map((provider) => <button key={provider.id} type="button" onClick={() => chooseProvider(provider)} className={`rounded-full border px-4 py-2 text-sm ${selected.id === provider.id ? "border-[#1f1c17] bg-[#1f1c17] text-white" : "border-black/15 bg-white"}`}>{provider.name}</button>)}</div> : null}
+    <header className="flex items-center justify-between border-b border-black/10 pb-5">
+      <div><p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#16834f]">WORKS</p><p className="mt-1 text-xs text-black/40">Provider workspace · by Oremea</p></div>
+      <SignedIn><UserButton afterSignOutUrl="/works/za" /></SignedIn>
+    </header>
+
+    <SignedOut><main className="py-16"><h1 className="max-w-2xl font-serif text-4xl leading-tight text-[#1f1c17] md:text-5xl">Put your available capacity to work.</h1><p className="mt-5 max-w-xl text-sm leading-6 text-black/55">Sign in to manage your WORKS provider profile.</p><SignInButton mode="modal"><button className="mt-7 rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Sign in →</button></SignInButton></main></SignedOut>
+
+    <SignedIn>{loading ? <p className="py-12 text-sm text-black/40">Loading provider workspace…</p> : providers.length === 0 ? <main className="py-16"><h1 className="font-serif text-4xl text-[#1f1c17]">Your WORKS account is ready.</h1><p className="mt-4 max-w-xl text-sm leading-6 text-black/55">Connect or add a provider profile to continue.</p><div className="mt-6 flex flex-wrap gap-3"><a href="/works/providers/new" className="rounded-full bg-[#1f1c17] px-5 py-2.5 text-sm text-white">Add your business →</a><a href="/works/providers/claim" className="rounded-full border border-black/15 bg-white px-5 py-2.5 text-sm">Find your business →</a></div></main> : selected && edit ? <main className="py-10 md:py-14">
+      {providers.length > 1 ? <div className="mb-8 flex flex-wrap gap-2">{providers.map(provider => <button key={provider.id} type="button" onClick={() => chooseProvider(provider)} className={`rounded-full border px-4 py-2 text-sm ${selected.id === provider.id ? "border-[#1f1c17] bg-[#1f1c17] text-white" : "border-black/15 bg-white"}`}>{provider.name}</button>)}</div> : null}
 
       <div className="flex flex-wrap items-end justify-between gap-5 border-b border-black/10 pb-6">
-        <div><p className="text-xs uppercase tracking-[0.18em] text-black/40">{selected.commercial.plan} plan</p><h1 className="mt-2 font-serif text-4xl text-[#1f1c17]">{selected.name}</h1></div>
-        <div className="flex flex-wrap gap-3"><a href={`/works/providers/${selected.slug}`} className="rounded-full border border-black/15 bg-white px-4 py-2 text-sm">Public profile →</a><a href="/works/provider/inbox" className="rounded-full bg-[#1f1c17] px-4 py-2 text-sm text-white">Provider inbox →</a></div>
+        <div><p className="text-xs uppercase tracking-[0.18em] text-black/40">{selected.commercial.plan} plan</p><h1 className="mt-2 font-serif text-4xl text-[#1f1c17]">Profile & capacity</h1><p className="mt-2 text-sm text-black/45">{selected.name}</p></div>
+        <div className="flex flex-wrap gap-3"><a href="/works/provider/inbox" className="text-sm underline underline-offset-4">Inbox</a><a href="/works/provider/insights" className="text-sm underline underline-offset-4">Demand insights</a><a href="/works/provider/reviews" className="text-sm underline underline-offset-4">Reviews</a><a href={`/works/providers/${selected.slug}`} className="text-sm underline underline-offset-4">Public profile</a></div>
       </div>
 
-      <nav className="mt-6 flex flex-wrap gap-2" aria-label="Provider workspace sections">
-        {([["profile","Profile & capacity"],["demand","Demand insights"],["reviews","Reviews"]] as const).map(([key,label]) => <button key={key} type="button" onClick={() => setSection(key)} className={`rounded-full border px-4 py-2 text-sm ${section === key ? "border-[#1f1c17] bg-[#1f1c17] text-white" : "border-black/15 bg-white"}`}>{label}</button>)}
-      </nav>
-
-      {section === "profile" ? <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1.35fr]">
+      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1.35fr]">
         <section className="space-y-5">
-          <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><div className="flex items-center justify-between gap-4"><p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Business profile</p><span className="text-xs text-black/35">Editable</span></div><div className="mt-4 grid gap-3">
-            <input value={edit.name} onChange={(e) => setEdit(v => v ? {...v,name:e.target.value}:v)} placeholder="Business name" className="rounded-xl border border-black/10 bg-white px-4 py-3" />
-            <input value={edit.legalName} onChange={(e) => setEdit(v => v ? {...v,legalName:e.target.value}:v)} placeholder="Legal name (optional)" className="rounded-xl border border-black/10 bg-white px-4 py-3" />
-            <input value={edit.website} onChange={(e) => setEdit(v => v ? {...v,website:e.target.value}:v)} placeholder="Website" className="rounded-xl border border-black/10 bg-white px-4 py-3" />
-            <div className="grid gap-3 sm:grid-cols-2"><input value={edit.email} onChange={(e) => setEdit(v => v ? {...v,email:e.target.value}:v)} placeholder="Contact email" className="rounded-xl border border-black/10 bg-white px-4 py-3" /><input value={edit.phone} onChange={(e) => setEdit(v => v ? {...v,phone:e.target.value}:v)} placeholder="Phone" className="rounded-xl border border-black/10 bg-white px-4 py-3" /></div>
-            <textarea value={edit.description} onChange={(e) => setEdit(v => v ? {...v,description:e.target.value}:v)} rows={5} placeholder="Describe what you make, who you serve and what makes your operation useful to founders." className="resize-none rounded-xl border border-black/10 bg-white px-4 py-3 text-sm leading-6" />
-          </div></div>
-          <div className="rounded-3xl border border-black/10 bg-[#f7f7f3] p-6"><p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Public visibility</p><p className="mt-2 text-xs leading-5 text-black/45">Business name and published reviews are public trust information. Everything below is your choice.</p><div className="mt-4 grid gap-2 sm:grid-cols-2">{[["show_description","Description"],["show_website","Website"],["show_email","Email"],["show_phone","Phone"],["show_legal_name","Legal name"],["show_location","Location"],["show_capacity","Capacity status"]].map(([key,label]) => <label key={key} className="flex items-center gap-3 rounded-xl border border-black/8 bg-white px-4 py-3 text-sm"><input type="checkbox" checked={edit.visibility[key as keyof Visibility]} onChange={(e)=>setEdit(v=>v?{...v,visibility:{...v.visibility,[key]:e.target.checked}}:v)} />{label}</label>)}</div></div>
-          <div className="rounded-2xl border border-black/10 bg-white/65 p-5"><p className="text-sm font-medium">Current capacity</p><div className="mt-3 flex flex-wrap gap-2">{(["OPEN","LIMITED","FULL","PAUSED"] as const).map(status => <button key={status} type="button" onClick={() => setEdit(v => v ? {...v,capacityStatus:status}:v)} className={`rounded-full border px-4 py-2 text-sm ${edit.capacityStatus===status?"border-[#1f1c17] bg-[#1f1c17] text-white":"border-black/15 bg-white"}`}>{status.charAt(0)+status.slice(1).toLowerCase()}</button>)}</div><textarea value={edit.capacityNote} onChange={(e)=>setEdit(v=>v?{...v,capacityNote:e.target.value}:v)} rows={3} placeholder="Timing, line availability, constraints…" className="mt-4 w-full resize-none rounded-xl border border-black/10 bg-white px-4 py-3 text-sm" /><p className="mt-2 text-xs text-black/35">Private inside WORKS.</p></div>
-          <label className="flex items-start gap-3 rounded-2xl border border-black/10 bg-white/65 p-5"><input type="checkbox" checked={edit.wantsMoreWork} onChange={e=>setEdit(v=>v?{...v,wantsMoreWork:e.target.checked}:v)} className="mt-1"/><span><span className="block text-sm font-medium">We want more work</span><span className="mt-1 block text-xs leading-5 text-black/45">Private demand signal for WORKS.</span></span></label>
-          <label className="flex items-start gap-3 rounded-2xl border border-black/10 bg-white/65 p-5"><input type="checkbox" checked={edit.marketingOptIn} onChange={e=>setEdit(v=>v?{...v,marketingOptIn:e.target.checked}:v)} className="mt-1"/><span><span className="block text-sm font-medium">Actively market our capabilities</span><span className="mt-1 block text-xs leading-5 text-black/45">Private instruction to WORKS.</span></span></label>
-        </section>
-        <section className="space-y-7">
-          <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Work you want more of</p><div className="mt-4 flex flex-wrap gap-2">{SERVICES.map(([key,label])=><button key={key} type="button" onClick={()=>setEdit(v=>v?{...v,targetServiceKeys:toggle(v.targetServiceKeys,key)}:v)} className={`rounded-full border px-4 py-2.5 text-sm ${edit.targetServiceKeys.includes(key)?"border-[#1f1c17] bg-[#1f1c17] text-white":"border-black/15 bg-white"}`}>{label}</button>)}</div><p className="mt-3 text-xs text-black/35">Private demand-generation signal.</p></div>
-          <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Product categories</p><div className="mt-4 flex flex-wrap gap-2">{CATEGORIES.map(([key,label])=><button key={key} type="button" onClick={()=>setEdit(v=>v?{...v,targetCategoryKeys:toggle(v.targetCategoryKeys,key)}:v)} className={`rounded-full border px-4 py-2.5 text-sm ${edit.targetCategoryKeys.includes(key)?"border-[#1f1c17] bg-[#1f1c17] text-white":"border-black/15 bg-white"}`}>{label}</button>)}</div><p className="mt-3 text-xs text-black/35">Private demand-generation signal.</p></div>
-          <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><label className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Anything specific WORKS should market?</label><textarea value={edit.marketingNote} onChange={e=>setEdit(v=>v?{...v,marketingNote:e.target.value}:v)} rows={4} placeholder="Private-label sauces, 500–5,000 unit skincare runs, capacity September–November…" className="mt-4 w-full resize-none rounded-xl border border-black/10 bg-white px-4 py-3 text-sm leading-6"/><p className="mt-2 text-xs text-black/35">Private inside WORKS. Customers never see this note.</p></div>
-          {message?<p className="rounded-2xl bg-[#eef7f1] p-4 text-sm leading-6">{message}</p>:null}{error?<p className="text-sm text-red-700">{error}</p>:null}<button type="button" onClick={save} disabled={saving} className="rounded-full bg-[#1f1c17] px-6 py-3 text-sm font-medium text-white disabled:opacity-50">{saving?"Saving…":"Save profile & capacity →"}</button>
-        </section>
-      </div> : null}
+          <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Business profile</p><div className="mt-4 grid gap-3"><input value={edit.name} onChange={event => setEdit(value => value ? { ...value, name: event.target.value } : value)} placeholder="Business name" className="rounded-xl border border-black/10 bg-white px-4 py-3" /><input value={edit.legalName} onChange={event => setEdit(value => value ? { ...value, legalName: event.target.value } : value)} placeholder="Legal name (optional)" className="rounded-xl border border-black/10 bg-white px-4 py-3" /><input value={edit.website} onChange={event => setEdit(value => value ? { ...value, website: event.target.value } : value)} placeholder="Website" className="rounded-xl border border-black/10 bg-white px-4 py-3" /><div className="grid gap-3 sm:grid-cols-2"><input value={edit.email} onChange={event => setEdit(value => value ? { ...value, email: event.target.value } : value)} placeholder="Contact email" className="rounded-xl border border-black/10 bg-white px-4 py-3" /><input value={edit.phone} onChange={event => setEdit(value => value ? { ...value, phone: event.target.value } : value)} placeholder="Phone" className="rounded-xl border border-black/10 bg-white px-4 py-3" /></div><textarea value={edit.description} onChange={event => setEdit(value => value ? { ...value, description: event.target.value } : value)} rows={5} placeholder="Describe what you make and who you serve." className="resize-none rounded-xl border border-black/10 bg-white px-4 py-3 text-sm leading-6" /></div></div>
 
-      {section === "demand" ? <section className="mt-8 max-w-4xl"><div className="mb-6"><p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Demand insights</p><h2 className="mt-2 font-serif text-3xl text-[#1f1c17]">What WORKS is seeing around your capabilities</h2><p className="mt-3 max-w-2xl text-sm leading-7 text-black/50">A separate private view for aggregated opportunity signals. Customer briefs and identities stay out of this view.</p></div><ProviderIntelligence key={selected.id} providerId={selected.id} /></section> : null}
+          <div className="rounded-3xl border border-black/10 bg-[#f7f7f3] p-6"><p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Public visibility</p><p className="mt-2 text-xs leading-5 text-black/45">Choose what customers can see.</p><div className="mt-4 grid gap-2 sm:grid-cols-2">{[["show_description","Description"],["show_website","Website"],["show_email","Email"],["show_phone","Phone"],["show_legal_name","Legal name"],["show_location","Location"],["show_capacity","Capacity status"]].map(([key,label]) => <label key={key} className="flex items-center gap-3 rounded-xl border border-black/8 bg-white px-4 py-3 text-sm"><input type="checkbox" checked={edit.visibility[key as keyof Visibility]} onChange={event => setEdit(value => value ? { ...value, visibility: { ...value.visibility, [key]: event.target.checked } } : value)} />{label}</label>)}</div></div>
 
-      {section === "reviews" ? <section className="mt-8 max-w-3xl"><div className="rounded-3xl border border-black/10 bg-white/70 p-6"><div className="flex items-end justify-between gap-4"><div><p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Customer reviews</p><p className="mt-2 text-sm text-black/50">Published feedback about your business. Reviewer identity is private unless the customer chooses to publish it.</p></div><span className="text-sm text-black/40">{selected.reviews.length}</span></div>{selected.reviews.length ? <div className="mt-5 space-y-4">{selected.reviews.map(review=><article key={review.id} className="border-t border-black/8 pt-4 first:border-0 first:pt-0"><p className="text-sm">{"★".repeat(review.rating)}<span className="text-black/15">{"★".repeat(5-review.rating)}</span></p><p className="mt-2 text-sm leading-6">{review.body}</p><p className="mt-2 text-xs text-black/40">{review.public_identity ? (review.reviewer_name ?? "WORKS customer") : "WORKS customer"}{review.public_identity && review.reviewer_company?` · ${review.reviewer_company}`:""}{review.verified_brief?" · Verified WORKS brief":""}</p></article>)}</div> : <p className="mt-5 text-sm text-black/40">Reviews from completed WORKS production relationships will appear here.</p>}</div></section> : null}
+          <div className="rounded-2xl border border-black/10 bg-white/65 p-5"><p className="text-sm font-medium">Current capacity</p><div className="mt-3 flex flex-wrap gap-2">{(["OPEN","LIMITED","FULL","PAUSED"] as const).map(status => <button key={status} type="button" onClick={() => setEdit(value => value ? { ...value, capacityStatus: status } : value)} className={`rounded-full border px-4 py-2 text-sm ${edit.capacityStatus === status ? "border-[#1f1c17] bg-[#1f1c17] text-white" : "border-black/15 bg-white"}`}>{status.charAt(0) + status.slice(1).toLowerCase()}</button>)}</div><textarea value={edit.capacityNote} onChange={event => setEdit(value => value ? { ...value, capacityNote: event.target.value } : value)} rows={3} placeholder="Timing, line availability, constraints…" className="mt-4 w-full resize-none rounded-xl border border-black/10 bg-white px-4 py-3 text-sm" /><p className="mt-2 text-xs text-black/35">Private inside WORKS.</p></div>
+        </section>
+
+        <section className="space-y-5">
+          <label className="flex items-start gap-3 rounded-2xl border border-black/10 bg-white/65 p-5"><input type="checkbox" checked={edit.wantsMoreWork} onChange={event => setEdit(value => value ? { ...value, wantsMoreWork: event.target.checked } : value)} className="mt-1"/><span><span className="block text-sm font-medium">We want more work</span><span className="mt-1 block text-xs leading-5 text-black/45">Private signal to WORKS.</span></span></label>
+          <label className="flex items-start gap-3 rounded-2xl border border-black/10 bg-white/65 p-5"><input type="checkbox" checked={edit.marketingOptIn} onChange={event => setEdit(value => value ? { ...value, marketingOptIn: event.target.checked } : value)} className="mt-1"/><span><span className="block text-sm font-medium">Actively market our capabilities</span><span className="mt-1 block text-xs leading-5 text-black/45">Private instruction to WORKS.</span></span></label>
+
+          <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Work you want more of</p><div className="mt-4 flex flex-wrap gap-2">{SERVICES.map(([key,label]) => <button key={key} type="button" onClick={() => setEdit(value => value ? { ...value, targetServiceKeys: toggle(value.targetServiceKeys, key) } : value)} className={`rounded-full border px-4 py-2.5 text-sm ${edit.targetServiceKeys.includes(key) ? "border-[#1f1c17] bg-[#1f1c17] text-white" : "border-black/15 bg-white"}`}>{label}</button>)}</div></div>
+
+          <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Product categories</p><div className="mt-4 flex flex-wrap gap-2">{CATEGORIES.map(([key,label]) => <button key={key} type="button" onClick={() => setEdit(value => value ? { ...value, targetCategoryKeys: toggle(value.targetCategoryKeys, key) } : value)} className={`rounded-full border px-4 py-2.5 text-sm ${edit.targetCategoryKeys.includes(key) ? "border-[#1f1c17] bg-[#1f1c17] text-white" : "border-black/15 bg-white"}`}>{label}</button>)}</div></div>
+
+          <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><label className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Anything specific WORKS should market?</label><textarea value={edit.marketingNote} onChange={event => setEdit(value => value ? { ...value, marketingNote: event.target.value } : value)} rows={4} placeholder="Private-label sauces, 500–5,000 unit skincare runs…" className="mt-4 w-full resize-none rounded-xl border border-black/10 bg-white px-4 py-3 text-sm leading-6" /><p className="mt-2 text-xs text-black/35">Private inside WORKS.</p></div>
+
+          {message ? <p className="rounded-2xl bg-[#eef7f1] p-4 text-sm">{message}</p> : null}
+          {error ? <p className="text-sm text-red-700">{error}</p> : null}
+          <button type="button" onClick={save} disabled={saving} className="rounded-full bg-[#1f1c17] px-6 py-3 text-sm font-medium text-white disabled:opacity-50">{saving ? "Saving…" : "Save profile & capacity →"}</button>
+        </section>
+      </div>
     </main> : null}</SignedIn>
   </div>;
 }
