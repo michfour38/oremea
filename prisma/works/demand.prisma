@@ -1,0 +1,103 @@
+enum WorksRequirementPriority {
+  REQUIRED
+  PREFERRED
+  OPTIONAL
+}
+
+enum WorksProductionStepStatus {
+  COMPLETE
+  NEEDED
+  UNSURE
+  NOT_APPLICABLE
+}
+
+enum WorksProductionStepSource {
+  SYSTEM_GENERATED
+  USER_ADDED
+  SUPPLIER_RECOMMENDED
+}
+
+model works_product_briefs {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  market_id           String   @db.Uuid
+  category_id         String?  @db.Uuid
+  product_description String
+  product_type        String?
+  stage               String?
+  target_quantity     Decimal? @db.Decimal(14, 3)
+  quantity_unit       String?
+  location_preference String?
+  administrative_area String?
+  timeline_date       DateTime? @db.Date
+  contact_email       String?
+  status              String   @default("DRAFT")
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime @updatedAt @db.Timestamptz(6)
+
+  market       works_markets           @relation(fields: [market_id], references: [id], onDelete: Cascade)
+  category     works_categories?       @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  requirements works_requirements[]
+  paths        works_production_paths[]
+
+  @@index([market_id, status])
+  @@index([category_id])
+  @@index([administrative_area])
+  @@index([created_at])
+}
+
+model works_requirements {
+  id               String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  brief_id         String                   @db.Uuid
+  requirement_type String
+  field            String
+  value            Json
+  display_value    String?
+  priority         WorksRequirementPriority @default(REQUIRED)
+  created_at       DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime                 @updatedAt @db.Timestamptz(6)
+
+  brief works_product_briefs @relation(fields: [brief_id], references: [id], onDelete: Cascade)
+
+  @@index([brief_id])
+  @@index([brief_id, field])
+  @@index([brief_id, priority])
+  @@index([requirement_type])
+}
+
+model works_production_paths {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  brief_id   String   @db.Uuid
+  version    Int      @default(1)
+  is_current Boolean  @default(true)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  brief works_product_briefs    @relation(fields: [brief_id], references: [id], onDelete: Cascade)
+  steps works_production_steps[]
+
+  @@unique([brief_id, version])
+  @@index([brief_id, is_current])
+}
+
+model works_production_steps {
+  id              String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  path_id         String                    @db.Uuid
+  service_id      String?                   @db.Uuid
+  step_key        String?
+  title           String
+  position        Int
+  status          WorksProductionStepStatus @default(NEEDED)
+  source          WorksProductionStepSource @default(SYSTEM_GENERATED)
+  dependency_keys String[]                  @default([])
+  notes           String?
+  created_at      DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime                  @updatedAt @db.Timestamptz(6)
+
+  path    works_production_paths @relation(fields: [path_id], references: [id], onDelete: Cascade)
+  service works_services?        @relation(fields: [service_id], references: [id], onDelete: SetNull)
+
+  @@index([path_id, position])
+  @@index([service_id])
+  @@index([status])
+  @@index([source])
+}
