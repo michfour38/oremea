@@ -5,18 +5,19 @@ enum WorksProviderReviewStatus {
 }
 
 model works_provider_reviews {
-  id                 String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  provider_id        String                    @db.Uuid
-  reviewer_name      String
-  reviewer_company   String?
-  rating             Int
-  body               String
-  verified_brief     Boolean                   @default(false)
-  status             WorksProviderReviewStatus @default(PENDING)
-  provider_response  String?
-  provider_replied_at DateTime?                @db.Timestamptz(6)
-  created_at         DateTime                  @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime                  @updatedAt @db.Timestamptz(6)
+  id                  String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider_id         String                    @db.Uuid
+  reviewer_name       String?
+  reviewer_company    String?
+  public_identity     Boolean                   @default(false)
+  rating              Int
+  body                String
+  verified_brief      Boolean                   @default(false)
+  status              WorksProviderReviewStatus @default(PENDING)
+  provider_response   String?
+  provider_replied_at DateTime?                 @db.Timestamptz(6)
+  created_at          DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime                  @updatedAt @db.Timestamptz(6)
 
   provider works_providers @relation(fields: [provider_id], references: [id], onDelete: Cascade)
 
