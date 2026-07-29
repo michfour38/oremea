@@ -140,15 +140,14 @@ export default async function CompassAreaArchivePage({ params }: Props) {
           </h1>
 
           <p className="mt-6 max-w-2xl text-base leading-8 text-zinc-400">
-            Compass sessions where you reflected on {areaLabel}, whether or not
-            it became the final selected direction.
+            Compass runs that included a {areaLabel} goal or direction.
           </p>
         </div>
 
         <div className="mt-10 space-y-6">
           {filteredSessions.length === 0 ? (
             <div className="rounded-3xl border border-zinc-800/80 bg-black/40 px-6 py-6 text-sm text-zinc-400">
-              No Compass reflections have been archived for {areaLabel} yet.
+              No Compass runs have been archived for {areaLabel} yet.
             </div>
           ) : (
             filteredSessions.map((session) => {
@@ -177,7 +176,7 @@ export default async function CompassAreaArchivePage({ params }: Props) {
                     {areaAnswer ? (
                       <section>
                         <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
-                          {areaLabel} Reflection
+                          {areaLabel} goal
                         </p>
 
                         <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-300">
@@ -189,7 +188,7 @@ export default async function CompassAreaArchivePage({ params }: Props) {
                     {layers.length > 0 ? (
                       <section>
                         <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
-                          Core Reality
+                          Where the Descent arrived
                         </p>
 
                         <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-300">
@@ -201,7 +200,7 @@ export default async function CompassAreaArchivePage({ params }: Props) {
                     {possibilities.length > 0 ? (
                       <section>
                         <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
-                          Possibility
+                          What became possible
                         </p>
 
                         <div className="mt-3 space-y-3">
@@ -219,7 +218,7 @@ export default async function CompassAreaArchivePage({ params }: Props) {
 
                     <section className="rounded-2xl border border-[#3A3224] bg-[#17130D] px-5 py-5">
                       <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
-                        Final Step
+                        Chosen next movement
                       </p>
 
                       {session.final_step || session.proposed_step ? (
@@ -231,7 +230,9 @@ export default async function CompassAreaArchivePage({ params }: Props) {
                           href="/compass"
                           className="mt-3 inline-block text-sm leading-7 text-[#E7C98B] underline underline-offset-4 transition hover:text-[#f1dfb4]"
                         >
-                          This Compass session ended before a Final Step was chosen.
+                          {session.status === "active"
+                            ? "This Compass is still active and has not chosen a next movement yet."
+                            : "This Compass closed before a next movement was chosen."}
                         </Link>
                       )}
                     </section>
