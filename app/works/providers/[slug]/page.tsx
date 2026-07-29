@@ -2,10 +2,21 @@ import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 
+const DEFAULT_VISIBILITY = {
+  show_legal_name: false,
+  show_website: true,
+  show_email: false,
+  show_phone: false,
+  show_description: true,
+  show_location: false,
+  show_capacity: false,
+};
+
 export default async function WorksProviderPublicProfile({ params }: { params: { slug: string } }) {
   const provider = await prisma.works_providers.findUnique({
     where: { slug: params.slug },
     include: {
+      public_settings: true,
       commercial_profile: true,
       markets: { where: { active: true }, include: { market: true } },
       reviews: { where: { status: "PUBLISHED" }, orderBy: { created_at: "desc" }, take: 30 },
@@ -14,6 +25,7 @@ export default async function WorksProviderPublicProfile({ params }: { params: {
 
   if (!provider || provider.profile_status === "ARCHIVED") notFound();
 
+  const visibility = provider.public_settings ?? DEFAULT_VISIBILITY;
   const reviews = provider.reviews;
   const average = reviews.length ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : null;
 
@@ -29,20 +41,20 @@ export default async function WorksProviderPublicProfile({ params }: { params: {
           <div>
             <p className="text-xs uppercase tracking-[0.18em] text-black/40">{provider.profile_status === "ACTIVE" ? "Active provider" : "WORKS provider"}</p>
             <h1 className="mt-2 font-serif text-4xl text-[#1f1c17] md:text-5xl">{provider.name}</h1>
-            {provider.legal_name && provider.legal_name !== provider.name ? <p className="mt-2 text-sm text-black/40">{provider.legal_name}</p> : null}
+            {visibility.show_legal_name && provider.legal_name && provider.legal_name !== provider.name ? <p className="mt-2 text-sm text-black/40">{provider.legal_name}</p> : null}
           </div>
-          {provider.commercial_profile?.capacity_status ? <span className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm text-black/60">Capacity · {provider.commercial_profile.capacity_status.toLowerCase()}</span> : null}
+          {visibility.show_capacity && provider.commercial_profile?.capacity_status ? <span className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm text-black/60">Capacity · {provider.commercial_profile.capacity_status.toLowerCase()}</span> : null}
         </div>
 
-        {provider.description ? <p className="mt-7 max-w-3xl text-base leading-8 text-black/65">{provider.description}</p> : <p className="mt-7 max-w-3xl text-sm leading-6 text-black/40">This provider is still completing its public WORKS profile.</p>}
+        {visibility.show_description ? (provider.description ? <p className="mt-7 max-w-3xl text-base leading-8 text-black/65">{provider.description}</p> : <p className="mt-7 max-w-3xl text-sm leading-6 text-black/40">This provider is still completing its public WORKS profile.</p>) : null}
 
         <div className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-          {provider.website ? <a href={provider.website} target="_blank" rel="noreferrer" className="underline underline-offset-4">Website ↗</a> : null}
-          {provider.email ? <a href={`mailto:${provider.email}`} className="underline underline-offset-4">Email</a> : null}
-          {provider.phone ? <span className="text-black/55">{provider.phone}</span> : null}
+          {visibility.show_website && provider.website ? <a href={provider.website} target="_blank" rel="noreferrer" className="underline underline-offset-4">Website ↗</a> : null}
+          {visibility.show_email && provider.email ? <a href={`mailto:${provider.email}`} className="underline underline-offset-4">Email</a> : null}
+          {visibility.show_phone && provider.phone ? <span className="text-black/55">{provider.phone}</span> : null}
         </div>
 
-        {provider.markets.length ? <div className="mt-8 flex flex-wrap gap-2">{provider.markets.map((entry) => <span key={entry.id} className="rounded-full border border-black/10 bg-white/70 px-4 py-2 text-xs text-black/50">{entry.locality ?? entry.administrative_area ?? entry.market.name}</span>)}</div> : null}
+        {visibility.show_location && provider.markets.length ? <div className="mt-8 flex flex-wrap gap-2">{provider.markets.map((entry) => <span key={entry.id} className="rounded-full border border-black/10 bg-white/70 px-4 py-2 text-xs text-black/50">{entry.locality ?? entry.administrative_area ?? entry.market.name}</span>)}</div> : null}
       </section>
 
       <section className="border-t border-black/10 py-10">
