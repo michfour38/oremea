@@ -1,0 +1,43 @@
+model works_provider_types {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key        String   @unique
+  sort_order Int      @default(0)
+  active     Boolean  @default(true)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  translations works_provider_type_translations[]
+  providers    works_provider_type_links[]
+
+  @@index([active, sort_order])
+}
+
+model works_provider_type_translations {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider_type_id String   @db.Uuid
+  locale_id        String   @db.Uuid
+  name             String
+  description      String?
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime @updatedAt @db.Timestamptz(6)
+
+  provider_type works_provider_types @relation(fields: [provider_type_id], references: [id], onDelete: Cascade)
+  locale        works_locales        @relation(fields: [locale_id], references: [id], onDelete: Cascade)
+
+  @@unique([provider_type_id, locale_id])
+  @@index([locale_id])
+}
+
+model works_provider_type_links {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider_id      String   @db.Uuid
+  provider_type_id String   @db.Uuid
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+
+  provider      works_providers      @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+  provider_type works_provider_types @relation(fields: [provider_type_id], references: [id], onDelete: Cascade)
+
+  @@unique([provider_id, provider_type_id])
+  @@index([provider_id])
+  @@index([provider_type_id])
+}
