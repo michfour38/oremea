@@ -34,6 +34,7 @@ export function CompassCard({
   const cardRef = useRef<HTMLElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const [hasGoalSet, setHasGoalSet] = useState(false);
+  const [sourceStatus, setSourceStatus] = useState<string | null>(null);
   const [startingConversation, setStartingConversation] = useState(false);
   const [resumeError, setResumeError] = useState("");
   const [mapReview, setMapReview] = useState<MapReviewState | null>(null);
@@ -51,6 +52,9 @@ export function CompassCard({
         if (cancelled) return;
         const goals = data?.session?.area_responses;
         setHasGoalSet(Array.isArray(goals) && goals.length >= 8);
+        setSourceStatus(
+          typeof data?.session?.status === "string" ? data.session.status : null,
+        );
       })
       .catch(() => {});
 
@@ -94,13 +98,13 @@ export function CompassCard({
   }, [isDiscussionCard, children]);
 
   useEffect(() => {
-    if (!isMapCard) return;
+    if (!isMapCard && !isDiscussionCard) return;
 
     void loadMapReview();
     const refresh = window.setTimeout(() => void loadMapReview(), 1000);
 
     return () => window.clearTimeout(refresh);
-  }, [isMapCard]);
+  }, [isMapCard, isDiscussionCard]);
 
   async function loadMapReview() {
     try {
@@ -124,7 +128,7 @@ export function CompassCard({
         activeCount,
       });
     } catch {
-      // The Map itself remains available if review-state refresh pauses.
+      // The conversation and Map remain available if review-state refresh pauses.
     }
   }
 
@@ -202,19 +206,32 @@ export function CompassCard({
   }
 
   function handleCardClickCapture(event: MouseEvent<HTMLElement>) {
-    if (!isMapCard) return;
-
     const target = event.target as HTMLElement;
     const button = target.closest("button");
     const label = button?.textContent?.trim() ?? "";
 
-    if (label === "Edit" || label === "Release") {
+    if (isDiscussionCard && label === "Make this workable" && !mapReview?.reviewed) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const mapButton = Array.from(
+        cardRef.current?.querySelectorAll("button") ?? [],
+      ).find((candidate) => candidate.textContent?.trim() === "Map");
+
+      mapButton?.click();
+      return;
+    }
+
+    if (isMapCard && (label === "Edit" || label === "Release")) {
       window.setTimeout(() => void loadMapReview(), 900);
     }
   }
 
+  const previousRunComplete = sourceStatus === "complete";
   const visibleDescription = isResumeCard
-    ? "Compass found an active session. Continue where you left off, begin a fresh conversation with your current goals, or set new goals."
+    ? previousRunComplete
+      ? "Your previous Compass is complete. Begin a fresh conversation with those goals in mind, or set new goals."
+      : "Compass found an active session. Continue where you left off, begin a fresh conversation with your current goals, or set new goals."
     : description;
 
   const secondResumeChild = childArray[1];
@@ -262,18 +279,20 @@ export function CompassCard({
         <div className="mt-6 space-y-4">
           {isResumeCard ? (
             <>
-              {childArray[0]}
+              {!previousRunComplete ? childArray[0] : null}
 
               {hasGoalSet ? (
                 <button
                   type="button"
                   onClick={() => void startNewConversation()}
                   disabled={startingConversation}
-                  className="secondary-button disabled:cursor-wait disabled:opacity-60"
+                  className={previousRunComplete ? "primary-button disabled:cursor-wait disabled:opacity-60" : "secondary-button disabled:cursor-wait disabled:opacity-60"}
                 >
                   {startingConversation
                     ? "Opening new conversation..."
-                    : "Start a new conversation with my current goals"}
+                    : previousRunComplete
+                      ? "Start a new conversation with these goals"
+                      : "Start a new conversation with my current goals"}
                 </button>
               ) : null}
 
