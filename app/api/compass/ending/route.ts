@@ -67,6 +67,16 @@ export async function POST(request: Request) {
 
     let state = readState(session.detected_patterns, session.selected_area)
 
+    if (action === "make_workable" && !state.mapReviewed) {
+      return NextResponse.json(
+        {
+          error: "Review the current Map before turning it into a movement.",
+          state,
+        },
+        { status: 409 },
+      )
+    }
+
     if (action === "make_workable" && !state.movementReady) {
       return NextResponse.json(
         {
@@ -105,9 +115,29 @@ export async function POST(request: Request) {
       }
 
       if (result.scopeCategory === "in_scope") {
-        state.mapItems = mergeMapItems(state.mapItems, result.mapItems)
-        state.reframe = result.reframe
-        state.followUpQuestion = result.followUpQuestion
+        if (action === "refresh_map") {
+          const previousSignature = activeMapSignature(state.mapItems)
+          const nextMapItems = reconcileMapItems(state.mapItems, result.mapItems)
+          const nextSignature = activeMapSignature(nextMapItems)
+          const mapChanged = previousSignature !== nextSignature
+
+          state.mapItems = nextMapItems
+          state.reframe = result.reframe
+          state.followUpQuestion = result.followUpQuestion
+
+          if (mapChanged) {
+            state.mapReviewed = false
+            state.movements = state.movements.map((movement) =>
+              movement.status === "active"
+                ? { ...movement, status: "replaced" as const }
+                : movement,
+            )
+            state.currentMovementId = null
+          }
+        } else {
+          state.reframe = result.reframe
+          state.followUpQuestion = result.followUpQuestion
+        }
 
         if (action === "make_workable" && result.movement) {
           const now = new Date().toISOString()
@@ -140,7 +170,11 @@ export async function POST(request: Request) {
         state.followUpQuestion = null
         state.currentMovementId = null
         state.movementReady = false
+        state.mapReviewed = false
       }
+    } else if (action === "confirm_map") {
+      state.mapReviewed = true
+      state.updatedAt = new Date().toISOString()
     } else if (action === "complete_item") {
       const itemId = typeof body.itemId === "string" ? body.itemId : ""
       const now = new Date().toISOString()
@@ -158,6 +192,7 @@ export async function POST(request: Request) {
           ? { ...item, status: "released" as const }
           : item,
       )
+      state.mapReviewed = false
       state.updatedAt = new Date().toISOString()
     } else if (action === "edit_item") {
       const itemId = typeof body.itemId === "string" ? body.itemId : ""
@@ -167,6 +202,7 @@ export async function POST(request: Request) {
         state.mapItems = state.mapItems.map((item) =>
           item.id === itemId ? { ...item, content } : item,
         )
+        state.mapReviewed = false
       }
       state.updatedAt = new Date().toISOString()
     } else if (action === "complete_movement") {
@@ -274,6 +310,7 @@ function readState(
     mapItems: Array.isArray(row.mapItems)
       ? (row.mapItems as CompassMapItem[])
       : [],
+    mapReviewed: row.mapReviewed === true,
     movements: Array.isArray(row.movements)
       ? (row.movements as CompassMovement[])
       : [],
@@ -290,46 +327,91 @@ function readState(
   }
 }
 
-function mergeMapItems(
+function reconcileMapItems(
   existing: CompassMapItem[],
   candidates: CompassMapCandidate[],
 ): CompassMapItem[] {
   const now = new Date().toISOString()
-  const merged = [...existing]
+  const historical = existing.filter(
+    (item) => item.status === "completed" || item.status === "released",
+  )
+  const available = existing.filter(
+    (item) => item.status === "active" || item.status === "waiting",
+  )
+  const usedIds = new Set<string>()
 
-  for (const candidate of candidates) {
-    const key = normalize(candidate.content)
-    const index = merged.findIndex((item) => normalize(item.content) === key)
+  const current = candidates.map((candidate) => {
+    const match = available.find(
+      (item) => !usedIds.has(item.id) && mapItemsMatch(item, candidate),
+    )
 
-    if (index >= 0) {
-      const current = merged[index]
-      merged[index] = {
-        ...current,
+    if (match) {
+      usedIds.add(match.id)
+      return {
+        ...match,
+        content: candidate.content,
         kind: candidate.kind,
         ownership: candidate.ownership,
-        area: candidate.area ?? current.area,
+        status: candidate.kind === "waiting" ? ("waiting" as const) : ("active" as const),
+        area: candidate.area ?? match.area,
         sourceMessageIndex:
-          candidate.sourceMessageIndex ?? current.sourceMessageIndex,
-        sourceSnippet: candidate.sourceSnippet ?? current.sourceSnippet,
+          candidate.sourceMessageIndex ?? match.sourceMessageIndex,
+        sourceSnippet: candidate.sourceSnippet ?? match.sourceSnippet,
+        completedAt: null,
       }
-      continue
     }
 
-    merged.push({
+    return {
       id: crypto.randomUUID(),
       content: candidate.content,
       kind: candidate.kind,
       ownership: candidate.ownership,
-      status: candidate.kind === "waiting" ? "waiting" : "active",
+      status: candidate.kind === "waiting" ? ("waiting" as const) : ("active" as const),
       area: candidate.area,
       sourceMessageIndex: candidate.sourceMessageIndex,
       sourceSnippet: candidate.sourceSnippet,
       createdAt: now,
       completedAt: null,
-    })
+    }
+  })
+
+  return [...current, ...historical]
+}
+
+function mapItemsMatch(
+  item: CompassMapItem,
+  candidate: CompassMapCandidate,
+): boolean {
+  const itemKey = normalize(item.content)
+  const candidateKey = normalize(candidate.content)
+
+  if (itemKey === candidateKey) return true
+
+  if (
+    itemKey.length >= 12 &&
+    candidateKey.length >= 12 &&
+    (itemKey.includes(candidateKey) || candidateKey.includes(itemKey))
+  ) {
+    return true
   }
 
-  return merged
+  if (
+    item.sourceMessageIndex != null &&
+    candidate.sourceMessageIndex != null &&
+    item.sourceMessageIndex === candidate.sourceMessageIndex &&
+    item.area === candidate.area
+  ) {
+    return true
+  }
+
+  return false
+}
+
+function activeMapSignature(items: CompassMapItem[]): string {
+  return items
+    .filter((item) => item.status === "active" || item.status === "waiting")
+    .map((item) => `${normalize(item.content)}:${item.kind}:${item.status}`)
+    .join("|")
 }
 
 function findMapItemId(
