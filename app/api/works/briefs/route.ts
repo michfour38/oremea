@@ -4,6 +4,7 @@ import {
 } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
+import { prisma } from "@/lib/prisma";
 import {
   createProductBrief,
   type CreateProductBriefRequirement,
@@ -40,6 +41,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     const marketSlug = stringValue(body?.marketSlug).toLowerCase();
+    const searchSessionId = optionalString(body?.searchSessionId);
     const productDescription = stringValue(body?.productDescription);
     const categoryKey = optionalString(body?.categoryKey)?.toUpperCase();
     const stage = optionalString(body?.stage)?.toUpperCase();
@@ -59,6 +61,20 @@ export async function POST(req: NextRequest) {
 
     if (!marketSlug) {
       return NextResponse.json({ error: "Market is required." }, { status: 400 });
+    }
+
+    if (searchSessionId) {
+      const searchSession = await prisma.works_search_sessions.findUnique({
+        where: { id: searchSessionId },
+        select: { market: { select: { slug: true } } },
+      });
+
+      if (!searchSession || searchSession.market.slug !== marketSlug) {
+        return NextResponse.json(
+          { error: "This WORKS search does not belong to the selected market." },
+          { status: 400 }
+        );
+      }
     }
 
     if (productDescription.length < 3) {
@@ -144,6 +160,17 @@ export async function POST(req: NextRequest) {
     });
 
     const result = await recalculateProductBrief(brief.id);
+
+    if (searchSessionId) {
+      await prisma.works_search_sessions.update({
+        where: { id: searchSessionId },
+        data: {
+          brief_id: brief.id,
+          current_step: null,
+          status: "ROUTE_BUILT",
+        },
+      });
+    }
 
     return NextResponse.json({
       briefId: brief.id,
