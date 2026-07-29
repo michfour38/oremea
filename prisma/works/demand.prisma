@@ -36,12 +36,14 @@ model works_product_briefs {
   created_at          DateTime @default(now()) @db.Timestamptz(6)
   updated_at          DateTime @updatedAt @db.Timestamptz(6)
 
-  market        works_markets           @relation(fields: [market_id], references: [id], onDelete: Cascade)
-  category      works_categories?       @relation(fields: [category_id], references: [id], onDelete: SetNull)
-  requirements  works_requirements[]
-  paths         works_production_paths[]
-  matches       works_matches[]
-  route_options works_route_options[]
+  market               works_markets               @relation(fields: [market_id], references: [id], onDelete: Cascade)
+  category             works_categories?           @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  requirements         works_requirements[]
+  paths                works_production_paths[]
+  matches              works_matches[]
+  route_options        works_route_options[]
+  search_session       works_search_sessions?
+  procurement_request  works_procurement_requests?
 
   @@index([market_id, status])
   @@index([category_id])
