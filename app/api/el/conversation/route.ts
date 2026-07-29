@@ -29,8 +29,7 @@ export async function POST(request: Request) {
     if (
       product === "compass" &&
       stage === "discussion" &&
-      result.scopeCategory &&
-      result.scopeCategory !== "in_scope"
+      result.scopeCategory
     ) {
       const { userId } = auth()
 
@@ -46,13 +45,31 @@ export async function POST(request: Request) {
         })
 
         if (session) {
-          const existing =
+          const existing: Record<string, unknown> =
             session.detected_patterns &&
             typeof session.detected_patterns === "object" &&
             !Array.isArray(session.detected_patterns) &&
             (session.detected_patterns as Record<string, unknown>).version === 1
               ? (session.detected_patterns as Record<string, unknown>)
-              : createEmptyCompassEndingState(session.selected_area)
+              : (createEmptyCompassEndingState(session.selected_area) as unknown as Record<
+                  string,
+                  unknown
+                >)
+
+          const outsideScope = result.scopeCategory !== "in_scope"
+          const retirePriorFrame = result.retirePriorFrame === true
+          const existingMovements = Array.isArray(existing.movements)
+            ? existing.movements
+            : []
+          const movements = retirePriorFrame
+            ? existingMovements.map((movement) => {
+                if (!movement || typeof movement !== "object") return movement
+                const row = movement as Record<string, unknown>
+                return row.status === "active"
+                  ? { ...row, status: "replaced" }
+                  : movement
+              })
+            : existingMovements
 
           await prisma.compass_sessions.update({
             where: { id: session.id },
@@ -62,8 +79,16 @@ export async function POST(request: Request) {
                 version: 1,
                 selectedArea: session.selected_area,
                 scopeCategory: result.scopeCategory,
-                currentMovementId: null,
-                reframe: null,
+                movementReady: outsideScope ? false : result.movementReady === true,
+                movements,
+                currentMovementId:
+                  outsideScope || retirePriorFrame
+                    ? null
+                    : (existing.currentMovementId ?? null),
+                reframe:
+                  outsideScope || retirePriorFrame
+                    ? null
+                    : (existing.reframe ?? null),
                 followUpQuestion: null,
                 updatedAt: new Date().toISOString(),
               } as object,
