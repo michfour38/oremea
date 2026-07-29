@@ -1,0 +1,47 @@
+enum WorksProviderOutreachStatus {
+  DRAFT
+  SENT
+  RESPONDED
+  DECLINED
+  FAILED
+}
+
+enum WorksProviderResponseDecision {
+  YES
+  POSSIBLE
+  OUTSIDE_CAPABILITY
+}
+
+model works_provider_outreach {
+  id                       String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  procurement_request_id   String                         @db.Uuid
+  brief_id                 String                         @db.Uuid
+  provider_id              String                         @db.Uuid
+  route_option_id          String?                        @db.Uuid
+  response_token_hash      String                         @unique
+  status                   WorksProviderOutreachStatus    @default(DRAFT)
+  relevant_steps           String[]                       @default([])
+  brief_snapshot           Json
+  sent_to_email            String?
+  sent_at                  DateTime?                      @db.Timestamptz(6)
+  responded_at             DateTime?                      @db.Timestamptz(6)
+  decision                 WorksProviderResponseDecision?
+  moq_value                Decimal?                       @db.Decimal(14, 3)
+  moq_unit                 String?
+  lead_time_text           String?
+  capacity_date            DateTime?                      @db.Date
+  pricing_notes            String?
+  certification_notes      String?
+  provider_notes           String?
+  created_at               DateTime                       @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime                       @updatedAt @db.Timestamptz(6)
+
+  procurement_request works_procurement_requests @relation(fields: [procurement_request_id], references: [id], onDelete: Cascade)
+  brief               works_product_briefs       @relation(fields: [brief_id], references: [id], onDelete: Cascade)
+  provider            works_providers            @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+
+  @@unique([procurement_request_id, provider_id])
+  @@index([brief_id, status])
+  @@index([provider_id, status])
+  @@index([created_at])
+}
