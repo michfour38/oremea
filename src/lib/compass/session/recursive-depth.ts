@@ -246,7 +246,7 @@ function extractDirectAnswer(input: string): string {
     .filter(Boolean)
 
   const directStatements = statements.filter((part) =>
-    /^(i\b|i['’]m\b|i am\b|i['’]ve\b|i have\b|i felt\b|i feel\b|i want\b|i need\b|i care\b|i believe\b|i thought\b|i was\b|my\b|me\b|it made me\b|that made me\b)/i.test(
+    /^(i\b|i['’]m\b|i am\b|i['’]ve\b|i have\b|i felt\b|i feel\b|i want\b|i need\b|i care\b|i believe\b|i thought\b|i was\b|my\b|me\b|it made me\b|that made me\b|that(?:['’]s| is) what\b|this(?:['’]s| is) what\b|it (?:was|is) because\b)/i.test(
       part,
     ),
   )
