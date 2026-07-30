@@ -1,0 +1,139 @@
+import { auth } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
+
+import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+
+type StoredMapItem = {
+  id?: unknown;
+  status?: unknown;
+  [key: string]: unknown;
+};
+
+export async function POST(request: Request) {
+  try {
+    const { userId } = auth();
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const itemIds = Array.isArray(body?.itemIds)
+      ? body.itemIds.filter((value: unknown): value is string =>
+          typeof value === "string" && value.length > 0,
+        )
+      : [];
+
+    if (itemIds.length === 0 || itemIds.length > 100) {
+      return NextResponse.json(
+        { error: "A valid Map order is required." },
+        { status: 400 },
+      );
+    }
+
+    if (new Set(itemIds).size !== itemIds.length) {
+      return NextResponse.json(
+        { error: "The Map order contains duplicate items." },
+        { status: 400 },
+      );
+    }
+
+    const session = await prisma.compass_sessions.findFirst({
+      where: {
+        user_id: userId,
+        status: "active",
+      },
+      orderBy: {
+        updated_at: "desc",
+      },
+    });
+
+    if (!session) {
+      return NextResponse.json(
+        { error: "No active Compass session." },
+        { status: 404 },
+      );
+    }
+
+    if (
+      !session.detected_patterns ||
+      typeof session.detected_patterns !== "object" ||
+      Array.isArray(session.detected_patterns)
+    ) {
+      return NextResponse.json(
+        { error: "The current Map is not available yet." },
+        { status: 409 },
+      );
+    }
+
+    const state = {
+      ...(session.detected_patterns as Record<string, unknown>),
+    };
+    const mapItems = Array.isArray(state.mapItems)
+      ? (state.mapItems as StoredMapItem[])
+      : [];
+    const activeItems = mapItems.filter(
+      (item) => item.status === "active" || item.status === "waiting",
+    );
+    const historicalItems = mapItems.filter(
+      (item) => item.status === "completed" || item.status === "released",
+    );
+    const activeIds = activeItems
+      .map((item) => item.id)
+      .filter((value): value is string => typeof value === "string");
+
+    if (
+      itemIds.length !== activeIds.length ||
+      itemIds.some((id) => !activeIds.includes(id))
+    ) {
+      return NextResponse.json(
+        { error: "The Map changed while it was being reordered. Refresh and try again." },
+        { status: 409 },
+      );
+    }
+
+    const byId = new Map(
+      activeItems
+        .filter((item): item is StoredMapItem & { id: string } =>
+          typeof item.id === "string",
+        )
+        .map((item) => [item.id, item]),
+    );
+    const orderedItems = itemIds
+      .map((id) => byId.get(id))
+      .filter((item): item is StoredMapItem => Boolean(item));
+    const movements = Array.isArray(state.movements)
+      ? (state.movements as Array<Record<string, unknown>>)
+      : [];
+
+    const nextState = {
+      ...state,
+      mapItems: [...orderedItems, ...historicalItems],
+      mapReviewed: false,
+      movements: movements.map((movement) =>
+        movement.status === "active"
+          ? { ...movement, status: "replaced" }
+          : movement,
+      ),
+      currentMovementId: null,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await prisma.compass_sessions.update({
+      where: { id: session.id },
+      data: {
+        detected_patterns: nextState as object,
+      },
+    });
+
+    return NextResponse.json({ success: true, state: nextState });
+  } catch (error) {
+    console.error("POST /api/compass/ending/reorder failed:", error);
+    return NextResponse.json(
+      { error: "Compass could not save the new Map order." },
+      { status: 500 },
+    );
+  }
+}
