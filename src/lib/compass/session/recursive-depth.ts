@@ -32,7 +32,8 @@ const VALUE_WORDS = [
   "movement",
 ]
 
-const DESCENT_QUESTION_KEY = "oremea-compass-descent-question"
+const DESCENT_QUESTION_KEY = "oremea-compass-descent-question-v2"
+const LEGACY_DESCENT_QUESTION_KEY = "oremea-compass-descent-question"
 
 export function getRecursiveQuestion(layer: number): string {
   const questions = [
@@ -81,8 +82,9 @@ export function rememberAdaptiveRecursiveQuestion({
   sourceAnswer: string
   question: string
 }) {
-  if (typeof window === "undefined") return
+  if (typeof window === "undefined" || !isRootDigQuestion(question)) return
 
+  window.sessionStorage.removeItem(LEGACY_DESCENT_QUESTION_KEY)
   window.sessionStorage.setItem(
     DESCENT_QUESTION_KEY,
     JSON.stringify({
@@ -102,6 +104,8 @@ export function getRememberedAdaptiveRecursiveQuestion({
 }): string | null {
   if (typeof window === "undefined") return null
 
+  window.sessionStorage.removeItem(LEGACY_DESCENT_QUESTION_KEY)
+
   const raw = window.sessionStorage.getItem(DESCENT_QUESTION_KEY)
   if (!raw) return null
 
@@ -116,14 +120,16 @@ export function getRememberedAdaptiveRecursiveQuestion({
       stored.layer === layer &&
       stored.sourceAnswer === normalizeSource(sourceAnswer) &&
       typeof stored.question === "string" &&
-      stored.question.trim()
+      isRootDigQuestion(stored.question)
     ) {
       return stored.question.trim()
     }
   } catch {
+    window.sessionStorage.removeItem(DESCENT_QUESTION_KEY)
     return null
   }
 
+  window.sessionStorage.removeItem(DESCENT_QUESTION_KEY)
   return null
 }
 
@@ -151,6 +157,34 @@ export function buildAdaptiveRecursiveQuestion({
   }
 
   return getRecursiveQuestion(layer)
+}
+
+function isRootDigQuestion(question: string): boolean {
+  const normalized = question.trim().toLowerCase()
+  if (!normalized) return false
+
+  const changesLens = [
+    "make possible",
+    "give you room",
+    "what would this create",
+    "what would that create",
+    "what comes next",
+    "what do you picture",
+    "what would it mean",
+    "what does it mean",
+    "what does this carry",
+    "what does that carry",
+    "how much weight",
+  ].some((phrase) => normalized.includes(phrase))
+
+  if (changesLens) return false
+
+  return (
+    normalized.includes("why") ||
+    normalized.includes("matter") ||
+    normalized.includes("important") ||
+    normalized.includes("underneath")
+  )
 }
 
 function normalizeSource(input: string): string {
