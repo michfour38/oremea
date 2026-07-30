@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 import {
   COMPASS_AREA_QUESTIONS,
   type CompassAreaResponse,
@@ -7,6 +11,8 @@ import {
 import { CompassCard } from "./CompassCard";
 
 const BODY_TEXT = "text-zinc-400";
+const MIRROR_UNAVAILABLE =
+  "Compass could not complete this reflection yet. Return to your answers and try again.";
 
 const AREA_LABELS: Record<CompassGoalArea, string> = {
   relationships: "Relationships",
@@ -36,10 +42,44 @@ export function CompassPriorityFlow({
   onChooseArea?: (area: CompassGoalArea) => void;
   showAreaChoices?: boolean;
 }) {
+  const isAreaMirror = !showAreaChoices && title === "What stands out";
+  const [savedAreaMirror, setSavedAreaMirror] = useState<string | null>(null);
+  const [mirrorChecked, setMirrorChecked] = useState(!isAreaMirror);
+
+  useEffect(() => {
+    if (!isAreaMirror) return;
+
+    let cancelled = false;
+
+    fetch("/api/compass/mirror?stage=area", {
+      method: "GET",
+      cache: "no-store",
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        setSavedAreaMirror(
+          typeof data?.output === "string" && data.output.trim()
+            ? data.output.trim()
+            : null,
+        );
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setMirrorChecked(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAreaMirror]);
+
   const displayTitle = showAreaChoices ? "Where do you want to begin?" : title;
   const displayDescription = showAreaChoices
     ? "You have named several things that matter. Choose the area you want Compass to follow more deeply."
-    : description;
+    : isAreaMirror
+      ? savedAreaMirror ?? (mirrorChecked ? MIRROR_UNAVAILABLE : "Restoring your reflection...")
+      : description;
 
   return (
     <CompassCard title={displayTitle} description={displayDescription}>
