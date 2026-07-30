@@ -69,6 +69,11 @@ Every new layer follows the reason contained in the participant's immediately pr
 The Descent moves straight down one living thread:
 chosen goal -> why it matters -> why that reason matters -> why that reason matters -> deeper -> deeper -> root.
 
+A question that could follow almost any answer fails.
+The question must name one concrete phrase, condition, choice, image, or consequence from the participant's immediately previous answer.
+When the answer names both a desired condition and the pressure it would end, follow the desired condition unless the participant clearly made the pressure itself the active thread.
+When the participant gives several concrete examples, ask what those examples would make possible together rather than repeating a generic "what matters about that?"
+
 Do not switch lenses or introduce a new theme merely because the layer number changed.
 Do not steer the participant back toward the original selected area when their own answer has moved somewhere else.
 Do not use a fixed sequence of meaning, possibility, contrast, purpose, action, identity, or future-planning questions.
@@ -76,23 +81,24 @@ Do not ask what they should do next.
 Do not coach, diagnose, motivate, interpret their psychology, or tell them what their answer means.
 Do not supply the answer inside the question.
 Do not introduce a value, identity, need, motive, tension, or conclusion they did not express.
+Do not return a generic question such as "What is it about what you described that matters?" when the participant supplied language you can follow directly.
 
 Use the participant's immediately previous answer as the active thread.
 Earlier layers are context only: use them to preserve continuity and avoid circling back upward.
 
 Write one natural conversational question that:
 - clearly grows from the participant's last answer
-- acknowledges the actual thing they just said by naming it naturally where useful
-- asks beneath it, toward why that matters to them
+- names the actual thing they just said
+- asks beneath it, toward why that matters or what it would make possible
 - sounds like a perceptive human continuing a conversation
-- varies its phrasing naturally instead of repeating "why does that matter?"
+- varies its phrasing naturally
 - stays concise enough to sit directly above a text box
 
 Useful natural forms include, only when they fit the participant's words:
+- When you say ___, what would that give you room to be or do?
 - Why does being able to ___ matter to you?
 - What is it about ___ that matters so much to you?
-- When you say ___, what makes that important to you?
-- What would ___ give you that matters here?
+- What would ___ make possible that matters here?
 - What is underneath wanting ___?
 
 Do not copy these forms mechanically.
@@ -132,7 +138,7 @@ ${priorDescent || "None yet. This is Layer 1."}
 
     if (!response.ok) {
       console.error("Compass Descent question API error:", data)
-      return fallbackQuestion(layer, selectedAreaLabel)
+      return fallbackQuestion(layer, selectedAreaLabel, sourceAnswer)
     }
 
     const raw = Array.isArray(data?.content)
@@ -146,10 +152,10 @@ ${priorDescent || "None yet. This is Layer 1."}
       : ""
 
     const parsed = parseQuestion(raw)
-    return parsed || fallbackQuestion(layer, selectedAreaLabel)
+    return parsed || fallbackQuestion(layer, selectedAreaLabel, sourceAnswer)
   } catch (error) {
     console.error("Compass Descent question request failed:", error)
-    return fallbackQuestion(layer, selectedAreaLabel)
+    return fallbackQuestion(layer, selectedAreaLabel, sourceAnswer)
   }
 }
 
@@ -172,8 +178,38 @@ function parseQuestion(raw: string): string | null {
   }
 }
 
-function fallbackQuestion(layer: number, selectedAreaLabel: string): string {
-  return layer === 1
-    ? `Why does ${selectedAreaLabel.toLowerCase()} matter to you right now?`
-    : "What is it about what you just described that matters to you?"
+function fallbackQuestion(
+  layer: number,
+  selectedAreaLabel: string,
+  sourceAnswer: string,
+): string {
+  if (layer === 1) {
+    return `Why does ${selectedAreaLabel.toLowerCase()} matter to you right now?`
+  }
+
+  const focus = extractFocusPhrase(sourceAnswer)
+
+  return focus
+    ? `When you say “${focus},” what would that give you room to be, do, or experience?`
+    : "What would what you just described make possible for you?"
+}
+
+function extractFocusPhrase(input: string): string | null {
+  const normalized = input.trim().replace(/\s+/g, " ")
+  if (!normalized) return null
+
+  const clauses = normalized
+    .split(/[,;]|\s+[—–-]\s+/)
+    .map((part) => part.trim().replace(/[.!?]+$/, ""))
+    .filter(Boolean)
+
+  const concise = clauses.find((part) => {
+    const words = part.split(/\s+/).filter(Boolean)
+    return words.length <= 8 && part.length <= 64
+  })
+
+  if (concise) return concise
+
+  const words = normalized.split(/\s+/).filter(Boolean)
+  return words.slice(0, 8).join(" ").replace(/[.!?,;:]+$/, "") || null
 }
