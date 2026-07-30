@@ -32,8 +32,9 @@ const VALUE_WORDS = [
   "movement",
 ]
 
-const DESCENT_QUESTION_KEY = "oremea-compass-descent-question-v3"
+const DESCENT_QUESTION_KEY = "oremea-compass-descent-question-v4"
 const LEGACY_DESCENT_QUESTION_KEYS = [
+  "oremea-compass-descent-question-v3",
   "oremea-compass-descent-question-v2",
   "oremea-compass-descent-question",
 ]
@@ -42,11 +43,11 @@ export function getRecursiveQuestion(layer: number): string {
   const questions = [
     "Why does this matter to you right now?",
     "Why is that important to you?",
-    "Why did that affect you that way?",
-    "Why did that feel true to you?",
-    "Why is that still important to you?",
+    "Why does that matter to you?",
+    "Why is that important?",
+    "Why does that matter?",
+    "Why is that important to you here?",
     "Why does that matter beneath everything else you have named?",
-    "Why does that matter at the deepest level for you?",
   ]
 
   return questions[layer - 1] ?? questions[questions.length - 1]
@@ -164,7 +165,7 @@ export function buildAdaptiveRecursiveQuestion({
 
 function isRootDigQuestion(question: string): boolean {
   const normalized = question.trim().toLowerCase()
-  if (!normalized) return false
+  if (!normalized || !normalized.startsWith("why")) return false
 
   const changesLens = [
     "make possible",
@@ -180,7 +181,20 @@ function isRootDigQuestion(question: string): boolean {
     "how much weight",
   ].some((phrase) => normalized.includes(phrase))
 
-  return !changesLens && normalized.startsWith("why")
+  const changesThread = [
+    "why did you feel",
+    "why do you feel",
+    "why did you believe",
+    "why do you believe",
+    "why did you think",
+    "why do you think",
+    "why did you conclude",
+    "why did you react",
+    "why wouldn't your",
+    "why would your",
+  ].some((phrase) => normalized.startsWith(phrase))
+
+  return !changesLens && !changesThread
 }
 
 function buildRootDigFallback({
@@ -192,39 +206,57 @@ function buildRootDigFallback({
   selectedAreaLabel: string
   sourceAnswer: string
 }): string {
-  const cleaned = sourceAnswer
-    .trim()
-    .replace(/^because\s+/i, "")
-    .replace(/[.!?]+$/, "")
+  const directAnswer = extractDirectAnswer(sourceAnswer)
 
-  const tiredMatch = cleaned.match(/^i(?:['’]m| am)\s+tired of\s+(.+)/i)
-  if (tiredMatch) {
-    return `Why are you tired of ${toSecondPerson(tiredMatch[1])}?`
+  if (!directAnswer) {
+    return layer === 1
+      ? `Why does ${selectedAreaLabel.toLowerCase()} matter to you right now?`
+      : getRecursiveQuestion(layer)
   }
 
-  const feltLikeMatch = cleaned.match(/^i(?:\s+always)?\s+felt like\s+(.+)/i)
-  if (feltLikeMatch) {
-    return `Why did you feel like ${toSecondPerson(feltLikeMatch[1])}?`
+  const clause = toSecondPerson(directAnswer)
+  const pastTense = /^(you\s+(?:felt|heard|were|had|believed|thought|wanted|needed)|it\s+(?:felt|was|made))/i.test(
+    clause,
+  )
+
+  if (pastTense) {
+    return layer % 2 === 0
+      ? `Why was it important to you that ${lowercaseFirst(clause)}?`
+      : `Why did it matter to you that ${lowercaseFirst(clause)}?`
   }
 
-  const feltMatch = cleaned.match(/^i(?:\s+always)?\s+felt\s+(.+)/i)
-  if (feltMatch) {
-    return `Why did you feel ${toSecondPerson(feltMatch[1])}?`
-  }
+  return layer % 2 === 0
+    ? `Why is it important to you that ${lowercaseFirst(clause)}?`
+    : `Why does it matter to you that ${lowercaseFirst(clause)}?`
+}
 
-  const beliefMatch = cleaned.match(/^i\s+(?:believed|thought)\s+(.+)/i)
-  if (beliefMatch) {
-    return `Why did you believe ${toSecondPerson(beliefMatch[1])}?`
-  }
+function extractDirectAnswer(input: string): string {
+  const normalized = input.trim().replace(/\s+/g, " ")
+  if (!normalized) return ""
 
-  const focus = extractFocusPhrase(cleaned)
-  if (focus) {
-    return `Why is ${toSecondPerson(focus)} so important to you?`
-  }
+  const fragments = normalized
+    .match(/[^.!?]+[.!?]?/g)
+    ?.map((part) => part.trim())
+    .filter(Boolean) ?? [normalized]
 
-  return layer === 1
-    ? `Why does ${selectedAreaLabel.toLowerCase()} matter to you right now?`
-    : getRecursiveQuestion(layer)
+  const statements = fragments
+    .filter((part) => !part.endsWith("?"))
+    .filter((part) => !/^(why|what|how|when|where|who|would|could|should)\b/i.test(part))
+    .map((part) => part.replace(/^because\s+/i, "").replace(/[.!?]+$/, "").trim())
+    .filter(Boolean)
+
+  const directStatements = statements.filter((part) =>
+    /^(i\b|i['’]m\b|i am\b|i['’]ve\b|i have\b|i felt\b|i feel\b|i want\b|i need\b|i care\b|i believe\b|i thought\b|i was\b|my\b|me\b|it made me\b|that made me\b)/i.test(
+      part,
+    ),
+  )
+
+  const selected = directStatements.length > 0 ? directStatements : statements
+  return selected.join("; ")
+}
+
+function lowercaseFirst(input: string): string {
+  return input ? input.charAt(0).toLowerCase() + input.slice(1) : input
 }
 
 function clearLegacyQuestionCache() {
@@ -238,6 +270,7 @@ function clearLegacyQuestionCache() {
 function toSecondPerson(input: string): string {
   return input
     .trim()
+    .replace(/^because\s+/i, "")
     .replace(/\bi['’]m\b/gi, "you're")
     .replace(/\bi am\b/gi, "you are")
     .replace(/\bi['’]ve\b/gi, "you've")
@@ -245,26 +278,6 @@ function toSecondPerson(input: string): string {
     .replace(/\bmy\b/gi, "your")
     .replace(/\bme\b/gi, "you")
     .replace(/\bi\b/gi, "you")
-}
-
-function extractFocusPhrase(input: string): string | null {
-  const normalized = input.trim().replace(/\s+/g, " ")
-  if (!normalized) return null
-
-  const clauses = normalized
-    .split(/[,;]|\s+[—–-]\s+/)
-    .map((part) => part.trim().replace(/[.!?]+$/, ""))
-    .filter(Boolean)
-
-  const concise = clauses.find((part) => {
-    const words = part.split(/\s+/).filter(Boolean)
-    return words.length <= 12 && part.length <= 96
-  })
-
-  if (concise) return concise
-
-  const words = normalized.split(/\s+/).filter(Boolean)
-  return words.slice(0, 12).join(" ").replace(/[.!?,;:]+$/, "") || null
 }
 
 function normalizeSource(input: string): string {
