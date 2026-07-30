@@ -64,20 +64,28 @@ The participant's immediately previous answer determines where the next question
 ${OREMEA_EVIDENCE_BOUNDARY}
 
 GOVERNING RULE
-Every layer asks why the participant's immediately previous answer matters.
+Every layer asks one clean why-question beneath the participant's immediately previous answer.
 
 The Descent moves straight down one living thread:
-chosen goal -> why it matters -> why that reason matters -> why that reason matters -> deeper -> deeper -> root.
+chosen goal -> why it matters -> why that reason exists -> why that feeling or belief formed -> deeper -> deeper -> root.
 
-This repetition is intentional. Do not escape the repetition by changing the lens. The seven questions serve the purpose of digging beneath each new reason until the root becomes visible.
+The operation repeats. The sentence frame must follow the grammar and substance of the newest answer.
+Do not confuse purposeful repetition with mechanically repeating "Why does it matter to you that..." at every layer.
+
+FOLLOW THE KIND OF ANSWER GIVEN
+- goal, condition, or outcome: ask why having or creating that is important
+- present frustration or exhaustion: ask why they are tired of that specific experience
+- past feeling: ask why they felt that way
+- belief or conclusion: ask why they believed it, why it felt true, or why they reached that conclusion
+- comparison or exclusion: ask why that experience produced the feeling or belief they just named
+- an answer beginning with "because": follow the reason after "because", not the wording before it
 
 QUESTION RULES
-- name the actual phrase, condition, relationship, outcome, or reason the participant just gave
-- ask why that specific thing matters or why it is important to them
-- follow the newest reason in the answer, especially the reason after words such as "because", "so that", or "which means"
-- when the answer contains several examples, ask why having, meeting, creating, or experiencing those things matters to them
-- when the answer names both a desired condition and a pressure it would end, follow whichever one the participant made central in the wording
-- keep the question concise and natural enough to sit directly above a text box
+- keep the newest reason as the subject of the next question
+- preserve the participant's actual language
+- ask beneath the answer rather than asking them to justify that the answer matters
+- use why throughout the seven layers; vary only enough to fit the answer naturally
+- keep the question concise enough to sit directly above a text box
 
 DO NOT CHANGE THE DIG INTO POSSIBILITY
 - do not ask what the answer would make possible
@@ -85,22 +93,33 @@ DO NOT CHANGE THE DIG INTO POSSIBILITY
 - do not ask what comes next, what they should do, what they picture, or what future it creates
 - do not ask about "weight", what something "carries", or abstract coaching language
 - do not introduce identity, purpose, values, freedom, safety, meaning, tension, or another theme unless the participant just named it
-- do not vary the question merely to sound clever or less repetitive
 - do not steer back toward the original area after the participant's answer has moved deeper
 - do not coach, diagnose, motivate, interpret, or supply the answer inside the question
+- do not use the same opening stem as the immediately previous question when the answer calls for a different grammatical why-question
 
-Natural forms:
+Natural forms, chosen by the answer:
 - Why is ___ so important to you?
-- Why does ___ matter to you?
-- What is it about ___ that matters to you?
-- Why does it matter to you that ___?
+- Why are you tired of ___?
+- Why did you feel ___?
+- Why did you feel like ___?
+- Why did you believe ___?
+- Why did ___ feel true to you?
+- Why did ___ affect you that way?
 
-Use the form that fits the participant's actual wording. Reusing one of these forms across layers is correct when it keeps the dig clean.
+EXAMPLE THREAD
+Answer: "meeting all the needs and wants of my family"
+Question: "Why is meeting all the needs and wants of your family so important to you?"
 
-Example:
-Previous answer: "meeting all the needs and wants of my family"
-Correct next question: "Why is meeting all the needs and wants of your family so important to you?"
-Incorrect next question: "What would meeting all the needs and wants of your family make possible for you?"
+Answer: "because I'm tired of telling the kids I have no money"
+Question: "Why are you tired of telling the kids you have no money?"
+Do not ask: "Why does it matter to you that you're tired of telling them?"
+
+Answer: "because that's what I constantly heard from my parents as a kid, and I always felt left out"
+Question: "Why did hearing that from your parents make you feel left out?"
+
+Answer: "I felt like I didn't deserve what the other kids had"
+Question: "Why did you feel like you didn't deserve what the other kids had?"
+Do not ask: "Why does it matter that you felt like you didn't deserve it?"
 
 Return JSON only:
 {"question":"..."}
@@ -151,7 +170,7 @@ ${priorDescent || "None yet. This is Layer 1."}
       : ""
 
     const parsed = parseQuestion(raw)
-    return parsed && isRootDigQuestion(parsed)
+    return parsed && isRootDigQuestion(parsed, recursiveLayers)
       ? parsed
       : fallbackQuestion(layer, selectedAreaLabel, sourceAnswer)
   } catch (error) {
@@ -179,7 +198,10 @@ function parseQuestion(raw: string): string | null {
   }
 }
 
-function isRootDigQuestion(question: string): boolean {
+function isRootDigQuestion(
+  question: string,
+  recursiveLayers: CompassRecursiveLayer[],
+): boolean {
   const normalized = question.trim().toLowerCase()
   if (!normalized) return false
 
@@ -197,13 +219,17 @@ function isRootDigQuestion(question: string): boolean {
     "how much weight",
   ].some((phrase) => normalized.includes(phrase))
 
-  if (changesLens) return false
+  if (changesLens || !normalized.startsWith("why")) return false
 
-  return (
-    normalized.includes("why") ||
-    normalized.includes("matter") ||
-    normalized.includes("important") ||
-    normalized.includes("underneath")
+  const previousQuestion =
+    recursiveLayers[recursiveLayers.length - 1]?.question.trim().toLowerCase() ?? ""
+  const mechanicalStems = [
+    "why does it matter to you that",
+    "why is it important to you that",
+  ]
+
+  return !mechanicalStems.some(
+    (stem) => normalized.startsWith(stem) && previousQuestion.startsWith(stem),
   )
 }
 
@@ -212,15 +238,52 @@ function fallbackQuestion(
   selectedAreaLabel: string,
   sourceAnswer: string,
 ): string {
-  const focus = extractFocusPhrase(sourceAnswer)
+  const cleaned = sourceAnswer
+    .trim()
+    .replace(/^because\s+/i, "")
+    .replace(/[.!?]+$/, "")
+
+  const tiredMatch = cleaned.match(/^i(?:['’]m| am)\s+tired of\s+(.+)/i)
+  if (tiredMatch) {
+    return `Why are you tired of ${toSecondPerson(tiredMatch[1])}?`
+  }
+
+  const feltLikeMatch = cleaned.match(/^i(?:\s+always)?\s+felt like\s+(.+)/i)
+  if (feltLikeMatch) {
+    return `Why did you feel like ${toSecondPerson(feltLikeMatch[1])}?`
+  }
+
+  const feltMatch = cleaned.match(/^i(?:\s+always)?\s+felt\s+(.+)/i)
+  if (feltMatch) {
+    return `Why did you feel ${toSecondPerson(feltMatch[1])}?`
+  }
+
+  const beliefMatch = cleaned.match(/^i\s+(?:believed|thought)\s+(.+)/i)
+  if (beliefMatch) {
+    return `Why did you believe ${toSecondPerson(beliefMatch[1])}?`
+  }
+
+  const focus = extractFocusPhrase(cleaned)
 
   if (focus) {
-    return `Why is “${focus}” so important to you?`
+    return `Why is ${toSecondPerson(focus)} so important to you?`
   }
 
   return layer === 1
     ? `Why does ${selectedAreaLabel.toLowerCase()} matter to you right now?`
     : "Why does that matter to you?"
+}
+
+function toSecondPerson(input: string): string {
+  return input
+    .trim()
+    .replace(/\bi['’]m\b/gi, "you're")
+    .replace(/\bi am\b/gi, "you are")
+    .replace(/\bi['’]ve\b/gi, "you've")
+    .replace(/\bi['’]d\b/gi, "you'd")
+    .replace(/\bmy\b/gi, "your")
+    .replace(/\bme\b/gi, "you")
+    .replace(/\bi\b/gi, "you")
 }
 
 function extractFocusPhrase(input: string): string | null {
