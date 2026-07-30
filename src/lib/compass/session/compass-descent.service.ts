@@ -43,7 +43,7 @@ export async function generateCompassDescentQuestion({
   if (!sourceAnswer) {
     return layer === 1
       ? `Why does ${selectedAreaLabel.toLowerCase()} matter to you right now?`
-      : "What is it about that that matters to you?"
+      : "Why does that matter to you?"
   }
 
   const priorDescent = recursiveLayers
@@ -56,7 +56,7 @@ export async function generateCompassDescentQuestion({
   const prompt = `
 You write one question for The Descent inside Compass, Oremea's goal-setting product.
 
-The Descent is a seven-layer recursive dig for the root reason beneath a participant's chosen goal.
+The Descent is a deliberately repetitive seven-question dig for the root reason beneath a participant's chosen goal.
 
 The selected area is the doorway into the dig, not a category the later answers must remain inside.
 The participant's immediately previous answer determines where the next question goes.
@@ -64,44 +64,43 @@ The participant's immediately previous answer determines where the next question
 ${OREMEA_EVIDENCE_BOUNDARY}
 
 GOVERNING RULE
-Every new layer follows the reason contained in the participant's immediately previous answer and asks naturally why THAT matters.
+Every layer asks why the participant's immediately previous answer matters.
 
 The Descent moves straight down one living thread:
 chosen goal -> why it matters -> why that reason matters -> why that reason matters -> deeper -> deeper -> root.
 
-A question that could follow almost any answer fails.
-The question must name one concrete phrase, condition, choice, image, or consequence from the participant's immediately previous answer.
-When the answer names both a desired condition and the pressure it would end, follow the desired condition unless the participant clearly made the pressure itself the active thread.
-When the participant gives several concrete examples, ask what those examples would make possible together rather than repeating a generic "what matters about that?"
+This repetition is intentional. Do not escape the repetition by changing the lens. The seven questions serve the purpose of digging beneath each new reason until the root becomes visible.
 
-Do not switch lenses or introduce a new theme merely because the layer number changed.
-Do not steer the participant back toward the original selected area when their own answer has moved somewhere else.
-Do not use a fixed sequence of meaning, possibility, contrast, purpose, action, identity, or future-planning questions.
-Do not ask what they should do next.
-Do not coach, diagnose, motivate, interpret their psychology, or tell them what their answer means.
-Do not supply the answer inside the question.
-Do not introduce a value, identity, need, motive, tension, or conclusion they did not express.
-Do not return a generic question such as "What is it about what you described that matters?" when the participant supplied language you can follow directly.
+QUESTION RULES
+- name the actual phrase, condition, relationship, outcome, or reason the participant just gave
+- ask why that specific thing matters or why it is important to them
+- follow the newest reason in the answer, especially the reason after words such as "because", "so that", or "which means"
+- when the answer contains several examples, ask why having, meeting, creating, or experiencing those things matters to them
+- when the answer names both a desired condition and a pressure it would end, follow whichever one the participant made central in the wording
+- keep the question concise and natural enough to sit directly above a text box
 
-Use the participant's immediately previous answer as the active thread.
-Earlier layers are context only: use them to preserve continuity and avoid circling back upward.
+DO NOT CHANGE THE DIG INTO POSSIBILITY
+- do not ask what the answer would make possible
+- do not ask what it would give them room to be, do, or experience
+- do not ask what comes next, what they should do, what they picture, or what future it creates
+- do not ask about "weight", what something "carries", or abstract coaching language
+- do not introduce identity, purpose, values, freedom, safety, meaning, tension, or another theme unless the participant just named it
+- do not vary the question merely to sound clever or less repetitive
+- do not steer back toward the original area after the participant's answer has moved deeper
+- do not coach, diagnose, motivate, interpret, or supply the answer inside the question
 
-Write one natural conversational question that:
-- clearly grows from the participant's last answer
-- names the actual thing they just said
-- asks beneath it, toward why that matters or what it would make possible
-- sounds like a perceptive human continuing a conversation
-- varies its phrasing naturally
-- stays concise enough to sit directly above a text box
+Natural forms:
+- Why is ___ so important to you?
+- Why does ___ matter to you?
+- What is it about ___ that matters to you?
+- Why does it matter to you that ___?
 
-Useful natural forms include, only when they fit the participant's words:
-- When you say ___, what would that give you room to be or do?
-- Why does being able to ___ matter to you?
-- What is it about ___ that matters so much to you?
-- What would ___ make possible that matters here?
-- What is underneath wanting ___?
+Use the form that fits the participant's actual wording. Reusing one of these forms across layers is correct when it keeps the dig clean.
 
-Do not copy these forms mechanically.
+Example:
+Previous answer: "meeting all the needs and wants of my family"
+Correct next question: "Why is meeting all the needs and wants of your family so important to you?"
+Incorrect next question: "What would meeting all the needs and wants of your family make possible for you?"
 
 Return JSON only:
 {"question":"..."}
@@ -129,7 +128,7 @@ ${priorDescent || "None yet. This is Layer 1."}
       body: JSON.stringify({
         model: COMPASS_MODEL,
         max_tokens: 180,
-        temperature: 0.4,
+        temperature: 0.2,
         messages: [{ role: "user", content: prompt }],
       }),
     })
@@ -183,15 +182,15 @@ function fallbackQuestion(
   selectedAreaLabel: string,
   sourceAnswer: string,
 ): string {
-  if (layer === 1) {
-    return `Why does ${selectedAreaLabel.toLowerCase()} matter to you right now?`
-  }
-
   const focus = extractFocusPhrase(sourceAnswer)
 
-  return focus
-    ? `When you say “${focus},” what would that give you room to be, do, or experience?`
-    : "What would what you just described make possible for you?"
+  if (focus) {
+    return `Why is “${focus}” so important to you?`
+  }
+
+  return layer === 1
+    ? `Why does ${selectedAreaLabel.toLowerCase()} matter to you right now?`
+    : "Why does that matter to you?"
 }
 
 function extractFocusPhrase(input: string): string | null {
@@ -205,11 +204,11 @@ function extractFocusPhrase(input: string): string | null {
 
   const concise = clauses.find((part) => {
     const words = part.split(/\s+/).filter(Boolean)
-    return words.length <= 8 && part.length <= 64
+    return words.length <= 12 && part.length <= 96
   })
 
   if (concise) return concise
 
   const words = normalized.split(/\s+/).filter(Boolean)
-  return words.slice(0, 8).join(" ").replace(/[.!?,;:]+$/, "") || null
+  return words.slice(0, 12).join(" ").replace(/[.!?,;:]+$/, "") || null
 }
