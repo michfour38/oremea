@@ -80,6 +80,13 @@ export default function MemberNav() {
               <div className="absolute right-0 top-12 z-[200] min-w-[230px] rounded-[1.75rem] border border-zinc-800/80 bg-zinc-950/95 p-4 shadow-[0_10px_40px_rgba(0,0,0,0.45)]">
                 <div className="grid gap-2">
                   <Link
+                    href="/recognition/archive"
+                    className="rounded-full border border-[#3A3224] bg-[#17130D] px-4 py-2 text-center text-sm text-[#E7C98B] transition hover:border-[#C8A96A] hover:bg-[#21190F]"
+                  >
+                    Recognition Archive
+                  </Link>
+
+                  <Link
                     href="/resonance/archive?view=day"
                     className="rounded-full border border-[#3A3224] bg-[#17130D] px-4 py-2 text-center text-sm text-[#E7C98B] transition hover:border-[#C8A96A] hover:bg-[#21190F]"
                   >
