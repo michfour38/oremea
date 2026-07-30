@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const itemIds = Array.isArray(body?.itemIds)
+    const itemIds: string[] = Array.isArray(body?.itemIds)
       ? body.itemIds.filter((value: unknown): value is string =>
           typeof value === "string" && value.length > 0,
         )
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
 
     if (
       itemIds.length !== activeIds.length ||
-      itemIds.some((id) => !activeIds.includes(id))
+      itemIds.some((id: string) => !activeIds.includes(id))
     ) {
       return NextResponse.json(
         { error: "The Map changed while it was being reordered. Refresh and try again." },
@@ -94,7 +94,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const byId = new Map(
+    const byId = new Map<string, StoredMapItem>(
       activeItems
         .filter((item): item is StoredMapItem & { id: string } =>
           typeof item.id === "string",
@@ -102,8 +102,8 @@ export async function POST(request: Request) {
         .map((item) => [item.id, item]),
     );
     const orderedItems = itemIds
-      .map((id) => byId.get(id))
-      .filter((item): item is StoredMapItem => Boolean(item));
+      .map((id: string) => byId.get(id))
+      .filter((item: StoredMapItem | undefined): item is StoredMapItem => Boolean(item));
     const movements = Array.isArray(state.movements)
       ? (state.movements as Array<Record<string, unknown>>)
       : [];
