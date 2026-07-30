@@ -251,7 +251,7 @@ export function CompassCard({
         className="rounded-[2rem] border border-zinc-800 bg-[#0f0f0f]/96 p-6 shadow-2xl shadow-black/30 backdrop-blur"
       >
         {eyebrow && (
-          <p className="mb-3 text-xs uppercase tracking-[0.28em] text-zinc-400">
+          <p className="mb-3 text-xs uppercase tracking-[0.28em] text-zinc-200">
             {eyebrow}
           </p>
         )}
@@ -260,7 +260,7 @@ export function CompassCard({
           {title}
         </h1>
 
-        <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-zinc-400 sm:text-base">
+        <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-zinc-200 sm:text-base">
           {visibleDescription}
         </p>
 
@@ -269,7 +269,7 @@ export function CompassCard({
             <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
               Review your Map
             </p>
-            <p className="mt-3 text-sm leading-7 text-zinc-300">
+            <p className="mt-3 text-sm leading-7 text-zinc-100">
               Check that each item says what you mean. Edit the wording or release
               anything that overlaps before Compass turns this Map into movement.
             </p>
@@ -321,7 +321,7 @@ export function CompassCard({
           ) : null}
 
           {isMapCard && mapReview?.reviewed ? (
-            <p className="text-center text-xs uppercase tracking-[0.16em] text-zinc-500">
+            <p className="text-center text-xs uppercase tracking-[0.16em] text-zinc-200">
               Map confirmed
             </p>
           ) : null}
@@ -339,8 +339,8 @@ export function CompassCard({
       {isDiscussionCard ? (
         <button
           type="button"
-          aria-label="Back to top of Discussion"
-          title="Back to top"
+          aria-label="Return to top of Discussion"
+          title="Return to top"
           onClick={() =>
             cardRef.current?.scrollIntoView({
               behavior: "smooth",
@@ -349,7 +349,7 @@ export function CompassCard({
           }
           className="fixed bottom-6 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-[#d8b15f]/50 bg-[#15110B]/95 text-lg text-[#E7C98B] shadow-lg shadow-black/40 backdrop-blur transition hover:border-[#d8b15f]"
         >
-          ↑
+          ↟
         </button>
       ) : null}
     </>
