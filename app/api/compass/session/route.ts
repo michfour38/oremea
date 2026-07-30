@@ -12,6 +12,13 @@ import {
 
 export const dynamic = "force-dynamic";
 
+const EMPTY_MIRROR_CACHE = {
+  mirrorCacheVersion: 1,
+  areaMirror: null,
+  coreMirror: null,
+  ending: null,
+};
+
 export async function GET() {
   try {
     const { userId } = auth();
@@ -131,6 +138,11 @@ export async function POST(request: Request) {
       });
     }
 
+    const startsFresh =
+      body.phase === "intro" &&
+      Array.isArray(body.areaResponses) &&
+      body.areaResponses.length === 0;
+
     const session = await saveCompassSession({
       userId,
       phase: body.phase,
@@ -142,6 +154,7 @@ export async function POST(request: Request) {
       discussionMessages: body.discussionMessages,
       proposedStep: body.proposedStep,
       finalStep: body.finalStep,
+      detectedPatterns: startsFresh ? EMPTY_MIRROR_CACHE : body.detectedPatterns,
     });
 
     if (body.phase === "complete") {
