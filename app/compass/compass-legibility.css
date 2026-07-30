@@ -1,0 +1,11 @@
+.compass-legibility .text-zinc-400,
+.compass-legibility .text-zinc-500,
+.compass-legibility .text-zinc-600 {
+  color: #e4e4e7 !important;
+}
+
+.compass-legibility .placeholder\:text-zinc-500::placeholder,
+.compass-legibility .placeholder\:text-zinc-600::placeholder {
+  color: #d4d4d8 !important;
+  opacity: 1;
+}
