@@ -3,6 +3,9 @@
 import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { useEffect, useMemo, useState } from "react";
 
+import { WorksProviderNav } from "@/components/works/provider/provider-nav";
+import { WorksPageHeader } from "@/components/works/works-brand";
+
 type Review = {
   id: string;
   reviewer_name: string | null;
@@ -77,17 +80,21 @@ export function ProviderReviewsPage() {
   }
 
   return <main className="mx-auto min-h-screen w-full max-w-4xl px-5 py-8 md:px-8 md:py-12">
-    <header className="flex items-center justify-between border-b border-black/10 pb-5">
-      <div><a href="/works/provider" className="text-xs font-semibold uppercase tracking-[0.32em] text-[#16834f]">WORKS</a><p className="mt-1 text-xs text-black/40">Provider reviews</p></div>
-      <SignedIn><UserButton afterSignOutUrl="/works/za" /></SignedIn>
-    </header>
+    <WorksPageHeader
+      href="/works/provider"
+      context="Provider workspace"
+      action={<SignedIn><UserButton afterSignOutUrl="/works/za" /></SignedIn>}
+    />
 
     <SignedOut><section className="py-16"><h1 className="font-serif text-4xl text-[#1f1c17]">Sign in to manage provider reviews.</h1><SignInButton mode="modal"><button className="mt-7 rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Sign in →</button></SignInButton></section></SignedOut>
 
     <SignedIn><section className="py-10 md:py-14">
-      <div className="flex flex-wrap items-end justify-between gap-5">
-        <div><p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Reputation</p><h1 className="mt-2 font-serif text-4xl text-[#1f1c17]">Customer reviews</h1></div>
-        <a href="/works/provider" className="text-sm underline underline-offset-4">Profile & capacity →</a>
+      <WorksProviderNav current="/works/provider/reviews" />
+
+      <div className="mt-10">
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Public reputation</p>
+        <h1 className="mt-2 font-serif text-4xl text-[#1f1c17]">Customer reviews</h1>
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-black/50">Published customer feedback appears here exactly as it may appear on your public WORKS profile. Reviewer identity remains private unless that customer chose to publish it.</p>
       </div>
 
       {loading ? <p className="mt-10 text-sm text-black/40">Loading…</p> : null}
@@ -105,7 +112,7 @@ export function ProviderReviewsPage() {
         <div className="mt-5 border-t border-black/8 pt-5">
           <label className="text-xs font-medium uppercase tracking-[0.14em] text-black/40">Your public response</label>
           <textarea value={drafts[review.id] ?? ""} onChange={event => setDrafts(current => ({ ...current, [review.id]: event.target.value }))} rows={3} maxLength={2000} placeholder="Respond to this review…" className="mt-3 w-full resize-none rounded-xl border border-black/10 bg-white px-4 py-3 text-sm leading-6" />
-          <button type="button" onClick={() => saveResponse(review.id)} disabled={savingId === review.id} className="mt-3 rounded-full border border-black/15 bg-white px-4 py-2 text-sm disabled:opacity-50">{savingId === review.id ? "Saving…" : "Save response →"}</button>
+          <button type="button" onClick={() => saveResponse(review.id)} disabled={savingId === review.id} className="mt-3 rounded-full border border-black/15 bg-white px-4 py-2 text-sm disabled:opacity-50">{savingId === review.id ? "Saving…" : "Save public response →"}</button>
         </div>
       </article>)}</div> : null}
     </section></SignedIn>

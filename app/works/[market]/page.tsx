@@ -28,6 +28,12 @@ export default async function WorksMarketPage({
 
   return (
     <main className="min-h-screen bg-[#f3eee4] text-[#1f1c17]">
+      <div className="border-b border-black/10 bg-white/45">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-2 px-5 py-3 text-sm sm:flex-row sm:items-center sm:justify-between md:px-8">
+          <span className="text-black/55">Manufacturers and production providers</span>
+          <a href="/works/providers/join" className="font-medium underline underline-offset-4">Create or connect your provider account →</a>
+        </div>
+      </div>
       <FounderConversationV2
         market={{
           slug: market.slug,

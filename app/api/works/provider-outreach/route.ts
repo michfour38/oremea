@@ -31,7 +31,7 @@ function escapeHtml(value: unknown) {
 function quantityText(snapshot: Awaited<ReturnType<typeof buildProviderBrief>>) {
   const target = snapshot.quantity.target;
   const unit = snapshot.quantity.unit;
-  if (target == null || !unit) return "Quantity details are included in the full brief.";
+  if (target == null || !unit) return "Quantity details are included in the full brief";
   return `${target} ${unit.toLowerCase().replaceAll("_", " ")}`;
 }
 
@@ -41,10 +41,11 @@ export async function POST(req: NextRequest) {
     const briefId = stringValue(body?.briefId);
     const searchSessionId = stringValue(body?.searchSessionId);
     const providerIds = Array.from(new Set(stringArray(body?.providerIds)));
+    const previewOnly = body?.preview === true;
 
     if (!briefId || !searchSessionId || providerIds.length === 0) {
       return NextResponse.json(
-        { error: "Choose at least one route provider to contact." },
+        { error: "Choose at least one route provider to contact" },
         { status: 400 }
       );
     }
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
 
     if (!procurement) {
       return NextResponse.json(
-        { error: "Add your contact details before WORKS contacts providers on your behalf." },
+        { error: "Add your contact details before WORKS prepares provider emails" },
         { status: 409 }
       );
     }
@@ -70,11 +71,39 @@ export async function POST(req: NextRequest) {
     });
     const providerById = new Map(providers.map((provider) => [provider.id, provider]));
 
+    if (previewOnly) {
+      const previews = [];
+
+      for (const providerId of providerIds) {
+        const provider = providerById.get(providerId);
+        if (!provider?.email) continue;
+
+        const snapshot = await buildProviderBrief(briefId, providerId);
+        previews.push({
+          providerId,
+          providerName: provider.name,
+          recipient: provider.email,
+          replyTo: procurement.email,
+          subject: `WORKS production enquiry: ${snapshot.product}`,
+          product: snapshot.product,
+          requesterName: procurement.name,
+          relevantSteps: snapshot.relevantSteps,
+          quantity: quantityText(snapshot),
+          requirements: snapshot.requirements.map(
+            (requirement) =>
+              requirement.displayValue || `${requirement.field}: ${JSON.stringify(requirement.value)}`
+          ),
+        });
+      }
+
+      return NextResponse.json({ previews });
+    }
+
     const apiKey = process.env.RESEND_API_KEY;
     const from = process.env.WORKS_OUTREACH_FROM;
     if (!apiKey || !from) {
       return NextResponse.json(
-        { error: "WORKS provider email is not configured yet." },
+        { error: "WORKS provider email is not configured yet" },
         { status: 503 }
       );
     }
@@ -86,11 +115,11 @@ export async function POST(req: NextRequest) {
     for (const providerId of providerIds) {
       const provider = providerById.get(providerId);
       if (!provider) {
-        results.push({ providerId, providerName: "Unknown provider", status: "SKIPPED", error: "Provider not found." });
+        results.push({ providerId, providerName: "Unknown provider", status: "SKIPPED", error: "Provider not found" });
         continue;
       }
       if (!provider.email) {
-        results.push({ providerId, providerName: provider.name, status: "SKIPPED", error: "No provider email is recorded yet." });
+        results.push({ providerId, providerName: provider.name, status: "SKIPPED", error: "No provider email is recorded yet" });
         continue;
       }
 
@@ -147,13 +176,13 @@ export async function POST(req: NextRequest) {
               <p style="letter-spacing:.18em;font-size:12px">WORKS · by Oremea</p>
               <h1 style="font-size:28px;font-weight:500">Can you help make this?</h1>
               <p><strong>${escapeHtml(snapshot.product)}</strong></p>
-              <p>WORKS matched your business to part of a production route for ${escapeHtml(procurement.name)}.</p>
+              <p>WORKS matched your business to part of a production route for ${escapeHtml(procurement.name)}</p>
               <p><strong>Your part of the route</strong></p>
               <ul>${stepsHtml}</ul>
               <p><strong>Current production quantity</strong><br>${escapeHtml(quantityText(snapshot))}</p>
               ${requirementsHtml ? `<p><strong>Relevant requirements</strong></p><ul>${requirementsHtml}</ul>` : ""}
               <p style="margin-top:28px"><a href="${responseUrl}" style="display:inline-block;background:#1f1c17;color:white;text-decoration:none;padding:12px 20px;border-radius:999px">Respond to this brief</a></p>
-              <p style="font-size:12px;color:#6b665e;margin-top:28px">Your response is attached to this specific WORKS production brief. Broader changes to your WORKS provider profile are handled separately.</p>
+              <p style="font-size:12px;color:#6b665e;margin-top:28px">Your response is attached to this specific WORKS production brief. Broader changes to your WORKS provider profile are handled separately</p>
             </div>
           `,
         });
@@ -174,7 +203,7 @@ export async function POST(req: NextRequest) {
           providerId,
           providerName: provider.name,
           status: "FAILED",
-          error: error instanceof Error ? error.message : "Provider outreach failed.",
+          error: error instanceof Error ? error.message : "Provider outreach failed",
         });
       }
     }
@@ -190,7 +219,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("WORKS provider outreach failed:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "WORKS could not contact these providers." },
+      { error: error instanceof Error ? error.message : "WORKS could not contact these providers" },
       { status: 500 }
     );
   }
