@@ -151,7 +151,9 @@ ${priorDescent || "None yet. This is Layer 1."}
       : ""
 
     const parsed = parseQuestion(raw)
-    return parsed || fallbackQuestion(layer, selectedAreaLabel, sourceAnswer)
+    return parsed && isRootDigQuestion(parsed)
+      ? parsed
+      : fallbackQuestion(layer, selectedAreaLabel, sourceAnswer)
   } catch (error) {
     console.error("Compass Descent question request failed:", error)
     return fallbackQuestion(layer, selectedAreaLabel, sourceAnswer)
@@ -175,6 +177,34 @@ function parseQuestion(raw: string): string | null {
   } catch {
     return null
   }
+}
+
+function isRootDigQuestion(question: string): boolean {
+  const normalized = question.trim().toLowerCase()
+  if (!normalized) return false
+
+  const changesLens = [
+    "make possible",
+    "give you room",
+    "what would this create",
+    "what would that create",
+    "what comes next",
+    "what do you picture",
+    "what would it mean",
+    "what does it mean",
+    "what does this carry",
+    "what does that carry",
+    "how much weight",
+  ].some((phrase) => normalized.includes(phrase))
+
+  if (changesLens) return false
+
+  return (
+    normalized.includes("why") ||
+    normalized.includes("matter") ||
+    normalized.includes("important") ||
+    normalized.includes("underneath")
+  )
 }
 
 function fallbackQuestion(
