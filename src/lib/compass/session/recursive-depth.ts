@@ -32,17 +32,20 @@ const VALUE_WORDS = [
   "movement",
 ]
 
-const DESCENT_QUESTION_KEY = "oremea-compass-descent-question-v2"
-const LEGACY_DESCENT_QUESTION_KEY = "oremea-compass-descent-question"
+const DESCENT_QUESTION_KEY = "oremea-compass-descent-question-v3"
+const LEGACY_DESCENT_QUESTION_KEYS = [
+  "oremea-compass-descent-question-v2",
+  "oremea-compass-descent-question",
+]
 
 export function getRecursiveQuestion(layer: number): string {
   const questions = [
     "Why does this matter to you right now?",
-    "What is it about what you just described that matters to you?",
-    "What makes that important to you?",
-    "Why does that matter to you?",
-    "What is underneath that for you?",
-    "What makes that matter so deeply to you?",
+    "Why is that important to you?",
+    "Why did that affect you that way?",
+    "Why did that feel true to you?",
+    "Why is that still important to you?",
+    "Why does that matter beneath everything else you have named?",
     "Why does that matter at the deepest level for you?",
   ]
 
@@ -84,7 +87,7 @@ export function rememberAdaptiveRecursiveQuestion({
 }) {
   if (typeof window === "undefined" || !isRootDigQuestion(question)) return
 
-  window.sessionStorage.removeItem(LEGACY_DESCENT_QUESTION_KEY)
+  clearLegacyQuestionCache()
   window.sessionStorage.setItem(
     DESCENT_QUESTION_KEY,
     JSON.stringify({
@@ -104,7 +107,7 @@ export function getRememberedAdaptiveRecursiveQuestion({
 }): string | null {
   if (typeof window === "undefined") return null
 
-  window.sessionStorage.removeItem(LEGACY_DESCENT_QUESTION_KEY)
+  clearLegacyQuestionCache()
 
   const raw = window.sessionStorage.getItem(DESCENT_QUESTION_KEY)
   if (!raw) return null
@@ -152,11 +155,11 @@ export function buildAdaptiveRecursiveQuestion({
 
   if (remembered) return remembered
 
-  if (layer === 1) {
-    return `Why does ${selectedAreaLabel.toLowerCase()} matter to you right now?`
-  }
-
-  return getRecursiveQuestion(layer)
+  return buildRootDigFallback({
+    layer,
+    selectedAreaLabel,
+    sourceAnswer,
+  })
 }
 
 function isRootDigQuestion(question: string): boolean {
@@ -177,14 +180,91 @@ function isRootDigQuestion(question: string): boolean {
     "how much weight",
   ].some((phrase) => normalized.includes(phrase))
 
-  if (changesLens) return false
+  return !changesLens && normalized.startsWith("why")
+}
 
-  return (
-    normalized.includes("why") ||
-    normalized.includes("matter") ||
-    normalized.includes("important") ||
-    normalized.includes("underneath")
+function buildRootDigFallback({
+  layer,
+  selectedAreaLabel,
+  sourceAnswer,
+}: {
+  layer: number
+  selectedAreaLabel: string
+  sourceAnswer: string
+}): string {
+  const cleaned = sourceAnswer
+    .trim()
+    .replace(/^because\s+/i, "")
+    .replace(/[.!?]+$/, "")
+
+  const tiredMatch = cleaned.match(/^i(?:['’]m| am)\s+tired of\s+(.+)/i)
+  if (tiredMatch) {
+    return `Why are you tired of ${toSecondPerson(tiredMatch[1])}?`
+  }
+
+  const feltLikeMatch = cleaned.match(/^i(?:\s+always)?\s+felt like\s+(.+)/i)
+  if (feltLikeMatch) {
+    return `Why did you feel like ${toSecondPerson(feltLikeMatch[1])}?`
+  }
+
+  const feltMatch = cleaned.match(/^i(?:\s+always)?\s+felt\s+(.+)/i)
+  if (feltMatch) {
+    return `Why did you feel ${toSecondPerson(feltMatch[1])}?`
+  }
+
+  const beliefMatch = cleaned.match(/^i\s+(?:believed|thought)\s+(.+)/i)
+  if (beliefMatch) {
+    return `Why did you believe ${toSecondPerson(beliefMatch[1])}?`
+  }
+
+  const focus = extractFocusPhrase(cleaned)
+  if (focus) {
+    return `Why is ${toSecondPerson(focus)} so important to you?`
+  }
+
+  return layer === 1
+    ? `Why does ${selectedAreaLabel.toLowerCase()} matter to you right now?`
+    : getRecursiveQuestion(layer)
+}
+
+function clearLegacyQuestionCache() {
+  if (typeof window === "undefined") return
+
+  LEGACY_DESCENT_QUESTION_KEYS.forEach((key) =>
+    window.sessionStorage.removeItem(key),
   )
+}
+
+function toSecondPerson(input: string): string {
+  return input
+    .trim()
+    .replace(/\bi['’]m\b/gi, "you're")
+    .replace(/\bi am\b/gi, "you are")
+    .replace(/\bi['’]ve\b/gi, "you've")
+    .replace(/\bi['’]d\b/gi, "you'd")
+    .replace(/\bmy\b/gi, "your")
+    .replace(/\bme\b/gi, "you")
+    .replace(/\bi\b/gi, "you")
+}
+
+function extractFocusPhrase(input: string): string | null {
+  const normalized = input.trim().replace(/\s+/g, " ")
+  if (!normalized) return null
+
+  const clauses = normalized
+    .split(/[,;]|\s+[—–-]\s+/)
+    .map((part) => part.trim().replace(/[.!?]+$/, ""))
+    .filter(Boolean)
+
+  const concise = clauses.find((part) => {
+    const words = part.split(/\s+/).filter(Boolean)
+    return words.length <= 12 && part.length <= 96
+  })
+
+  if (concise) return concise
+
+  const words = normalized.split(/\s+/).filter(Boolean)
+  return words.slice(0, 12).join(" ").replace(/[.!?,;:]+$/, "") || null
 }
 
 function normalizeSource(input: string): string {
