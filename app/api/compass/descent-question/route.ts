@@ -6,17 +6,6 @@ import type {
   CompassGoalArea,
   CompassRecursiveLayer,
 } from "@/src/lib/compass/session/session-types"
-import { buildMirrorWhyQuestion } from "@/src/lib/oremea/mirror-question"
-
-const FLAT_FALLBACKS = new Set([
-  "Why does this matter to you right now?",
-  "Why is that important to you?",
-  "Why does that matter to you?",
-  "Why is that important here?",
-  "Why does that matter now?",
-  "Why is that still important to you?",
-  "Why does that matter beneath everything else you have named?",
-])
 
 export async function POST(request: Request) {
   try {
@@ -32,32 +21,18 @@ export async function POST(request: Request) {
       )
     }
 
-    const areaResponses = Array.isArray(body.areaResponses)
-      ? (body.areaResponses as CompassAreaResponse[])
-      : []
-    const recursiveLayers = Array.isArray(body.recursiveLayers)
-      ? (body.recursiveLayers as CompassRecursiveLayer[])
-      : []
-    const currentAnswer =
-      typeof body.currentAnswer === "string" ? body.currentAnswer : undefined
-
-    const sourceAnswer =
-      currentAnswer?.trim() ||
-      recursiveLayers[recursiveLayers.length - 1]?.answer.trim() ||
-      areaResponses.find((response) => response.area === selectedArea)?.answer.trim() ||
-      ""
-
-    const generatedQuestion = await generateCompassDescentQuestion({
+    const question = await generateCompassDescentQuestion({
       layer,
       selectedArea,
-      areaResponses,
-      recursiveLayers,
-      currentAnswer,
+      areaResponses: Array.isArray(body.areaResponses)
+        ? (body.areaResponses as CompassAreaResponse[])
+        : [],
+      recursiveLayers: Array.isArray(body.recursiveLayers)
+        ? (body.recursiveLayers as CompassRecursiveLayer[])
+        : [],
+      currentAnswer:
+        typeof body.currentAnswer === "string" ? body.currentAnswer : undefined,
     })
-
-    const question = FLAT_FALLBACKS.has(generatedQuestion.trim())
-      ? buildMirrorWhyQuestion({ layer, sourceAnswer })
-      : generatedQuestion
 
     return NextResponse.json({ ok: true, question })
   } catch (error) {
@@ -66,12 +41,9 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown Compass Descent error.",
+        error: "Mirror could not form the next question without leaving the participant's evidence.",
       },
-      { status: 500 },
+      { status: 503 },
     )
   }
 }
