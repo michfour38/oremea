@@ -1,5 +1,3 @@
-import { buildMirrorWhyQuestion } from "@/src/lib/oremea/mirror-question"
-
 import type { CompassRecursiveLayer } from "./session-types"
 
 const VALUE_WORDS = [
@@ -34,8 +32,9 @@ const VALUE_WORDS = [
   "movement",
 ]
 
-const DESCENT_QUESTION_KEY = "oremea-compass-descent-question-v6"
+const DESCENT_QUESTION_KEY = "oremea-compass-descent-question-v7"
 const LEGACY_DESCENT_QUESTION_KEYS = [
+  "oremea-compass-descent-question-v6",
   "oremea-compass-descent-question-v5",
   "oremea-compass-descent-question-v4",
   "oremea-compass-descent-question-v3",
@@ -156,7 +155,7 @@ export function buildAdaptiveRecursiveQuestion({
     return `Why does ${selectedAreaLabel.toLowerCase()} matter to you right now?`
   }
 
-  return buildMirrorWhyQuestion({ layer, sourceAnswer })
+  return ""
 }
 
 function isUsableQuestion(question: string): boolean {
