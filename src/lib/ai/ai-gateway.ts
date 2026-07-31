@@ -1,3 +1,5 @@
+import { OREMEA_EVIDENCE_BOUNDARY } from "@/src/lib/oremea/evidence-boundary"
+
 import { AI_MODELS } from "./ai-config"
 
 export type GenerateAIParams = {
@@ -6,11 +8,19 @@ export type GenerateAIParams = {
   maxTokens?: number
 }
 
+const PARTICIPANT_EVIDENCE_TASKS = new Set([
+  "recognition_synthesis",
+])
+
 export async function generateAI({
   task,
   prompt,
   maxTokens = 1400,
 }: GenerateAIParams): Promise<string | null> {
+  const effectivePrompt = PARTICIPANT_EVIDENCE_TASKS.has(task)
+    ? `${OREMEA_EVIDENCE_BOUNDARY}\n\n${prompt}`
+    : prompt
+
   const models = [
     AI_MODELS.primary,
     AI_MODELS.fallback,
@@ -22,7 +32,7 @@ export async function generateAI({
     const result = await callAnthropicModel({
       task,
       model,
-      prompt,
+      prompt: effectivePrompt,
       maxTokens,
     })
 
@@ -77,27 +87,27 @@ async function callAnthropicModel({
 
     const data = await res.json()
 
-if (data?.stop_reason === "max_tokens") {
-  if (allowTokenRetry) {
-    console.warn(
-      `AI model "${model}" reached the token limit for task "${task}". Retrying with more room.`,
-    )
+    if (data?.stop_reason === "max_tokens") {
+      if (allowTokenRetry) {
+        console.warn(
+          `AI model "${model}" reached the token limit for task "${task}". Retrying with more room.`,
+        )
 
-    return callAnthropicModel({
-      task,
-      model,
-      prompt,
-      maxTokens: Math.min(maxTokens * 2, 4000),
-      allowTokenRetry: false,
-    })
-  }
+        return callAnthropicModel({
+          task,
+          model,
+          prompt,
+          maxTokens: Math.min(maxTokens * 2, 4000),
+          allowTokenRetry: false,
+        })
+      }
 
-  console.error(
-    `AI model "${model}" remained truncated for task "${task}" after retry.`,
-  )
+      console.error(
+        `AI model "${model}" remained truncated for task "${task}" after retry.`,
+      )
 
-  return null
-}
+      return null
+    }
 
     if (!res.ok) {
       console.error(
