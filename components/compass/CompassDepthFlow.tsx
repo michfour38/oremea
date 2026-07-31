@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 
 import {
-  buildAdaptiveRecursiveQuestion,
   getRememberedAdaptiveRecursiveQuestion,
   rememberAdaptiveRecursiveQuestion,
   type CompassAreaResponse,
@@ -71,6 +70,8 @@ export function CompassDepthFlow({
 
   const [currentQuestion, setCurrentQuestion] = useState("");
   const [isQuestionLoading, setIsQuestionLoading] = useState(true);
+  const [questionError, setQuestionError] = useState("");
+  const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -83,24 +84,20 @@ export function CompassDepthFlow({
 
       if (remembered) {
         setCurrentQuestion(remembered);
+        setQuestionError("");
         setIsQuestionLoading(false);
         return;
       }
 
       if (!selectedArea) {
-        setCurrentQuestion(
-          buildAdaptiveRecursiveQuestion({
-            layer: layerNumber,
-            selectedAreaLabel,
-            previousAnswer,
-            firstAnswer,
-          }),
-        );
+        setCurrentQuestion("");
+        setQuestionError("Choose an area before beginning The Descent.");
         setIsQuestionLoading(false);
         return;
       }
 
       setCurrentQuestion("");
+      setQuestionError("");
       setIsQuestionLoading(true);
 
       try {
@@ -124,41 +121,29 @@ export function CompassDepthFlow({
             ? data.question.trim()
             : "";
 
-        const question =
-          generatedQuestion ||
-          buildAdaptiveRecursiveQuestion({
-            layer: layerNumber,
-            selectedAreaLabel,
-            previousAnswer,
-            firstAnswer,
-          });
+        if (!generatedQuestion) {
+          throw new Error(
+            typeof data?.error === "string"
+              ? data.error
+              : "Mirror did not return a usable Descent question.",
+          );
+        }
 
         rememberAdaptiveRecursiveQuestion({
           layer: layerNumber,
           sourceAnswer: carriedAnswer,
-          question,
+          question: generatedQuestion,
         });
 
-        setCurrentQuestion(question);
+        setCurrentQuestion(generatedQuestion);
       } catch (error) {
         if (cancelled) return;
 
         console.error("Compass Descent question failed:", error);
-
-        const fallback = buildAdaptiveRecursiveQuestion({
-          layer: layerNumber,
-          selectedAreaLabel,
-          previousAnswer,
-          firstAnswer,
-        });
-
-        rememberAdaptiveRecursiveQuestion({
-          layer: layerNumber,
-          sourceAnswer: carriedAnswer,
-          question: fallback,
-        });
-
-        setCurrentQuestion(fallback);
+        setCurrentQuestion("");
+        setQuestionError(
+          "Mirror could not form the next question without leaving your words.",
+        );
       } finally {
         if (!cancelled) setIsQuestionLoading(false);
       }
@@ -172,12 +157,10 @@ export function CompassDepthFlow({
   }, [
     areaResponses,
     carriedAnswer,
-    firstAnswer,
     layerNumber,
-    previousAnswer,
     recursiveLayers,
+    retryNonce,
     selectedArea,
-    selectedAreaLabel,
   ]);
 
   return (
@@ -202,6 +185,19 @@ export function CompassDepthFlow({
           <p className="font-serif text-2xl leading-tight text-zinc-100 sm:text-3xl">
             Following the thread...
           </p>
+        ) : questionError ? (
+          <div className="space-y-4">
+            <p className="font-serif text-2xl leading-tight text-zinc-100 sm:text-3xl">
+              {questionError}
+            </p>
+            <button
+              type="button"
+              onClick={() => setRetryNonce((value) => value + 1)}
+              className="primary-button"
+            >
+              Try again
+            </button>
+          </div>
         ) : (
           <h2 className="font-serif text-3xl leading-tight text-[#d8b15f] sm:text-4xl">
             {currentQuestion}
@@ -214,13 +210,18 @@ export function CompassDepthFlow({
         onChange={(event) => onAnswerChange(event.target.value)}
         placeholder="Answer in your own words."
         rows={7}
-        disabled={isQuestionLoading || !currentQuestion}
+        disabled={isQuestionLoading || Boolean(questionError) || !currentQuestion}
         className="compass-textarea"
       />
 
       <button
         onClick={onSubmitAnswer}
-        disabled={isQuestionLoading || !currentQuestion || !recursiveAnswer.trim()}
+        disabled={
+          isQuestionLoading ||
+          Boolean(questionError) ||
+          !currentQuestion ||
+          !recursiveAnswer.trim()
+        }
         className="primary-button disabled:cursor-not-allowed disabled:opacity-50"
       >
         Continue
