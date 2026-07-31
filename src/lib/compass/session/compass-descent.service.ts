@@ -42,9 +42,11 @@ export async function generateCompassDescentQuestion({
     currentAnswer?.trim() || previousLayer?.answer.trim() || selectedAreaAnswer
 
   if (!sourceAnswer) {
-    return layer === 1
-      ? `Why does ${selectedAreaLabel.toLowerCase()} matter to you right now?`
-      : genericWhyQuestion(layer)
+    if (layer === 1) {
+      return `Why does ${selectedAreaLabel.toLowerCase()} matter to you right now?`
+    }
+
+    throw new Error("Compass Descent has no previous answer to follow.")
   }
 
   const priorDescent = recursiveLayers
@@ -73,7 +75,7 @@ export async function generateCompassDescentQuestion({
       body: JSON.stringify({
         model: COMPASS_MODEL,
         max_tokens: 180,
-        temperature: 0.25,
+        temperature: 0.2,
         messages: [{ role: "user", content: prompt }],
       }),
     })
@@ -82,7 +84,7 @@ export async function generateCompassDescentQuestion({
 
     if (!response.ok) {
       console.error("Compass Descent question API error:", data)
-      return genericWhyQuestion(layer)
+      throw new Error("Mirror could not generate the next Descent question.")
     }
 
     const raw = Array.isArray(data?.content)
@@ -96,12 +98,18 @@ export async function generateCompassDescentQuestion({
       : ""
 
     const parsed = parseQuestion(raw)
-    return parsed && isValidDescentQuestion(parsed, recursiveLayers)
-      ? parsed
-      : genericWhyQuestion(layer)
+
+    if (
+      !parsed ||
+      !isValidDescentQuestion(parsed, recursiveLayers, sourceAnswer)
+    ) {
+      throw new Error("Mirror returned a question outside the Descent boundary.")
+    }
+
+    return parsed
   } catch (error) {
     console.error("Compass Descent question request failed:", error)
-    return genericWhyQuestion(layer)
+    throw error
   }
 }
 
@@ -132,21 +140,23 @@ THE DESCENT JOB
 - position is irrelevant: the direct answer may appear first, in the middle, or last
 - a direct answer is the thought that most naturally completes "Because..."
 - if several thoughts directly answer the question, hold them together as one compound answer
-- use the full response to hear emotional tone, but follow only the direct answer as the inquiry thread
+- use the full response to understand references and cadence, but follow only the direct answer as the inquiry thread
 - ask one why-question beneath that answer
 
-EMOTIONAL PRECISION
-- the question should sound as though Mirror heard the person, not as though software inserted their sentence into a template
-- acknowledge frustration, hurt, exclusion, anger, grief, fear, relief, longing, or another feeling when the participant's words and surrounding context strongly carry it
-- empathy belongs in the accuracy and humanity of the wording; do not comfort, reassure, praise, or coach
-- compress awkward clauses and reflect the lived contrast naturally
-- avoid bureaucratic constructions such as "Why did it matter to you that you felt like..." when a more human why-question can hold the same thread
+HUMAN WITHOUT LEADING
+- sound as though Mirror heard the person, not as though software inserted their sentence into a template
+- compress awkward clauses while preserving the participant's meaning
+- empathy must come through accurate language and natural cadence
+- preserve an emotion only when the participant explicitly names that emotion in the direct answer
+- never infer or label frustration, hurt, exclusion, anger, grief, fear, relief, longing, pain, difficulty, or intensity from tone, punctuation, a rhetorical question, or surrounding context
+- never add "so", "deeply", "painful", "hard to carry", or another intensifier the participant did not supply
+- a rhetorical question may clarify a reference, but it is not evidence of an emotion
 
 KEEP THE THREAD
 - use only why
 - the newest direct answer remains the subject
 - preserve the participant's meaning and living language
-- rhetorical questions, examples, commentary, blame, speculation, and side explanations may inform tone but must not become the next thread
+- rhetorical questions, examples, commentary, blame, speculation, and side explanations must not become the next thread
 - do not investigate why another person behaved as they did
 - do not ask what the answer makes possible, what comes next, what they should do, or what future it creates
 - do not diagnose, interpret the whole person, or supply the answer inside the question
@@ -154,20 +164,19 @@ KEEP THE THREAD
 - do not repeat the exact wording or opening structure of an earlier question when a natural alternative is available
 
 RABBIT-HOLE GUARD
-Do not ask for the cause of the feeling or belief merely because the answer contains one.
-For example, do not ask:
-- "Why did you feel like you didn't deserve it?"
-- "Why did you believe that?"
-- "Why wouldn't your parents work smarter?"
-
-Instead, Mirror may hold the emotional truth already present and ask why that experience carried weight.
+Do not ask for the cause of a feeling or belief merely because the answer contains one.
+Do not ask why another person acted as they did.
+Ask why the participant's direct answer mattered to them.
 
 EXAMPLE
 Previous question: "Why did feeling left out matter to you?"
 Answer: "I felt like I didn't deserve what they had. Why wouldn't my parents just work smarter?"
 Direct answer: "I felt like I didn't deserve what they had."
-Tone available from the full response: exclusion and frustration.
-Next question: "Why was it so frustrating to feel like you didn't deserve what the other kids had?"
+Context used only to resolve "they": the other kids.
+Next question: "Why did feeling undeserving of what the other kids had matter to you?"
+Do not ask: "Why was it so frustrating...?"
+Do not ask: "Why did you feel...?"
+Do not ask: "Why wouldn't your parents...?"
 
 Return JSON only:
 {"question":"..."}
@@ -207,8 +216,11 @@ function parseQuestion(raw: string): string | null {
 function isValidDescentQuestion(
   question: string,
   recursiveLayers: CompassRecursiveLayer[],
+  sourceAnswer: string,
 ): boolean {
   const normalized = question.trim().toLowerCase()
+  const source = sourceAnswer.trim().toLowerCase()
+
   if (!normalized.startsWith("why") || !normalized.endsWith("?")) return false
 
   const changesLens = [
@@ -238,23 +250,30 @@ function isValidDescentQuestion(
     "why would your",
   ].some((phrase) => normalized.startsWith(phrase))
 
-  if (changesLens || changesThread) return false
+  const inferredLabels = [
+    "frustrat",
+    "hurt",
+    "painful",
+    "angry",
+    "grief",
+    "fear",
+    "frighten",
+    "relief",
+    "longing",
+    "hard to carry",
+  ].some(
+    (label) => normalized.includes(label) && !source.includes(label),
+  )
+
+  const inventedIntensity = [" so ", "deeply", "extremely"].some(
+    (word) => normalized.includes(word) && !source.includes(word.trim()),
+  )
+
+  if (changesLens || changesThread || inferredLabels || inventedIntensity) {
+    return false
+  }
 
   return !recursiveLayers.some(
     (item) => item.question.trim().toLowerCase() === normalized,
   )
-}
-
-function genericWhyQuestion(layer: number): string {
-  const questions = [
-    "Why does this matter to you right now?",
-    "Why is that important to you?",
-    "Why does that matter to you?",
-    "Why is that important here?",
-    "Why does that matter now?",
-    "Why is that still important to you?",
-    "Why does that matter beneath everything else you have named?",
-  ]
-
-  return questions[layer - 1] ?? questions[questions.length - 1]
 }
