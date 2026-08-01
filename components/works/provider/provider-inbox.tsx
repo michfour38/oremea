@@ -138,7 +138,7 @@ export function WorksProviderInbox() {
       action={<SignedIn><UserButton afterSignOutUrl="/works/za" /></SignedIn>}
     />
 
-    <SignedOut><section className="py-16"><h1 className="font-serif text-4xl md:text-5xl">Production opportunities sent to your business.</h1><p className="mt-5 max-w-xl text-sm leading-7 text-black/55">Sign in with the account connected to your WORKS provider profile.</p><SignInButton mode="modal"><button className="mt-7 rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Sign in →</button></SignInButton></section></SignedOut>
+    <SignedOut><section className="py-16"><h1 className="font-serif text-4xl md:text-5xl">Production opportunities sent to your business</h1><p className="mt-5 max-w-xl text-sm leading-7 text-black/55">Sign in with the account connected to your WORKS provider profile.</p><SignInButton mode="modal"><button className="mt-7 rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Sign in →</button></SignInButton></section></SignedOut>
 
     <SignedIn>{loading ? <p className="py-12 text-sm text-black/40">Loading opportunities…</p> : items.length === 0 ? <section className="py-10 md:py-14"><WorksProviderNav current="/works/provider/inbox" /><div className="mt-10"><h1 className="font-serif text-4xl">Inbox</h1><p className="mt-4 max-w-xl text-sm leading-7 text-black/50">No WORKS production briefs have been sent to your provider profile yet.</p></div></section> : <section className="py-10 md:py-14">
       <WorksProviderNav current="/works/provider/inbox" />
