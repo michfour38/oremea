@@ -84,7 +84,7 @@ export default function WorksNewProviderPage() {
         <SignedOut>
           <section className="py-16">
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#16834f]">New to WORKS</p>
-            <h1 className="mt-4 max-w-3xl font-serif text-5xl leading-tight">Add your manufacturing or production business.</h1>
+            <h1 className="mt-4 max-w-3xl font-serif text-5xl leading-tight">Add your manufacturing or production business</h1>
             <p className="mt-5 max-w-xl text-sm leading-7 text-black/55">Sign in first. The profile belongs to your account from creation, and nothing beyond the business name becomes public until you choose it.</p>
             <SignInButton mode="modal" forceRedirectUrl="/works/providers/new"><button className="mt-7 rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Sign in to continue →</button></SignInButton>
           </section>
