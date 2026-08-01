@@ -1,7 +1,9 @@
 "use client";
 
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
-import { useState } from "react";
+import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
+
+import { MemberWorksNav } from "@/components/works/member-works-nav";
 
 type FormState = {
   name: string;
@@ -29,11 +31,30 @@ const INITIAL: FormState = {
   acceptsRemoteClients: false,
 };
 
+const DRAFT_KEY = "works-provider-new-draft";
+
 export default function WorksNewProviderPage() {
   const [form, setForm] = useState<FormState>(INITIAL);
+  const [draftLoaded, setDraftLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [created, setCreated] = useState<{ name: string; slug: string } | null>(null);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(DRAFT_KEY);
+      if (saved) setForm({ ...INITIAL, ...JSON.parse(saved) });
+    } catch {
+      window.localStorage.removeItem(DRAFT_KEY);
+    } finally {
+      setDraftLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!draftLoaded || created) return;
+    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
+  }, [created, draftLoaded, form]);
 
   async function createProvider() {
     try {
@@ -46,6 +67,7 @@ export default function WorksNewProviderPage() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error ?? "WORKS could not create this provider profile yet.");
+      window.localStorage.removeItem(DRAFT_KEY);
       setCreated(data.provider);
     } catch (err) {
       setError(err instanceof Error ? err.message : "WORKS could not create this provider profile yet.");
@@ -57,17 +79,14 @@ export default function WorksNewProviderPage() {
   return (
     <main className="min-h-screen bg-[#fbfaf7] text-[#1f1c17]">
       <div className="mx-auto w-full max-w-5xl px-5 py-8 md:px-8 md:py-12">
-        <header className="flex items-center justify-between border-b border-black/10 pb-5">
-          <div><a href="/works/za" className="text-xs font-semibold uppercase tracking-[0.32em] text-[#16834f]">WORKS</a><p className="mt-1 text-xs text-black/40">Add your business · by Oremea</p></div>
-          <SignedIn><UserButton afterSignOutUrl="/works/providers/join" /></SignedIn>
-        </header>
+        <MemberWorksNav />
 
         <SignedOut>
           <section className="py-16">
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#16834f]">New to WORKS</p>
             <h1 className="mt-4 max-w-3xl font-serif text-5xl leading-tight">Add your manufacturing or production business.</h1>
             <p className="mt-5 max-w-xl text-sm leading-7 text-black/55">Sign in first. The profile belongs to your account from creation, and nothing beyond the business name becomes public until you choose it.</p>
-            <SignInButton mode="modal"><button className="mt-7 rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Sign in to continue →</button></SignInButton>
+            <SignInButton mode="modal" forceRedirectUrl="/works/providers/new"><button className="mt-7 rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Sign in to continue →</button></SignInButton>
           </section>
         </SignedOut>
 
@@ -75,14 +94,14 @@ export default function WorksNewProviderPage() {
           {created ? (
             <section className="py-16">
               <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#16834f]">Profile created</p>
-              <h1 className="mt-4 max-w-3xl font-serif text-5xl leading-tight">{created.name} is now connected to your WORKS account.</h1>
+              <h1 className="mt-4 max-w-3xl font-serif text-5xl leading-tight">{created.name} is now connected to your WORKS account</h1>
               <p className="mt-5 max-w-2xl text-sm leading-7 text-black/55">Your operational information stays inside WORKS. Open the provider workspace to choose what customers can see, add capacity, and tell WORKS what work you want more of.</p>
               <div className="mt-8 flex flex-wrap gap-3"><a href="/works/provider" className="rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Open provider workspace →</a><a href={`/works/providers/${created.slug}`} className="rounded-full border border-black/15 bg-white px-6 py-3 text-sm">View public profile</a></div>
             </section>
           ) : (
             <section className="py-12">
               <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#16834f]">New provider</p>
-              <h1 className="mt-3 max-w-3xl font-serif text-4xl leading-tight md:text-5xl">Tell WORKS which business you represent.</h1>
+              <h1 className="mt-3 max-w-3xl font-serif text-4xl leading-tight md:text-5xl">Tell WORKS which business you represent</h1>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-black/55">This step creates the account-linked provider record. Contact details, description and location remain private by default until you choose to publish them from your provider workspace.</p>
 
               <div className="mt-8 grid gap-5 rounded-3xl border border-black/10 bg-white p-6 md:p-8">
