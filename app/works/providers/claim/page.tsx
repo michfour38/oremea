@@ -1,7 +1,9 @@
 "use client";
 
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
+
+import { MemberWorksNav } from "@/components/works/member-works-nav";
 
 type ProviderResult = {
   id: string;
@@ -84,17 +86,14 @@ export default function WorksProviderClaimPage() {
   return (
     <main className="min-h-screen bg-[#fbfaf7] text-[#1f1c17]">
       <div className="mx-auto w-full max-w-5xl px-5 py-8 md:px-8 md:py-12">
-        <header className="flex items-center justify-between border-b border-black/10 pb-5">
-          <div><a href="/works/za" className="text-xs font-semibold uppercase tracking-[0.32em] text-[#16834f]">WORKS</a><p className="mt-1 text-xs text-black/40">Connect an existing business · by Oremea</p></div>
-          <SignedIn><UserButton afterSignOutUrl="/works/providers/join" /></SignedIn>
-        </header>
+        <MemberWorksNav />
 
         <SignedOut>
           <section className="py-16">
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#16834f]">Provider access</p>
             <h1 className="mt-4 max-w-3xl font-serif text-5xl leading-tight">Connect your account to the WORKS profile for your business.</h1>
             <p className="mt-5 max-w-xl text-sm leading-7 text-black/55">Sign in first. WORKS verifies the connection before any editing access is granted.</p>
-            <SignInButton mode="modal"><button className="mt-7 rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Sign in to continue →</button></SignInButton>
+            <SignInButton mode="modal" forceRedirectUrl="/works/providers/claim"><button className="mt-7 rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Sign in to continue →</button></SignInButton>
           </section>
         </SignedOut>
 
