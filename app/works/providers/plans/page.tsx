@@ -29,7 +29,7 @@ export default function WorksProviderPlansPage() {
 
         <section className="py-14 md:py-20">
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#16834f]">Provider plans</p>
-          <h1 className="mt-3 max-w-3xl font-serif text-4xl md:text-5xl">Choose how actively WORKS represents your available capacity.</h1>
+          <h1 className="mt-3 max-w-3xl font-serif text-4xl md:text-5xl">Choose how actively WORKS represents your available capacity</h1>
           <p className="mt-5 max-w-2xl text-sm leading-7 text-black/55">
             Opportunity follows real founder demand and genuine fit. A paid plan never purchases artificial ranking or a guaranteed lead count.
           </p>
