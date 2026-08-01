@@ -43,7 +43,7 @@ export function ProviderInsightsPage() {
       action={<SignedIn><UserButton afterSignOutUrl="/works/za" /></SignedIn>}
     />
 
-    <SignedOut><section className="py-16"><h1 className="font-serif text-4xl text-[#1f1c17]">Sign in to view provider insights.</h1><SignInButton mode="modal"><button className="mt-7 rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Sign in →</button></SignInButton></section></SignedOut>
+    <SignedOut><section className="py-16"><h1 className="font-serif text-4xl text-[#1f1c17]">Sign in to view provider insights</h1><SignInButton mode="modal"><button className="mt-7 rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Sign in →</button></SignInButton></section></SignedOut>
 
     <SignedIn><section className="py-10 md:py-14">
       <WorksProviderNav current="/works/provider/insights" />
