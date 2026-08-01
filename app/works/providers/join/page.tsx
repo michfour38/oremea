@@ -1,6 +1,6 @@
 "use client";
 
-import { SignInButton } from "@clerk/nextjs";
+import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
 
 import { WorksPageHeader } from "@/components/works/works-brand";
 
@@ -11,11 +11,20 @@ export default function WorksProviderJoinPage() {
         <WorksPageHeader
           context="For manufacturers & production providers"
           action={
-            <SignInButton mode="modal">
-              <button className="rounded-full border border-black/15 bg-white px-4 py-2 text-sm">
-                Provider sign in
-              </button>
-            </SignInButton>
+            <>
+              <SignedOut>
+                <SignInButton mode="modal" forceRedirectUrl="/works/provider">
+                  <button className="rounded-full border border-black/15 bg-white px-4 py-2 text-sm">
+                    Provider sign in
+                  </button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <a href="/works/provider" className="rounded-full border border-black/15 bg-white px-4 py-2 text-sm">
+                  Provider workspace →
+                </a>
+              </SignedIn>
+            </>
           }
         />
 
@@ -24,7 +33,7 @@ export default function WorksProviderJoinPage() {
             Matching capacity with opportunity
           </p>
           <h1 className="mt-4 max-w-4xl font-serif text-5xl leading-[1.05] md:text-6xl">
-            Bring the work you want more of into WORKS.
+            Bring the work you want more of into WORKS
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-8 text-black/60">
             WORKS matches real production requirements with real provider capability. Start by telling us whether your business already has a WORKS profile.
