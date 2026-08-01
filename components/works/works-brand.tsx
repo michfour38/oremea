@@ -8,20 +8,13 @@ export function WorksBrand({
   context?: string;
 }) {
   return (
-    <a href={href} className="inline-flex items-center gap-3" aria-label="WORKS by Oremea">
+    <a href={href} className="inline-flex min-w-0 flex-col items-start" aria-label="WORKS by Oremea">
       <img
-        src="/works/works-mark.png"
-        alt=""
-        className="h-9 w-9 object-contain"
+        src="/works/works-logo.png"
+        alt="WORKS by Oremea"
+        className="h-11 w-auto max-w-[210px] object-contain object-left"
       />
-      <span className="min-w-0">
-        <img
-          src="/works/works-logo.png"
-          alt="WORKS by Oremea"
-          className="h-8 w-auto max-w-[180px] object-contain object-left"
-        />
-        {context ? <span className="mt-1 block text-[11px] text-black/40">{context}</span> : null}
-      </span>
+      {context ? <span className="mt-1 block text-[11px] text-black/40">{context}</span> : null}
     </a>
   );
 }
