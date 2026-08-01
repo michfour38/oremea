@@ -10,14 +10,14 @@ const plans = [
   {
     name: "Verified",
     price: "R599 / month",
-    detail: "Keep provider information current and make the fit easier for founders to trust.",
-    features: ["Claimed + maintained profile", "Capacity and capability controls", "Direct WORKS enquiries", "Provider response workspace", "Public customer reviews"],
+    detail: "Keep your provider information current so founders can understand and trust the fit.",
+    features: ["Claim and maintain your own profile", "Update capacity and capability", "Receive direct WORKS enquiries", "Respond from your provider workspace", "Public customer reviews"],
   },
   {
     name: "Growth",
     price: "R1,999 / month",
     detail: "Tell WORKS what capacity you want filled. WORKS actively markets those capabilities and routes matching demand by genuine fit.",
-    features: ["Everything in Verified", "Active demand generation", "Demand intelligence as volume grows", "Choose categories and work you want more of", "Public customer reviews"],
+    features: ["Claim and maintain your own profile", "Update capacity and capability", "Receive direct WORKS enquiries", "Respond from your provider workspace", "Active demand generation", "Demand intelligence as volume grows", "Choose categories and work you want more of", "Public customer reviews"],
   },
 ] as const;
 
