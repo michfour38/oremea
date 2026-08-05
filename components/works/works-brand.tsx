@@ -1,14 +1,13 @@
 import type { ReactNode } from "react";
 
 export function WorksBrand({
-  href = "/works/za",
   context,
 }: {
   href?: string;
   context?: string;
 }) {
   return (
-    <a href={href} className="inline-flex min-w-0 flex-col items-start" aria-label="WORKS by Oremea">
+    <a href="/works" className="inline-flex min-w-0 flex-col items-start" aria-label="WORKS by Oremea">
       <img
         src="/works/works-logo.png"
         alt="WORKS by Oremea"
