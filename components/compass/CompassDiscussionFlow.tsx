@@ -397,18 +397,6 @@ export function CompassDiscussionFlow({
   return (
     <CompassCard
       title={view === "discussion" ? "Discussion" : "Map"}
-      headerAction={
-        view === "discussion" ? (
-          <button
-            type="button"
-            onClick={() => void finishDiscussion()}
-            disabled={finishingDiscussion}
-            className="rounded-full border border-[#d8b15f]/50 px-4 py-2 text-xs font-medium text-[#E7C98B] transition hover:border-[#d8b15f] hover:bg-[#21190F] disabled:cursor-wait disabled:opacity-60"
-          >
-            {finishingDiscussion ? "Finishing..." : "Finish discussion"}
-          </button>
-        ) : undefined
-      }
       description={
         view === "discussion"
           ? "Stay with what has become visible. Compass will hold what you have already named while you clarify what has your attention now."
@@ -439,12 +427,6 @@ export function CompassDiscussionFlow({
           Map
         </button>
       </div>
-
-      {finishDiscussionError ? (
-        <p className="text-sm leading-6 text-amber-200/80">
-          {finishDiscussionError}
-        </p>
-      ) : null}
 
       {boundaryMessage ? (
         <div className="rounded-[1.4rem] border border-[#6B4035] bg-[#1A1110] p-5 text-sm leading-relaxed text-zinc-200">
@@ -489,6 +471,21 @@ export function CompassDiscussionFlow({
               <button onClick={onSend} className="primary-button">
                 Continue discussion
               </button>
+
+              <button
+                type="button"
+                onClick={() => void finishDiscussion()}
+                disabled={finishingDiscussion}
+                className="secondary-button disabled:cursor-wait disabled:opacity-60"
+              >
+                {finishingDiscussion ? "Finishing..." : "Finish discussion"}
+              </button>
+
+              {finishDiscussionError ? (
+                <p className="text-sm leading-6 text-amber-200/80">
+                  {finishDiscussionError}
+                </p>
+              ) : null}
 
               {canMakeWorkable ? (
                 <button
