@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server"
 
-import { generateCompassDescentQuestion } from "@/src/lib/compass/session/compass-descent.service"
+import {
+  evaluateCompassDescentAnswer,
+  generateCompassDescentQuestion,
+} from "@/src/lib/compass/session/compass-descent.service"
 import type {
   CompassAreaResponse,
   CompassGoalArea,
   CompassRecursiveLayer,
 } from "@/src/lib/compass/session/session-types"
+import type { CompassDescentAttempt } from "@/src/lib/compass/session/compass-descent.types"
 
 export async function POST(request: Request) {
   try {
@@ -21,17 +25,39 @@ export async function POST(request: Request) {
       )
     }
 
+    const areaResponses = Array.isArray(body.areaResponses)
+      ? (body.areaResponses as CompassAreaResponse[])
+      : []
+    const recursiveLayers = Array.isArray(body.recursiveLayers)
+      ? (body.recursiveLayers as CompassRecursiveLayer[])
+      : []
+
+    if (
+      typeof body.currentQuestion === "string" &&
+      typeof body.currentAnswer === "string"
+    ) {
+      const attempts = Array.isArray(body.attempts)
+        ? (body.attempts as CompassDescentAttempt[])
+        : []
+
+      const decision = await evaluateCompassDescentAnswer({
+        layer,
+        selectedArea,
+        areaResponses,
+        recursiveLayers,
+        currentQuestion: body.currentQuestion,
+        currentAnswer: body.currentAnswer,
+        attempts,
+      })
+
+      return NextResponse.json({ ok: true, decision })
+    }
+
     const question = await generateCompassDescentQuestion({
       layer,
       selectedArea,
-      areaResponses: Array.isArray(body.areaResponses)
-        ? (body.areaResponses as CompassAreaResponse[])
-        : [],
-      recursiveLayers: Array.isArray(body.recursiveLayers)
-        ? (body.recursiveLayers as CompassRecursiveLayer[])
-        : [],
-      currentAnswer:
-        typeof body.currentAnswer === "string" ? body.currentAnswer : undefined,
+      areaResponses,
+      recursiveLayers,
     })
 
     return NextResponse.json({ ok: true, question })
@@ -41,7 +67,8 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        error: "Mirror could not form the next question without leaving the participant's evidence.",
+        error:
+          "Mirror could not follow the next movement without leaving the participant's evidence.",
       },
       { status: 503 },
     )

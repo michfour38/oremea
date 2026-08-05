@@ -13,7 +13,7 @@ import {
 export const dynamic = "force-dynamic";
 
 const EMPTY_MIRROR_CACHE = {
-  mirrorCacheVersion: 1,
+  mirrorCacheVersion: 2,
   areaMirror: null,
   coreMirror: null,
   ending: null,

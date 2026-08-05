@@ -20,11 +20,13 @@ export function CompassCard({
   eyebrow,
   title,
   description,
+  headerAction,
   children,
 }: {
   eyebrow?: string;
   title: string;
   description: string;
+  headerAction?: ReactNode;
   children: ReactNode;
 }) {
   const isResumeCard = title === "Resume Compass?";
@@ -256,9 +258,15 @@ export function CompassCard({
           </p>
         )}
 
-        <h1 className="font-serif text-3xl text-[#d8b15f] sm:text-4xl">
-          {title}
-        </h1>
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="font-serif text-3xl text-[#d8b15f] sm:text-4xl">
+            {title}
+          </h1>
+
+          {headerAction ? (
+            <div className="shrink-0 pt-1">{headerAction}</div>
+          ) : null}
+        </div>
 
         <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-zinc-200 sm:text-base">
           {visibleDescription}

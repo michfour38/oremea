@@ -14,7 +14,9 @@
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
     "db:seed:works": "tsx prisma/seeds/works/seed-only.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:compass-descent": "tsx scripts/verify-compass-descent-contract.ts",
+    "test:compass": "npm run test:compass-descent"
   },
   "prisma": {
     "schema": "./prisma",

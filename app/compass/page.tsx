@@ -28,17 +28,16 @@ import {
 import {
   COMPASS_AREA_QUESTIONS,
   analyzeAreaResponse,
-  buildAdaptiveRecursiveQuestion,
   buildAreaMirrorReflection,
   calibrateExecutionStep,
   createRecursiveLayer,
   evaluateResonanceBridge,
   generateNextStep,
-  getRecursiveQuestion,
   mapResistance,
   reflectCoreValues,
   reflectPrimaryArea,
   type CompassAreaResponse,
+  type CompassDescentResolution,
   type CompassDiscussionMessage,
   type CompassGoalArea,
   type CompassRecursiveLayer,
@@ -559,49 +558,63 @@ async function generateCompassMirror(
   }
 }
 
-  function submitRecursiveAnswer() {
-    if (!recursiveAnswer.trim()) return;
+  function submitRecursiveAnswer(resolution: CompassDescentResolution) {
+    const { decision, displayedQuestion, participantAnswer } = resolution;
 
-    if (recursiveLayers.length >= 7) {
-  setPhase("core_reflection");
-  return;
-}
+    if (!participantAnswer.trim()) return;
 
     setHasStarted(true);
+    setRecursiveAnswer("");
+
+    if (decision.historyAction === "stay") {
+      return;
+    }
+
+    if (decision.historyAction === "replace_previous") {
+      if (!decision.substantiveAnswer || recursiveLayers.length === 0) return;
+
+      const previous = recursiveLayers[recursiveLayers.length - 1];
+      const replacement = createRecursiveLayer({
+        layer: previous.layer,
+        question: previous.question,
+        answer: decision.substantiveAnswer,
+      });
+
+      setRecursiveLayers([
+        ...recursiveLayers.slice(0, -1),
+        replacement,
+      ]);
+      return;
+    }
+
+    if (!decision.advanceLayer || !decision.substantiveAnswer) return;
+
+    if (recursiveLayers.length >= 7) {
+      setPhase("core_reflection");
+      return;
+    }
 
     const layerNumber = recursiveLayers.length + 1;
-
-    const question = buildAdaptiveRecursiveQuestion({
-      layer: layerNumber,
-      selectedAreaLabel,
-      previousAnswer: recursiveLayers[recursiveLayers.length - 1]?.answer ?? "",
-      firstAnswer:
-        areaResponses.find((response) => response.area === selectedArea)
-          ?.answer ?? "",
-    });
-
-    const fallbackQuestion = getRecursiveQuestion(layerNumber);
-
     const layer = createRecursiveLayer({
       layer: layerNumber,
-      question: question || fallbackQuestion,
-      answer: recursiveAnswer,
+      question: displayedQuestion,
+      answer: decision.substantiveAnswer,
     });
-
     const updated = [...recursiveLayers, layer];
 
     setRecursiveLayers(updated);
-    setRecursiveAnswer("");
 
     if (updated.length < 7) {
-      pauseThen(() => setPhase("depth"));
+      pauseThen(() => setPhase("depth"), {
+        showAnalyzing: false,
+      });
       return;
     }
 
     pauseThen(async () => {
-  await generateCompassMirror(updated);
-  setPhase("core_reflection");
-});
+      await generateCompassMirror(updated);
+      setPhase("core_reflection");
+    });
   }
 
 function submitPossibilityAnswer() {
@@ -967,7 +980,7 @@ async function completeCompassProcess() {
 
           {phase === "analyzing" && (
             <CompassCard
-              title="Reading your responses"
+              title="Reading your response..."
 description=""
             >
               <div className={`flex justify-center py-8 text-5xl ${BODY_TEXT}`}>
@@ -1059,6 +1072,8 @@ description=""
           {phase === "core_reflection" && (
             <CompassCoreReflection
   reflection={compassMirrorOutput || coreReflection.reflection}
+  areaResponses={areaResponses}
+  selectedArea={selectedArea}
   recursiveLayers={recursiveLayers}
   extraReflection={extraReflection}
   onExtraReflectionChange={setExtraReflection}

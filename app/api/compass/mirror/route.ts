@@ -7,7 +7,8 @@ import { runCompassMirror } from "@/src/lib/compass/session/compass-mirror.servi
 type MirrorStage = "area" | "core"
 
 type CompassMirrorCache = {
-  mirrorCacheVersion: 1
+  mirrorCacheVersion: 2
+  coreMirrorGeneration: 1 | 2
   areaMirror: string | null
   coreMirror: string | null
   ending: unknown | null
@@ -42,7 +43,12 @@ export async function GET(request: Request) {
     }
 
     const cache = readMirrorCache(session.detected_patterns)
-    const output = stage === "area" ? cache.areaMirror : cache.coreMirror
+    const output =
+      stage === "area"
+        ? cache.areaMirror
+        : cache.coreMirrorGeneration === 2
+          ? cache.coreMirror
+          : null
 
     return NextResponse.json({ ok: true, output })
   } catch (error) {
@@ -97,6 +103,8 @@ export async function POST(request: Request) {
       const cache = readMirrorCache(session.detected_patterns)
       const nextCache: CompassMirrorCache = {
         ...cache,
+        coreMirrorGeneration:
+          mirrorStage === "core" ? 2 : cache.coreMirrorGeneration,
         areaMirror: mirrorStage === "area" ? output : cache.areaMirror,
         coreMirror: mirrorStage === "core" ? output : cache.coreMirror,
       }
@@ -137,9 +145,10 @@ function readMirrorCache(value: unknown): CompassMirrorCache {
   if (value && typeof value === "object" && !Array.isArray(value)) {
     const row = value as Record<string, unknown>
 
-    if (row.mirrorCacheVersion === 1) {
+    if (row.mirrorCacheVersion === 2) {
       return {
-        mirrorCacheVersion: 1,
+        mirrorCacheVersion: 2,
+        coreMirrorGeneration: row.coreMirrorGeneration === 2 ? 2 : 1,
         areaMirror: typeof row.areaMirror === "string" ? row.areaMirror : null,
         coreMirror: typeof row.coreMirror === "string" ? row.coreMirror : null,
         ending: row.ending ?? null,
@@ -148,7 +157,8 @@ function readMirrorCache(value: unknown): CompassMirrorCache {
   }
 
   return {
-    mirrorCacheVersion: 1,
+    mirrorCacheVersion: 2,
+    coreMirrorGeneration: 1,
     areaMirror: null,
     coreMirror: null,
     ending: value ?? null,

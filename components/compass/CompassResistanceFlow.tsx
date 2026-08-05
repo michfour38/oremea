@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 
 import type {
+  CompassAreaResponse,
+  CompassGoalArea,
   CompassRecursiveLayer,
 } from "@/src/lib/compass/session";
 
@@ -14,12 +16,16 @@ const MIRROR_UNAVAILABLE =
 
 export function CompassCoreReflection({
   reflection,
+  areaResponses,
+  selectedArea,
   recursiveLayers,
   extraReflection,
   onExtraReflectionChange,
   onContinue,
 }: {
   reflection: string;
+  areaResponses: CompassAreaResponse[];
+  selectedArea: CompassGoalArea | null;
   recursiveLayers: CompassRecursiveLayer[];
   extraReflection: string;
   onExtraReflectionChange: (value: string) => void;
@@ -33,31 +39,73 @@ export function CompassCoreReflection({
   useEffect(() => {
     let cancelled = false;
 
-    fetch("/api/compass/mirror?stage=core", {
-      method: "GET",
-      cache: "no-store",
-    })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data) => {
-        if (cancelled) return;
-        setSavedCoreMirror(
-          typeof data?.output === "string" && data.output.trim()
-            ? data.output.trim()
-            : null,
-        );
-      })
-      .catch(() => {})
-      .finally(() => {
+    async function loadOrGenerateCoreMirror() {
+      try {
+        const savedResponse = await fetch("/api/compass/mirror?stage=core", {
+          method: "GET",
+          cache: "no-store",
+        });
+        const savedData = savedResponse.ok ? await savedResponse.json() : null;
+        const savedOutput =
+          typeof savedData?.output === "string" && savedData.output.trim()
+            ? savedData.output.trim()
+            : "";
+
+        if (savedOutput) {
+          if (!cancelled) setSavedCoreMirror(savedOutput);
+          return;
+        }
+
+        const generatedResponse = await fetch("/api/compass/mirror", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            areaResponses,
+            selectedArea,
+            recursiveLayers,
+            mirrorStage: "core",
+          }),
+        });
+        const generatedData = generatedResponse.ok
+          ? await generatedResponse.json()
+          : null;
+        const generatedOutput =
+          typeof generatedData?.output === "string" && generatedData.output.trim()
+            ? generatedData.output.trim()
+            : "";
+
+        if (!cancelled) {
+          setSavedCoreMirror(generatedOutput || null);
+        }
+      } catch (error) {
+        console.error("Compass Core Mirror regeneration failed:", error);
+      } finally {
         if (!cancelled) setMirrorChecked(true);
-      });
+      }
+    }
+
+    void loadOrGenerateCoreMirror();
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [areaResponses, recursiveLayers, selectedArea]);
 
-  const displayedReflection = savedCoreMirror ?? (mirrorChecked ? MIRROR_UNAVAILABLE : reflection);
+  const displayedReflection =
+    savedCoreMirror ?? (mirrorChecked ? MIRROR_UNAVAILABLE : reflection);
   const mirrorAvailable = Boolean(savedCoreMirror);
+
+  if (!mirrorChecked && !savedCoreMirror) {
+    return (
+      <CompassCard title="" description="">
+        <p className="font-serif text-3xl leading-tight text-[#d8b15f] sm:text-4xl">
+          Reading your response...
+        </p>
+      </CompassCard>
+    );
+  }
 
   async function continueWithSavedMirror() {
     if (!savedCoreMirror || continuing) return;

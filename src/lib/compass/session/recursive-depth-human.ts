@@ -1,3 +1,4 @@
+import type { CompassDescentAttempt } from "./compass-descent.types"
 import type { CompassRecursiveLayer } from "./session-types"
 
 const VALUE_WORDS = [
@@ -32,8 +33,13 @@ const VALUE_WORDS = [
   "movement",
 ]
 
-const DESCENT_QUESTION_KEY = "oremea-compass-descent-question-v7"
+const DESCENT_QUESTION_KEY = "oremea-compass-descent-question-v11"
+const DESCENT_ATTEMPTS_KEY = "oremea-compass-descent-attempts-v3"
 const LEGACY_DESCENT_QUESTION_KEYS = [
+  "oremea-compass-descent-question-v10",
+  "oremea-compass-descent-question-v9",
+  "oremea-compass-descent-question-v8",
+  "oremea-compass-descent-question-v7",
   "oremea-compass-descent-question-v6",
   "oremea-compass-descent-question-v5",
   "oremea-compass-descent-question-v4",
@@ -44,13 +50,13 @@ const LEGACY_DESCENT_QUESTION_KEYS = [
 
 export function getRecursiveQuestion(layer: number): string {
   const questions = [
-    "Why does this matter to you right now?",
-    "Why is that important to you?",
-    "Why does that matter to you?",
-    "Why is that important here?",
-    "Why does that matter now?",
-    "Why is that still important to you?",
-    "Why does that matter beneath everything else you have named?",
+    "Why is this important to you?",
+    "Why does this matter to you?",
+    "Why is this significant to you?",
+    "Why did this matter to you?",
+    "Why was this important to you?",
+    "Why does this remain important to you?",
+    "Why is this the reason beneath the goal?",
   ]
 
   return questions[layer - 1] ?? questions[questions.length - 1]
@@ -135,6 +141,91 @@ export function getRememberedAdaptiveRecursiveQuestion({
   return null
 }
 
+export function rememberCompassDescentAttempts({
+  layer,
+  sourceAnswer,
+  attempts,
+}: {
+  layer: number
+  sourceAnswer: string
+  attempts: CompassDescentAttempt[]
+}) {
+  if (typeof window === "undefined") return
+
+  window.sessionStorage.setItem(
+    DESCENT_ATTEMPTS_KEY,
+    JSON.stringify({
+      layer,
+      sourceAnswer: normalizeSource(sourceAnswer),
+      attempts,
+    }),
+  )
+}
+
+export function getRememberedCompassDescentAttempts({
+  layer,
+  sourceAnswer,
+}: {
+  layer: number
+  sourceAnswer: string
+}): CompassDescentAttempt[] {
+  if (typeof window === "undefined") return []
+
+  const raw = window.sessionStorage.getItem(DESCENT_ATTEMPTS_KEY)
+  if (!raw) return []
+
+  try {
+    const stored = JSON.parse(raw) as {
+      layer?: unknown
+      sourceAnswer?: unknown
+      attempts?: unknown
+    }
+
+    if (
+      stored.layer === layer &&
+      stored.sourceAnswer === normalizeSource(sourceAnswer) &&
+      Array.isArray(stored.attempts)
+    ) {
+      return stored.attempts.filter(isStoredAttempt)
+    }
+  } catch {
+    window.sessionStorage.removeItem(DESCENT_ATTEMPTS_KEY)
+    return []
+  }
+
+  window.sessionStorage.removeItem(DESCENT_ATTEMPTS_KEY)
+  return []
+}
+
+export function clearRememberedCompassDescentAttempts({
+  layer,
+  sourceAnswer,
+}: {
+  layer: number
+  sourceAnswer: string
+}) {
+  if (typeof window === "undefined") return
+
+  const raw = window.sessionStorage.getItem(DESCENT_ATTEMPTS_KEY)
+  if (!raw) return
+
+  try {
+    const stored = JSON.parse(raw) as {
+      layer?: unknown
+      sourceAnswer?: unknown
+    }
+
+    if (
+      stored.layer === layer &&
+      stored.sourceAnswer === normalizeSource(sourceAnswer)
+    ) {
+      window.sessionStorage.removeItem(DESCENT_ATTEMPTS_KEY)
+    }
+  } catch {
+    window.sessionStorage.removeItem(DESCENT_ATTEMPTS_KEY)
+  }
+}
+
 export function buildAdaptiveRecursiveQuestion({
   layer,
   selectedAreaLabel,
@@ -152,28 +243,52 @@ export function buildAdaptiveRecursiveQuestion({
   if (remembered) return remembered
 
   if (layer === 1 && !sourceAnswer) {
-    return `Why does ${selectedAreaLabel.toLowerCase()} matter to you right now?`
+    return `Why is ${selectedAreaLabel.toLowerCase()} important to you?`
   }
 
   return ""
 }
 
+function isStoredAttempt(value: unknown): value is CompassDescentAttempt {
+  if (!value || typeof value !== "object") return false
+
+  const attempt = value as Record<string, unknown>
+  return (
+    typeof attempt.question === "string" &&
+    typeof attempt.answer === "string" &&
+    typeof attempt.movement === "string" &&
+    typeof attempt.direction === "string"
+  )
+}
+
 function isUsableQuestion(question: string): boolean {
   const normalized = question.trim().toLowerCase()
-  if (!normalized.startsWith("why") || !normalized.endsWith("?")) return false
+  if (!normalized.endsWith("?")) return false
+  if (!/^why\b/.test(normalized)) return false
 
   return ![
     "make possible",
-    "give you room",
+    "makes possible",
+    "made possible",
+    "become possible",
+    "becomes possible",
     "what comes next",
     "what do you picture",
-    "what would it mean",
+    "what would it mean now",
+    "how will you",
+    "how can you",
+    "lead to",
+    "opens up",
   ].some((phrase) => normalized.includes(phrase))
 }
 
 function clearLegacyQuestionCache() {
   if (typeof window === "undefined") return
-  LEGACY_DESCENT_QUESTION_KEYS.forEach((key) => window.sessionStorage.removeItem(key))
+  LEGACY_DESCENT_QUESTION_KEYS.forEach((key) =>
+    window.sessionStorage.removeItem(key),
+  )
+  window.sessionStorage.removeItem("oremea-compass-descent-attempts-v1")
+  window.sessionStorage.removeItem("oremea-compass-descent-attempts-v2")
 }
 
 function normalizeSource(input: string): string {
