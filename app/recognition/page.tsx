@@ -147,6 +147,7 @@ useEffect(() => {
   }, []);
 
   const currentPanel = panels[panelIndex];
+
 const currentQuestionIndex =
   currentPanel.type === "question"
     ? QUESTIONS.findIndex(
