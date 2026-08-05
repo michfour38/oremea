@@ -147,7 +147,6 @@ useEffect(() => {
   }, []);
 
   const currentPanel = panels[panelIndex];
-
 const currentQuestionIndex =
   currentPanel.type === "question"
     ? QUESTIONS.findIndex(
@@ -349,10 +348,10 @@ window.localStorage.removeItem(DRAFT_KEY);
 </div>
 
 <a
-  href="/#resonance"
+  href="/entry"
   className="mt-8 inline-block rounded-full border border-[#C6A96B]/70 px-6 py-3 font-serif text-lg text-[#C6A96B] transition hover:border-[#D6B97A] hover:text-[#D6B97A]"
 >
-  Enter here — www.oremea.com
+  Continue to Resonance
 </a>
           </div>
         </section>
@@ -499,10 +498,10 @@ window.localStorage.removeItem(DRAFT_KEY);
       </p>
 
       <a
-        href="/#resonance"
+        href="/entry"
         className="mt-8 inline-block rounded-full border border-[#C6A96B]/70 px-6 py-3 font-serif text-lg text-[#C6A96B] transition hover:border-[#D6B97A] hover:text-[#D6B97A]"
       >
-        Continue into Resonance
+        Continue to Resonance
       </a>
     </div>
   ) : (
