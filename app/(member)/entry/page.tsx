@@ -180,7 +180,7 @@ export default async function EntryPage() {
               <p className="text-xs uppercase tracking-[0.3em] text-[#f1dfb4]/70">
                 Resonance
               </p>
-              <h2 className="mt-3 text-3xl font-light">Choose a room</h2>
+              <h2 className="mt-3 text-3xl font-light">Which one do you choose?</h2>
               <p className="mt-4 text-base leading-8 text-zinc-300">
                 Each purchase opens one seven-day Resonance room. There is no
                 required order. Choose the room containing the question that
