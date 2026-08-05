@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { WorksPageHeader } from "@/components/works/works-brand";
+
 export function OpenSavedWorksSearch({ sessionId }: { sessionId: string }) {
   const [message, setMessage] = useState("Opening your WORKS search…");
 
@@ -29,7 +31,7 @@ export function OpenSavedWorksSearch({ sessionId }: { sessionId: string }) {
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-3xl px-5 py-12 md:px-8">
-      <a href="/works/my" className="text-xs font-semibold uppercase tracking-[0.32em] text-[#16834f]">WORKS</a>
+      <WorksPageHeader context="Saved customer search" />
       <div className="py-16">
         <p className="font-serif text-3xl text-[#1f1c17]">{message}</p>
         <p className="mt-4 text-sm leading-6 text-black/45">Only searches attached to your WORKS account can be opened here.</p>

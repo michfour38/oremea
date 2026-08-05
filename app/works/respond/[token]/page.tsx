@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 import { notFound } from "next/navigation";
 
 import { ProviderResponseForm } from "@/components/works/outreach/provider-response-form";
+import { WorksPageHeader } from "@/components/works/works-brand";
 import { prisma } from "@/lib/prisma";
 
 function hashToken(token: string) {
@@ -35,10 +36,7 @@ export default async function WorksProviderResponsePage({
   return (
     <main className="min-h-screen bg-[#f3eee4] px-5 py-10 text-[#1f1c17] md:px-8">
       <div className="mx-auto max-w-3xl">
-        <header className="border-b border-black/10 pb-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#8b6a31]">WORKS</p>
-          <p className="mt-1 text-xs text-black/40">by Oremea · provider response</p>
-        </header>
+        <WorksPageHeader context="Provider response" />
 
         <section className="py-10">
           <p className="text-sm text-black/45">Production enquiry for {outreach.provider.name}</p>

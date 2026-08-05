@@ -3,6 +3,8 @@
 import { SignInButton, SignedIn, SignedOut, UserButton, useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 
+import { WorksPageHeader } from "@/components/works/works-brand";
+
 type Search = {
   id: string;
   status: string;
@@ -81,13 +83,10 @@ export function MyWorksDashboard() {
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl px-5 py-8 md:px-8 md:py-12">
-      <header className="flex items-center justify-between border-b border-black/10 pb-5">
-        <div>
-          <a href="/works/za" className="text-xs font-semibold uppercase tracking-[0.32em] text-[#16834f]">WORKS</a>
-          <p className="mt-1 text-xs text-black/40">My WORKS</p>
-        </div>
-        <SignedIn><UserButton afterSignOutUrl="/works/za" /></SignedIn>
-      </header>
+      <WorksPageHeader
+        context="My WORKS"
+        action={<SignedIn><UserButton afterSignOutUrl="/works" /></SignedIn>}
+      />
 
       <SignedOut>
         <section className="py-16">
@@ -104,7 +103,7 @@ export function MyWorksDashboard() {
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">My WORKS</p>
               <h1 className="mt-2 font-serif text-4xl text-[#1f1c17]">Saved production searches</h1>
             </div>
-            <a href="/works/za" className="rounded-full bg-[#1f1c17] px-5 py-2.5 text-sm text-white">Start another product →</a>
+            <a href="/works" className="rounded-full bg-[#1f1c17] px-5 py-2.5 text-sm text-white">Start another product →</a>
           </div>
 
           {loading ? <p className="mt-10 text-sm text-black/40">Loading your WORKS searches…</p> : null}
