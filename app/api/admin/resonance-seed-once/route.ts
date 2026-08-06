@@ -7,7 +7,7 @@ import { seedResonanceWeek } from "@/prisma/seeds/resonance-seed-lib";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const RELEASE_DEADLINE = Date.parse("2026-08-06T18:00:00Z");
+const RELEASE_DEADLINE = Date.parse("2026-08-06T20:00:00Z");
 let releaseComplete = false;
 
 function requestIsAuthorized(request: Request) {
