@@ -38,6 +38,10 @@ function productLabel(context: WorksBridgeQuestionContext) {
   return context.productType?.trim() || "product";
 }
 
+function inlineProduct(context: WorksBridgeQuestionContext) {
+  return productLabel(context).replace(/^(A|An|The)\b/, (article) => article.toLowerCase());
+}
+
 function providerLabel(context: WorksBridgeQuestionContext) {
   return context.providerName?.trim() || "the provider";
 }
@@ -67,11 +71,30 @@ function quantityLabel(context: WorksBridgeQuestionContext) {
   return `${context.targetQuantity} finished units`;
 }
 
+function unitLabel(unit: string | null | undefined) {
+  switch (unit) {
+    case "KG":
+      return "kg";
+    case "G":
+      return "g";
+    case "MG":
+      return "mg";
+    case "ML":
+      return "ml";
+    case "LITRES":
+      return "litres";
+    case "UNITS":
+      return "units";
+    default:
+      return unit?.toLowerCase().replaceAll("_", " ") || "batch units";
+  }
+}
+
 export function buildBridgeQuestions(
   context: WorksBridgeQuestionContext
 ): WorksBridgeQuestion[] {
   const questions: WorksBridgeQuestion[] = [];
-  const product = productLabel(context);
+  const product = inlineProduct(context);
   const provider = providerLabel(context);
 
   if (quantityNeedsBridge(context)) {
@@ -113,7 +136,7 @@ export function buildBridgeQuestions(
       key: "PROVIDER_MINIMUM_BASIS",
       audience: "PROVIDER",
       kind: "TEXT",
-      prompt: `For this ${product}, what production minimum actually applies: ${context.providerMinimumValue} ${context.providerMinimumUnit}, litres, kilograms, or another batch basis?`,
+      prompt: `The available information refers to a ${context.providerMinimumValue} ${unitLabel(context.providerMinimumUnit)} minimum. What minimum applies to ${product}, and is it measured by finished-product mass, volume, bottles, or another batch basis?`,
       purpose:
         "Provider marketing pages can describe vessel capacity and commercial minimums differently. WORKS needs the minimum that applies to this exact product and process.",
       requiredToResolve: ["QUANTITY_COMPARISON"],
@@ -128,7 +151,7 @@ export function buildBridgeQuestions(
         key: "PROVIDER_MINIMUM_BATCH_YIELD",
         audience: "PROVIDER",
         kind: "NUMBER",
-        prompt: `At a ${fill} finished fill size, how many saleable units does your minimum production batch of this ${product} yield?`,
+        prompt: `At a ${fill} fill size, how many saleable finished units would the minimum production batch yield for ${product}?`,
         purpose:
           "This converts the provider's production minimum into the same finished-unit language as the founder's range without assuming product density or process loss.",
         requiredToResolve: ["QUANTITY_COMPARISON"],
@@ -140,7 +163,7 @@ export function buildBridgeQuestions(
         key: "PROVIDER_PARTIAL_FILL_POLICY",
         audience: "PROVIDER",
         kind: "TEXT",
-        prompt: `The workable first run is ${quantityLabel(context)}. If your minimum batch yields more than that range, can you fill within the requested range, and how is the remaining product handled?`,
+        prompt: `The workable first run is ${quantityLabel(context)}. If the minimum batch yields more than that range, can you fill within the requested range, and how is the remaining product handled?`,
         purpose:
           "A minimum cooking batch and a minimum finished-unit order can be different commercial constraints.",
         requiredToResolve: ["QUANTITY_VIABILITY"],
@@ -203,7 +226,7 @@ export function buildBridgeQuestions(
         key: "PROVIDER_HALAAL_CERTIFICATE_DETAILS",
         audience: "PROVIDER",
         kind: "TEXT",
-        prompt: `Please provide the current Halaal certifying authority, certificate/reference number, certified site and validity dates for the ${provider} facility that would manufacture this ${product}.`,
+        prompt: `Please provide the current Halaal certifying authority, certificate or reference number, certified site and validity dates for the ${provider} facility that would manufacture ${product}.`,
         purpose:
           "WORKS verifies the exact current credential rather than treating a general website statement as sufficient.",
         requiredToResolve: ["HALAAL_CURRENT_CERTIFICATE"],
@@ -213,7 +236,7 @@ export function buildBridgeQuestions(
         key: "PROVIDER_HALAAL_SCOPE",
         audience: "PROVIDER",
         kind: "TEXT",
-        prompt: `Does that certification scope cover this ${product}, its ingredients and processing aids, the manufacturing process, cross-contamination controls, and private-label production at this site?`,
+        prompt: `Does that certification scope cover ${product}, its ingredients and processing aids, the manufacturing process, cross-contamination controls, and private-label production at this site?`,
         purpose:
           "Halaal suitability belongs to the actual product and production process, not merely the company name.",
         requiredToResolve: ["HALAAL_SCOPE"],
@@ -223,7 +246,7 @@ export function buildBridgeQuestions(
         key: "AUTHORITY_HALAAL_SCOPE_VERIFICATION",
         audience: "AUTHORITY",
         kind: "CONFIRMATION",
-        prompt: `Confirm that ${provider}'s certificate is current and that its approved scope covers the proposed ${product} production route at the stated facility.`,
+        prompt: `Confirm that ${provider}'s certificate is current and that its approved scope covers the proposed production route for ${product} at the stated facility.`,
         purpose:
           "Authority verification upgrades the credential from provider-reported/source-confirmed to authority-verified evidence.",
         requiredToResolve: ["HALAAL_CURRENT_CERTIFICATE", "HALAAL_SCOPE"],
@@ -237,7 +260,7 @@ export function buildBridgeQuestions(
         audience: "AUTHORITY",
         kind: "CONFIRMATION",
         prompt:
-          "Confirm whether the Halaal mark may appear on this finished product's packaging and what product/artwork approval is required before printing.",
+          "Confirm whether the Halaal mark may appear on this finished product's packaging and what product or artwork approval is required before printing.",
         purpose:
           "Certification of production and authorization to display a certifier's mark are separate facts.",
         requiredToResolve: ["HALAAL_LABEL_USE"],
