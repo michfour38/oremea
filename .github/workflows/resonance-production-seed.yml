@@ -1,0 +1,75 @@
+name: Run Resonance production seed
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - app/api/admin/resonance-seed-once/route.ts
+      - .github/workflows/resonance-production-seed.yml
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  seed-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Wait for Railway, seed, and verify
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: |
+          set -u
+
+          endpoint="https://app.oremea.com/api/admin/resonance-seed-once"
+
+          for attempt in $(seq 1 30); do
+            echo "Seed attempt ${attempt}/30"
+
+            status=$(curl \
+              --silent \
+              --show-error \
+              --output resonance-seed-response.json \
+              --write-out "%{http_code}" \
+              --connect-timeout 15 \
+              --max-time 300 \
+              --header "Authorization: Bearer ${GITHUB_TOKEN}" \
+              --header "X-GitHub-Run-Id: ${GITHUB_RUN_ID}" \
+              "${endpoint}" || true)
+
+            cat resonance-seed-response.json 2>/dev/null || true
+            echo
+
+            if [ "${status}" = "200" ]; then
+              node - <<'NODE'
+              const fs = require("node:fs");
+              const result = JSON.parse(
+                fs.readFileSync("resonance-seed-response.json", "utf8"),
+              );
+
+              if (
+                result.ok !== true ||
+                result.expectedPromptCount !== 350 ||
+                result.activePromptCount !== 350 ||
+                !Array.isArray(result.rooms) ||
+                result.rooms.length !== 10
+              ) {
+                console.error("Resonance verification response was incomplete", result);
+                process.exit(1);
+              }
+
+              console.log("Resonance production seed verified:");
+              console.log(result.rooms.join("\n"));
+              NODE
+
+              exit 0
+            fi
+
+            sleep 20
+          done
+
+          echo "Resonance production seed did not complete within the retry window."
+          exit 1
