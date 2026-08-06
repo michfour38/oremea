@@ -218,10 +218,7 @@ export default function MirrorOutput({
               />
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-              <div className="text-xs text-zinc-500">
-                {answersSaved ? "2Q saved" : "Answer both questions to continue."}
-              </div>
+            <div className="flex flex-wrap items-center justify-end gap-3 pt-1">
               <button
                 type="button"
                 onClick={() => void saveAnswers()}
