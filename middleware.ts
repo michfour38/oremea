@@ -15,6 +15,9 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/recognition(.*)",
   "/api/recognition(.*)",
+  // This one-time release endpoint performs its own exact-deployment-SHA and
+  // expiry checks. Clerk must let the GitHub release runner reach those checks.
+  "/api/admin/resonance-seed-once",
   // WORKS begins anonymously. Public founder search, provider profiles,
   // provider response links and onboarding surfaces must render without
   // Clerk forcing a platform sign-in. Sensitive WORKS APIs enforce their
