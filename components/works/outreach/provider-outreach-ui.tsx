@@ -35,7 +35,6 @@ export type EmailPreview = {
 export function ContextSummary({
   founderAnswers,
   providerQuestions,
-  authorityQuestions,
   targetLabel,
   draftReady,
   includedQuestions,
@@ -43,7 +42,6 @@ export function ContextSummary({
 }: {
   founderAnswers: FounderAnswer[];
   providerQuestions: string[];
-  authorityQuestions: string[];
   targetLabel: string;
   draftReady: boolean;
   includedQuestions: Set<string>;
@@ -104,24 +102,6 @@ export function ContextSummary({
                 </button>
               );
             })}
-          </div>
-        </div>
-      ) : null}
-
-      {authorityQuestions.length ? (
-        <div className="mt-6 rounded-2xl border border-black/10 bg-white/45 p-5">
-          <p className="text-xs font-medium uppercase tracking-[0.14em] text-black/40">
-            Verify after the provider replies
-          </p>
-          <div className="mt-3 space-y-3">
-            {authorityQuestions.map((question) => (
-              <div key={question} className="rounded-xl border border-black/10 bg-white/70 p-4">
-                <span className="text-[11px] uppercase tracking-[0.15em] text-[#8b6a31]">
-                  Verify with authority
-                </span>
-                <p className="mt-2 text-sm leading-6">{question}</p>
-              </div>
-            ))}
           </div>
         </div>
       ) : null}
@@ -259,6 +239,8 @@ export function DraftEditor({
   sent,
   sending,
   restoring,
+  pristine,
+  restored,
   onChange,
   onRestore,
   onSend,
@@ -267,6 +249,8 @@ export function DraftEditor({
   sent: boolean;
   sending: boolean;
   restoring: boolean;
+  pristine: boolean;
+  restored: boolean;
   onChange: (field: "subject" | "bodyText", value: string) => void;
   onRestore: () => void;
   onSend: () => void;
@@ -288,14 +272,25 @@ export function DraftEditor({
         <p className="text-sm leading-6 text-black/55">
           Changed too much? Restore the complete original WORKS draft, including its questions and signature.
         </p>
-        <button
-          type="button"
-          onClick={onRestore}
-          disabled={restoring || sending || sent}
-          className="shrink-0 rounded-full border border-black/15 bg-white px-4 py-2.5 text-sm font-medium disabled:opacity-40"
-        >
-          {restoring ? "Restoring…" : "Restore original WORKS draft"}
-        </button>
+        <div className="shrink-0">
+          <button
+            type="button"
+            onClick={onRestore}
+            disabled={pristine || restoring || sending || sent}
+            className="rounded-full border border-black/15 bg-white px-4 py-2.5 text-sm font-medium disabled:opacity-55"
+          >
+            {restoring
+              ? "Restoring…"
+              : pristine
+                ? "Original WORKS draft ✓"
+                : "Restore original WORKS draft"}
+          </button>
+          {restored ? (
+            <p className="mt-2 text-center text-xs font-medium text-[#6b542c]">
+              Original draft restored ✓
+            </p>
+          ) : null}
+        </div>
       </div>
 
       <label className="mt-5 block text-xs uppercase tracking-[0.12em] text-black/40">
@@ -321,12 +316,12 @@ export function DraftEditor({
         </p>
       ) : null}
 
-      <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-black/10 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <span className="text-xs text-black/45">
-          Provider response button · active only in the sent email
-        </span>
+      <div className="mt-5 flex flex-col items-start gap-3 rounded-2xl border border-black/10 bg-white px-4 py-3 sm:flex-row sm:items-center">
         <span className="shrink-0 rounded-full bg-[#1f1c17] px-5 py-2.5 text-sm text-white">
           Respond to this brief
+        </span>
+        <span className="text-xs text-black/45">
+          Provider response button · active only in the sent email
         </span>
       </div>
 
@@ -337,9 +332,14 @@ export function DraftEditor({
           disabled={sending || restoring || sent}
           className="rounded-full bg-[#1f1c17] px-6 py-3.5 text-base font-medium text-white disabled:opacity-40"
         >
-          {sent ? "Email sent" : sending ? "Sending…" : `Send email to ${preview.providerName} →`}
+          {sent ? "Email sent ✓" : sending ? "Sending…" : `Send email to ${preview.providerName} →`}
         </button>
       </div>
+      {sent ? (
+        <p className="mt-3 text-right text-sm text-black/60">
+          Your enquiry was sent to {preview.providerName}.
+        </p>
+      ) : null}
     </article>
   );
 }
