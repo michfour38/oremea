@@ -78,6 +78,59 @@ function getAreaAnswer(value: unknown, area: string): string | null {
   return null;
 }
 
+function getDiscussionPreview(value: unknown): string | null {
+  if (!Array.isArray(value)) return null;
+
+  for (let index = value.length - 1; index >= 0; index -= 1) {
+    const item = value[index];
+    if (!item || typeof item !== "object") continue;
+
+    const message = item as {
+      role?: unknown;
+      content?: unknown;
+    };
+
+    if (
+      message.role === "participant" &&
+      typeof message.content === "string" &&
+      message.content.trim()
+    ) {
+      return message.content.trim();
+    }
+  }
+
+  return null;
+}
+
+function getMapCounts(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { active: 0, completed: 0, archived: 0 };
+  }
+
+  const state = value as {
+    version?: unknown;
+    mapItems?: unknown;
+  };
+
+  if (state.version !== 1 || !Array.isArray(state.mapItems)) {
+    return { active: 0, completed: 0, archived: 0 };
+  }
+
+  return state.mapItems.reduce(
+    (counts, item) => {
+      if (!item || typeof item !== "object") return counts;
+      const status = (item as { status?: unknown }).status;
+
+      if (status === "active" || status === "waiting") counts.active += 1;
+      if (status === "completed") counts.completed += 1;
+      if (status === "released") counts.archived += 1;
+
+      return counts;
+    },
+    { active: 0, completed: 0, archived: 0 },
+  );
+}
+
 export default async function CompassAreaArchivePage({ params }: Props) {
   const { userId } = await auth();
 
@@ -104,10 +157,13 @@ export default async function CompassAreaArchivePage({ params }: Props) {
     select: {
       id: true,
       status: true,
+      phase: true,
       selected_area: true,
       area_responses: true,
       recursive_layers: true,
       possibility_answers: true,
+      discussion_messages: true,
+      detected_patterns: true,
       proposed_step: true,
       final_step: true,
       updated_at: true,
@@ -154,6 +210,14 @@ export default async function CompassAreaArchivePage({ params }: Props) {
               const areaAnswer = getAreaAnswer(session.area_responses, params.area);
               const layers = asLayerSummary(session.recursive_layers);
               const possibilities = asStringArray(session.possibility_answers);
+              const discussionPreview = getDiscussionPreview(
+                session.discussion_messages,
+              );
+              const mapCounts = getMapCounts(session.detected_patterns);
+              const isConversationWithExistingGoals =
+                session.phase === "discussion" &&
+                layers.length === 0 &&
+                possibilities.length === 0;
 
               return (
                 <article
@@ -164,79 +228,103 @@ export default async function CompassAreaArchivePage({ params }: Props) {
                     <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">
                       {formatDate(session.updated_at)}
                     </p>
-                    <Link
-                      href={`/compass/archive/session/${session.id}`}
-                      className="text-xs text-[#E7C98B] underline underline-offset-4 transition hover:text-[#f1dfb4]"
-                    >
-                      Discussion ↔ Map
-                    </Link>
+                    <span className="rounded-full border border-zinc-800 px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-zinc-500">
+                      {session.status === "active" ? "Current" : "Complete"}
+                    </span>
                   </div>
 
-                  <div className="mt-6 space-y-6">
-                    {areaAnswer ? (
-                      <section>
-                        <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
-                          {areaLabel} goal
-                        </p>
-
-                        <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-300">
-                          {areaAnswer}
-                        </p>
-                      </section>
-                    ) : null}
-
-                    {layers.length > 0 ? (
-                      <section>
-                        <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
-                          Where the Descent arrived
-                        </p>
-
-                        <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-300">
-                          {layers[layers.length - 1]}
-                        </p>
-                      </section>
-                    ) : null}
-
-                    {possibilities.length > 0 ? (
-                      <section>
-                        <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
-                          What became possible
-                        </p>
-
-                        <div className="mt-3 space-y-3">
-                          {possibilities.map((answer, index) => (
-                            <p
-                              key={`${session.id}-possibility-${index}`}
-                              className="whitespace-pre-wrap text-sm leading-7 text-zinc-400"
-                            >
-                              {answer}
-                            </p>
-                          ))}
-                        </div>
-                      </section>
-                    ) : null}
-
-                    <section className="rounded-2xl border border-[#3A3224] bg-[#17130D] px-5 py-5">
+                  {isConversationWithExistingGoals ? (
+                    <div className="mt-6">
                       <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
-                        Chosen next movement
+                        Conversation with existing goals
                       </p>
 
+                      <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-300">
+                        {discussionPreview ??
+                          "This conversation continues with the goals already held in this Compass."}
+                      </p>
+
+                      {mapCounts.active > 0 ||
+                      mapCounts.completed > 0 ||
+                      mapCounts.archived > 0 ? (
+                        <div className="mt-4 flex flex-wrap gap-2 text-xs text-zinc-500">
+                          {mapCounts.active > 0 ? (
+                            <span>{mapCounts.active} active on Map</span>
+                          ) : null}
+                          {mapCounts.completed > 0 ? (
+                            <span>{mapCounts.completed} completed</span>
+                          ) : null}
+                          {mapCounts.archived > 0 ? (
+                            <span>{mapCounts.archived} archived</span>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div className="mt-6 space-y-6">
+                      {areaAnswer ? (
+                        <section>
+                          <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
+                            {areaLabel} goal
+                          </p>
+
+                          <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-300">
+                            {areaAnswer}
+                          </p>
+                        </section>
+                      ) : null}
+
+                      {layers.length > 0 ? (
+                        <section>
+                          <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
+                            Where the Descent arrived
+                          </p>
+
+                          <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-300">
+                            {layers[layers.length - 1]}
+                          </p>
+                        </section>
+                      ) : null}
+
+                      {possibilities.length > 0 ? (
+                        <section>
+                          <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
+                            What became possible
+                          </p>
+
+                          <div className="mt-3 space-y-3">
+                            {possibilities.map((answer, index) => (
+                              <p
+                                key={`${session.id}-possibility-${index}`}
+                                className="whitespace-pre-wrap text-sm leading-7 text-zinc-400"
+                              >
+                                {answer}
+                              </p>
+                            ))}
+                          </div>
+                        </section>
+                      ) : null}
+
                       {session.final_step || session.proposed_step ? (
-                        <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-300">
-                          {session.final_step || session.proposed_step}
-                        </p>
-                      ) : (
-                        <Link
-                          href="/compass"
-                          className="mt-3 inline-block text-sm leading-7 text-[#E7C98B] underline underline-offset-4 transition hover:text-[#f1dfb4]"
-                        >
-                          {session.status === "active"
-                            ? "This Compass is still active and has not chosen a next movement yet."
-                            : "This Compass closed before a next movement was chosen."}
-                        </Link>
-                      )}
-                    </section>
-                  </div>
+                        <section className="rounded-2xl border border-[#3A3224] bg-[#17130D] px-5 py-5">
+                          <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
+                            Movement chosen in this Compass
+                          </p>
+
+                          <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-300">
+                            {session.final_step || session.proposed_step}
+                          </p>
+                        </section>
+                      ) : null}
+                    </div>
+                  )}
+
+                  <Link
+                    href={`/compass/archive/session/${session.id}`}
+                    className="mt-6 flex w-full items-center justify-center rounded-full border border-[#3A3224] bg-[#17130D] px-5 py-3 text-sm text-[#E7C98B] transition hover:border-[#C8A96A] hover:bg-[#21190F]"
+                  >
+                    Open Discussion and Map
+                  </Link>
                 </article>
               );
             })

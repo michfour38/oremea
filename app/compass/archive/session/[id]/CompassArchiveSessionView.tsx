@@ -21,13 +21,18 @@ type DiscussionMessage = {
 };
 
 export function CompassArchiveSessionView({
+  sessionId,
   discussionMessages,
   endingState,
 }: {
+  sessionId: string;
   discussionMessages: DiscussionMessage[];
   endingState: CompassEndingState | null;
 }) {
   const [view, setView] = useState<"discussion" | "map">("discussion");
+  const [returningItemId, setReturningItemId] = useState<string | null>(null);
+  const [returnedItemIds, setReturnedItemIds] = useState<string[]>([]);
+  const [returnError, setReturnError] = useState("");
 
   const completedItems = useMemo(
     () => endingState?.mapItems.filter((item) => item.status === "completed") ?? [],
@@ -40,11 +45,52 @@ export function CompassArchiveSessionView({
       ) ?? [],
     [endingState],
   );
+  const archivedItems = useMemo(
+    () => endingState?.mapItems.filter((item) => item.status === "released") ?? [],
+    [endingState],
+  );
   const completedMovements = useMemo(
     () =>
       endingState?.movements.filter((movement) => movement.status === "completed") ?? [],
     [endingState],
   );
+
+  async function returnToCurrentMap(itemId: string) {
+    if (returningItemId) return;
+
+    setReturningItemId(itemId);
+    setReturnError("");
+
+    try {
+      const response = await fetch("/api/compass/map/restore", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sourceSessionId: sessionId,
+          itemId,
+        }),
+      });
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setReturnError(
+          data?.error ?? "Compass could not return this goal to the Map yet.",
+        );
+        return;
+      }
+
+      setReturnedItemIds((current) =>
+        current.includes(itemId) ? current : [...current, itemId],
+      );
+      window.dispatchEvent(new Event("compass-map-changed"));
+    } catch {
+      setReturnError("Compass could not return this goal to the Map yet.");
+    } finally {
+      setReturningItemId(null);
+    }
+  }
 
   function jumpToDiscussion(sourceMessageIndex: number) {
     setView("discussion");
@@ -123,6 +169,10 @@ export function CompassArchiveSessionView({
             </section>
           ) : null}
 
+          {returnError ? (
+            <p className="text-sm leading-6 text-amber-200/80">{returnError}</p>
+          ) : null}
+
           <ArchiveList
             title="Current Map"
             empty="No current Map items were saved."
@@ -133,6 +183,9 @@ export function CompassArchiveSessionView({
               sourceMessageIndex: item.sourceMessageIndex,
             }))}
             onSource={jumpToDiscussion}
+            onReturn={returnToCurrentMap}
+            returningItemId={returningItemId}
+            returnedItemIds={returnedItemIds}
           />
 
           <ArchiveList
@@ -145,6 +198,24 @@ export function CompassArchiveSessionView({
               sourceMessageIndex: item.sourceMessageIndex,
             }))}
             onSource={jumpToDiscussion}
+            onReturn={returnToCurrentMap}
+            returningItemId={returningItemId}
+            returnedItemIds={returnedItemIds}
+          />
+
+          <ArchiveList
+            title="Moved to Archive"
+            empty="No goals were moved to Archive in this run."
+            items={archivedItems.map((item) => ({
+              id: item.id,
+              content: item.content,
+              detail: item.area ? AREA_LABELS[item.area] ?? item.area : null,
+              sourceMessageIndex: item.sourceMessageIndex,
+            }))}
+            onSource={jumpToDiscussion}
+            onReturn={returnToCurrentMap}
+            returningItemId={returningItemId}
+            returnedItemIds={returnedItemIds}
           />
 
           <ArchiveList
@@ -169,6 +240,9 @@ function ArchiveList({
   empty,
   items,
   onSource,
+  onReturn,
+  returningItemId,
+  returnedItemIds = [],
 }: {
   title: string;
   empty: string;
@@ -179,6 +253,9 @@ function ArchiveList({
     sourceMessageIndex: number | null;
   }>;
   onSource: (index: number) => void;
+  onReturn?: (itemId: string) => void | Promise<void>;
+  returningItemId?: string | null;
+  returnedItemIds?: string[];
 }) {
   return (
     <section>
@@ -205,6 +282,23 @@ function ArchiveList({
                   className="text-zinc-500 underline underline-offset-4 transition hover:text-[#d8b15f]"
                 >
                   From discussion
+                </button>
+              ) : null}
+              {onReturn ? (
+                <button
+                  type="button"
+                  onClick={() => void onReturn(item.id)}
+                  disabled={
+                    returningItemId === item.id ||
+                    returnedItemIds.includes(item.id)
+                  }
+                  className="text-[#C8A96A] transition hover:text-[#E7C98B] disabled:cursor-default disabled:text-zinc-600"
+                >
+                  {returnedItemIds.includes(item.id)
+                    ? "On current Map"
+                    : returningItemId === item.id
+                      ? "Returning..."
+                      : "Return to current Map"}
                 </button>
               ) : null}
             </div>

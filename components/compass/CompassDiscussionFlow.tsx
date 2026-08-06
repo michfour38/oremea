@@ -465,30 +465,27 @@ export function CompassDiscussionFlow({
           : "Compass is holding the goals, dependencies, decisions, and other things already asking for your attention. You only need to carry the movement in front of you."
       }
     >
-      <div className="grid grid-cols-2 rounded-full border border-zinc-800 bg-[#101010] p-1">
+      {activeMapItems.length > 0 ? (
         <button
           type="button"
-          onClick={() => setView("discussion")}
-          className={`rounded-full px-4 py-2 text-sm transition ${
-            view === "discussion"
-              ? "bg-[#21190F] text-[#E7C98B]"
-              : "text-zinc-500 hover:text-zinc-300"
-          }`}
+          onClick={() => window.location.assign("/compass/map")}
+          className="w-full rounded-[1.5rem] border border-[#3A3224] bg-[#17130D] p-5 text-left transition hover:border-[#d8b15f]"
         >
-          Discussion
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
+                What&apos;s asking for attention
+              </p>
+              <p className="mt-2 text-sm leading-6 text-zinc-400">
+                Open the Map to order, complete, edit, or archive what is active.
+              </p>
+            </div>
+            <span className="shrink-0 text-sm text-[#E7C98B]">
+              {activeMapItems.length}
+            </span>
+          </div>
         </button>
-        <button
-          type="button"
-          onClick={() => void openMap()}
-          className={`rounded-full px-4 py-2 text-sm transition ${
-            view === "map"
-              ? "bg-[#21190F] text-[#E7C98B]"
-              : "text-zinc-500 hover:text-zinc-300"
-          }`}
-        >
-          Map
-        </button>
-      </div>
+      ) : null}
 
       {boundaryMessage ? (
         <div className="rounded-[1.4rem] border border-[#6B4035] bg-[#1A1110] p-5 text-sm leading-relaxed text-zinc-200">
@@ -677,6 +674,7 @@ export function CompassDiscussionFlow({
               {activeMapItems.map((item) => (
                 <div
                   key={item.id}
+                  data-compass-map-id={item.id}
                   className="flex gap-3 rounded-2xl border border-zinc-800 bg-[#121212] p-4"
                 >
                   <button

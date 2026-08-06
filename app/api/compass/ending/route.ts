@@ -199,6 +199,21 @@ export async function POST(request: Request) {
           : item,
       )
       state.updatedAt = now
+    } else if (action === "restore_item") {
+      const itemId = typeof body.itemId === "string" ? body.itemId : ""
+      const now = new Date().toISOString()
+
+      state.mapItems = state.mapItems.map((item) =>
+        item.id === itemId
+          ? {
+              ...item,
+              status: "active" as const,
+              completedAt: null,
+            }
+          : item,
+      )
+      state.mapReviewed = false
+      state.updatedAt = now
     } else if (action === "release_item") {
       const itemId = typeof body.itemId === "string" ? body.itemId : ""
       state.mapItems = state.mapItems.map((item) =>

@@ -70,7 +70,7 @@ export function CompassCard({
         window.history.replaceState(
           {},
           "",
-          `${window.location.pathname}${window.location.search}`,
+          window.location.pathname,
         );
 
         window.setTimeout(() => {
@@ -173,7 +173,14 @@ export function CompassCard({
         return;
       }
 
-      window.location.assign("/compass#resume-current-goals");
+      const sessionId =
+        typeof data?.session?.id === "string"
+          ? data.session.id
+          : Date.now().toString();
+
+      window.location.assign(
+        `/compass?conversation=${encodeURIComponent(sessionId)}#resume-current-goals`,
+      );
     } catch {
       setResumeError("Compass could not start a new conversation yet.");
     } finally {

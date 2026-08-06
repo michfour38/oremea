@@ -35,12 +35,58 @@ function ProductLink({
 
 export default function MemberNav() {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null)
+  const [hasActiveMap, setHasActiveMap] = useState(false)
 
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
   useEffect(() => {
     setOpenMenu(null)
+  }, [pathname, searchParams])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function refreshMapAvailability() {
+      try {
+        const response = await fetch("/api/compass/ending", {
+          method: "GET",
+          cache: "no-store",
+        })
+
+        if (!response.ok) {
+          if (!cancelled) setHasActiveMap(false)
+          return
+        }
+
+        const data = await response.json()
+        const items = Array.isArray(data?.state?.mapItems)
+          ? data.state.mapItems
+          : []
+        const hasActive = items.some(
+          (item: { status?: string }) =>
+            item?.status === "active" || item?.status === "waiting",
+        )
+
+        if (!cancelled) setHasActiveMap(hasActive)
+      } catch {
+        if (!cancelled) setHasActiveMap(false)
+      }
+    }
+
+    void refreshMapAvailability()
+    window.addEventListener(
+      "compass-map-changed",
+      refreshMapAvailability,
+    )
+
+    return () => {
+      cancelled = true
+      window.removeEventListener(
+        "compass-map-changed",
+        refreshMapAvailability,
+      )
+    }
   }, [pathname, searchParams])
 
   return (
@@ -58,6 +104,9 @@ export default function MemberNav() {
             <ProductLink href="/recognition" label="Recognition" pathname={pathname} />
             <ProductLink href="/resonance" label="Resonance" pathname={pathname} />
             <ProductLink href="/compass" label="Compass" pathname={pathname} />
+            {hasActiveMap ? (
+              <ProductLink href="/compass/map" label="Map" pathname={pathname} />
+            ) : null}
           </div>
         </div>
 

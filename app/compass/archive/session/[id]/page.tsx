@@ -99,6 +99,7 @@ export default async function CompassArchiveSessionPage({ params }: Props) {
         </header>
 
         <CompassArchiveSessionView
+          sessionId={session.id}
           discussionMessages={discussionMessages}
           endingState={endingState}
         />

@@ -220,16 +220,28 @@ export function CompassMapOrderEnhancer() {
     async function enhance() {
       openMapFromHash();
       const list = findList();
-      if (!list || list.dataset.compassMapEnhanced === "true") return;
+      if (!list) return;
 
       const cards = getCards(list);
       if (cards.length < 2) return;
 
-      const snapshot = await loadSnapshot();
-      if (stopped || snapshot.length !== cards.length) return;
+      const cardsMissingIds = cards.some(
+        (card) => !card.dataset.compassMapId,
+      );
 
-      cards.forEach((card, index) => {
-        card.dataset.compassMapId = snapshot[index]?.id ?? "";
+      if (cardsMissingIds) {
+        const snapshot = await loadSnapshot();
+        if (stopped || snapshot.length !== cards.length) return;
+
+        cards.forEach((card, index) => {
+          if (!card.dataset.compassMapId) {
+            card.dataset.compassMapId = snapshot[index]?.id ?? "";
+          }
+        });
+      }
+
+      cards.forEach((card) => {
+        if (!card.dataset.compassMapId) return;
         attachCardBehaviour(card, list);
       });
 
@@ -242,8 +254,6 @@ export function CompassMapOrderEnhancer() {
           "Drag items into the order that matches your available movement. Reordering saves automatically and keeps the Map open for confirmation.";
         list.before(note);
       }
-
-      list.dataset.compassMapEnhanced = "true";
     }
 
     const observer = new MutationObserver(() => void enhance());
