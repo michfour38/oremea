@@ -9,58 +9,116 @@ on:
       - .github/workflows/resonance-production-seed.yml
 
 permissions:
-  actions: read
   contents: read
 
 jobs:
   seed-and-verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     steps:
-      - name: Wait for Railway, seed, and verify
+      - name: Wait for Railway, seed room by room, and verify
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-          GITHUB_RUN_ID: ${{ github.run_id }}
+          RELEASE_SHA: ${{ github.sha }}
         run: |
-          set -u
+          set -uo pipefail
 
           endpoint="https://app.oremea.com/api/admin/resonance-seed-once"
+          response_file="resonance-release-response.json"
 
-          for attempt in $(seq 1 30); do
-            echo "Seed attempt ${attempt}/30"
-
-            status=$(curl \
+          call_release() {
+            local url="$1"
+            rm -f "${response_file}"
+            curl \
               --silent \
               --show-error \
-              --output resonance-seed-response.json \
+              --request POST \
+              --output "${response_file}" \
               --write-out "%{http_code}" \
               --connect-timeout 15 \
-              --max-time 300 \
-              --header "Authorization: Bearer ${GITHUB_TOKEN}" \
-              --header "X-GitHub-Run-Id: ${GITHUB_RUN_ID}" \
-              "${endpoint}" || true)
+              --max-time 28 \
+              --header "X-Oremea-Release-Sha: ${RELEASE_SHA}" \
+              "${url}" || true
+          }
 
-            cat resonance-seed-response.json 2>/dev/null || true
-            echo
+          ready=false
+          for attempt in $(seq 1 60); do
+            echo "Waiting for final Railway deploy: ${attempt}/60"
+            status=$(call_release "${endpoint}?phase=ready")
 
-            if [ "${status}" = "200" ]; then
-              if jq -e '
+            if [ "${status}" = "200" ] && \
+              jq -e '.ok == true and .phase == "ready"' "${response_file}" >/dev/null 2>&1; then
+              ready=true
+              break
+            fi
+
+            sleep 15
+          done
+
+          if [ "${ready}" != "true" ]; then
+            echo "The final Railway deployment did not expose the release endpoint in time."
+            cat "${response_file}" 2>/dev/null || true
+            exit 1
+          fi
+
+          for week in $(seq 1 10); do
+            seeded=false
+
+            for attempt in $(seq 1 4); do
+              echo "Seeding Resonance room ${week}/10 — attempt ${attempt}/4"
+              status=$(call_release "${endpoint}?phase=seed&week=${week}")
+
+              if [ "${status}" = "200" ] && \
+                jq -e --argjson week "${week}" \
+                  '.ok == true and .phase == "seed" and .weekNumber == $week' \
+                  "${response_file}" >/dev/null 2>&1; then
+                seeded=true
+                break
+              fi
+
+              cat "${response_file}" 2>/dev/null || true
+              echo
+              sleep 10
+            done
+
+            if [ "${seeded}" != "true" ]; then
+              echo "Resonance room ${week} could not be seeded."
+              exit 1
+            fi
+          done
+
+          verified=false
+          for attempt in $(seq 1 4); do
+            echo "Verifying all Resonance rooms — attempt ${attempt}/4"
+            status=$(call_release "${endpoint}?phase=verify")
+
+            if [ "${status}" = "200" ] && \
+              jq -e '
                 .ok == true and
+                .phase == "verify" and
                 .expectedPromptCount == 350 and
                 .activePromptCount == 350 and
                 (.rooms | type == "array" and length == 10)
-              ' resonance-seed-response.json >/dev/null; then
-                echo "Resonance production seed verified:"
-                jq -r '.rooms[]' resonance-seed-response.json
-                exit 0
-              fi
-
-              echo "Resonance verification response was incomplete."
-              exit 1
+              ' "${response_file}" >/dev/null 2>&1; then
+              verified=true
+              break
             fi
 
-            sleep 20
+            cat "${response_file}" 2>/dev/null || true
+            echo
+            sleep 10
           done
 
-          echo "Resonance production seed did not complete within the retry window."
-          exit 1
+          if [ "${verified}" != "true" ]; then
+            echo "The production database did not pass the exact Resonance verifier."
+            exit 1
+          fi
+
+          echo "Resonance production seed verified:"
+          jq -r '.rooms[]' "${response_file}"
+
+          status=$(call_release "${endpoint}?phase=close")
+          if [ "${status}" != "200" ] || \
+            ! jq -e '.ok == true and .phase == "closed"' "${response_file}" >/dev/null 2>&1; then
+            echo "The temporary release endpoint did not close cleanly."
+            exit 1
+          fi
