@@ -12,8 +12,9 @@ import MemberNav from "../../member-nav";
 export const dynamic = "force-dynamic";
 
 const RESONANCE_TESTER_USER_ID = "user_3CLGEx3xqgXY6DsIHPyV3yOd1xi";
+const TEST_WEEK_NUMBER = 7;
 
-async function openBelongingTestRun() {
+async function openForgeTestRun() {
   "use server";
 
   const { userId } = await auth();
@@ -33,7 +34,7 @@ async function openBelongingTestRun() {
 
   await createPurchasedResonanceRun({
     userId,
-    weekNumber: 1,
+    weekNumber: TEST_WEEK_NUMBER,
     purchaseSource: "manual_test",
     purchaseReference: `manual-test-${userId}-${randomUUID()}`,
   });
@@ -64,25 +65,25 @@ export default async function ResonanceTestPage() {
       <div className="mx-auto flex min-h-[80vh] max-w-3xl items-center px-6 py-16">
         <section className="w-full rounded-3xl border border-[#c8a96a]/30 bg-black/40 p-8 md:p-12">
           <p className="text-xs uppercase tracking-[0.3em] text-[#f1dfb4]/70">
-            Resonance testing
+            Resonance testing · Conflict &amp; Repair
           </p>
           <h1 className="mt-4 text-4xl font-light tracking-tight">
-            Belonging
+            The Forge
           </h1>
           <p className="mt-4 text-lg font-light text-zinc-200">
-            Where do I feel able to be myself?
+            What happens between us when something comes under pressure?
           </p>
           <p className="mt-6 max-w-2xl text-sm leading-7 text-zinc-400">
             This opens one active seven-day test run through the same gate used by a
-            verified purchase. The room will then open at Day 1.
+            verified purchase. The Forge will then open at Day 1.
           </p>
 
-          <form action={openBelongingTestRun} className="mt-8">
+          <form action={openForgeTestRun} className="mt-8">
             <button
               type="submit"
               className="inline-flex rounded-xl border border-[#c8a96a]/60 px-6 py-3 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/10"
             >
-              Open Belonging test run
+              Open The Forge test run
             </button>
           </form>
         </section>
