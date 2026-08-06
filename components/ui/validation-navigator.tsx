@@ -154,21 +154,21 @@ export function ValidationNavigator() {
 
       let firstTarget: HTMLElement | null = null;
 
-      errors.forEach((error) => {
+      for (const error of errors) {
         const scope = error.closest<HTMLElement>(
           "[data-validation-scope], fieldset, section, form, main",
         );
-        if (!scope) return;
+        if (!scope) continue;
 
         const invalidControls = inferInvalidControls(scope);
         if (invalidControls.length) {
           invalidControls.forEach(markControl);
           firstTarget ??= invalidControls[0];
-          return;
+          continue;
         }
 
         firstTarget ??= markHeading(scope);
-      });
+      }
 
       const key = `${window.location.pathname}|${errors
         .map((error) => error.textContent?.trim())
