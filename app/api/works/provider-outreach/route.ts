@@ -13,7 +13,9 @@ function stringValue(value: unknown) {
 
 function stringArray(value: unknown) {
   if (!Array.isArray(value)) return [];
-  return value.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+  return value.filter(
+    (item): item is string => typeof item === "string" && item.trim().length > 0
+  );
 }
 
 function hashToken(token: string) {
@@ -31,7 +33,9 @@ function escapeHtml(value: unknown) {
 
 function unitLabel(snapshot: Awaited<ReturnType<typeof buildProviderBrief>>) {
   const unit = snapshot.quantity.unit;
-  if (unit !== "UNITS") return unit?.toLowerCase().replaceAll("_", " ") ?? "units";
+  if (unit !== "UNITS") {
+    return unit?.toLowerCase().replaceAll("_", " ") ?? "units";
+  }
 
   switch (snapshot.packagingFormat) {
     case "BOTTLE":
@@ -91,12 +95,52 @@ function quantityText(snapshot: Awaited<ReturnType<typeof buildProviderBrief>>) 
     : "Quantity details are included in the full brief.";
 }
 
+function enumLabel(value: string) {
+  return value
+    .toLowerCase()
+    .replaceAll("_", " ")
+    .replace(/(^|\s)\S/g, (letter) => letter.toUpperCase());
+}
+
+function requirementValueText(value: unknown) {
+  if (typeof value === "string") return enumLabel(value);
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  return "";
+}
+
 function requirementText(snapshot: Awaited<ReturnType<typeof buildProviderBrief>>) {
   return snapshot.requirements
-    .map((requirement) =>
-      requirement.displayValue || `${requirement.field}: ${JSON.stringify(requirement.value)}`
-    )
-    .filter((value) => value.trim().length > 0);
+    .map((requirement) => {
+      if (requirement.displayValue?.trim()) return requirement.displayValue.trim();
+
+      if (requirement.field === "credential.HALAAL.authority_requirement") {
+        switch (requirement.value) {
+          case "ANY_RECOGNISED_CURRENT_CERTIFICATION":
+            return "Any recognised current Halaal certification is acceptable.";
+          case "SPECIFIC_AUTHORITY_REQUIRED":
+            return "A specific Halaal certifying authority is required.";
+          case "UNSURE":
+            return "The required Halaal certifying authority is still to be confirmed.";
+        }
+      }
+
+      if (requirement.field === "credential.HALAAL.specific_authority") {
+        const authority = stringValue(requirement.value);
+        return authority ? `Required Halaal certifying authority: ${authority}.` : "";
+      }
+
+      const value = requirementValueText(requirement.value);
+      if (!value) return "";
+      const label = requirement.field
+        .split(".")
+        .at(-1)
+        ?.replaceAll("_", " ")
+        .replace(/(^|\s)\S/g, (letter) => letter.toUpperCase());
+      return label ? `${label}: ${value}.` : value;
+    })
+    .filter((value): value is string => Boolean(value?.trim()));
 }
 
 type RouteQuestion = {
@@ -104,37 +148,55 @@ type RouteQuestion = {
   prompt: string;
 };
 
+function uniquePrompts(questions: RouteQuestion[]) {
+  return Array.from(
+    new Set(
+      questions
+        .map((question) => question.prompt.trim())
+        .filter((prompt) => prompt.length > 0)
+    )
+  );
+}
+
 function providerQuestionsFor(
   providerName: string,
   snapshot: Awaited<ReturnType<typeof buildProviderBrief>>,
   questions: RouteQuestion[]
 ) {
-  const providerQuestions = questions.filter((question) => question.audience === "PROVIDER");
+  const providerQuestions = questions.filter(
+    (question) => question.audience === "PROVIDER"
+  );
   if (providerQuestions.length === 0) return [];
 
   const named = providerQuestions.filter((question) =>
     question.prompt.toLowerCase().includes(providerName.toLowerCase())
   );
-  if (named.length > 0) return named.map((question) => question.prompt);
-
   const handlesManufacturing = snapshot.relevantSteps.some((step) =>
     step.toLowerCase().includes("manufactur")
   );
-  return handlesManufacturing
-    ? providerQuestions.map((question) => question.prompt)
-    : [];
+
+  if (handlesManufacturing) return uniquePrompts(providerQuestions);
+  return uniquePrompts(named);
 }
 
 function buildEditableBody({
   snapshot,
+  providerName,
   requesterName,
+  requesterEmail,
+  requesterPhone,
   questions,
 }: {
   snapshot: Awaited<ReturnType<typeof buildProviderBrief>>;
+  providerName: string;
   requesterName: string;
+  requesterEmail: string;
+  requesterPhone: string | null;
   questions: string[];
 }) {
   const lines = [
+    `Hello ${providerName} team,`,
+    "",
     "Can you help make this?",
     "",
     snapshot.product,
@@ -150,7 +212,11 @@ function buildEditableBody({
 
   const requirements = requirementText(snapshot);
   if (requirements.length > 0) {
-    lines.push("", "Relevant requirements", ...requirements.map((requirement) => `- ${requirement}`));
+    lines.push(
+      "",
+      "Relevant requirements",
+      ...requirements.map((requirement) => `- ${requirement}`)
+    );
   }
 
   if (questions.length > 0) {
@@ -163,9 +229,14 @@ function buildEditableBody({
 
   lines.push(
     "",
-    "Please use the secure response button below to confirm what is possible and add any useful notes."
+    "Please use the secure response button below to confirm what is possible and add any useful notes.",
+    "",
+    "Kind regards,",
+    requesterName,
+    requesterEmail
   );
 
+  if (requesterPhone) lines.push(requesterPhone);
   return lines.join("\n");
 }
 
@@ -182,7 +253,9 @@ function draftMap(value: unknown) {
   const result = new Map<string, DraftValue>();
   if (!value || typeof value !== "object" || Array.isArray(value)) return result;
 
-  for (const [providerId, draft] of Object.entries(value as Record<string, unknown>)) {
+  for (const [providerId, draft] of Object.entries(
+    value as Record<string, unknown>
+  )) {
     if (!draft || typeof draft !== "object" || Array.isArray(draft)) continue;
     const record = draft as Record<string, unknown>;
     const subject = stringValue(record.subject).slice(0, 240);
@@ -214,7 +287,7 @@ export async function POST(req: NextRequest) {
         brief_id: briefId,
         search_session_id: searchSessionId,
       },
-      select: { id: true, name: true, email: true },
+      select: { id: true, name: true, email: true, phone: true },
     });
 
     if (!procurement) {
@@ -225,10 +298,15 @@ export async function POST(req: NextRequest) {
     }
 
     const providers = await prisma.works_providers.findMany({
-      where: { id: { in: providerIds }, profile_status: { not: "ARCHIVED" } },
+      where: {
+        id: { in: providerIds },
+        profile_status: { not: "ARCHIVED" },
+      },
       select: { id: true, name: true, email: true },
     });
-    const providerById = new Map(providers.map((provider) => [provider.id, provider]));
+    const providerById = new Map(
+      providers.map((provider) => [provider.id, provider])
+    );
     const routeSummary = await getRouteSummary(briefId);
     const routeQuestions = routeSummary?.nextQuestions ?? [];
 
@@ -254,7 +332,10 @@ export async function POST(req: NextRequest) {
           subject: `WORKS production enquiry: ${snapshot.product}`,
           bodyText: buildEditableBody({
             snapshot,
+            providerName: provider.name,
             requesterName: procurement.name,
+            requesterEmail: procurement.email,
+            requesterPhone: procurement.phone,
             questions,
           }),
           questionCount: questions.length,
@@ -274,17 +355,34 @@ export async function POST(req: NextRequest) {
     }
 
     const resend = new Resend(apiKey);
-    const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://app.oremea.com").replace(/\/$/, "");
-    const results: Array<{ providerId: string; providerName: string; status: string; error?: string }> = [];
+    const appUrl = (
+      process.env.NEXT_PUBLIC_APP_URL || "https://app.oremea.com"
+    ).replace(/\/$/, "");
+    const results: Array<{
+      providerId: string;
+      providerName: string;
+      status: string;
+      error?: string;
+    }> = [];
 
     for (const providerId of providerIds) {
       const provider = providerById.get(providerId);
       if (!provider) {
-        results.push({ providerId, providerName: "Unknown provider", status: "SKIPPED", error: "Provider not found" });
+        results.push({
+          providerId,
+          providerName: "Unknown provider",
+          status: "SKIPPED",
+          error: "Provider not found",
+        });
         continue;
       }
       if (!provider.email) {
-        results.push({ providerId, providerName: provider.name, status: "SKIPPED", error: "No provider email is recorded yet" });
+        results.push({
+          providerId,
+          providerName: provider.name,
+          status: "SKIPPED",
+          error: "No provider email is recorded yet",
+        });
         continue;
       }
 
@@ -299,7 +397,10 @@ export async function POST(req: NextRequest) {
           subject: `WORKS production enquiry: ${snapshot.product}`,
           bodyText: buildEditableBody({
             snapshot,
+            providerName: provider.name,
             requesterName: procurement.name,
+            requesterEmail: procurement.email,
+            requesterPhone: procurement.phone,
             questions,
           }),
         };
@@ -308,11 +409,13 @@ export async function POST(req: NextRequest) {
         const tokenHash = hashToken(token);
         const responseUrl = `${appUrl}/works/respond/${token}`;
         const relevantSteps = snapshot.relevantSteps;
-        const briefSnapshot = JSON.parse(JSON.stringify({
-          ...snapshot,
-          emailDraft: draft,
-          questions,
-        })) as Prisma.InputJsonValue;
+        const briefSnapshot = JSON.parse(
+          JSON.stringify({
+            ...snapshot,
+            emailDraft: draft,
+            questions,
+          })
+        ) as Prisma.InputJsonValue;
 
         const outreach = await prisma.works_provider_outreach.upsert({
           where: {
@@ -360,8 +463,16 @@ export async function POST(req: NextRequest) {
         });
 
         if (error) {
-          await prisma.works_provider_outreach.update({ where: { id: outreach.id }, data: { status: "FAILED" } });
-          results.push({ providerId, providerName: provider.name, status: "FAILED", error: error.message });
+          await prisma.works_provider_outreach.update({
+            where: { id: outreach.id },
+            data: { status: "FAILED" },
+          });
+          results.push({
+            providerId,
+            providerName: provider.name,
+            status: "FAILED",
+            error: error.message,
+          });
           continue;
         }
 
@@ -369,13 +480,18 @@ export async function POST(req: NextRequest) {
           where: { id: outreach.id },
           data: { status: "SENT", sent_at: new Date() },
         });
-        results.push({ providerId, providerName: provider.name, status: "SENT" });
+        results.push({
+          providerId,
+          providerName: provider.name,
+          status: "SENT",
+        });
       } catch (error) {
         results.push({
           providerId,
           providerName: provider.name,
           status: "FAILED",
-          error: error instanceof Error ? error.message : "Provider outreach failed",
+          error:
+            error instanceof Error ? error.message : "Provider outreach failed",
         });
       }
     }
@@ -391,7 +507,12 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("WORKS provider outreach failed:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "WORKS could not contact these providers" },
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "WORKS could not contact these providers",
+      },
       { status: 500 }
     );
   }
