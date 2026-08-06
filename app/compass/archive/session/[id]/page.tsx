@@ -75,7 +75,7 @@ export default async function CompassArchiveSessionPage({ params }: Props) {
     : "Compass";
 
   return (
-    <main className="min-h-screen bg-[#090909] text-white">
+    <main id="top" className="min-h-screen bg-[#090909] text-white">
       <MemberNav />
 
       <section className="mx-auto max-w-3xl px-5 py-12">
@@ -104,6 +104,14 @@ export default async function CompassArchiveSessionPage({ params }: Props) {
           endingState={endingState}
         />
       </section>
+
+      <a
+        href="#top"
+        aria-label="Return to top"
+        className="fixed bottom-24 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full border border-[#d8b15f]/70 bg-[#090909]/90 text-2xl text-[#d8b15f] shadow-lg backdrop-blur transition hover:border-[#d8b15f] hover:bg-[#17130b] md:bottom-5"
+      >
+        ↟
+      </a>
     </main>
   );
 }
