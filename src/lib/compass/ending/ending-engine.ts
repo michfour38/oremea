@@ -44,7 +44,26 @@ export async function runCompassEndingEngine(
   input: CompassEndingEngineInput,
 ): Promise<CompassEndingEngineResult | null> {
   const prompt = buildPrompt(input)
+  const firstResponse = await requestEndingModel(prompt)
+  const firstResult = firstResponse
+    ? parseEndingResponse(firstResponse)
+    : null
 
+  if (firstResult) return firstResult
+
+  const retryResponse = await requestEndingModel(
+    `${prompt}
+
+RETRY REQUIREMENT
+The previous attempt did not produce a usable complete JSON object.
+Return compact valid JSON only.
+Keep independently named goals, but remove explanatory prose and semantic duplicates.`,
+  )
+
+  return retryResponse ? parseEndingResponse(retryResponse) : null
+}
+
+async function requestEndingModel(prompt: string): Promise<string | null> {
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -55,7 +74,8 @@ export async function runCompassEndingEngine(
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-5-20250929",
-        max_tokens: 1400,
+        max_tokens: 3600,
+        temperature: 0,
         messages: [{ role: "user", content: prompt }],
       }),
     })
@@ -78,47 +98,51 @@ export async function runCompassEndingEngine(
           .trim()
       : ""
 
-    if (!text) return null
-
-    const parsed = parseJsonObject(text)
-    if (!parsed) return null
-
-    const scopeCategory = SCOPE_VALUES.includes(
-      parsed.scopeCategory as CompassScopeCategory,
-    )
-      ? (parsed.scopeCategory as CompassScopeCategory)
-      : "in_scope"
-
-    if (scopeCategory !== "in_scope") {
-      return {
-        scopeCategory,
-        mapItems: [],
-        reframe: null,
-        movement: null,
-        followUpQuestion: null,
-      }
-    }
-
-    const mapItems = toMapCandidates(parsed.mapItems)
-    const movement = toMovement(parsed.movement)
-
-    return {
-      scopeCategory,
-      mapItems,
-      reframe:
-        typeof parsed.reframe === "string" && parsed.reframe.trim()
-          ? parsed.reframe.trim()
-          : null,
-      movement,
-      followUpQuestion:
-        typeof parsed.followUpQuestion === "string" &&
-        parsed.followUpQuestion.trim()
-          ? parsed.followUpQuestion.trim()
-          : null,
-    }
+    return text || null
   } catch (error) {
     console.error("Compass ending engine request failed:", error)
     return null
+  }
+}
+
+function parseEndingResponse(
+  text: string,
+): CompassEndingEngineResult | null {
+  const parsed = parseJsonObject(text)
+  if (!parsed) return null
+
+  const scopeCategory = SCOPE_VALUES.includes(
+    parsed.scopeCategory as CompassScopeCategory,
+  )
+    ? (parsed.scopeCategory as CompassScopeCategory)
+    : "in_scope"
+
+  if (scopeCategory !== "in_scope") {
+    return {
+      scopeCategory,
+      mapItems: [],
+      reframe: null,
+      movement: null,
+      followUpQuestion: null,
+    }
+  }
+
+  const mapItems = toMapCandidates(parsed.mapItems)
+  const movement = toMovement(parsed.movement)
+
+  return {
+    scopeCategory,
+    mapItems,
+    reframe:
+      typeof parsed.reframe === "string" && parsed.reframe.trim()
+        ? parsed.reframe.trim()
+        : null,
+    movement,
+    followUpQuestion:
+      typeof parsed.followUpQuestion === "string" &&
+      parsed.followUpQuestion.trim()
+        ? parsed.followUpQuestion.trim()
+        : null,
   }
 }
 
@@ -233,6 +257,8 @@ When scope is anything except in_scope, return no Map items, no reframe, no move
 
 OUTPUT
 Return valid JSON only. No markdown. No explanation outside the JSON.
+Keep the JSON compact enough to finish completely.
+Use concise Map item wording and semantically deduplicate before returning it.
 
 Shape:
 {

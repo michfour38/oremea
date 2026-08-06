@@ -102,10 +102,25 @@ export function CompassCard({
   useEffect(() => {
     if (!isMapCard && !isDiscussionCard) return;
 
-    void loadMapReview();
-    const refresh = window.setTimeout(() => void loadMapReview(), 1000);
+    function refreshMapReview() {
+      void loadMapReview();
+    }
 
-    return () => window.clearTimeout(refresh);
+    void loadMapReview();
+    const refresh = window.setTimeout(refreshMapReview, 1000);
+
+    window.addEventListener(
+      "compass-map-reordered",
+      refreshMapReview,
+    );
+
+    return () => {
+      window.clearTimeout(refresh);
+      window.removeEventListener(
+        "compass-map-reordered",
+        refreshMapReview,
+      );
+    };
   }, [isMapCard, isDiscussionCard]);
 
   async function loadMapReview() {

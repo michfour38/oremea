@@ -36,6 +36,28 @@ type LocalEndingQuestion = {
 
 type FinalizationStage = "idle" | "execution" | "confirm";
 
+function MapThinkingIndicator() {
+  const delays = ["0ms", "180ms", "360ms"];
+
+  return (
+    <div
+      className="flex items-center rounded-2xl border border-zinc-800 p-5 text-sm text-zinc-300"
+      aria-live="polite"
+    >
+      <span>Holding the pieces together</span>
+      <span className="ml-2 inline-flex items-center gap-1" aria-hidden="true">
+        {delays.map((delay) => (
+          <span
+            key={delay}
+            className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#d8b15f]"
+            style={{ animationDelay: delay }}
+          />
+        ))}
+      </span>
+    </div>
+  );
+}
+
 export function CompassDiscussionFlow({
   discussionMessages,
   discussionInput,
@@ -112,6 +134,33 @@ export function CompassDiscussionFlow({
     void loadEnding();
   }, [discussionMessages]);
 
+  useEffect(() => {
+    function handleMapReordered(event: Event) {
+      const state = (
+        event as CustomEvent<CompassEndingState | null>
+      ).detail;
+
+      if (!state) return;
+
+      setEndingState(state);
+      setBoundaryMessage(null);
+      setEndingError("");
+      setView("map");
+    }
+
+    window.addEventListener(
+      "compass-map-reordered",
+      handleMapReordered,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "compass-map-reordered",
+        handleMapReordered,
+      );
+    };
+  }, []);
+
   async function loadEnding() {
     try {
       const response = await fetch("/api/compass/ending", {
@@ -136,24 +185,37 @@ export function CompassDiscussionFlow({
     setEndingError("");
 
     try {
+      const currentDiscussion = discussionMessages.filter(
+        (message) => message.content.trim() && message.content !== "...",
+      );
       const response = await fetch("/api/compass/ending", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ action, ...extra }),
+        body: JSON.stringify({
+          action,
+          discussionMessages: currentDiscussion,
+          ...extra,
+        }),
       });
 
-      const data = (await response.json()) as EndingResponse;
+      const data = (await response.json().catch(() => null)) as
+        | EndingResponse
+        | null;
 
       if (!response.ok) {
-        setEndingError(data.error ?? "Compass could not update the Map yet.");
+        setEndingError(
+          data?.error ??
+            "Compass could not build the Map from this discussion yet.",
+        );
         return null;
       }
 
-      setEndingState(data.state ?? null);
-      setBoundaryMessage(data.boundaryMessage ?? null);
-      return data.state ?? null;
+      setEndingError("");
+      setEndingState(data?.state ?? null);
+      setBoundaryMessage(data?.boundaryMessage ?? null);
+      return data?.state ?? null;
     } catch {
       setEndingError("Compass could not update the Map yet.");
       return null;
@@ -598,12 +660,13 @@ export function CompassDiscussionFlow({
 
             <div className="mt-4 space-y-3">
               {endingBusy && activeMapItems.length === 0 ? (
-                <div className="rounded-2xl border border-zinc-800 p-5 text-sm text-zinc-500">
-                  Holding the pieces together...
-                </div>
+                <MapThinkingIndicator />
               ) : null}
 
-              {!endingBusy && activeMapItems.length === 0 && !boundaryMessage ? (
+              {!endingBusy &&
+              activeMapItems.length === 0 &&
+              !boundaryMessage &&
+              !endingError ? (
                 <div className="rounded-2xl border border-zinc-800 p-5 text-sm leading-6 text-zinc-500">
                   {canMakeWorkable
                     ? "The current discussion is ready to turn into movement when you are."
@@ -662,7 +725,25 @@ export function CompassDiscussionFlow({
       )}
 
       {endingError ? (
-        <p className="text-sm leading-6 text-amber-200/80">{endingError}</p>
+        <div
+          className="rounded-[1.4rem] border border-[#5A4A2E] bg-[#17130D] p-5"
+          aria-live="polite"
+        >
+          <p className="text-sm leading-6 text-amber-200/80">
+            {endingError}
+          </p>
+
+          {view === "map" ? (
+            <button
+              type="button"
+              onClick={() => void openMap()}
+              disabled={endingBusy}
+              className="secondary-button disabled:cursor-wait disabled:opacity-60"
+            >
+              Try building the Map again
+            </button>
+          ) : null}
+        </div>
       ) : null}
     </CompassCard>
   );

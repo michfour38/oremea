@@ -93,10 +93,15 @@ export function CompassMapOrderEnhancer() {
         body: JSON.stringify({ itemIds }),
       });
 
-      if (!response.ok) return;
+      const data = await response.json().catch(() => null);
 
-      window.location.hash = MAP_HASH;
-      window.location.reload();
+      if (!response.ok || !data?.state) return;
+
+      window.dispatchEvent(
+        new CustomEvent("compass-map-reordered", {
+          detail: data.state,
+        }),
+      );
     }
 
     function queueSave(list: HTMLElement) {
@@ -234,7 +239,7 @@ export function CompassMapOrderEnhancer() {
         note.dataset.compassOrderNote = "true";
         note.className = "mt-3 text-sm leading-6 text-zinc-200";
         note.textContent =
-          "Drag items into the order that matches your available movement. Reordering saves automatically and returns the Map for confirmation.";
+          "Drag items into the order that matches your available movement. Reordering saves automatically and keeps the Map open for confirmation.";
         list.before(note);
       }
 

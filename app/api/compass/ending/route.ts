@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client"
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -65,6 +66,19 @@ export async function POST(request: Request) {
       )
     }
 
+    const currentDiscussionMessages = Array.isArray(body.discussionMessages)
+      ? body.discussionMessages.filter(
+          (message: unknown) =>
+            Boolean(
+              message &&
+                typeof message === "object" &&
+                typeof (message as Record<string, unknown>).content === "string" &&
+                (message as Record<string, string>).content.trim() &&
+                (message as Record<string, string>).content !== "...",
+            ),
+        )
+      : session.discussion_messages
+
     let state = readState(session.detected_patterns, session.selected_area)
 
     if (action === "make_workable" && !state.mapReviewed) {
@@ -94,14 +108,14 @@ export async function POST(request: Request) {
         areaResponses: session.area_responses,
         recursiveLayers: session.recursive_layers,
         possibilityAnswers: session.possibility_answers,
-        discussionMessages: session.discussion_messages,
+        discussionMessages: currentDiscussionMessages,
         existingMapItems: state.mapItems,
         movements: state.movements,
       })
 
       if (!result) {
         return NextResponse.json(
-          { error: "Compass could not build the ending yet." },
+          { error: "Compass could not build the Map from this discussion yet." },
           { status: 502 },
         )
       }
@@ -110,7 +124,7 @@ export async function POST(request: Request) {
         ...state,
         selectedArea: session.selected_area,
         scopeCategory: result.scopeCategory,
-        discussionCount: countDiscussionMessages(session.discussion_messages),
+        discussionCount: countDiscussionMessages(currentDiscussionMessages),
         updatedAt: new Date().toISOString(),
       }
 
@@ -258,6 +272,8 @@ export async function POST(request: Request) {
       where: { id: session.id },
       data: {
         detected_patterns: state as object,
+        discussion_messages:
+          currentDiscussionMessages as Prisma.InputJsonValue,
       },
     })
 
