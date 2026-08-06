@@ -63,6 +63,10 @@ export default async function WorksMarketPage({
         .works-market-conversation > div {
           padding-top: 0;
         }
+
+        .works-market-conversation [data-works-outreach-panel] + section.mt-8 {
+          display: none;
+        }
       `}</style>
     </main>
   );
