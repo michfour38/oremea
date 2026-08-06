@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 
 import type { CompassEndingState } from "@/src/lib/compass/ending/ending-types";
 
@@ -235,20 +234,19 @@ export function CompassArchiveSessionView({
             returnedItemIds={returnedItemIds}
           />
 
-          <ArchiveList
-            title="Completed movements"
-            empty="No movement was completed during this archived run."
-            emptyDetail="Movements are completed from the live Map."
-            emptyHref="/compass/map"
-            emptyLinkLabel="Open current Map"
-            items={completedMovements.map((movement) => ({
-              id: movement.id,
-              content: movement.instruction,
-              detail: movement.reason,
-              sourceMessageIndex: null,
-            }))}
-            onSource={jumpToDiscussion}
-          />
+          {completedMovements.length > 0 ? (
+            <ArchiveList
+              title="What you completed"
+              empty=""
+              items={completedMovements.map((movement) => ({
+                id: movement.id,
+                content: movement.instruction,
+                detail: movement.reason,
+                sourceMessageIndex: null,
+              }))}
+              onSource={jumpToDiscussion}
+            />
+          ) : null}
         </div>
       )}
     </div>
@@ -258,9 +256,6 @@ export function CompassArchiveSessionView({
 function ArchiveList({
   title,
   empty,
-  emptyDetail,
-  emptyHref,
-  emptyLinkLabel,
   items,
   onSource,
   onReturn,
@@ -269,9 +264,6 @@ function ArchiveList({
 }: {
   title: string;
   empty: string;
-  emptyDetail?: string;
-  emptyHref?: string;
-  emptyLinkLabel?: string;
   items: Array<{
     id: string;
     content: string;
@@ -289,18 +281,7 @@ function ArchiveList({
       <div className="mt-3 space-y-3">
         {items.length === 0 ? (
           <div className="rounded-2xl border border-zinc-800 p-4 text-sm text-zinc-500">
-            <p>{empty}</p>
-            {emptyDetail ? (
-              <p className="mt-2 leading-6 text-zinc-600">{emptyDetail}</p>
-            ) : null}
-            {emptyHref && emptyLinkLabel ? (
-              <Link
-                href={emptyHref}
-                className="mt-3 inline-block text-[#E7C98B] underline underline-offset-4 transition hover:text-[#f1dfb4]"
-              >
-                {emptyLinkLabel} →
-              </Link>
-            ) : null}
+            {empty}
           </div>
         ) : null}
 
