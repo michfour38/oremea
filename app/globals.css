@@ -53,6 +53,29 @@ body {
   overflow-x: hidden;
 }
 
+/*
+ * Oremea-wide validation navigation rule.
+ * Every field identified as invalid receives the same unmistakable marker,
+ * regardless of product, route, light surface, or dark surface.
+ */
+[data-oremea-error-marker="true"] {
+  margin-left: 0.25rem;
+  color: #dc2626;
+  font-weight: 800;
+  line-height: 1;
+}
+
+input[data-oremea-invalid="true"],
+textarea[data-oremea-invalid="true"],
+select[data-oremea-invalid="true"] {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 2px rgb(220 38 38 / 0.18) !important;
+}
+
+[data-oremea-invalid-heading="true"] {
+  scroll-margin-top: 2rem;
+}
+
 /* subtle vertical scrollbar */
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {

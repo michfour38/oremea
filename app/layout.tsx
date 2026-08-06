@@ -1,4 +1,7 @@
 import { ClerkProvider } from "@clerk/nextjs";
+
+import { ValidationNavigator } from "@/components/ui/validation-navigator";
+
 import "./globals.css";
 
 export default function RootLayout({
@@ -9,7 +12,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <ClerkProvider>{children}</ClerkProvider>
+        <ClerkProvider>
+          <ValidationNavigator />
+          {children}
+        </ClerkProvider>
       </body>
     </html>
   );
