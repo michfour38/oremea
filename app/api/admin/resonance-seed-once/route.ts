@@ -2,78 +2,88 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { verifyResonanceSeed } from "@/prisma/scripts/resonance-verify-lib";
-import { seedAllResonance } from "@/prisma/seeds/resonance-seed-lib";
+import { seedResonanceWeek } from "@/prisma/seeds/resonance-seed-lib";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const REPOSITORY = "michfour38/oremea";
-const WORKFLOW_NAME = "Run Resonance production seed";
+const RELEASE_DEADLINE = Date.parse("2026-08-06T17:30:00Z");
+let releaseComplete = false;
 
-type GitHubWorkflowRun = {
-  name?: string;
-  event?: string;
-  head_branch?: string;
-  head_sha?: string;
-  repository?: { full_name?: string };
-};
-
-async function requestIsAuthorized(request: Request) {
-  const authorization = request.headers.get("authorization");
-  const runId = request.headers.get("x-github-run-id");
-
-  if (!authorization?.startsWith("Bearer ") || !runId || !/^\d+$/.test(runId)) {
-    return false;
-  }
-
-  const response = await fetch(
-    `https://api.github.com/repos/${REPOSITORY}/actions/runs/${runId}`,
-    {
-      cache: "no-store",
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: authorization,
-        "X-GitHub-Api-Version": "2022-11-28",
-      },
-    },
-  );
-
-  if (!response.ok) return false;
-
-  const run = (await response.json()) as GitHubWorkflowRun;
+function requestIsAuthorized(request: Request) {
+  const suppliedSha = request.headers.get("x-oremea-release-sha");
   const deployedSha = process.env.RAILWAY_GIT_COMMIT_SHA;
 
-  return (
-    run.repository?.full_name === REPOSITORY &&
-    run.name === WORKFLOW_NAME &&
-    run.event === "push" &&
-    run.head_branch === "main" &&
-    (!deployedSha || run.head_sha === deployedSha)
+  return Boolean(
+    !releaseComplete &&
+      Date.now() <= RELEASE_DEADLINE &&
+      suppliedSha &&
+      deployedSha &&
+      suppliedSha === deployedSha,
   );
 }
 
-export async function GET(request: Request) {
-  if (!(await requestIsAuthorized(request))) {
+export async function POST(request: Request) {
+  if (!requestIsAuthorized(request)) {
     return NextResponse.json({ ok: false }, { status: 404 });
   }
 
-  try {
-    await seedAllResonance(prisma);
-    const verification = await verifyResonanceSeed(prisma);
+  const url = new URL(request.url);
+  const phase = url.searchParams.get("phase");
 
-    return NextResponse.json({
-      ok: true,
-      expectedPromptCount: verification.expectedPromptCount,
-      activePromptCount: verification.activePromptCount,
-      rooms: verification.roomSummaries,
-    });
+  try {
+    if (phase === "ready") {
+      return NextResponse.json({ ok: true, phase: "ready" });
+    }
+
+    if (phase === "seed") {
+      const weekNumber = Number(url.searchParams.get("week"));
+
+      if (!Number.isInteger(weekNumber) || weekNumber < 1 || weekNumber > 10) {
+        return NextResponse.json(
+          { ok: false, error: "Week must be an integer from 1 to 10" },
+          { status: 400 },
+        );
+      }
+
+      await seedResonanceWeek(prisma, weekNumber);
+
+      return NextResponse.json({
+        ok: true,
+        phase: "seed",
+        weekNumber,
+      });
+    }
+
+    if (phase === "verify") {
+      const verification = await verifyResonanceSeed(prisma);
+
+      return NextResponse.json({
+        ok: true,
+        phase: "verify",
+        expectedPromptCount: verification.expectedPromptCount,
+        activePromptCount: verification.activePromptCount,
+        rooms: verification.roomSummaries,
+      });
+    }
+
+    if (phase === "close") {
+      releaseComplete = true;
+      return NextResponse.json({ ok: true, phase: "closed" });
+    }
+
+    return NextResponse.json(
+      { ok: false, error: "Unknown release phase" },
+      { status: 400 },
+    );
   } catch (error) {
-    console.error("One-time Resonance production seed failed:", error);
+    console.error(`Resonance production release phase ${phase} failed:`, error);
 
     return NextResponse.json(
       {
         ok: false,
-        error: error instanceof Error ? error.message : "Unknown seed error",
+        phase,
+        error: error instanceof Error ? error.message : "Unknown release error",
       },
       { status: 500 },
     );
