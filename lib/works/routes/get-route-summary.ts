@@ -11,6 +11,16 @@ const QUANTITY_RELEVANT_ROUTE_SERVICES = new Set([
   "RAW_MATERIAL_SOURCING",
 ]);
 
+const FOUNDER_CHOICE_LABELS: Record<string, string> = {
+  EXACT: "Exactly this quantity",
+  APPROXIMATE: "Roughly this quantity",
+  AT_LEAST: "At least this quantity",
+  MAXIMUM: "This is my maximum",
+  ANY_RECOGNISED_CURRENT_CERTIFICATION: "Any recognised current certification",
+  SPECIFIC_AUTHORITY_REQUIRED: "A specific authority is required",
+  UNSURE: "I am not sure yet",
+};
+
 function routeLabel(status: WorksRouteStatus) {
   switch (status) {
     case WorksRouteStatus.VIABLE:
@@ -328,6 +338,85 @@ export async function getRouteSummary(briefId: string, rank = 1) {
       ),
   });
 
+  const founderAnswers: Array<{
+    key: string;
+    kind: "CHOICE" | "NUMBER" | "TEXT" | "CONFIRMATION";
+    prompt: string;
+    answer: string;
+    value: string | number | boolean;
+    answerField: string;
+    unit?: string;
+    choices?: string[];
+  }> = [];
+
+  if (quantityFlexibility) {
+    founderAnswers.push({
+      key: "FOUNDER_QUANTITY_FLEXIBILITY",
+      kind: "CHOICE",
+      prompt: `How flexible is your target of ${route.brief.target_quantity ?? "the requested"} finished units?`,
+      answer: FOUNDER_CHOICE_LABELS[quantityFlexibility] ?? quantityFlexibility,
+      value: quantityFlexibility,
+      answerField: "commercial.target_quantity_flexibility",
+      choices: ["EXACT", "APPROXIMATE", "AT_LEAST", "MAXIMUM"],
+    });
+  }
+
+  if (fillVolumeMl != null) {
+    founderAnswers.push({
+      key: "FOUNDER_TARGET_PACK_SIZE",
+      kind: "NUMBER",
+      prompt:
+        packagingFormat === "BOTTLE"
+          ? "How much product should each finished bottle contain?"
+          : "What is the target fill size for each finished unit?",
+      answer: `${fillVolumeMl} ml`,
+      value: fillVolumeMl,
+      answerField: "packaging.fill_volume_ml",
+      unit: "ML",
+    });
+  }
+
+  if (halaalAuthorityRequirement) {
+    founderAnswers.push({
+      key: "FOUNDER_HALAAL_AUTHORITY_REQUIREMENT",
+      kind: "CHOICE",
+      prompt:
+        "Does your customer, retailer or export market require a particular Halaal certifying authority?",
+      answer:
+        FOUNDER_CHOICE_LABELS[halaalAuthorityRequirement] ??
+        halaalAuthorityRequirement,
+      value: halaalAuthorityRequirement,
+      answerField: "credential.HALAAL.authority_requirement",
+      choices: [
+        "ANY_RECOGNISED_CURRENT_CERTIFICATION",
+        "SPECIFIC_AUTHORITY_REQUIRED",
+        "UNSURE",
+      ],
+    });
+  }
+
+  if (halaalSpecificAuthority) {
+    founderAnswers.push({
+      key: "FOUNDER_HALAAL_SPECIFIC_AUTHORITY",
+      kind: "TEXT",
+      prompt: "Which Halaal certifying authority or scheme is required?",
+      answer: halaalSpecificAuthority,
+      value: halaalSpecificAuthority,
+      answerField: "credential.HALAAL.specific_authority",
+    });
+  }
+
+  if (typeof halaalLogoRequirement === "boolean") {
+    founderAnswers.push({
+      key: "FOUNDER_HALAAL_MARK_ON_LABEL",
+      kind: "CONFIRMATION",
+      prompt: "Should the Halaal certification mark appear on the finished retail label?",
+      answer: halaalLogoRequirement ? "Yes" : "No",
+      value: halaalLogoRequirement,
+      answerField: "credential.HALAAL.logo_required",
+    });
+  }
+
   return {
     id: route.id,
     rank: route.rank,
@@ -362,6 +451,7 @@ export async function getRouteSummary(briefId: string, rank = 1) {
     }),
     unresolved: [...unresolved.values()],
     nextQuestions,
+    founderAnswers,
     gaps,
   };
 }

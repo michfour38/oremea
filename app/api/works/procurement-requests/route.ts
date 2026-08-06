@@ -11,6 +11,44 @@ function emailValue(value: unknown) {
   return email.includes("@") ? email : "";
 }
 
+export async function GET(req: NextRequest) {
+  try {
+    const searchSessionId = stringValue(req.nextUrl.searchParams.get("searchSessionId"));
+    const briefId = stringValue(req.nextUrl.searchParams.get("briefId"));
+
+    if (!searchSessionId || !briefId) {
+      return NextResponse.json({ contact: null });
+    }
+
+    const request = await prisma.works_procurement_requests.findFirst({
+      where: {
+        search_session_id: searchSessionId,
+        brief_id: briefId,
+      },
+      select: {
+        name: true,
+        email: true,
+        phone: true,
+        preferred_contact_method: true,
+      },
+    });
+
+    return NextResponse.json({
+      contact: request
+        ? {
+            name: request.name,
+            email: request.email,
+            phone: request.phone ?? "",
+            preferredContactMethod: request.preferred_contact_method ?? "EMAIL",
+          }
+        : null,
+    });
+  } catch (error) {
+    console.error("WORKS procurement contact restore failed:", error);
+    return NextResponse.json({ contact: null });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

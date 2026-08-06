@@ -1,5 +1,36 @@
 import { prisma } from "@/lib/prisma";
 
+function jsonNumber(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function jsonString(value: unknown) {
+  return typeof value === "string" ? value : null;
+}
+
+function isInternalQuantityRequirement(field: string, displayValue: string | null) {
+  if (
+    field === "commercial.quantity.minimum" ||
+    field === "commercial.quantity.preferred" ||
+    field === "commercial.quantity.maximum" ||
+    field === "packaging.fill_volume_ml" ||
+    field === "packaging.fill_weight_g"
+  ) {
+    return true;
+  }
+
+  const normalizedField = field.toLowerCase();
+  if (normalizedField.includes("original") && normalizedField.includes("quantity")) {
+    return true;
+  }
+
+  const normalizedDisplay = displayValue?.toLowerCase() ?? "";
+  return (
+    normalizedDisplay.includes("founder") &&
+    normalizedDisplay.includes("original quantity basis")
+  );
+}
+
 export async function buildProviderBrief(briefId: string, providerId: string, routeOptionId?: string | null) {
   const route = await prisma.works_route_options.findFirst({
     where: {
@@ -38,10 +69,17 @@ export async function buildProviderBrief(briefId: string, providerId: string, ro
       .filter((key): key is string => Boolean(key))
   );
 
+  const requirementValue = (field: string) =>
+    route.brief.requirements.find((requirement) => requirement.field === field)?.value;
+
   const requirements = route.brief.requirements
     .filter((requirement) => {
       const scoped = requirement.applies_to_service?.key;
-      return !scoped || serviceKeys.has(scoped);
+      const applies = !scoped || serviceKeys.has(scoped);
+      return (
+        applies &&
+        !isInternalQuantityRequirement(requirement.field, requirement.display_value)
+      );
     })
     .map((requirement) => ({
       field: requirement.field,
@@ -57,9 +95,15 @@ export async function buildProviderBrief(briefId: string, providerId: string, ro
     productType: route.brief.product_type,
     category: route.brief.category?.key ?? null,
     stage: route.brief.stage,
+    packagingFormat: jsonString(requirementValue("packaging.format")),
     quantity: {
       target: route.brief.target_quantity == null ? null : Number(route.brief.target_quantity),
+      minimum: jsonNumber(requirementValue("commercial.quantity.minimum")),
+      preferred: jsonNumber(requirementValue("commercial.quantity.preferred")),
+      maximum: jsonNumber(requirementValue("commercial.quantity.maximum")),
       unit: route.brief.quantity_unit,
+      fillVolumeMl: jsonNumber(requirementValue("packaging.fill_volume_ml")),
+      fillWeightG: jsonNumber(requirementValue("packaging.fill_weight_g")),
     },
     location: {
       preference: route.brief.location_preference,

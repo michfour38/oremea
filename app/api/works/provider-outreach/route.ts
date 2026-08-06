@@ -5,6 +5,7 @@ import { Resend } from "resend";
 
 import { prisma } from "@/lib/prisma";
 import { buildProviderBrief } from "@/lib/works/outreach/build-provider-brief";
+import { getRouteSummary } from "@/lib/works/routes/get-route-summary";
 
 function stringValue(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -28,11 +29,168 @@ function escapeHtml(value: unknown) {
     .replaceAll("'", "&#039;");
 }
 
-function quantityText(snapshot: Awaited<ReturnType<typeof buildProviderBrief>>) {
-  const target = snapshot.quantity.target;
+function unitLabel(snapshot: Awaited<ReturnType<typeof buildProviderBrief>>) {
   const unit = snapshot.quantity.unit;
-  if (target == null || !unit) return "Quantity details are included in the full brief";
-  return `${target} ${unit.toLowerCase().replaceAll("_", " ")}`;
+  if (unit !== "UNITS") return unit?.toLowerCase().replaceAll("_", " ") ?? "units";
+
+  switch (snapshot.packagingFormat) {
+    case "BOTTLE":
+      return "bottles";
+    case "JAR":
+      return "jars";
+    case "SACHET":
+      return "sachets";
+    case "POUCH":
+      return "pouches";
+    case "CAN":
+      return "cans";
+    case "TIN":
+      return "tins";
+    case "BOX":
+      return "boxes";
+    case "TUB":
+      return "tubs";
+    default:
+      return "units";
+  }
+}
+
+function fillSizeText(snapshot: Awaited<ReturnType<typeof buildProviderBrief>>) {
+  if (snapshot.quantity.fillVolumeMl != null) {
+    return `${snapshot.quantity.fillVolumeMl} ml each`;
+  }
+  if (snapshot.quantity.fillWeightG != null) {
+    return `${snapshot.quantity.fillWeightG} g each`;
+  }
+  return "";
+}
+
+function quantityText(snapshot: Awaited<ReturnType<typeof buildProviderBrief>>) {
+  const quantity = snapshot.quantity;
+  const unit = unitLabel(snapshot);
+  const preferred = quantity.preferred ?? quantity.target;
+  const fillSize = fillSizeText(snapshot);
+  const lines: string[] = [];
+
+  if (preferred != null) {
+    lines.push(
+      `Preferred first run: ${preferred} ${unit}${fillSize ? `, ${fillSize}` : ""}.`
+    );
+  }
+
+  if (quantity.minimum != null && quantity.maximum != null) {
+    lines.push(`Workable range: ${quantity.minimum}-${quantity.maximum} ${unit}.`);
+  }
+
+  if (lines.length === 0 && quantity.target != null) {
+    lines.push(`${quantity.target} ${unit}${fillSize ? `, ${fillSize}` : ""}.`);
+  }
+
+  return lines.length > 0
+    ? lines.join("\n")
+    : "Quantity details are included in the full brief.";
+}
+
+function requirementText(snapshot: Awaited<ReturnType<typeof buildProviderBrief>>) {
+  return snapshot.requirements
+    .map((requirement) =>
+      requirement.displayValue || `${requirement.field}: ${JSON.stringify(requirement.value)}`
+    )
+    .filter((value) => value.trim().length > 0);
+}
+
+type RouteQuestion = {
+  audience: string;
+  prompt: string;
+};
+
+function providerQuestionsFor(
+  providerName: string,
+  snapshot: Awaited<ReturnType<typeof buildProviderBrief>>,
+  questions: RouteQuestion[]
+) {
+  const providerQuestions = questions.filter((question) => question.audience === "PROVIDER");
+  if (providerQuestions.length === 0) return [];
+
+  const named = providerQuestions.filter((question) =>
+    question.prompt.toLowerCase().includes(providerName.toLowerCase())
+  );
+  if (named.length > 0) return named.map((question) => question.prompt);
+
+  const handlesManufacturing = snapshot.relevantSteps.some((step) =>
+    step.toLowerCase().includes("manufactur")
+  );
+  return handlesManufacturing
+    ? providerQuestions.map((question) => question.prompt)
+    : [];
+}
+
+function buildEditableBody({
+  snapshot,
+  requesterName,
+  questions,
+}: {
+  snapshot: Awaited<ReturnType<typeof buildProviderBrief>>;
+  requesterName: string;
+  questions: string[];
+}) {
+  const lines = [
+    "Can you help make this?",
+    "",
+    snapshot.product,
+    "",
+    `WORKS matched your business to part of a production route for ${requesterName}.`,
+    "",
+    "Your part of the route",
+    ...snapshot.relevantSteps.map((step) => `- ${step}`),
+    "",
+    "Production quantity",
+    quantityText(snapshot),
+  ];
+
+  const requirements = requirementText(snapshot);
+  if (requirements.length > 0) {
+    lines.push("", "Relevant requirements", ...requirements.map((requirement) => `- ${requirement}`));
+  }
+
+  if (questions.length > 0) {
+    lines.push(
+      "",
+      "Questions to confirm",
+      ...questions.map((question) => `- ${question}`)
+    );
+  }
+
+  lines.push(
+    "",
+    "Please use the secure response button below to confirm what is possible and add any useful notes."
+  );
+
+  return lines.join("\n");
+}
+
+function bodyTextToHtml(bodyText: string) {
+  return escapeHtml(bodyText).replaceAll("\n", "<br>");
+}
+
+type DraftValue = {
+  subject: string;
+  bodyText: string;
+};
+
+function draftMap(value: unknown) {
+  const result = new Map<string, DraftValue>();
+  if (!value || typeof value !== "object" || Array.isArray(value)) return result;
+
+  for (const [providerId, draft] of Object.entries(value as Record<string, unknown>)) {
+    if (!draft || typeof draft !== "object" || Array.isArray(draft)) continue;
+    const record = draft as Record<string, unknown>;
+    const subject = stringValue(record.subject).slice(0, 240);
+    const bodyText = stringValue(record.bodyText).slice(0, 12000);
+    if (subject && bodyText) result.set(providerId, { subject, bodyText });
+  }
+
+  return result;
 }
 
 export async function POST(req: NextRequest) {
@@ -42,6 +200,7 @@ export async function POST(req: NextRequest) {
     const searchSessionId = stringValue(body?.searchSessionId);
     const providerIds = Array.from(new Set(stringArray(body?.providerIds)));
     const previewOnly = body?.preview === true;
+    const drafts = draftMap(body?.drafts);
 
     if (!briefId || !searchSessionId || providerIds.length === 0) {
       return NextResponse.json(
@@ -70,6 +229,8 @@ export async function POST(req: NextRequest) {
       select: { id: true, name: true, email: true },
     });
     const providerById = new Map(providers.map((provider) => [provider.id, provider]));
+    const routeSummary = await getRouteSummary(briefId);
+    const routeQuestions = routeSummary?.nextQuestions ?? [];
 
     if (previewOnly) {
       const previews = [];
@@ -79,20 +240,24 @@ export async function POST(req: NextRequest) {
         if (!provider?.email) continue;
 
         const snapshot = await buildProviderBrief(briefId, providerId);
+        const questions = providerQuestionsFor(
+          provider.name,
+          snapshot,
+          routeQuestions
+        );
         previews.push({
           providerId,
           providerName: provider.name,
           recipient: provider.email,
           replyTo: procurement.email,
-          subject: `WORKS production enquiry: ${snapshot.product}`,
-          product: snapshot.product,
           requesterName: procurement.name,
-          relevantSteps: snapshot.relevantSteps,
-          quantity: quantityText(snapshot),
-          requirements: snapshot.requirements.map(
-            (requirement) =>
-              requirement.displayValue || `${requirement.field}: ${JSON.stringify(requirement.value)}`
-          ),
+          subject: `WORKS production enquiry: ${snapshot.product}`,
+          bodyText: buildEditableBody({
+            snapshot,
+            requesterName: procurement.name,
+            questions,
+          }),
+          questionCount: questions.length,
         });
       }
 
@@ -125,11 +290,29 @@ export async function POST(req: NextRequest) {
 
       try {
         const snapshot = await buildProviderBrief(briefId, providerId);
+        const questions = providerQuestionsFor(
+          provider.name,
+          snapshot,
+          routeQuestions
+        );
+        const fallbackDraft = {
+          subject: `WORKS production enquiry: ${snapshot.product}`,
+          bodyText: buildEditableBody({
+            snapshot,
+            requesterName: procurement.name,
+            questions,
+          }),
+        };
+        const draft = drafts.get(providerId) ?? fallbackDraft;
         const token = randomBytes(32).toString("hex");
         const tokenHash = hashToken(token);
         const responseUrl = `${appUrl}/works/respond/${token}`;
         const relevantSteps = snapshot.relevantSteps;
-        const briefSnapshot = JSON.parse(JSON.stringify(snapshot)) as Prisma.InputJsonValue;
+        const briefSnapshot = JSON.parse(JSON.stringify({
+          ...snapshot,
+          emailDraft: draft,
+          questions,
+        })) as Prisma.InputJsonValue;
 
         const outreach = await prisma.works_provider_outreach.upsert({
           where: {
@@ -161,28 +344,17 @@ export async function POST(req: NextRequest) {
           select: { id: true },
         });
 
-        const stepsHtml = relevantSteps.map((step) => `<li>${escapeHtml(step)}</li>`).join("");
-        const requirementsHtml = snapshot.requirements
-          .map((requirement) => `<li>${escapeHtml(requirement.displayValue || `${requirement.field}: ${JSON.stringify(requirement.value)}`)}</li>`)
-          .join("");
-
         const { error } = await resend.emails.send({
           from,
           to: provider.email,
           replyTo: procurement.email,
-          subject: `WORKS production enquiry: ${snapshot.product}`,
+          subject: draft.subject,
           html: `
-            <div style="font-family:Arial,sans-serif;line-height:1.6;color:#1f1c17;max-width:680px;margin:auto">
+            <div style="font-family:Arial,sans-serif;line-height:1.65;color:#1f1c17;max-width:680px;margin:auto">
               <p style="letter-spacing:.18em;font-size:12px">WORKS · by Oremea</p>
-              <h1 style="font-size:28px;font-weight:500">Can you help make this?</h1>
-              <p><strong>${escapeHtml(snapshot.product)}</strong></p>
-              <p>WORKS matched your business to part of a production route for ${escapeHtml(procurement.name)}</p>
-              <p><strong>Your part of the route</strong></p>
-              <ul>${stepsHtml}</ul>
-              <p><strong>Current production quantity</strong><br>${escapeHtml(quantityText(snapshot))}</p>
-              ${requirementsHtml ? `<p><strong>Relevant requirements</strong></p><ul>${requirementsHtml}</ul>` : ""}
+              <div>${bodyTextToHtml(draft.bodyText)}</div>
               <p style="margin-top:28px"><a href="${responseUrl}" style="display:inline-block;background:#1f1c17;color:white;text-decoration:none;padding:12px 20px;border-radius:999px">Respond to this brief</a></p>
-              <p style="font-size:12px;color:#6b665e;margin-top:28px">Your response is attached to this specific WORKS production brief. Broader changes to your WORKS provider profile are handled separately</p>
+              <p style="font-size:12px;color:#6b665e;margin-top:28px">Your response is attached to this specific WORKS production brief. Broader changes to your WORKS provider profile are handled separately.</p>
             </div>
           `,
         });
