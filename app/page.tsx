@@ -8,11 +8,11 @@ import { SiteShell } from "@/components/site/site-shell";
 const products = [
   {
     name: "Recognition",
-    href: "/recognition",
+    href: "/recognition/purchase",
     active: true,
     short:
       "A private reflective entry point that helps you see what is already present in your own words.",
-    action: "Enter Recognition",
+    action: "Choose Recognition",
     full: [
       "Recognition begins with what already has your attention.",
       "You respond to a carefully sequenced set of prompts in your own words, creating enough material for the system to reflect the pattern taking shape.",
