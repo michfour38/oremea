@@ -114,6 +114,18 @@ function questionCount(bodyText: string, questions: string[]) {
   return questions.filter((question) => questionAppearsInBody(bodyText, question)).length;
 }
 
+function sameDraft(
+  current: EmailPreview | undefined,
+  original: EmailPreview | undefined
+) {
+  return Boolean(
+    current &&
+      original &&
+      current.subject === original.subject &&
+      current.bodyText === original.bodyText
+  );
+}
+
 export function ProviderOutreachPanel({
   briefId,
   searchSessionId,
@@ -133,16 +145,19 @@ export function ProviderOutreachPanel({
   const [contact, setContact] = useState<Contact>(EMPTY_CONTACT);
   const [contactError, setContactError] = useState("");
   const [providerQuestions, setProviderQuestions] = useState<string[]>([]);
-  const [authorityQuestions, setAuthorityQuestions] = useState<string[]>([]);
   const [founderAnswers, setFounderAnswers] = useState<FounderAnswer[]>([]);
   const [hasFounderQuestions, setHasFounderQuestions] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [previews, setPreviews] = useState<Record<string, EmailPreview>>({});
+  const [originalPreviews, setOriginalPreviews] = useState<
+    Record<string, EmailPreview>
+  >({});
   const [results, setResults] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<
     "IDLE" | "SAVING" | "PREVIEWING" | "RESETTING" | "SENDING"
   >("IDLE");
   const [resettingProviderId, setResettingProviderId] = useState<string | null>(null);
+  const [restoredProviderId, setRestoredProviderId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const reviewSectionRef = useRef<HTMLDivElement>(null);
   const refs = {
@@ -190,17 +205,6 @@ export function ProviderOutreachPanel({
               questions
                 .filter(
                   (item: { audience?: string }) => item.audience === "PROVIDER"
-                )
-                .map((item: { prompt?: string }) => item.prompt)
-                .filter(
-                  (prompt: unknown): prompt is string =>
-                    typeof prompt === "string" && Boolean(prompt.trim())
-                )
-            );
-            setAuthorityQuestions(
-              questions
-                .filter(
-                  (item: { audience?: string }) => item.audience === "AUTHORITY"
                 )
                 .map((item: { prompt?: string }) => item.prompt)
                 .filter(
@@ -349,6 +353,7 @@ export function ProviderOutreachPanel({
   async function review() {
     try {
       setMessage("");
+      setRestoredProviderId(null);
       if (!selectedContactable.length) {
         throw new Error("Choose at least one provider");
       }
@@ -361,6 +366,7 @@ export function ProviderOutreachPanel({
         next[preview.providerId] = normalizePreview(preview);
       }
       setPreviews(next);
+      setOriginalPreviews(next);
       window.setTimeout(() => {
         const first = selectedContactable.find((id) => next[id]);
         document
@@ -379,16 +385,11 @@ export function ProviderOutreachPanel({
   }
 
   async function restoreOriginal(providerId: string) {
-    const current = previews[providerId];
-    if (!current) return;
-
-    const confirmed = window.confirm(
-      `Replace your edited ${current.providerName} subject and email copy with the original WORKS draft?`
-    );
-    if (!confirmed) return;
+    if (sameDraft(previews[providerId], originalPreviews[providerId])) return;
 
     try {
       setMessage("");
+      setRestoredProviderId(null);
       if (!(await saveContact())) return;
 
       setStatus("RESETTING");
@@ -406,7 +407,11 @@ export function ProviderOutreachPanel({
         ...existing,
         [providerId]: restored,
       }));
-      setMessage(`Original WORKS draft restored for ${fresh.providerName}.`);
+      setOriginalPreviews((existing) => ({
+        ...existing,
+        [providerId]: restored,
+      }));
+      setRestoredProviderId(providerId);
     } catch (error) {
       setMessage(
         error instanceof Error
@@ -424,6 +429,9 @@ export function ProviderOutreachPanel({
     field: "subject" | "bodyText",
     value: string
   ) {
+    setRestoredProviderId((current) =>
+      current === providerId ? null : current
+    );
     setPreviews((current) => {
       const existing = current[providerId];
       if (!existing) return current;
@@ -471,6 +479,7 @@ export function ProviderOutreachPanel({
       return;
     }
 
+    setRestoredProviderId(null);
     setPreviews((current) => {
       const next = { ...current };
       for (const id of relevantReviewed) {
@@ -492,6 +501,27 @@ export function ProviderOutreachPanel({
     document
       .getElementById(`works-email-draft-${relevantReviewed[0]}`)
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function returnToStart() {
+    const keysToRemove: string[] = [];
+
+    for (let index = 0; index < window.localStorage.length; index += 1) {
+      const key = window.localStorage.key(index);
+      if (
+        key?.startsWith("oremea:works:") &&
+        key.endsWith(":search-session") &&
+        window.localStorage.getItem(key) === searchSessionId
+      ) {
+        keysToRemove.push(key);
+      }
+    }
+
+    for (const key of keysToRemove) {
+      window.localStorage.removeItem(key);
+    }
+
+    window.location.reload();
   }
 
   async function send(providerIds: string[]) {
@@ -531,14 +561,29 @@ export function ProviderOutreachPanel({
         next[result.providerId] = result.status;
       }
       setResults(next);
-      const sent = (data.results ?? []).filter(
+
+      const sentResults = (data.results ?? []).filter(
         (item: { status: string }) => item.status === "SENT"
-      ).length;
-      setMessage(
-        sent
-          ? `WORKS emailed ${sent} provider${sent === 1 ? "" : "s"}`
-          : "No emails were sent"
-      );
+      ) as Array<{ providerId: string; providerName?: string; status: string }>;
+      const allSelectedSent =
+        selectedContactable.length > 0 &&
+        selectedContactable.every((id) => next[id] === "SENT");
+
+      if (allSelectedSent) {
+        const names = selectedProviders.map((provider) => provider.name);
+        setMessage(
+          names.length === 1
+            ? `Your enquiry was sent to ${names[0]}.`
+            : `Your enquiries were sent to ${names.length} providers.`
+        );
+        window.setTimeout(returnToStart, 1500);
+      } else {
+        setMessage(
+          sentResults.length
+            ? `WORKS emailed ${sentResults.length} provider${sentResults.length === 1 ? "" : "s"}`
+            : "No emails were sent"
+        );
+      }
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "WORKS could not send these emails"
@@ -560,7 +605,6 @@ export function ProviderOutreachPanel({
       <ContextSummary
         founderAnswers={founderAnswers}
         providerQuestions={providerQuestions}
-        authorityQuestions={authorityQuestions}
         targetLabel={targetLabel}
         draftReady={draftReady}
         includedQuestions={includedQuestions}
@@ -608,6 +652,8 @@ export function ProviderOutreachPanel({
               sent={results[id] === "SENT"}
               sending={status === "SENDING"}
               restoring={resettingProviderId === id}
+              pristine={sameDraft(previews[id], originalPreviews[id])}
+              restored={restoredProviderId === id}
               onChange={(field, value) => updatePreview(id, field, value)}
               onRestore={() => restoreOriginal(id)}
               onSend={() => send([id])}
@@ -631,7 +677,11 @@ export function ProviderOutreachPanel({
       {message ? (
         <p
           className={`mt-5 text-base leading-7 ${
-            message.startsWith("WORKS emailed") ? "text-black/60" : "text-black/55"
+            message.startsWith("Your enquiry") ||
+            message.startsWith("Your enquiries") ||
+            message.startsWith("WORKS emailed")
+              ? "text-black/60"
+              : "text-black/55"
           }`}
         >
           {message}
