@@ -15,6 +15,45 @@ export async function verifyResonanceSeed(
   const roomSummaries: string[] = [];
   let activePromptCount = 0;
 
+  if (RESONANCE_CONTENT.length !== 10) {
+    errors.push(
+      `Canonical source must contain 10 rooms; found ${RESONANCE_CONTENT.length}`,
+    );
+  }
+
+  for (const week of RESONANCE_CONTENT) {
+    if (week.days.length !== 7) {
+      errors.push(
+        `Week ${week.week_number} must contain 7 days; found ${week.days.length}`,
+      );
+    }
+
+    for (const day of week.days) {
+      if (day.prompts.length !== 5) {
+        errors.push(
+          `Week ${week.week_number} Day ${day.day_number} must contain 5 prompts; found ${day.prompts.length}`,
+        );
+      }
+
+      const orders = day.prompts.map((prompt) => prompt.prompt_order);
+      if (orders.join(",") !== "1,2,3,4,5") {
+        errors.push(
+          `Week ${week.week_number} Day ${day.day_number} orders must be 1,2,3,4,5; found ${orders.join(",")}`,
+        );
+      }
+
+      const types = day.prompts.map((prompt) => prompt.type);
+      if (
+        types.slice(0, 4).some((type) => type !== "thread_prompt") ||
+        types[4] !== "mirror_exercise"
+      ) {
+        errors.push(
+          `Week ${week.week_number} Day ${day.day_number} must contain four thread prompts followed by one mirror exercise`,
+        );
+      }
+    }
+  }
+
   const weeks = await prisma.resonance_weeks.findMany({
     where: { is_published: true },
     include: {
@@ -149,6 +188,12 @@ export async function verifyResonanceSeed(
   );
   const expectedPromptCount = expectedPrompts.length;
   const wording = expectedPrompts.map((prompt) => prompt.content);
+
+  if (expectedPromptCount !== 350) {
+    errors.push(
+      `Canonical source must contain 350 prompts; found ${expectedPromptCount}`,
+    );
+  }
 
   if (new Set(wording).size !== wording.length) {
     errors.push("Canonical source contains duplicate prompt wording");
