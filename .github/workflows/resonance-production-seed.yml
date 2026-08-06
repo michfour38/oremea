@@ -44,28 +44,19 @@ jobs:
             echo
 
             if [ "${status}" = "200" ]; then
-              node - <<'NODE'
-              const fs = require("node:fs");
-              const result = JSON.parse(
-                fs.readFileSync("resonance-seed-response.json", "utf8"),
-              );
+              if jq -e '
+                .ok == true and
+                .expectedPromptCount == 350 and
+                .activePromptCount == 350 and
+                (.rooms | type == "array" and length == 10)
+              ' resonance-seed-response.json >/dev/null; then
+                echo "Resonance production seed verified:"
+                jq -r '.rooms[]' resonance-seed-response.json
+                exit 0
+              fi
 
-              if (
-                result.ok !== true ||
-                result.expectedPromptCount !== 350 ||
-                result.activePromptCount !== 350 ||
-                !Array.isArray(result.rooms) ||
-                result.rooms.length !== 10
-              ) {
-                console.error("Resonance verification response was incomplete", result);
-                process.exit(1);
-              }
-
-              console.log("Resonance production seed verified:");
-              console.log(result.rooms.join("\n"));
-              NODE
-
-              exit 0
+              echo "Resonance verification response was incomplete."
+              exit 1
             fi
 
             sleep 20
