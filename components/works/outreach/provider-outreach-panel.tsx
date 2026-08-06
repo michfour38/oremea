@@ -121,7 +121,7 @@ export function ProviderOutreachPanel({ briefId, searchSessionId, providers }: {
       for (const preview of data.previews ?? []) next[preview.providerId] = preview;
       setPreviews(next);
     } catch (error) {
-      setMessage(error instanceof Error ? error.messae : "WORKS could not prepare these drafts");
+      setMessage(error instanceof Error ? error.message : "WORKS could not prepare these drafts");
     } finally {
       setStatus("IDLE");
     }
