@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 
 import type { CompassEndingState } from "@/src/lib/compass/ending/ending-types";
 
@@ -33,6 +34,7 @@ export function CompassArchiveSessionView({
   const [returningItemId, setReturningItemId] = useState<string | null>(null);
   const [returnedItemIds, setReturnedItemIds] = useState<string[]>([]);
   const [returnError, setReturnError] = useState("");
+  const [highlightedMessageIndex, setHighlightedMessageIndex] = useState<number | null>(null);
 
   const completedItems = useMemo(
     () => endingState?.mapItems.filter((item) => item.status === "completed") ?? [],
@@ -94,11 +96,19 @@ export function CompassArchiveSessionView({
 
   function jumpToDiscussion(sourceMessageIndex: number) {
     setView("discussion");
+    setHighlightedMessageIndex(sourceMessageIndex);
+
     window.setTimeout(() => {
       document
         .getElementById(`archive-discussion-${sourceMessageIndex}`)
         ?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 50);
+
+    window.setTimeout(() => {
+      setHighlightedMessageIndex((current) =>
+        current === sourceMessageIndex ? null : current,
+      );
+    }, 3200);
   }
 
   return (
@@ -140,12 +150,19 @@ export function CompassArchiveSessionView({
             <div
               id={`archive-discussion-${index}`}
               key={`${message.role}-${index}`}
-              className={`rounded-[1.4rem] p-5 text-sm leading-7 ${
-                message.role === "compass"
-                  ? "bg-[#12100D] text-zinc-400"
-                  : "bg-[#121212] text-zinc-200"
+              className={`rounded-[1.4rem] border p-5 text-sm leading-7 transition duration-500 ${
+                highlightedMessageIndex === index
+                  ? "border-[#E7C98B] bg-[#21190F] shadow-[0_0_0_3px_rgba(231,201,139,0.14)]"
+                  : message.role === "compass"
+                    ? "border-transparent bg-[#12100D] text-zinc-400"
+                    : "border-transparent bg-[#121212] text-zinc-200"
               }`}
             >
+              {highlightedMessageIndex === index ? (
+                <p className="mb-3 text-[11px] uppercase tracking-[0.18em] text-[#E7C98B]">
+                  Source for this Map item
+                </p>
+              ) : null}
               <p className="whitespace-pre-wrap">{message.content}</p>
             </div>
           ))}
@@ -220,7 +237,10 @@ export function CompassArchiveSessionView({
 
           <ArchiveList
             title="Completed movements"
-            empty="No completed movements were saved in this run."
+            empty="No movement was completed during this archived run."
+            emptyDetail="Movements are completed from the live Map."
+            emptyHref="/compass/map"
+            emptyLinkLabel="Open current Map"
             items={completedMovements.map((movement) => ({
               id: movement.id,
               content: movement.instruction,
@@ -238,6 +258,9 @@ export function CompassArchiveSessionView({
 function ArchiveList({
   title,
   empty,
+  emptyDetail,
+  emptyHref,
+  emptyLinkLabel,
   items,
   onSource,
   onReturn,
@@ -246,6 +269,9 @@ function ArchiveList({
 }: {
   title: string;
   empty: string;
+  emptyDetail?: string;
+  emptyHref?: string;
+  emptyLinkLabel?: string;
   items: Array<{
     id: string;
     content: string;
@@ -263,7 +289,18 @@ function ArchiveList({
       <div className="mt-3 space-y-3">
         {items.length === 0 ? (
           <div className="rounded-2xl border border-zinc-800 p-4 text-sm text-zinc-500">
-            {empty}
+            <p>{empty}</p>
+            {emptyDetail ? (
+              <p className="mt-2 leading-6 text-zinc-600">{emptyDetail}</p>
+            ) : null}
+            {emptyHref && emptyLinkLabel ? (
+              <Link
+                href={emptyHref}
+                className="mt-3 inline-block text-[#E7C98B] underline underline-offset-4 transition hover:text-[#f1dfb4]"
+              >
+                {emptyLinkLabel} →
+              </Link>
+            ) : null}
           </div>
         ) : null}
 
@@ -281,7 +318,7 @@ function ArchiveList({
                   onClick={() => onSource(item.sourceMessageIndex!)}
                   className="text-zinc-500 underline underline-offset-4 transition hover:text-[#d8b15f]"
                 >
-                  From discussion
+                  Open source in Discussion
                 </button>
               ) : null}
               {onReturn ? (
