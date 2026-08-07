@@ -262,6 +262,7 @@ function refineOnce() {
           email,
           source: creatorRef ? `creator:${creatorRef}` : "recognition-page",
           answers: formattedAnswers,
+          refineSessionId: hasUsedRefineOnce ? lastSessionId : null,
         }),
       });
 
