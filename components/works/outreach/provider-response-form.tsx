@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 
-export function ProviderResponseForm({ token }: { token: string }) {
+export function ProviderResponseForm({
+  token,
+  preview = false,
+}: {
+  token?: string;
+  preview?: boolean;
+}) {
   const [decision, setDecision] = useState("");
   const [moqValue, setMoqValue] = useState("");
   const [moqUnit, setMoqUnit] = useState("UNITS");
@@ -15,6 +21,8 @@ export function ProviderResponseForm({ token }: { token: string }) {
   const [error, setError] = useState("");
 
   async function submit() {
+    if (preview || !token) return;
+
     try {
       setStatus("SAVING");
       setError("");
@@ -91,8 +99,17 @@ export function ProviderResponseForm({ token }: { token: string }) {
       ) : null}
 
       {error ? <p className="mt-4 text-sm text-red-700">{error}</p> : null}
-      <button type="button" disabled={!decision || status === "SAVING"} onClick={submit} className="mt-6 rounded-full bg-[#1f1c17] px-6 py-3 text-sm font-medium text-white disabled:opacity-40">
-        {status === "SAVING" ? "Saving response…" : "Send response →"}
+      <button
+        type="button"
+        disabled={!decision || status === "SAVING" || preview}
+        onClick={submit}
+        className="mt-6 rounded-full bg-[#1f1c17] px-6 py-3 text-sm font-medium text-white disabled:opacity-40"
+      >
+        {preview
+          ? "Preview only · response will not send"
+          : status === "SAVING"
+            ? "Saving response…"
+            : "Send response →"}
       </button>
     </div>
   );
