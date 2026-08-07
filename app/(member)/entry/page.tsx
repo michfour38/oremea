@@ -177,23 +177,23 @@ export default async function EntryPage() {
 
           <section className="mt-14">
             <div className="max-w-3xl">
-              <p className="text-xs uppercase tracking-[0.3em] text-[#f1dfb4]/70">
+              <p className="text-xs uppercase tracking-[0.3em] text-[#c8a96a]/70">
                 Resonance
               </p>
               <h2 className="mt-3 text-3xl font-light">Which one do you choose?</h2>
               <p className="mt-4 text-base leading-8 text-zinc-300">
                 Each purchase opens one seven-day Resonance room. There is no
                 required order. Choose the room containing the question that
-                currently has your attention. When the run closes, that visit
-                remains available in the archive. Returning to the same room later
-                opens a new run while preserving the earlier visit.
+                currently has your attention. When the visit closes, it remains
+                available in the archive. Returning to the same room later opens a
+                new visit while preserving the earlier one.
               </p>
             </div>
 
             <details className="group mt-8 rounded-3xl border border-[#c8a96a]/25 bg-black/35 backdrop-blur-[2px]">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-5 px-6 py-5 md:px-7">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.22em] text-[#f1dfb4]/65">
+                  <p className="text-xs uppercase tracking-[0.22em] text-[#c8a96a]/65">
                     Choosing between them
                   </p>
                   <h3 className="mt-2 text-xl text-zinc-100">Compare the rooms</h3>
@@ -219,7 +219,7 @@ export default async function EntryPage() {
                       >
                         <div>
                           <p className="text-sm text-zinc-100">{week.title}</p>
-                          <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[#f1dfb4]/60">
+                          <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[#c8a96a]/60">
                             {detail?.label ?? week.theme}
                           </p>
                         </div>
@@ -256,11 +256,11 @@ export default async function EntryPage() {
                   week.is_published && activeRun !== null && !isActive;
 
                 const status = isActive
-                  ? `Active · Run ${activeRun.runNumber} · Day ${activeDay ?? 1}`
+                  ? `Active · Day ${activeDay ?? 1}`
                   : completedRuns.length > 1
                     ? `${completedRuns.length} completed visits`
                     : completedRuns.length === 1
-                      ? `Completed · Run ${completedRuns[0].runNumber}`
+                      ? "Completed"
                       : preservedRuns.length > 0
                         ? "Preserved visit"
                         : isLockedByActive
@@ -277,7 +277,7 @@ export default async function EntryPage() {
                   >
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-5 px-6 py-5 md:px-7">
                       <div>
-                        <p className="text-xs uppercase tracking-[0.22em] text-[#f1dfb4]/65">
+                        <p className="text-xs uppercase tracking-[0.22em] text-[#c8a96a]/65">
                           {detail?.label ?? week.theme}
                         </p>
                         <h3 className="mt-2 text-xl text-zinc-100">{week.title}</h3>
@@ -303,7 +303,7 @@ export default async function EntryPage() {
                             {detail.description}
                           </p>
                           <p className="mt-4 text-sm leading-7 text-zinc-400">
-                            <span className="text-[#f1dfb4]/80">Choose this room when:</span>{" "}
+                            <span className="text-[#c8a96a]/80">Choose this room when:</span>{" "}
                             {detail.chooseWhen}
                           </p>
                         </div>
@@ -317,9 +317,9 @@ export default async function EntryPage() {
                         {isActive ? (
                           <Link
                             href="/resonance"
-                            className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-2.5 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/10"
+                            className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-2.5 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10"
                           >
-                            Continue {week.title} · Run {activeRun.runNumber}
+                            Continue {week.title}
                           </Link>
                         ) : null}
 
@@ -335,7 +335,7 @@ export default async function EntryPage() {
                         {canPurchase ? (
                           <Link
                             href={`/resonance/purchase?week=${week.week_number}`}
-                            className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-2.5 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/10"
+                            className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-2.5 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10"
                           >
                             {hasArchivedHistory
                               ? `Purchase ${week.title} again · $5`
@@ -345,8 +345,8 @@ export default async function EntryPage() {
 
                         {isLockedByActive ? (
                           <p className="text-sm text-zinc-500">
-                            Complete {activeWeek?.title ?? "your active room"} · Run{" "}
-                            {activeRun.runNumber} before opening another room.
+                            Complete {activeWeek?.title ?? "your active room"} before
+                            opening another room.
                           </p>
                         ) : null}
 

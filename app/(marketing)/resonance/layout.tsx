@@ -25,7 +25,7 @@ export default function OremeaLayout({
 
       <div className="fixed inset-0 bg-black/15" />
 
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_top,rgba(214,160,88,0.12),transparent_45%),linear-gradient(to_bottom,rgba(0,0,0,0.1),rgba(0,0,0,0.5))]" />
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_top,rgba(200,169,106,0.12),transparent_45%),linear-gradient(to_bottom,rgba(0,0,0,0.1),rgba(0,0,0,0.5))]" />
 
       <div className="relative z-10 min-h-screen">
         {children}
