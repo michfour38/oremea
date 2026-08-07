@@ -146,36 +146,29 @@ export async function POST(req: NextRequest) {
     });
 
     if (canUseIncludedRefinement && latestSession) {
-      const session = await prisma.$transaction(async (tx) => {
-        await tx.entry_mirror_responses.deleteMany({
-          where: { session_id: latestSession.id },
-        });
-
-        await tx.entry_mirror_responses.createMany({
-          data: cleanedAnswers.map((answer) => ({
-            session_id: latestSession.id,
-            question_key: answer.questionKey,
-            question_text: answer.questionText,
-            response: answer.response,
-            response_order: answer.responseOrder,
-          })),
-        });
-
-        return tx.entry_mirror_sessions.update({
-          where: { id: latestSession.id },
-          data: {
-            status: "responses_captured",
-            completed_at: null,
-            mirror_generated_at: null,
+      const session = await prisma.entry_mirror_sessions.update({
+        where: { id: latestSession.id },
+        data: {
+          status: "responses_captured",
+          completed_at: null,
+          mirror_generated_at: null,
+          entry_mirror_responses: {
+            deleteMany: {},
+            create: cleanedAnswers.map((answer) => ({
+              question_key: answer.questionKey,
+              question_text: answer.questionText,
+              response: answer.response,
+              response_order: answer.responseOrder,
+            })),
           },
-          select: {
-            id: true,
-            lead_id: true,
-            entry_type: true,
-            status: true,
-            created_at: true,
-          },
-        });
+        },
+        select: {
+          id: true,
+          lead_id: true,
+          entry_type: true,
+          status: true,
+          created_at: true,
+        },
       });
 
       return NextResponse.json({
