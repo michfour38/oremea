@@ -24,14 +24,16 @@ export default function PromptCard({ prompt }: PromptCardProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const incompleteCardRef = useRef<HTMLDivElement>(null);
 
-  function handleSubmit(formData: FormData) {
+  async function handleSubmit(formData: FormData) {
     if (isSubmitting) return;
 
     setIsSubmitting(true);
 
-    window.setTimeout(() => {
-      void submitPromptAction(formData);
-    }, 350);
+    try {
+      await submitPromptAction(formData);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   useEffect(() => {
