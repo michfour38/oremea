@@ -141,7 +141,7 @@ export default async function ResonancePurchasePage({ searchParams }: Props) {
         <MemberNav />
 
         <div className="mx-auto max-w-2xl px-6 py-12 md:py-16">
-          <p className="text-xs uppercase tracking-[0.3em] text-[#f1dfb4]/70">
+          <p className="text-xs uppercase tracking-[0.3em] text-[#c8a96a]/70">
             Resonance · {detail?.label ?? "Seven-day room"}
           </p>
 
@@ -168,7 +168,7 @@ export default async function ResonancePurchasePage({ searchParams }: Props) {
                 </p>
                 <p className="mt-2 text-2xl text-zinc-100">One seven-day visit</p>
               </div>
-              <p className="text-2xl text-[#f1dfb4]">$5</p>
+              <p className="text-2xl text-[#c8a96a]">$5</p>
             </div>
 
             <p className="mt-5 text-sm leading-7 text-zinc-300">
@@ -189,7 +189,7 @@ export default async function ResonancePurchasePage({ searchParams }: Props) {
               {checkoutHref ? (
                 <a
                   href={checkoutHref}
-                  className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/10"
+                  className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10"
                 >
                   Purchase {week.title} · $5
                 </a>

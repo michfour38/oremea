@@ -197,7 +197,7 @@ export default async function ResonancePage() {
               {content ? (
                 <>
                   <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
-                    Week {content.weekNumber} · Run {activeRun.runNumber} · Day {content.dayNumber}
+                    Week {content.weekNumber} · Day {content.dayNumber}
                   </p>
                   <h1 className="text-4xl text-white">{content.weekTitle}</h1>
                   <p className="text-zinc-300">Resonance by Oremea</p>

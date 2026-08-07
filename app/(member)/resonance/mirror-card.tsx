@@ -86,11 +86,11 @@ function getProgressStyles(ratio: number) {
 
   return {
     outer:
-      "border-amber-300/35 bg-gradient-to-br from-amber-400/[0.08] via-amber-400/[0.03] to-zinc-900 shadow-[0_0_0_1px_rgba(198,168,91,0.10)]",
-    inner: "border-amber-400/20 bg-black/35 text-zinc-100",
-    ring: "focus:ring-amber-400/20",
+      "border-[#c8a96a]/35 bg-gradient-to-br from-[#c8a96a]/[0.08] via-[#c8a96a]/[0.03] to-zinc-900 shadow-[0_0_0_1px_rgba(200,169,106,0.10)]",
+    inner: "border-[#c8a96a]/20 bg-black/35 text-zinc-100",
+    ring: "focus:ring-[#c8a96a]/20",
     saveButton:
-      "border border-amber-300/30 bg-amber-400/20 text-amber-100 hover:bg-amber-400/20",
+      "border border-[#c8a96a]/30 bg-[#c8a96a]/20 text-[#c8a96a] hover:bg-[#c8a96a]/20",
   };
 }
 

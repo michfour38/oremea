@@ -64,7 +64,7 @@ export default async function ResonanceTestPage() {
 
       <div className="mx-auto flex min-h-[80vh] max-w-3xl items-center px-6 py-16">
         <section className="w-full rounded-3xl border border-[#c8a96a]/30 bg-black/40 p-8 md:p-12">
-          <p className="text-xs uppercase tracking-[0.3em] text-[#f1dfb4]/70">
+          <p className="text-xs uppercase tracking-[0.3em] text-[#c8a96a]/70">
             Resonance testing · Conflict &amp; Repair
           </p>
           <h1 className="mt-4 text-4xl font-light tracking-tight">
@@ -74,16 +74,16 @@ export default async function ResonanceTestPage() {
             What happens between us when something comes under pressure?
           </p>
           <p className="mt-6 max-w-2xl text-sm leading-7 text-zinc-400">
-            This opens one active seven-day test run through the same gate used by a
+            This opens one active seven-day test visit through the same gate used by a
             verified purchase. The Forge will then open at Day 1.
           </p>
 
           <form action={openForgeTestRun} className="mt-8">
             <button
               type="submit"
-              className="inline-flex rounded-xl border border-[#c8a96a]/60 px-6 py-3 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/10"
+              className="inline-flex rounded-xl border border-[#c8a96a]/60 px-6 py-3 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10"
             >
-              Open The Forge test run
+              Open The Forge test visit
             </button>
           </form>
         </section>

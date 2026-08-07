@@ -19,7 +19,7 @@ export default function ContinueDayButton() {
     <button
       type="submit"
       disabled={pending}
-      className="min-w-[150px] rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/10 disabled:cursor-not-allowed disabled:opacity-50"
+      className="min-w-[150px] rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10 disabled:cursor-not-allowed disabled:opacity-50"
     >
       {pending ? <LoadingDots /> : "Continue to next day"}
     </button>

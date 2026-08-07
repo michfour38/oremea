@@ -41,7 +41,7 @@ export default async function ResonanceEnterPage() {
             className="mx-auto h-16 w-auto md:h-24"
           />
 
-          <p className="mt-8 text-sm uppercase tracking-[0.32em] text-[#f1dfb4]/80 md:text-base">
+          <p className="mt-8 text-sm uppercase tracking-[0.32em] text-[#c8a96a]/80 md:text-base">
             Resonance by Oremea
           </p>
 
@@ -53,21 +53,21 @@ export default async function ResonanceEnterPage() {
 
           <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-zinc-200 md:text-lg">
             Resonance is a private seven-day reflection experience. Ten thematic
-            rooms are available, and each visit opens one room for one complete run.
+            rooms are available, and each visit opens one room for seven days.
           </p>
         </header>
 
         <section className="mx-auto mt-12 max-w-3xl rounded-[2rem] border border-white/10 bg-black/40 p-7 backdrop-blur-[2px] md:p-9">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.28em] text-[#f1dfb4]/70">
-                One room · one run
+              <p className="text-xs uppercase tracking-[0.28em] text-[#c8a96a]/70">
+                One room · one visit
               </p>
               <h2 className={`${playfair.className} mt-3 text-3xl text-white`}>
                 Seven days of Resonance
               </h2>
             </div>
-            <p className="text-2xl text-[#f1dfb4]">$5</p>
+            <p className="text-2xl text-[#c8a96a]">$5</p>
           </div>
 
           <div className="mt-6 grid gap-5 text-sm leading-7 text-zinc-300 md:grid-cols-2">
@@ -92,7 +92,7 @@ export default async function ResonanceEnterPage() {
 
           <p className="mt-6 text-sm leading-7 text-zinc-300">
             The ten rooms can be visited in the order that fits the participant.
-            One run remains active at a time. A completed room stays available in
+            One visit remains active at a time. A completed room stays available in
             the archive, and a later purchase opens a fresh visit while preserving
             the earlier one.
           </p>
@@ -100,7 +100,7 @@ export default async function ResonanceEnterPage() {
           <div className="mt-8 flex justify-center">
             <Link
               href={entryHref}
-              className="inline-flex rounded-xl border border-[#c8a96a]/60 px-6 py-3 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/10"
+              className="inline-flex rounded-xl border border-[#c8a96a]/60 px-6 py-3 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10"
             >
               {userId ? "Choose a Resonance room" : "Create account and choose a room"}
             </Link>
@@ -113,8 +113,8 @@ export default async function ResonanceEnterPage() {
               Returning to a room
             </summary>
             <p className="mt-4 text-sm leading-7 text-zinc-400">
-              Each return creates a separate run. Earlier reflections, 2Q, and
-              Mirrors remain intact. Once the newer run closes, the two visits can
+              Each return creates a separate visit. Earlier reflections, 2Q, and
+              Mirrors remain intact. Once the newer visit closes, the two visits can
               be viewed side by side so differences in the participant&apos;s own
               language are visible without shaping the newer responses in advance.
             </p>
