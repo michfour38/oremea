@@ -65,7 +65,10 @@ export function SiteFooter() {
                 Resonance
               </Link>
 
-              <Link href="/compass" className="transition hover:text-amber-100">
+              <Link
+                href="https://compass.oremea.com"
+                className="transition hover:text-amber-100"
+              >
                 Compass
               </Link>
             </div>

@@ -97,7 +97,7 @@ export function ExploreEcosystem() {
               </div>
 
               <Link
-                href="/compass"
+                href="https://compass.oremea.com"
                 className="rounded-2xl border border-white/10 bg-black/20 px-5 py-3 text-sm tracking-[0.16em] text-amber-100 transition hover:border-amber-100/40 hover:bg-black/35"
               >
                 Enter Compass

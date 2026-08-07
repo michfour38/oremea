@@ -46,7 +46,7 @@ export default function CompassAccessPage() {
 
       <section className="relative z-20 mx-auto max-w-3xl px-6 py-12 md:py-16">
         <Link
-          href="/"
+          href="https://www.oremea.com"
           className="text-sm text-zinc-400 underline underline-offset-4 transition hover:text-[#f1dfb4]"
         >
           ← Return to Oremea

@@ -94,7 +94,7 @@ export default function MemberNav() {
       <div className="mx-auto flex h-12 max-w-6xl items-center justify-between">
         <div className="flex h-12 items-center gap-6">
           <Link
-            href="/"
+            href="https://www.oremea.com"
             className="text-[11px] uppercase tracking-[0.28em] text-[#C8A96A]/90 transition hover:text-[#f1dfb4]"
           >
             Oremea
