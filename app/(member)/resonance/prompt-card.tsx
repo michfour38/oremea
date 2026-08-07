@@ -52,13 +52,9 @@ export default function PromptCard({ prompt }: PromptCardProps) {
 
   if (!prompt.isUnlocked) {
     return (
-      <div className="space-y-3 rounded-3xl border border-zinc-800 bg-black/40 px-6 py-6 opacity-75 backdrop-blur-[2px]">
+      <div className="rounded-3xl border border-zinc-800 bg-black/40 px-6 py-6 opacity-75 backdrop-blur-[2px]">
         <p className="select-none text-sm leading-7 text-zinc-500 blur-[2px]">
           {prompt.content}
-        </p>
-
-        <p className="text-xs leading-6 text-zinc-500">
-          Complete the reflection before this one to continue.
         </p>
       </div>
     );
@@ -70,12 +66,7 @@ export default function PromptCard({ prompt }: PromptCardProps) {
         ref={incompleteCardRef}
         className="space-y-5 rounded-3xl border border-zinc-700/80 bg-black/45 px-6 py-6 backdrop-blur-[2px]"
       >
-        <div className="space-y-3">
-          <p className="text-base leading-7 text-zinc-200">{prompt.content}</p>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-            Private reflection
-          </p>
-        </div>
+        <p className="text-base leading-7 text-zinc-200">{prompt.content}</p>
 
         <form action={handleSubmit} className="space-y-4">
           <input type="hidden" name="promptId" value={prompt.id} />
@@ -103,12 +94,7 @@ export default function PromptCard({ prompt }: PromptCardProps) {
 
   return (
     <div className="space-y-5 rounded-3xl border border-amber-400/35 bg-gradient-to-br from-amber-400/[0.08] via-amber-400/[0.03] to-black/60 px-6 py-6 shadow-[0_0_0_1px_rgba(251,191,36,0.04)]">
-      <div className="space-y-3">
-        <p className="text-base leading-7 text-zinc-200">{prompt.content}</p>
-        <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-          Private reflection
-        </p>
-      </div>
+      <p className="text-base leading-7 text-zinc-200">{prompt.content}</p>
 
       {showEdit ? (
         <form
