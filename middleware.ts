@@ -49,9 +49,9 @@ export default clerkMiddleware((auth, req) => {
       return NextResponse.next();
     }
 
-    // Keep the public asset namespace intact (the middleware matcher excludes
-    // files with extensions, but this also protects extensionless assets).
-    if (pathname.startsWith("/works/") && pathname !== "/works/za") {
+    // Strip the legacy /works prefix when someone follows an existing link on
+    // the dedicated subdomain. Internal rewrites below do not expose this path.
+    if (pathname === "/works" || pathname.startsWith("/works/")) {
       const cleanUrl = req.nextUrl.clone();
       cleanUrl.pathname = pathname.slice("/works".length) || "/";
       return NextResponse.redirect(cleanUrl);
@@ -60,8 +60,7 @@ export default clerkMiddleware((auth, req) => {
     // The dedicated WORKS service exposes clean subdomain paths while the
     // existing application routes remain under /works internally.
     const internalUrl = req.nextUrl.clone();
-    internalUrl.pathname =
-      pathname === "/" ? "/works/za" : `/works${pathname}`;
+    internalUrl.pathname = pathname === "/" ? "/works/za" : `/works${pathname}`;
     return NextResponse.rewrite(internalUrl);
   }
 
