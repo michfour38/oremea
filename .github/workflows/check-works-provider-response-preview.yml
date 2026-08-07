@@ -1,0 +1,43 @@
+name: Check WORKS provider response preview
+
+on:
+  push:
+    branches:
+      - checks/works-provider-response-preview-9d99d0b
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Type-check WORKS preview files
+        run: |
+          cat > tsconfig.works-preview.json <<'EOF'
+          {
+            "extends": "./tsconfig.json",
+            "compilerOptions": {
+              "incremental": false
+            },
+            "include": [
+              "next-env.d.ts",
+              "app/works/respond/[token]/page.tsx",
+              "app/works/respond/preview/page.tsx",
+              "components/works/outreach/provider-outreach-ui.tsx",
+              "components/works/outreach/provider-response-form.tsx",
+              "components/works/outreach/provider-response-view.tsx"
+            ],
+            "exclude": [
+              "node_modules",
+              "prisma/seeds/**/*"
+            ]
+          }
+          EOF
+          npx tsc --project tsconfig.works-preview.json --noEmit
