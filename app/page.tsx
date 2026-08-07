@@ -38,11 +38,11 @@ const products = [
   },
   {
     name: "The Compass",
-    href: "/compass",
+    href: "/compass/access",
     active: true,
     short:
       "Turn self-awareness into one executable next step. Clarity. Direction. Execution.",
-    action: "Enter Compass",
+    action: "Choose Compass",
     full: [
       "The Compass is for the moment after awareness, when you know something matters but still do not know what to do next.",
       "It helps you move from scattered goals into one clear priority, then takes you deeper into why it matters.",
