@@ -9,6 +9,7 @@ export function ProviderResponseView({
   product,
   category,
   relevantSteps,
+  questions = [],
   token,
   responded = false,
   preview = false,
@@ -18,6 +19,7 @@ export function ProviderResponseView({
   product: string;
   category?: string | null;
   relevantSteps: string[];
+  questions?: string[];
   token?: string;
   responded?: boolean;
   preview?: boolean;
@@ -54,11 +56,11 @@ export function ProviderResponseView({
 
           {!preview && responded ? (
             <div className="mt-8 rounded-3xl border border-black/10 bg-white p-6 text-sm leading-6">
-              A response has already been recorded for this brief. Submitting again will update the same response.
+              A response has already been recorded for this brief. Submitting again will update the same response and notify the customer again.
             </div>
           ) : null}
 
-          <ProviderResponseForm token={token} preview={preview} />
+          <ProviderResponseForm token={token} questions={questions} preview={preview} />
         </section>
       </div>
     </main>

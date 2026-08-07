@@ -29,6 +29,9 @@ export default async function WorksProviderResponsePage({
   const relevantSteps = Array.isArray(snapshot.relevantSteps)
     ? snapshot.relevantSteps.filter((item): item is string => typeof item === "string")
     : outreach.relevant_steps;
+  const questions = Array.isArray(snapshot.questions)
+    ? snapshot.questions.filter((item): item is string => typeof item === "string" && Boolean(item.trim()))
+    : [];
   const product = typeof snapshot.product === "string" ? snapshot.product : "Production brief";
   const category = typeof snapshot.category === "string" ? snapshot.category : null;
 
@@ -39,6 +42,7 @@ export default async function WorksProviderResponsePage({
       product={product}
       category={category}
       relevantSteps={relevantSteps}
+      questions={questions}
       token={params.token}
       responded={Boolean(outreach.responded_at)}
     />

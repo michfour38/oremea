@@ -10,6 +10,7 @@ type PreviewPayload = {
   product: string;
   category?: string | null;
   relevantSteps: string[];
+  questions?: string[];
   createdAt?: number;
 };
 
@@ -75,6 +76,7 @@ export default function WorksProviderResponsePreviewPage() {
       product={payload.product}
       category={payload.category ?? null}
       relevantSteps={payload.relevantSteps}
+      questions={Array.isArray(payload.questions) ? payload.questions : []}
       preview
     />
   );

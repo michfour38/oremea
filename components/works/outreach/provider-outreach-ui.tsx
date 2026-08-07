@@ -62,6 +62,23 @@ function responsePreviewPayload(preview: EmailPreview) {
     }
   }
 
+  const questionsHeading = lines.findIndex(
+    (line) => normalize(line) === normalize("Questions to confirm")
+  );
+  const questions: string[] = [];
+
+  if (questionsHeading >= 0) {
+    for (let index = questionsHeading + 1; index < lines.length; index += 1) {
+      const line = lines[index].trim();
+      if (!line) {
+        if (questions.length) break;
+        continue;
+      }
+      if (!line.startsWith("-")) break;
+      questions.push(line.replace(/^-\s*/, ""));
+    }
+  }
+
   return {
     providerName: preview.providerName,
     requesterName: preview.requesterName,
@@ -69,6 +86,7 @@ function responsePreviewPayload(preview: EmailPreview) {
       product || preview.subject.replace(/^WORKS production enquiry:\s*/i, "").trim() || "Production brief",
     category: null,
     relevantSteps,
+    questions,
   };
 }
 
@@ -95,7 +113,7 @@ function openProviderResponsePreview(preview: EmailPreview) {
 }
 
 export function ContextSummary({
-  founderAnswers,
+  founderAnswers: _founderAnswers,
   providerQuestions,
   targetLabel,
   draftReady,
@@ -109,25 +127,10 @@ export function ContextSummary({
   includedQuestions: Set<string>;
   onQuestionClick: (question: string) => void;
 }) {
+  void _founderAnswers;
+
   return (
     <>
-      {founderAnswers.length ? (
-        <div className="mt-6 rounded-2xl bg-[#f8f0df] p-5">
-          <p className="text-xs font-medium uppercase tracking-[0.14em] text-[#8b6a31]">
-            Details already supplied
-          </p>
-          <div className="mt-3 space-y-2 text-sm leading-6">
-            {founderAnswers.map((item) => (
-              <p key={item.key}>
-                <span className="text-black/50">{item.prompt}</span>
-                <br />
-                <strong>{item.answer}</strong>
-              </p>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
       {providerQuestions.length ? (
         <div className="mt-6">
           <p className="text-xs font-medium uppercase tracking-[0.14em] text-[#8b6a31]">
@@ -330,30 +333,23 @@ export function DraftEditor({
         Edit the subject and email below before sending. Changes apply only to this {preview.providerName} email.
       </p>
 
-      <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-black/10 bg-white/70 p-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm leading-6 text-black/55">
-          Changed too much? Restore the complete original WORKS draft, including its questions and signature.
-        </p>
-        <div className="shrink-0">
+      {!pristine ? (
+        <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-black/10 bg-white/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm leading-6 text-black/55">
+            Changed too much? Restore the complete original WORKS draft, including its questions and signature.
+          </p>
           <button
             type="button"
             onClick={onRestore}
-            disabled={pristine || restoring || sending || sent}
-            className="rounded-full border border-black/15 bg-white px-4 py-2.5 text-sm font-medium disabled:opacity-55"
+            disabled={restoring || sending || sent}
+            className="shrink-0 rounded-full border border-black/15 bg-white px-4 py-2.5 text-sm font-medium disabled:opacity-55"
           >
-            {restoring
-              ? "Restoring…"
-              : pristine
-                ? "Original WORKS draft ✓"
-                : "Restore original WORKS draft"}
+            {restoring ? "Restoring…" : "Restore original WORKS draft"}
           </button>
-          {restored ? (
-            <p className="mt-2 text-center text-xs font-medium text-[#6b542c]">
-              Original draft restored ✓
-            </p>
-          ) : null}
         </div>
-      </div>
+      ) : restored ? (
+        <p className="mt-4 text-sm font-medium text-[#6b542c]">Original draft restored ✓</p>
+      ) : null}
 
       <label className="mt-5 block text-xs uppercase tracking-[0.12em] text-black/40">
         Subject · editable
