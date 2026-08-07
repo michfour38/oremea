@@ -4,6 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 const RECOGNITION_HOST = "recognition.oremea.com";
 const COMPASS_HOST = "compass.oremea.com";
 const RESONANCE_HOST = "resonance.oremea.com";
+const APP_HOST = "app.oremea.com";
 const OREMEA_PUBLIC_HOSTS = new Set(["oremea.com", "www.oremea.com"]);
 
 function getHostname(req: NextRequest) {
@@ -21,6 +22,18 @@ function rewriteRecognitionPath(req: NextRequest, pathname: string) {
 
 function redirectRecognitionPath(req: NextRequest, pathname: string) {
   const url = new URL(`https://${RECOGNITION_HOST}${pathname}`);
+  url.search = req.nextUrl.search;
+  return NextResponse.redirect(url, 308);
+}
+
+function rewriteResonancePath(req: NextRequest, pathname: string) {
+  const url = req.nextUrl.clone();
+  url.pathname = pathname;
+  return NextResponse.rewrite(url);
+}
+
+function redirectResonancePath(req: NextRequest, pathname: string) {
+  const url = new URL(`https://${RESONANCE_HOST}${pathname}`);
   url.search = req.nextUrl.search;
   return NextResponse.redirect(url, 308);
 }
@@ -84,6 +97,31 @@ function recognitionDomainResponse(req: NextRequest) {
       pathname === "/recognition/archive/"
     ) {
       return redirectRecognitionPath(req, "/archive");
+    }
+  }
+
+  return null;
+}
+
+function resonanceDomainResponse(req: NextRequest) {
+  const host = getHostname(req);
+  const { pathname } = req.nextUrl;
+
+  if (host === RESONANCE_HOST) {
+    if (pathname === "/entry" || pathname === "/entry/") {
+      return redirectResonancePath(req, "/");
+    }
+
+    return null;
+  }
+
+  if (host === APP_HOST) {
+    if (pathname === "/entry" || pathname === "/entry/") {
+      return redirectResonancePath(req, "/");
+    }
+
+    if (pathname === "/resonance" || pathname.startsWith("/resonance/")) {
+      return redirectResonancePath(req, pathname);
     }
   }
 
@@ -290,6 +328,17 @@ export default clerkMiddleware((auth, req) => {
   if (isCompassProtectedPath(req)) {
     auth().protect();
   }
+
+  const host = getHostname(req);
+  const { pathname } = req.nextUrl;
+
+  if (host === RESONANCE_HOST && pathname === "/") {
+    auth().protect();
+    return rewriteResonancePath(req, "/entry");
+  }
+
+  const resonanceResponse = resonanceDomainResponse(req);
+  if (resonanceResponse) return resonanceResponse;
 
   const recognitionResponse = recognitionDomainResponse(req);
   if (recognitionResponse) return recognitionResponse;
