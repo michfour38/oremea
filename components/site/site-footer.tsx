@@ -54,7 +54,10 @@ export function SiteFooter() {
             </p>
 
             <div className="flex flex-col gap-3 text-zinc-300">
-              <Link href="/recognition" className="transition hover:text-amber-100">
+              <Link
+                href="https://recognition.oremea.com"
+                className="transition hover:text-amber-100"
+              >
                 Recognition
               </Link>
 

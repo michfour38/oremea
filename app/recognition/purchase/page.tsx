@@ -47,7 +47,7 @@ export default function RecognitionPurchasePage() {
 
       <section className="relative z-20 mx-auto max-w-3xl px-6 py-12 md:py-16">
         <Link
-          href="/"
+          href="https://www.oremea.com"
           className="text-sm text-zinc-400 underline underline-offset-4 transition hover:text-[#f1dfb4]"
         >
           ← Return to Oremea
@@ -121,9 +121,17 @@ export default function RecognitionPurchasePage() {
           </section>
         </div>
 
-        <p className="mt-8 text-sm leading-7 text-zinc-500">
-          Prices are shown and charged in US dollars.
-        </p>
+        <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+          <p className="leading-7 text-zinc-500">
+            Prices are shown and charged in US dollars.
+          </p>
+          <Link
+            href="https://recognition.oremea.com/archive"
+            className="text-zinc-400 underline underline-offset-4 transition hover:text-[#f1dfb4]"
+          >
+            Open Recognition Archive
+          </Link>
+        </div>
       </section>
     </main>
   );

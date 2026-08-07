@@ -46,7 +46,7 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
 
                   <div className="mt-10 flex flex-wrap gap-4">
                     <Link
-                      href="/recognition"
+                      href="https://recognition.oremea.com"
                       className="rounded-full border border-amber-200/20 bg-amber-100/[0.05] px-5 py-2 text-sm text-amber-100 transition hover:border-amber-100/50 hover:bg-amber-100/[0.08]"
                     >
                       Begin Recognition
@@ -93,7 +93,7 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
 
                 <div className="flex flex-wrap gap-4 pt-2">
                   <Link
-                    href="/recognition"
+                    href="https://recognition.oremea.com"
                     className="rounded-full border border-amber-200/20 bg-amber-100/[0.05] px-5 py-2 text-sm text-amber-100 transition hover:border-amber-100/50 hover:bg-amber-100/[0.08]"
                   >
                     Begin Recognition

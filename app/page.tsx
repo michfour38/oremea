@@ -8,7 +8,7 @@ import { SiteShell } from "@/components/site/site-shell";
 const products = [
   {
     name: "Recognition",
-    href: "/recognition/purchase",
+    href: "https://recognition.oremea.com",
     active: true,
     short:
       "A private reflective entry point that helps you see what is already present in your own words.",

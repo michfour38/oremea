@@ -2,7 +2,6 @@ import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import MemberNav from "@/app/(member)/member-nav";
 import { prisma } from "@/lib/prisma";
 
 function formatDate(value: Date | string) {
@@ -17,7 +16,7 @@ export default async function RecognitionArchivePage() {
   const user = await currentUser();
 
   if (!user) {
-    redirect("/sign-in");
+    redirect("/sign-in?redirect_url=%2Farchive");
   }
 
   const emails = user.emailAddresses
@@ -75,11 +74,29 @@ export default async function RecognitionArchivePage() {
 
   return (
     <main className="min-h-screen bg-[#090909] text-white">
-      <MemberNav />
+      <nav className="border-b border-white/5 bg-black/50 px-6 py-4">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-6 text-sm">
+          <Link
+            href="https://www.oremea.com"
+            className="uppercase tracking-[0.28em] text-[#C8A96A]/90 transition hover:text-[#f1dfb4]"
+          >
+            Oremea
+          </Link>
+          <div className="flex items-center gap-5">
+            <Link
+              href="https://recognition.oremea.com"
+              className="text-zinc-400 transition hover:text-[#f1dfb4]"
+            >
+              Recognition
+            </Link>
+            <span className="text-[#E7C98B]">Archive</span>
+          </div>
+        </div>
+      </nav>
 
       <section className="mx-auto max-w-4xl px-5 py-12">
         <Link
-          href="/recognition"
+          href="https://recognition.oremea.com"
           className="text-sm text-zinc-200 underline underline-offset-4 transition hover:text-[#d8b15f]"
         >
           Return to Recognition
@@ -118,7 +135,9 @@ export default async function RecognitionArchivePage() {
                   {session.entry_mirror_outputs.map((output, index) => (
                     <section key={output.id}>
                       <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
-                        {index === 0 ? "Your Recognition" : `Recognition · Pass ${index + 1}`}
+                        {index === 0
+                          ? "Your Recognition"
+                          : `Recognition · Pass ${index + 1}`}
                       </p>
                       <div className="mt-4 whitespace-pre-wrap font-serif text-xl leading-relaxed text-zinc-100 md:text-2xl">
                         {output.output}
