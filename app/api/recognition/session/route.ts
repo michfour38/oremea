@@ -5,8 +5,6 @@ import {
   getRecognitionQuestions,
 } from "../../../../src/lib/recognition/recognition.service";
 
-const REFINEMENT_WINDOW_MS = 4 * 60 * 60 * 1000;
-
 type CleanAnswer = {
   questionKey: string;
   questionText: string;
@@ -39,6 +37,11 @@ export async function POST(req: NextRequest) {
 
     const email =
       typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+
+    const refineSessionId =
+      typeof body?.refineSessionId === "string"
+        ? body.refineSessionId.trim()
+        : "";
 
     const entryType: RecognitionType = "neutral";
     const source =
@@ -92,35 +95,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const existingLead = await prisma.entry_leads.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        entry_mirror_sessions: {
-          orderBy: { created_at: "desc" },
-          take: 1,
-          select: {
-            id: true,
-            completed_at: true,
-            mirror_generated_at: true,
-            entry_mirror_outputs: {
-              select: { id: true },
-            },
-          },
-        },
-      },
-    });
-
-    const latestSession = existingLead?.entry_mirror_sessions[0] ?? null;
-    const lastCompletedAt =
-      latestSession?.completed_at ?? latestSession?.mirror_generated_at ?? null;
-    const canUseIncludedRefinement = Boolean(
-      latestSession &&
-        latestSession.entry_mirror_outputs.length === 1 &&
-        lastCompletedAt &&
-        Date.now() - lastCompletedAt.getTime() <= REFINEMENT_WINDOW_MS,
-    );
-
     const lead = await prisma.entry_leads.upsert({
       where: { email },
       update: {
@@ -145,9 +119,29 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    if (canUseIncludedRefinement && latestSession) {
+    if (refineSessionId) {
+      const existingSession = await prisma.entry_mirror_sessions.findFirst({
+        where: {
+          id: refineSessionId,
+          lead_id: lead.id,
+        },
+        select: {
+          id: true,
+          entry_mirror_outputs: {
+            select: { id: true },
+          },
+        },
+      });
+
+      if (!existingSession || existingSession.entry_mirror_outputs.length !== 1) {
+        return NextResponse.json(
+          { error: "This Recognition refinement is no longer available." },
+          { status: 409 },
+        );
+      }
+
       const session = await prisma.entry_mirror_sessions.update({
-        where: { id: latestSession.id },
+        where: { id: existingSession.id },
         data: {
           status: "responses_captured",
           completed_at: null,
