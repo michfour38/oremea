@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
 
     const questions = getRecognitionQuestions(entryType);
 
-    const cleanedAnswers = answers
+    const cleanedAnswers: CleanAnswer[] = answers
       .map((item: unknown) => {
         if (!item || typeof item !== "object") return null;
 
