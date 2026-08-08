@@ -44,13 +44,6 @@ export default function RecognitionPurchasePage() {
       <div className="fixed inset-0 z-10 bg-black/70" />
 
       <section className="relative z-20 mx-auto max-w-3xl px-6 py-12 md:py-16">
-        <Link
-          href="https://www.oremea.com"
-          className="text-sm text-zinc-400 underline underline-offset-4 transition hover:text-[#f1dfb4]"
-        >
-          ← Return to Oremea
-        </Link>
-
         <header className="mt-12 max-w-2xl">
           <p className="text-xs uppercase tracking-[0.3em] text-[#f1dfb4]/70">
             Recognition
