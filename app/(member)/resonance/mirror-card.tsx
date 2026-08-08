@@ -99,6 +99,16 @@ export default function MirrorCard({
     }
   }
 
+  if (!prompt.isUnlocked) {
+    return (
+      <div className="rounded-3xl border border-zinc-800 bg-black/45 px-6 py-6 opacity-65 backdrop-blur-[2px]">
+        <p className="select-none text-sm leading-7 text-zinc-500 blur-[2px]">
+          {prompt.content}
+        </p>
+      </div>
+    );
+  }
+
   if (prompt.isCompleted && prompt.response) {
     return (
       <div className="space-y-5 rounded-3xl border border-[#C8A96A]/30 bg-black/50 px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.22)] backdrop-blur-[3px]">
