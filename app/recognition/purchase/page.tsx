@@ -68,7 +68,7 @@ export default function RecognitionPurchasePage() {
                   One Recognition process
                 </h2>
               </div>
-              <p className="text-3xl text-[#f1dfb4]">$3</p>
+              <p className="text-3xl text-[#f1dfb4]">$9.99</p>
             </div>
 
             <p className="mt-5 text-sm leading-7 text-zinc-300">
@@ -80,7 +80,7 @@ export default function RecognitionPurchasePage() {
             <div className="mt-7">
               <CheckoutAction
                 href={processCheckout}
-                label="Begin one Recognition process · $3"
+                label="Begin one Recognition process · $9.99"
               />
             </div>
           </section>
