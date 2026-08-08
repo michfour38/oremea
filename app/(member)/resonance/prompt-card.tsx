@@ -29,6 +29,7 @@ export default function PromptCard({ prompt }: PromptCardProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const incompleteCardRef = useRef<HTMLDivElement>(null);
+  const incompleteTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   async function handleSubmit(formData: FormData) {
     if (isSubmitting) return;
@@ -68,6 +69,7 @@ export default function PromptCard({ prompt }: PromptCardProps) {
     if (prompt.isCompleted || !prompt.isUnlocked) return;
 
     const node = incompleteCardRef.current;
+    const textarea = incompleteTextareaRef.current;
     if (!node) return;
 
     const timer = window.setTimeout(() => {
@@ -75,6 +77,8 @@ export default function PromptCard({ prompt }: PromptCardProps) {
         behavior: "smooth",
         block: "center",
       });
+
+      textarea?.focus({ preventScroll: true });
     }, 150);
 
     return () => window.clearTimeout(timer);
@@ -102,6 +106,7 @@ export default function PromptCard({ prompt }: PromptCardProps) {
           <input type="hidden" name="promptId" value={prompt.id} />
 
           <textarea
+            ref={incompleteTextareaRef}
             name="response"
             placeholder="Write what feels true for you..."
             rows={4}
