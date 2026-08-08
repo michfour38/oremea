@@ -26,6 +26,18 @@ function isVisible(element: HTMLElement) {
   );
 }
 
+function getDailyMirrorSection(input: HTMLTextAreaElement) {
+  if (input.dataset.resonanceInput !== "true") return null;
+
+  const section = input.closest<HTMLElement>("section");
+  if (!section) return null;
+
+  const text = section.textContent ?? "";
+  return text.includes("Today's Mirror") && text.includes("2Q")
+    ? section
+    : null;
+}
+
 function focusNextResonanceInput() {
   if (isEditableElement(document.activeElement)) return;
 
@@ -38,6 +50,26 @@ function focusNextResonanceInput() {
   );
 
   if (!nextInput) return;
+
+  const dailyMirrorSection = getDailyMirrorSection(nextInput);
+
+  if (dailyMirrorSection) {
+    // Once the Daily Mirror opens, keep its beginning in view so the participant
+    // reads the reflection from the top. Prime the first empty 2Q field at the
+    // same time without allowing browser focus to pull the viewport down to it.
+    dailyMirrorSection.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+
+    window.setTimeout(() => {
+      if (!isEditableElement(document.activeElement)) {
+        nextInput.focus({ preventScroll: true });
+      }
+    }, 180);
+
+    return;
+  }
 
   nextInput.scrollIntoView({
     behavior: "smooth",
