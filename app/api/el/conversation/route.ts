@@ -89,6 +89,10 @@ export async function POST(request: Request) {
           await prisma.compass_sessions.update({
             where: { id: session.id },
             data: {
+              resolution_text: null,
+              resolution_confirmed_at: null,
+              final_step: null,
+              final_step_confirmed_at: null,
               detected_patterns: {
                 ...existing,
                 version: 1,
@@ -104,6 +108,9 @@ export async function POST(request: Request) {
                   outsideScope || retirePriorFrame
                     ? null
                     : (existing.reframe ?? null),
+                resolutionCandidate: null,
+                resolutionConfirmed: false,
+                resolutionConfirmedAt: null,
                 followUpQuestion: null,
                 updatedAt: new Date().toISOString(),
               } as object,

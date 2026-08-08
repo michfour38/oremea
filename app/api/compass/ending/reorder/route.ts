@@ -118,6 +118,9 @@ export async function POST(request: Request) {
           : movement,
       ),
       currentMovementId: null,
+      resolutionCandidate: null,
+      resolutionConfirmed: false,
+      resolutionConfirmedAt: null,
       updatedAt: new Date().toISOString(),
     };
 
@@ -125,6 +128,10 @@ export async function POST(request: Request) {
       where: { id: session.id },
       data: {
         detected_patterns: nextState as object,
+        resolution_text: null,
+        resolution_confirmed_at: null,
+        final_step: null,
+        final_step_confirmed_at: null,
       },
     });
 

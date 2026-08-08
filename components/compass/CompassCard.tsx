@@ -234,7 +234,7 @@ export function CompassCard({
     const button = target.closest("button");
     const label = button?.textContent?.trim() ?? "";
 
-    if (isDiscussionCard && label === "Make this workable" && !mapReview?.reviewed) {
+    if (isDiscussionCard && label === "Reach a resolution" && !mapReview?.reviewed) {
       event.preventDefault();
       event.stopPropagation();
 

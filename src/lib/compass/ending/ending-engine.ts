@@ -7,7 +7,7 @@ import type {
 import type { CompassScopeCategory } from "../scope-boundary"
 
 export type CompassEndingEngineInput = {
-  mode: "map" | "movement"
+  mode: "map" | "resolution" | "movement"
   selectedArea: string | null
   areaResponses: unknown
   recursiveLayers: unknown
@@ -15,6 +15,7 @@ export type CompassEndingEngineInput = {
   discussionMessages: unknown
   existingMapItems: unknown
   movements: unknown
+  confirmedResolution?: string | null
 }
 
 const SCOPE_VALUES: CompassScopeCategory[] = [
@@ -122,6 +123,7 @@ function parseEndingResponse(
       scopeCategory,
       mapItems: [],
       reframe: null,
+      resolution: null,
       movement: null,
       followUpQuestion: null,
     }
@@ -136,6 +138,10 @@ function parseEndingResponse(
     reframe:
       typeof parsed.reframe === "string" && parsed.reframe.trim()
         ? parsed.reframe.trim()
+        : null,
+    resolution:
+      typeof parsed.resolution === "string" && parsed.resolution.trim()
+        ? parsed.resolution.trim()
         : null,
     movement,
     followUpQuestion:
@@ -165,7 +171,8 @@ YOUR JOB
 1. Hold the complexity so the participant does not have to keep carrying all of it in working memory.
 2. Turn what they have already said into a clean Map of what is asking for attention.
 3. Reframe when the current way of holding a real problem creates unnecessary cognitive load.
-4. When mode is movement, identify ONE concrete available movement if the evidence is strong enough.
+4. When mode is resolution, state the resolution the participant's own account has reached, if one is actually available.
+5. When mode is movement, identify ONE concrete available movement that follows from the participant-confirmed resolution.
 
 EVIDENCE ORDER FOR THE ENDING
 - Latest participant Discussion language has foreground authority about what is current now.
@@ -190,6 +197,14 @@ Examples of the KIND of cognitive change you are looking for, not templates to c
 Do not hardcode cleaning, exercise, laundry, food, work, relationships, or any other domain.
 Reason from the participant's actual account.
 Do not make the reframe more psychologically interesting than the evidence warrants.
+
+RESOLUTION RULES
+A resolution is the participant-owned conclusion now reached: what is being decided, accepted, released, deferred under a named condition, or deliberately left open.
+It is not a summary, insight, reframe, diagnosis, motivational statement, or action.
+Use only conclusions supported by the participant's own words.
+Preserve uncertainty or an open part when the participant has not resolved it.
+In resolution mode, return one concise resolution when the discussion has genuinely reached one.
+If no honest resolution is available yet, return resolution null, movement null, and one plain follow-up question that helps the participant clarify what is still unresolved.
 
 MAP RULES
 Include:
@@ -229,6 +244,7 @@ For each Map item return:
 
 MOVEMENT RULES
 Only in movement mode.
+A movement must follow from CONFIRMED RESOLUTION below. Do not replace, reinterpret, or expand that agreement.
 A movement is one real participation the person could perform next.
 It must be concrete enough to recognise when it is done.
 It should emerge from what is current in the participant's own account, not automatically from the original selected area.
@@ -274,6 +290,7 @@ Shape:
     }
   ],
   "reframe": "... or null",
+  "resolution": "... or null",
   "movement": {
     "instruction": "...",
     "reason": "... or null",
@@ -282,8 +299,10 @@ Shape:
   "followUpQuestion": null
 }
 
-If mode is map, movement must be null.
-If movement is unavailable, movement must be null and followUpQuestion should contain one natural question.
+If mode is map, resolution and movement must be null.
+If mode is resolution, movement must be null.
+If mode is movement, resolution must repeat the confirmed resolution exactly.
+If the requested resolution or movement is unavailable, return it as null and put one natural question in followUpQuestion.
 
 STARTING AREA
 ${input.selectedArea ?? "None"}
@@ -305,6 +324,9 @@ ${stringify(input.existingMapItems)}
 
 MOVEMENT HISTORY
 ${stringify(input.movements)}
+
+CONFIRMED RESOLUTION
+${input.confirmedResolution ?? "None"}
 `.trim()
 }
 

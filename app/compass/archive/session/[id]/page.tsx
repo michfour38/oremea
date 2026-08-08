@@ -57,6 +57,10 @@ export default async function CompassArchiveSessionPage({ params }: Props) {
       selected_area: true,
       discussion_messages: true,
       detected_patterns: true,
+      resolution_text: true,
+      resolution_confirmed_at: true,
+      final_step: true,
+      final_step_confirmed_at: true,
       updated_at: true,
     },
   });
@@ -102,6 +106,12 @@ export default async function CompassArchiveSessionPage({ params }: Props) {
           sessionId={session.id}
           discussionMessages={discussionMessages}
           endingState={endingState}
+          resolutionText={
+            session.resolution_confirmed_at ? session.resolution_text : null
+          }
+          finalStep={
+            session.final_step_confirmed_at ? session.final_step : null
+          }
         />
       </section>
 
