@@ -42,56 +42,12 @@ function getStageCopy(stage: ReflectionStage) {
 
 function LoadingDots() {
   return (
-    <span className="inline-flex items-center gap-1">
+    <span className="inline-flex items-center gap-1" aria-label="Saving reflection">
       <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.2s]" />
       <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.1s]" />
       <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current" />
     </span>
   );
-}
-
-function getProgressStyles(ratio: number) {
-  if (ratio <= 0.15) {
-    return {
-      outer:
-        "border-zinc-700 bg-gradient-to-br from-zinc-900 via-zinc-950 to-zinc-950 shadow-[0_0_0_1px_rgba(161,161,170,0.08)]",
-      inner: "border-zinc-700 bg-black/35 text-zinc-100",
-      ring: "focus:ring-zinc-600",
-      saveButton:
-        "border border-zinc-700 bg-zinc-800 text-zinc-100 hover:bg-zinc-700",
-    };
-  }
-
-  if (ratio <= 0.6) {
-    return {
-      outer:
-        "border-zinc-600 bg-gradient-to-br from-zinc-900 via-zinc-950 to-green-400/[0.06] shadow-[0_0_0_1px_rgba(34,197,94,0.08)]",
-      inner: "border-green-400/15 bg-black/35 text-zinc-100",
-      ring: "focus:ring-green-400/15",
-      saveButton:
-        "border border-green-400/18 bg-green-400/10 text-green-200 hover:bg-green-400/14",
-    };
-  }
-
-  if (ratio <= 0.85) {
-    return {
-      outer:
-        "border-green-400/22 bg-gradient-to-br from-zinc-900 via-green-400/[0.07] to-zinc-950 shadow-[0_0_0_1px_rgba(34,197,94,0.10)]",
-      inner: "border-green-400/18 bg-black/35 text-zinc-100",
-      ring: "focus:ring-green-400/18",
-      saveButton:
-        "border border-green-400/20 bg-green-400/12 text-green-200 hover:bg-green-400/16",
-    };
-  }
-
-  return {
-    outer:
-      "border-[#c8a96a]/35 bg-gradient-to-br from-[#c8a96a]/[0.08] via-[#c8a96a]/[0.03] to-zinc-900 shadow-[0_0_0_1px_rgba(200,169,106,0.10)]",
-    inner: "border-[#c8a96a]/20 bg-black/35 text-zinc-100",
-    ring: "focus:ring-[#c8a96a]/20",
-    saveButton:
-      "border border-[#c8a96a]/30 bg-[#c8a96a]/20 text-[#c8a96a] hover:bg-[#c8a96a]/20",
-  };
 }
 
 export default function MirrorCard({
@@ -100,44 +56,54 @@ export default function MirrorCard({
 }: MirrorCardProps) {
   const [saved, setSaved] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [text, setText] = useState(prompt.response ?? "");
   const router = useRouter();
 
-  const styles = getProgressStyles(progressRatio);
   const copy = getStageCopy(getReflectionStage(progressRatio));
 
-  function handleSubmit(formData: FormData) {
+  async function handleSubmit(formData: FormData) {
     if (isSubmitting) return;
 
     setIsSubmitting(true);
+    setSubmitError("");
 
-    window.setTimeout(async () => {
-      await submitPromptAction(formData);
+    try {
+      const result = await submitPromptAction(formData);
+
+      if (!result?.ok) {
+        setSubmitError(result?.error ?? "This reflection could not be saved.");
+        return;
+      }
+
       setSaved(true);
       router.refresh();
-    }, 350);
+    } catch (error) {
+      console.error("Resonance deeper reflection save failed:", error);
+      setSubmitError(
+        "This reflection could not be saved. Please submit it again.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   if (prompt.isCompleted && prompt.response) {
     return (
-      <div
-        className={`space-y-5 rounded-3xl border px-6 py-6 transition-colors duration-500 ${styles.outer}`}
-      >
+      <div className="space-y-5 rounded-3xl border border-[#C8A96A]/30 bg-black/50 px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.22)] backdrop-blur-[3px]">
         <div className="space-y-1">
-          <p className="text-xs font-medium uppercase tracking-[0.25em] text-zinc-500">
+          <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#C8A96A]">
             Deeper reflection
           </p>
-          <p className="text-xs text-zinc-500">{copy.helper}</p>
+          <p className="text-xs leading-6 text-zinc-400">{copy.helper}</p>
         </div>
 
-        <p className="whitespace-pre-wrap text-base leading-8 text-zinc-300">
+        <p className="whitespace-pre-wrap text-base leading-8 text-zinc-200">
           {prompt.content}
         </p>
 
-        <div
-          className={`rounded-2xl border px-5 py-4 transition-colors duration-500 ${styles.inner}`}
-        >
-          <p className="whitespace-pre-wrap text-base leading-8">
+        <div className="rounded-2xl border border-zinc-800 bg-black/55 px-5 py-4">
+          <p className="whitespace-pre-wrap text-base leading-8 text-zinc-300">
             {prompt.response}
           </p>
         </div>
@@ -146,17 +112,15 @@ export default function MirrorCard({
   }
 
   return (
-    <div
-      className={`space-y-5 rounded-3xl border px-6 py-6 transition-colors duration-500 ${styles.outer}`}
-    >
+    <div className="space-y-5 rounded-3xl border border-[#C8A96A]/30 bg-black/50 px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.22)] backdrop-blur-[3px]">
       <div className="space-y-1">
-        <p className="text-xs font-medium uppercase tracking-[0.25em] text-zinc-500">
+        <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#C8A96A]">
           Deeper reflection
         </p>
-        <p className="text-xs text-zinc-500">{copy.helper}</p>
+        <p className="text-xs leading-6 text-zinc-400">{copy.helper}</p>
       </div>
 
-      <p className="whitespace-pre-wrap text-base leading-8 text-zinc-300">
+      <p className="whitespace-pre-wrap text-base leading-8 text-zinc-200">
         {prompt.content}
       </p>
 
@@ -169,17 +133,27 @@ export default function MirrorCard({
           onChange={(event) => {
             setText(event.target.value);
             if (saved) setSaved(false);
+            if (submitError) setSubmitError("");
           }}
           placeholder={copy.placeholder}
           rows={6}
-          className={`w-full resize-none rounded-2xl border px-4 py-3 text-sm leading-7 text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:ring-1 transition-colors duration-500 ${styles.inner} ${styles.ring}`}
+          className="w-full resize-none rounded-2xl border border-zinc-700 bg-black/70 px-4 py-3 text-sm leading-7 text-zinc-100 placeholder:text-zinc-500 focus:border-[#C8A96A]/65 focus:outline-none focus:ring-1 focus:ring-[#C8A96A]/35"
         />
 
-        <div className="flex items-center gap-3">
+        {submitError ? (
+          <div
+            aria-live="polite"
+            className="rounded-2xl border border-red-400/25 bg-red-950/20 px-4 py-3"
+          >
+            <p className="text-sm leading-6 text-red-300">{submitError}</p>
+          </div>
+        ) : null}
+
+        <div className="flex justify-end">
           <button
             type="submit"
             disabled={!text.trim() || isSubmitting}
-            className={`rounded-xl px-4 py-2 text-sm transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-30 ${styles.saveButton}`}
+            className="inline-flex min-w-[130px] items-center justify-center rounded-xl border border-[#C8A96A]/55 bg-[#C8A96A]/15 px-4 py-2 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/20 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isSubmitting ? <LoadingDots /> : saved ? "Saved" : "Save reflection"}
           </button>
