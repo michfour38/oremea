@@ -1,13 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
-import { prisma } from "@/lib/prisma";
 import { getCurrentDayContent } from "@/src/lib/resonance/getCurrentDayContent";
 import { getActiveResonanceRun } from "@/src/lib/resonance/resonance-week-run";
 import {
-  getRunContinuedDays,
+  getRunActiveDay,
   getRunMirror,
-  getRunPromptCompletions,
 } from "@/src/lib/resonance/resonance-run-data";
 import PromptCard from "./prompt-card";
 import MirrorCard from "./mirror-card";
@@ -53,58 +51,16 @@ function getResonanceBackgrounds(weekNumber?: number) {
 }
 
 async function getActiveResonancePosition(runId: string, activeWeek: number) {
-  const week = await prisma.resonance_weeks.findUnique({
-    where: { week_number: activeWeek },
-    include: {
-      resonance_days: {
-        orderBy: { day_number: "asc" },
-        include: {
-          day_prompts: {
-            where: { is_published: true },
-            orderBy: { prompt_order: "asc" },
-            select: { id: true },
-          },
-        },
-      },
-    },
-  });
+  const dayNumber = await getRunActiveDay(runId, activeWeek);
 
-  if (!week?.is_published) {
+  if (!dayNumber) {
     throw new Error("The active Resonance room is not available.");
-  }
-
-  const promptIds = week.resonance_days.flatMap((day) =>
-    day.day_prompts.map((prompt) => prompt.id),
-  );
-
-  const [completionByPrompt, continuedDayNumbers] = await Promise.all([
-    getRunPromptCompletions(runId, promptIds),
-    getRunContinuedDays(runId),
-  ]);
-
-  for (const day of week.resonance_days) {
-    const prompts = day.day_prompts;
-    if (prompts.length === 0) continue;
-
-    const allPromptsDone = prompts.every((prompt) =>
-      completionByPrompt.has(prompt.id),
-    );
-
-    const allDone = allPromptsDone && continuedDayNumbers.has(day.day_number);
-
-    if (!allDone) {
-      return {
-        phase: activeWeek >= 9 ? ("INTEGRATION" as const) : ("CORE" as const),
-        weekNumber: activeWeek,
-        dayNumber: day.day_number,
-      };
-    }
   }
 
   return {
     phase: activeWeek >= 9 ? ("INTEGRATION" as const) : ("CORE" as const),
     weekNumber: activeWeek,
-    dayNumber: 7,
+    dayNumber,
   };
 }
 
