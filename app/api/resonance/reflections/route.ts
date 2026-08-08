@@ -6,6 +6,29 @@ import { completeRunPrompt } from "@/src/lib/resonance/complete-run-prompt";
 import { getRunContinuedDays } from "@/src/lib/resonance/resonance-run-data";
 import { getActiveResonanceRun } from "@/src/lib/resonance/resonance-week-run";
 
+const BUILD_SHA =
+  process.env.RAILWAY_GIT_COMMIT_SHA ??
+  process.env.GIT_COMMIT_SHA ??
+  "unknown";
+
+function json(
+  body: Record<string, unknown>,
+  status = 200,
+) {
+  return NextResponse.json(
+    {
+      ...body,
+      build: BUILD_SHA === "unknown" ? BUILD_SHA : BUILD_SHA.slice(0, 8),
+    },
+    {
+      status,
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+      },
+    },
+  );
+}
+
 async function getCurrentActiveDay(runId: string) {
   const completedDays = await getRunContinuedDays(runId);
 
@@ -16,28 +39,77 @@ async function getCurrentActiveDay(runId: string) {
   return null;
 }
 
-function safeMessage(error: unknown) {
+function failureDetails(error: unknown) {
   const message = error instanceof Error ? error.message : "";
 
-  const safeMessages = new Set([
-    "This Resonance room is no longer the active visit.",
-    "This Resonance day is no longer the active day.",
-    "This Resonance reflection is not available.",
-    "The 10-minute edit window has closed.",
-  ]);
+  if (message === "This Resonance room is no longer the active visit.") {
+    return { error: message, code: "ACTIVE_RUN", status: 409 };
+  }
 
-  if (safeMessages.has(message)) return message;
+  if (message === "This Resonance day is no longer the active day.") {
+    return { error: message, code: "ACTIVE_DAY", status: 409 };
+  }
 
-  return "This reflection could not be saved. Please try again.";
+  if (message === "This Resonance reflection is not available.") {
+    return { error: message, code: "PROMPT_UNAVAILABLE", status: 409 };
+  }
+
+  if (message === "The 10-minute edit window has closed.") {
+    return { error: message, code: "EDIT_WINDOW", status: 409 };
+  }
+
+  const prismaError = error as {
+    code?: unknown;
+    meta?: { code?: unknown } | null;
+  };
+
+  const prismaCode =
+    typeof prismaError?.code === "string" ? prismaError.code : "";
+  const databaseCode =
+    typeof prismaError?.meta?.code === "string" ? prismaError.meta.code : "";
+
+  if (prismaCode === "P2010" && databaseCode) {
+    return {
+      error: "The reflection reached the database but its write contract is out of sync.",
+      code: `DB_${databaseCode}`,
+      status: 500,
+    };
+  }
+
+  if (prismaCode === "P2003") {
+    return {
+      error: "The reflection reached the database but a linked record is missing.",
+      code: "DB_FOREIGN_KEY",
+      status: 500,
+    };
+  }
+
+  if (prismaCode === "P2002") {
+    return {
+      error: "The reflection reached the database but collided with an existing save record.",
+      code: "DB_UNIQUE",
+      status: 500,
+    };
+  }
+
+  return {
+    error: "This reflection could not be saved. Please try again.",
+    code: prismaCode ? `DB_${prismaCode}` : "SAVE_UNKNOWN",
+    status: 500,
+  };
 }
 
 export async function POST(request: Request) {
   const { userId } = await auth();
 
   if (!userId) {
-    return NextResponse.json(
-      { ok: false, error: "Your session has expired. Refresh and sign in again." },
-      { status: 401 },
+    return json(
+      {
+        ok: false,
+        error: "Your session has expired. Refresh and sign in again.",
+        code: "AUTH",
+      },
+      401,
     );
   }
 
@@ -46,9 +118,13 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json(
-      { ok: false, error: "This reflection could not be read. Please try again." },
-      { status: 400 },
+    return json(
+      {
+        ok: false,
+        error: "This reflection could not be read. Please try again.",
+        code: "BODY",
+      },
+      400,
     );
   }
 
@@ -56,9 +132,13 @@ export async function POST(request: Request) {
   const response = typeof body.response === "string" ? body.response.trim() : "";
 
   if (!promptId || !response) {
-    return NextResponse.json(
-      { ok: false, error: "Write a reflection before continuing." },
-      { status: 400 },
+    return json(
+      {
+        ok: false,
+        error: "Write a reflection before continuing.",
+        code: "EMPTY",
+      },
+      400,
     );
   }
 
@@ -109,17 +189,25 @@ export async function POST(request: Request) {
       response,
     });
 
-    return NextResponse.json({ ok: true });
+    return json({ ok: true });
   } catch (error) {
+    const failure = failureDetails(error);
+
     console.error("Resonance reflection API save failed:", {
       userId,
       promptId,
+      code: failure.code,
+      build: BUILD_SHA,
       error,
     });
 
-    return NextResponse.json(
-      { ok: false, error: safeMessage(error) },
-      { status: 500 },
+    return json(
+      {
+        ok: false,
+        error: failure.error,
+        code: failure.code,
+      },
+      failure.status,
     );
   }
 }
