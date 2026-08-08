@@ -290,7 +290,7 @@ export default function MirrorOutput({
                   disabled={answersSaving || !answerOne.trim() || !answerTwo.trim()}
                   className="inline-flex min-w-[110px] items-center justify-center rounded-xl border border-[#C8A96A]/55 bg-[#C8A96A]/15 px-4 py-2 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/20 disabled:cursor-not-allowed disabled:opacity-45"
                 >
-                  {answersSaving ? <LoadingDots /> : answersSaved ? "Saved" : "Save 2Q"}
+                  {answersSaving ? <LoadingDots /> : answersSaved ? "Saved" : "Save"}
                 </button>
               </div>
             </div>
