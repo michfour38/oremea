@@ -12,6 +12,7 @@ Internal working record for later cross-room comparison. This file does not driv
 - Evidence preference: actions, cues, actual moments, choices, differences the participant can point to
 - Answer tolerance: a useful seed must still work with short answers, uncertainty, `nothing`, `both`, humour, contradiction, or a participant rejecting the premise
 - Interpretation boundary: do not seed an emotion, motive, diagnosis, hidden cause, worth claim, or identity claim into the premise
+- First-read clarity boundary: the literal question must make sense on the first read; contrast may invite the answer but must never require mental reversal, abstract translation, or rereading to discover what is being asked
 
 ## Seven-day data arc
 
@@ -52,18 +53,18 @@ Internal working record for later cross-room comparison. This file does not driv
 | D5.1 | Thread | How can you tell when someone is glad you are there, rather than simply okay with you being there? | observable welcome cues | glad / merely okay | `welcome`, `evidence`, `contrast` |
 | D5.2 | Thread | What do both people do to keep a connection going? | mutual maintenance behaviours | both people / one-sided effort implied | `reciprocity`, `maintenance`, `behaviour` |
 | D5.3 | Thread | What is different when the questions and curiosity go both ways? | participant-described effect of mutual curiosity | one-way / two-way | `curiosity`, `reciprocity`, `contrast` |
-| D5.4 | Thread | What do you need to receive from a relationship to keep wanting to give to it? | participant-stated receiving needs linked to continued contribution | receive / give | `reciprocity`, `need`, `contribution` |
+| D5.4 | Thread | What do you need from the other person so you still want to keep putting effort into the relationship? | participant-stated receiving needs linked to continued contribution | other person's contribution / own continued effort | `reciprocity`, `need`, `contribution` |
 | D5.5 | Deeper | Think of one relationship that does not seem to run on one person doing all the work. What does each person actually give, receive, or make room for? | concrete distribution of relational labour and exchange | one-person labour / shared contribution | `episode`, `reciprocity`, `labour`, `give_receive` |
 | D6.1 | Thread | What makes you want to keep showing up somewhere? | reasons participant states for continued participation | stay involved / stop implied | `continued_participation`, `preference`, `evidence` |
 | D6.2 | Thread | Before you move closer to someone, stay where you are, or step back, what do you notice? | cues preceding relational distance choices | closer / stay / step back | `approach_distance`, `cue`, `choice` |
 | D6.3 | Thread | How can you tell the difference between 'this is new' and 'this is not for me'? | participant's distinction between unfamiliarity and poor fit | new / not for me | `fit`, `unfamiliarity`, `contrast`, `discernment` |
 | D6.4 | Thread | What do you do that helps other people feel welcome around you? | participant's own contribution to welcome | receiving welcome / creating welcome across room arc | `own_behaviour`, `welcome`, `contribution` |
 | D6.5 | Deeper | Choose one relationship or space you are deciding how to be in. What facts make you want to move closer, stay where you are, or give it more distance? | explicit evidence supporting a current participation choice | closer / stay / distance | `current_episode`, `evidence`, `choice`, `approach_distance` |
-| D7.1 | Thread | Where in your life can you walk in and be yourself without much thought? What is true about that place or those people? | concrete low-effort context and observable conditions | low management / other contexts implied | `context`, `self_expression`, `conditions` |
+| D7.1 | Thread | Where in your life can you walk in and be yourself without much thought? What do those people do, or what is different about that place? | concrete low-effort context and observable conditions | low management / contrasting conditions | `context`, `self_expression`, `conditions` |
 | D7.2 | Thread | Where can you join in as yourself, and where do you notice yourself adjusting to fit the room? | context contrast in self-adjustment | self / adjust to room | `self_adjustment`, `context`, `contrast` |
 | D7.3 | Thread | What do you do when you are trying to fit in that you do not do when you already feel at home? | behavioural contrast across belonging states | fit in / at home | `behaviour`, `contrast`, `fit` |
 | D7.4 | Thread | The next time you enter a new group or relationship, what do you want to notice sooner? | participant-chosen future attention | later recognition / earlier noticing | `future_participation`, `attention`, `choice` |
-| D7.5 | Deeper | Finish this from what you have actually noticed this week: I feel most at home with people when… What is one thing you can do to create or choose more of that? | participant's own synthesis plus one chosen action | notice / create-or-choose | `integration`, `participant_meaning`, `choice`, `future_participation` |
+| D7.5 | Deeper | Finish this from what you have actually noticed this week: I feel most at home with people when… What is one thing you can do to have more of that in your life? | participant's own synthesis plus one chosen action | notice / have more | `integration`, `participant_meaning`, `choice`, `future_participation` |
 
 ## Cross-room comparison fields to retain
 
@@ -79,3 +80,4 @@ When later rooms are audited, compare every seed on at least these axes:
 8. **Answer-range tolerance** — whether `IDK`, `nothing`, `both`, a correction, or a short concrete answer remains valid data.
 9. **Mirror yield** — whether the answer is likely to give the Daily Mirror observable material rather than polished self-theory.
 10. **Participation yield** — whether the question ultimately gives the participant something they can notice, choose, do, approach, or leave alone without prescribing the answer.
+11. **First-read clarity** — whether the literal question is immediately understandable without mentally reversing absence, unpacking abstract nouns, or rereading the sentence.
