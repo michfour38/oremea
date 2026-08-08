@@ -58,7 +58,7 @@ export default function RecognitionPurchasePage() {
             Recognition
           </p>
           <h1 className="mt-4 font-serif text-4xl font-light tracking-tight md:text-6xl">
-            Begin one complete process.
+            Begin one complete process
           </h1>
           <p className="mt-6 text-base leading-8 text-zinc-300">
             Recognition begins with what already has your attention and reflects
