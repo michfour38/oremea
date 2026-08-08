@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import type { ResonancePromptDTO } from "@/src/lib/resonance/getCurrentDayContent";
 import { submitPromptAction } from "./actions";
@@ -20,17 +21,31 @@ function LoadingDots() {
 }
 
 export default function PromptCard({ prompt }: PromptCardProps) {
+  const router = useRouter();
   const [showEdit, setShowEdit] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const incompleteCardRef = useRef<HTMLDivElement>(null);
 
   async function handleSubmit(formData: FormData) {
     if (isSubmitting) return;
 
     setIsSubmitting(true);
+    setSubmitError("");
 
     try {
-      await submitPromptAction(formData);
+      const result = await submitPromptAction(formData);
+
+      if (!result?.ok) {
+        setSubmitError(result?.error ?? "This reflection could not be saved.");
+        return;
+      }
+
+      setShowEdit(false);
+      router.refresh();
+    } catch (error) {
+      console.error("Resonance reflection save failed:", error);
+      setSubmitError("This reflection could not be saved. Try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -80,6 +95,10 @@ export default function PromptCard({ prompt }: PromptCardProps) {
             className="w-full resize-none rounded-2xl border border-zinc-800 bg-black/60 px-4 py-3 text-sm leading-7 text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-700"
           />
 
+          {submitError ? (
+            <p className="text-sm text-red-400">{submitError}</p>
+          ) : null}
+
           <div className="flex justify-end pt-1">
             <button
               type="submit"
@@ -99,11 +118,7 @@ export default function PromptCard({ prompt }: PromptCardProps) {
       <p className="text-base leading-7 text-zinc-200">{prompt.content}</p>
 
       {showEdit ? (
-        <form
-          action={handleSubmit}
-          onSubmit={() => setShowEdit(false)}
-          className="space-y-4"
-        >
+        <form action={handleSubmit} className="space-y-4">
           <input type="hidden" name="promptId" value={prompt.id} />
 
           <textarea
@@ -113,10 +128,17 @@ export default function PromptCard({ prompt }: PromptCardProps) {
             className="w-full resize-none rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm leading-7 text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-700"
           />
 
+          {submitError ? (
+            <p className="text-sm text-red-400">{submitError}</p>
+          ) : null}
+
           <div className="flex items-center justify-end gap-3">
             <button
               type="button"
-              onClick={() => setShowEdit(false)}
+              onClick={() => {
+                setShowEdit(false);
+                setSubmitError("");
+              }}
               className="text-sm text-zinc-500 underline underline-offset-4 transition-colors hover:text-zinc-300"
             >
               Cancel
@@ -142,7 +164,10 @@ export default function PromptCard({ prompt }: PromptCardProps) {
             {prompt.canEdit ? (
               <button
                 type="button"
-                onClick={() => setShowEdit(true)}
+                onClick={() => {
+                  setSubmitError("");
+                  setShowEdit(true);
+                }}
                 className="rounded-xl border border-[#c8a96a]/20 bg-[#c8a96a]/20 px-4 py-2 text-sm text-[#c8a96a] transition-colors hover:bg-[#c8a96a]/25"
               >
                 Edit reflection
