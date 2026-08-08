@@ -4,6 +4,11 @@ import { Playfair_Display } from "next/font/google";
 
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteNav } from "@/components/site/site-nav";
+import {
+  RESONANCE_LAUNCH_LABEL,
+  RESONANCE_LAUNCH_PRICE,
+  RESONANCE_REGULAR_PRICE,
+} from "@/src/lib/resonance/resonance-pricing";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -67,25 +72,39 @@ export default async function ResonanceEnterPage() {
                 Seven days of Resonance
               </h2>
             </div>
-            <p className="text-2xl text-[#c8a96a]">$5</p>
+
+            <div className="text-right">
+              <p className="text-xs uppercase tracking-[0.18em] text-[#c8a96a]/70">
+                {RESONANCE_LAUNCH_LABEL}
+              </p>
+              <div className="mt-1 flex items-baseline justify-end gap-3">
+                <span className="text-base text-zinc-500 line-through">
+                  {RESONANCE_REGULAR_PRICE}
+                </span>
+                <span className="text-3xl text-[#c8a96a]">
+                  {RESONANCE_LAUNCH_PRICE}
+                </span>
+              </div>
+            </div>
           </div>
 
           <div className="mt-6 grid gap-5 text-sm leading-7 text-zinc-300 md:grid-cols-2">
             <div className="rounded-2xl border border-white/8 bg-black/25 p-5">
               <p className="text-zinc-100">Days 1–6</p>
               <p className="mt-2">
-                Private reflections are followed by two questions drawn from that
-                day&apos;s own material, then the journey continues directly into the
-                next day.
+                Private reflections are read together by the Daily Mirror. It
+                reflects the pattern, tension, contrast, or movement becoming visible,
+                then ends with two precise questions drawn from that analysis before
+                the participant chooses to continue.
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/8 bg-black/25 p-5">
               <p className="text-zinc-100">Day 7</p>
               <p className="mt-2">
-                The final reflections and 2Q open a cumulative Mirror that reads the
-                Resonance journey completed so far and reflects what persists,
-                changes, and becomes more precise.
+                Day 7 receives the same Daily Mirror and 2Q, then opens a Closing
+                Mirror across the full seven-day visit to reflect what persisted,
+                changed, sharpened, or became newly visible.
               </p>
             </div>
           </div>
@@ -113,10 +132,11 @@ export default async function ResonanceEnterPage() {
               Returning to a room
             </summary>
             <p className="mt-4 text-sm leading-7 text-zinc-400">
-              Each return creates a separate visit. Earlier reflections, 2Q, and
-              Mirrors remain intact. Once the newer visit closes, the two visits can
-              be viewed side by side so differences in the participant&apos;s own
-              language are visible without shaping the newer responses in advance.
+              Each return creates a separate visit. Earlier reflections, Daily
+              Mirrors, 2Q, and Closing Mirrors remain intact. Once the newer visit
+              closes, the two visits can be viewed side by side so differences in the
+              participant&apos;s own language are visible without shaping the newer
+              responses in advance.
             </p>
           </details>
 
@@ -125,10 +145,12 @@ export default async function ResonanceEnterPage() {
               The role of Mirror
             </summary>
             <p className="mt-4 text-sm leading-7 text-zinc-400">
-              Daily 2Q holds the questioning function. The cumulative Mirror arrives
-              after Day 7 and reads participant reflections and participant-written
-              2Q answers as evidence. Earlier generated questions and Mirrors provide
-              continuity context so the reflection can remain fresh and grounded.
+              The Daily Mirror reads each day&apos;s participant-written reflections as
+              one body of evidence, reflects what becomes visible across them, and
+              ends with 2Q arising from that reflection. The Closing Mirror arrives
+              after Day 7 and reads across the full visit, including participant-written
+              2Q answers, while earlier generated material remains context rather than
+              evidence about the participant.
             </p>
           </details>
         </section>
