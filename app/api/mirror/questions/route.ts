@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { OREMEA_EVIDENCE_BOUNDARY } from "@/src/lib/oremea/evidence-boundary";
 import {
-  getRunContinuedDays,
+  getRunActiveDay,
   getRunGuidance,
   getRunPromptCompletions,
 } from "@/src/lib/resonance/resonance-run-data";
@@ -107,16 +107,7 @@ async function assertActiveCompletedDay(
   const activeRun = await getActiveResonanceRun(userId);
   if (!activeRun || activeRun.weekNumber !== weekNumber) return null;
 
-  const completedDays = await getRunContinuedDays(activeRun.id);
-  let currentDay: number | null = null;
-
-  for (let candidate = 1; candidate <= 7; candidate += 1) {
-    if (!completedDays.has(candidate)) {
-      currentDay = candidate;
-      break;
-    }
-  }
-
+  const currentDay = await getRunActiveDay(activeRun.id, weekNumber);
   if (currentDay !== dayNumber) return null;
 
   const day = await prisma.resonance_days.findFirst({
@@ -172,7 +163,10 @@ export async function GET(request: Request) {
   const { userId } = await auth();
 
   if (!userId) {
-    return NextResponse.json({ questions: [], answers: [], answered: false }, { status: 401 });
+    return NextResponse.json(
+      { questions: [], answers: [], answered: false },
+      { status: 401 },
+    );
   }
 
   const url = new URL(request.url);
@@ -180,12 +174,18 @@ export async function GET(request: Request) {
   const dayNumber = Number(url.searchParams.get("dayNumber"));
 
   if (!weekNumber || !dayNumber) {
-    return NextResponse.json({ questions: [], answers: [], answered: false }, { status: 400 });
+    return NextResponse.json(
+      { questions: [], answers: [], answered: false },
+      { status: 400 },
+    );
   }
 
   const activeRun = await getActiveResonanceRun(userId);
   if (!activeRun || activeRun.weekNumber !== weekNumber) {
-    return NextResponse.json({ questions: [], answers: [], answered: false }, { status: 400 });
+    return NextResponse.json(
+      { questions: [], answers: [], answered: false },
+      { status: 400 },
+    );
   }
 
   const existing = await getRunGuidance(activeRun.id, dayNumber);
@@ -303,8 +303,10 @@ export async function PATCH(request: Request) {
 
   const weekNumber = Number(body.weekNumber);
   const dayNumber = Number(body.dayNumber);
-  const answerOne = typeof body.answerOne === "string" ? body.answerOne.trim() : "";
-  const answerTwo = typeof body.answerTwo === "string" ? body.answerTwo.trim() : "";
+  const answerOne =
+    typeof body.answerOne === "string" ? body.answerOne.trim() : "";
+  const answerTwo =
+    typeof body.answerTwo === "string" ? body.answerTwo.trim() : "";
 
   if (!answerOne || !answerTwo) {
     return NextResponse.json(
