@@ -1,117 +1,284 @@
 .recognition-theme {
-  --recognition-bg: #0A0A0A;
-  --recognition-surface: #11100D;
-  --recognition-surface-raised: #14110B;
-  --recognition-border: #2A2418;
-  --recognition-border-soft: #3A2F1C;
-  --recognition-text: #EAEAEA;
-  --recognition-copy: #BFBFBF;
-  --recognition-answer: #D8D0C0;
-  --recognition-muted-warm: #8F815E;
-  --recognition-gold: #C6A96B;
-  --recognition-gold-bright: #D6B97A;
+  --recognition-bg: #080808;
+  --recognition-surface: #0D0D0D;
+  --recognition-gold: #C8A96A;
+  --recognition-zinc: #E4E4E7;
+
+  min-height: 100vh;
+  background: var(--recognition-bg);
+  color: var(--recognition-zinc);
+  isolation: isolate;
+  position: relative;
+  caret-color: var(--recognition-gold);
 }
 
 /*
-  Recognition palette baseline restored from the version immediately before the
-  August 8 visual cleanup. Keep these colours intact when changing layout or flow.
+  RECOGNITION VISUAL CONTRACT
+  ---------------------------
+  One gold. One zinc. Black provides depth.
+  Gold marks structure, position and interaction.
+  Zinc carries the conversation.
+  Importance is communicated through composition, spacing and type — never by
+  turning body copy into a palette the participant has to decode.
 */
+
+.recognition-theme::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at 50% -12%,
+      color-mix(in srgb, var(--recognition-gold) 12%, transparent) 0%,
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at 100% 55%,
+      color-mix(in srgb, var(--recognition-gold) 4%, transparent) 0%,
+      transparent 32%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--recognition-zinc) 1.5%, transparent),
+      transparent 24%
+    );
+}
+
 .recognition-theme main {
-  background: var(--recognition-bg) !important;
-  color: var(--recognition-text) !important;
+  background: transparent !important;
+  color: var(--recognition-zinc) !important;
 }
 
-.recognition-theme [class*="bg-[#11100D]"] {
-  background-color: var(--recognition-surface) !important;
+/* Recognition uses its own light system. Remove inherited photographic colour. */
+.recognition-theme [style*="background-image"] {
+  background-image: none !important;
 }
 
-.recognition-theme [class*="bg-[#14110B]"] {
-  background-color: var(--recognition-surface-raised) !important;
-}
-
-.recognition-theme [class*="bg-[#0C0B08]"] {
-  background-color: var(--recognition-bg) !important;
-}
-
-.recognition-theme [class*="bg-[#1A140A]"] {
-  background-color: #171208 !important;
-}
-
-.recognition-theme [class*="border-[#4A3D25]"],
-.recognition-theme [class*="border-[#5C4A2B]"],
-.recognition-theme [class*="border-[#8E7140]"] {
-  border-color: var(--recognition-border) !important;
-}
-
-.recognition-theme [class*="border-[#6D552D]"] {
-  border-color: var(--recognition-border-soft) !important;
-}
-
-.recognition-theme [class*="text-[#F3F0EA]"] {
-  color: var(--recognition-text) !important;
-}
-
-.recognition-theme [class*="text-[#D8D0C0]"] {
-  color: var(--recognition-copy) !important;
-}
-
-.recognition-theme [class*="text-[#E2D8C5]"] {
-  color: var(--recognition-answer) !important;
-}
-
-.recognition-theme [class*="text-[#C9B98F]"],
-.recognition-theme [class*="text-[#B6A477]"],
-.recognition-theme [class*="text-[#B59A60]"] {
-  color: var(--recognition-muted-warm) !important;
-}
-
+/* ---------- Conversation text: one zinc ---------- */
 .recognition-theme h1,
 .recognition-theme h2,
-.recognition-theme h3 {
-  color: var(--recognition-text) !important;
+.recognition-theme h3,
+.recognition-theme [class*="text-white"],
+.recognition-theme [class*="text-zinc-"],
+.recognition-theme [class*="text-[#F3F0EA]"],
+.recognition-theme [class*="text-[#EAEAEA]"],
+.recognition-theme [class*="text-[#E2D8C5]"],
+.recognition-theme [class*="text-[#D8D0C0]"],
+.recognition-theme [class*="text-[#C9B98F]"],
+.recognition-theme [class*="text-[#BFBFBF]"],
+.recognition-theme [class*="text-[#B9B0A2]"],
+.recognition-theme [class*="text-[#B6A477]"],
+.recognition-theme [class*="text-[#B59A60]"],
+.recognition-theme [class*="text-[#9A9285]"] {
+  color: var(--recognition-zinc) !important;
 }
 
-/* Original small-label/progress gold. */
-.recognition-theme p.text-xs[class*="tracking"] {
+/* Small tracked labels are structural, so they get the single gold. */
+.recognition-theme p.text-xs[class*="tracking"],
+.recognition-theme [class*="text-[#C8A96A]"],
+.recognition-theme [class*="text-[#c8a96a]"],
+.recognition-theme [class*="text-[#C6A96B]"],
+.recognition-theme [class*="text-[#D6B97A]"],
+.recognition-theme [class*="text-[#f1dfb4]"],
+.recognition-theme [class*="text-[#E7C98B]"],
+.recognition-theme [class*="text-[#d8b15f]"],
+.recognition-theme [class*="text-[#A88A4A]"] {
   color: var(--recognition-gold) !important;
 }
 
-.recognition-theme textarea {
-  background: var(--recognition-bg) !important;
-  border-color: var(--recognition-border) !important;
-  color: var(--recognition-text) !important;
-  box-shadow: none !important;
+/* Keep the actual reading material equally available to the eye. */
+.recognition-theme h1,
+.recognition-theme h2,
+.recognition-theme h3,
+.recognition-theme p,
+.recognition-theme article,
+.recognition-theme details,
+.recognition-theme summary {
+  text-wrap: pretty;
 }
 
-.recognition-theme textarea::placeholder {
-  color: #666 !important;
-  opacity: 1;
+.recognition-theme h1 {
+  letter-spacing: -0.025em;
 }
 
-.recognition-theme textarea:focus {
-  border-color: var(--recognition-gold) !important;
-  box-shadow: none !important;
+.recognition-theme p {
+  letter-spacing: 0.002em;
 }
 
+/* ---------- Surfaces ---------- */
+.recognition-theme [class*="bg-[#11100D]"],
+.recognition-theme [class*="bg-[#14110B]"],
+.recognition-theme [class*="bg-[#0C0B08]"],
+.recognition-theme [class*="bg-zinc-950"] {
+  background-color: var(--recognition-surface) !important;
+}
+
+.recognition-theme [class*="bg-[#1A140A]"] {
+  background-color: transparent !important;
+}
+
+.recognition-theme [class*="rounded-3xl"][class*="border"],
+.recognition-theme [class*="rounded-[2rem]"][class*="border"] {
+  border-color: color-mix(in srgb, var(--recognition-gold) 24%, transparent) !important;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--recognition-gold) 3.5%, var(--recognition-surface)) 0%,
+      var(--recognition-surface) 32%,
+      color-mix(in srgb, var(--recognition-zinc) 1%, var(--recognition-surface)) 100%
+    ) !important;
+  box-shadow:
+    0 26px 80px color-mix(in srgb, black 72%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--recognition-zinc) 5%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--recognition-gold) 3%, transparent);
+}
+
+/* ---------- Borders and dividers ---------- */
+.recognition-theme [class*="border-[#4A3D25]"],
+.recognition-theme [class*="border-[#5C4A2B]"],
+.recognition-theme [class*="border-[#8E7140]"],
+.recognition-theme [class*="border-[#6D552D]"],
+.recognition-theme [class*="border-[#3A3224]"],
+.recognition-theme [class*="border-zinc-700"],
+.recognition-theme [class*="border-white/5"],
+.recognition-theme [class*="border-white/10"] {
+  border-color: color-mix(in srgb, var(--recognition-gold) 22%, transparent) !important;
+}
+
+.recognition-theme div[class*="h-px"][class*="bg-[#2A2418]"] {
+  background: color-mix(in srgb, var(--recognition-zinc) 10%, transparent) !important;
+  overflow: hidden;
+}
+
+.recognition-theme div[class*="h-px"][class*="bg-[#2A2418]"] > div {
+  background: var(--recognition-gold) !important;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--recognition-gold) 42%, transparent);
+}
+
+/* ---------- Inputs ---------- */
+.recognition-theme textarea,
 .recognition-theme input {
-  background: var(--recognition-bg) !important;
-  border-color: var(--recognition-border) !important;
-  color: var(--recognition-text) !important;
-  box-shadow: none !important;
+  background: color-mix(in srgb, black 88%, var(--recognition-surface)) !important;
+  border-color: color-mix(in srgb, var(--recognition-gold) 34%, transparent) !important;
+  color: var(--recognition-zinc) !important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--recognition-zinc) 3%, transparent),
+    0 16px 48px color-mix(in srgb, black 46%, transparent) !important;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
 }
 
+.recognition-theme textarea::placeholder,
 .recognition-theme input::placeholder {
-  color: #777 !important;
+  color: color-mix(in srgb, var(--recognition-zinc) 42%, transparent) !important;
   opacity: 1;
 }
 
+.recognition-theme textarea:focus,
 .recognition-theme input:focus {
+  background: black !important;
   border-color: var(--recognition-gold) !important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--recognition-zinc) 4%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--recognition-gold) 24%, transparent),
+    0 0 42px color-mix(in srgb, var(--recognition-gold) 10%, transparent) !important;
+}
+
+/* ---------- Buttons and interactive gold ---------- */
+.recognition-theme button[class*="bg-[#C6A96B]"],
+.recognition-theme button[class*="bg-[#D6B97A]"],
+.recognition-theme a[class*="bg-[#C6A96B]"] {
+  background: var(--recognition-gold) !important;
+  border-color: var(--recognition-gold) !important;
+  color: var(--recognition-bg) !important;
+  box-shadow:
+    0 12px 36px color-mix(in srgb, var(--recognition-gold) 13%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--recognition-zinc) 18%, transparent) !important;
+}
+
+.recognition-theme button[class*="bg-[#C6A96B]"]:hover,
+.recognition-theme button[class*="bg-[#D6B97A]"]:hover,
+.recognition-theme a[class*="bg-[#C6A96B]"]:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.recognition-theme button[class*="bg-[#1A140A]"] {
+  background: transparent !important;
+  border-color: color-mix(in srgb, var(--recognition-gold) 22%, transparent) !important;
+  color: color-mix(in srgb, var(--recognition-zinc) 48%, transparent) !important;
   box-shadow: none !important;
+}
+
+.recognition-theme a[class*="border-[#C6A96B]"],
+.recognition-theme a[class*="border-[#c8a96a]"],
+.recognition-theme button[class*="border-[#5C4A2B]"],
+.recognition-theme button[class*="border-[#4A3D25]"] {
+  border-color: color-mix(in srgb, var(--recognition-gold) 42%, transparent) !important;
+}
+
+.recognition-theme a[class*="border-[#C6A96B]"]:hover,
+.recognition-theme a[class*="border-[#c8a96a]"]:hover,
+.recognition-theme button[class*="border-[#5C4A2B]"]:hover,
+.recognition-theme button[class*="border-[#4A3D25]"]:hover {
+  border-color: var(--recognition-gold) !important;
+}
+
+.recognition-theme button,
+.recognition-theme a {
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    opacity 180ms ease,
+    transform 180ms ease,
+    filter 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .recognition-theme button:not(:disabled):focus-visible,
-.recognition-theme a:focus-visible {
+.recognition-theme a:focus-visible,
+.recognition-theme textarea:focus-visible,
+.recognition-theme input:focus-visible,
+.recognition-theme summary:focus-visible {
   outline: 2px solid var(--recognition-gold);
-  outline-offset: 3px;
+  outline-offset: 4px;
+}
+
+/* ---------- Archive ---------- */
+.recognition-theme nav {
+  background: color-mix(in srgb, black 82%, transparent) !important;
+  border-color: color-mix(in srgb, var(--recognition-gold) 16%, transparent) !important;
+  backdrop-filter: blur(18px);
+}
+
+.recognition-theme details > summary {
+  color: var(--recognition-gold) !important;
+}
+
+/* ---------- Selection ---------- */
+.recognition-theme ::selection {
+  background: var(--recognition-gold);
+  color: var(--recognition-bg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .recognition-theme main > section {
+    animation: recognition-arrive 420ms cubic-bezier(0.2, 0.72, 0.2, 1) both;
+  }
+}
+
+@keyframes recognition-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
