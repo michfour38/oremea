@@ -172,7 +172,7 @@ export const WEEK_1: ResonanceWeekSeed = {
           prompt_order: 4,
           type: "thread_prompt",
           label: null,
-          content: "What do you need to receive from a relationship to keep wanting to give to it?",
+          content: "What do you need from the other person so you still want to keep putting effort into the relationship?",
         },
         {
           prompt_order: 5,
@@ -224,7 +224,7 @@ export const WEEK_1: ResonanceWeekSeed = {
           prompt_order: 1,
           type: "thread_prompt",
           label: null,
-          content: "Where in your life can you walk in and be yourself without much thought? What is true about that place or those people?",
+          content: "Where in your life can you walk in and be yourself without much thought? What do those people do, or what is different about that place?",
         },
         {
           prompt_order: 2,
@@ -248,7 +248,7 @@ export const WEEK_1: ResonanceWeekSeed = {
           prompt_order: 5,
           type: "mirror_exercise",
           label: null,
-          content: "Finish this from what you have actually noticed this week: I feel most at home with people when… What is one thing you can do to create or choose more of that?",
+          content: "Finish this from what you have actually noticed this week: I feel most at home with people when… What is one thing you can do to have more of that in your life?",
         },
       ],
     },
