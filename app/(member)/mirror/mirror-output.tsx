@@ -178,20 +178,20 @@ export default function MirrorOutput({
 
   return (
     <div className="space-y-6">
-      <section className="space-y-5 rounded-3xl border border-[#c8a96a]/35 bg-[#c8a96a]/[0.06] px-6 py-6">
+      <section className="space-y-5 rounded-3xl border border-[#C8A96A]/30 bg-black/55 px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.22)] backdrop-blur-[3px]">
         <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#c8a96a]">
+          <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#C8A96A]">
             Today&apos;s 2Q
           </p>
-          <p className="text-sm leading-7 text-[#c8a96a]/80">
+          <p className="text-sm leading-7 text-zinc-400">
             Two questions drawn directly from what you reflected today.
           </p>
         </div>
 
         {questions.length === 2 ? (
-          <div className="space-y-5">
+          <div className="space-y-6">
             <div className="space-y-3">
-              <p className="text-sm leading-7 text-[#c8a96a]/90">{questions[0]}</p>
+              <p className="text-sm leading-7 text-zinc-200">{questions[0]}</p>
               <textarea
                 value={answerOne}
                 onChange={(event) => {
@@ -200,12 +200,12 @@ export default function MirrorOutput({
                 }}
                 rows={4}
                 placeholder="Stay with this question..."
-                className="w-full resize-none rounded-2xl border border-[#c8a96a]/35 bg-black/35 px-4 py-3 text-sm leading-7 text-[#c8a96a]/90 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-[#c8a96a]/50"
+                className="w-full resize-none rounded-2xl border border-zinc-700 bg-black/70 px-4 py-3 text-sm leading-7 text-zinc-100 placeholder:text-zinc-500 focus:border-[#C8A96A]/65 focus:outline-none focus:ring-1 focus:ring-[#C8A96A]/35"
               />
             </div>
 
             <div className="space-y-3">
-              <p className="text-sm leading-7 text-[#c8a96a]/90">{questions[1]}</p>
+              <p className="text-sm leading-7 text-zinc-200">{questions[1]}</p>
               <textarea
                 value={answerTwo}
                 onChange={(event) => {
@@ -214,7 +214,7 @@ export default function MirrorOutput({
                 }}
                 rows={4}
                 placeholder="Stay with this question..."
-                className="w-full resize-none rounded-2xl border border-[#c8a96a]/35 bg-black/35 px-4 py-3 text-sm leading-7 text-[#c8a96a]/90 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-[#c8a96a]/50"
+                className="w-full resize-none rounded-2xl border border-zinc-700 bg-black/70 px-4 py-3 text-sm leading-7 text-zinc-100 placeholder:text-zinc-500 focus:border-[#C8A96A]/65 focus:outline-none focus:ring-1 focus:ring-[#C8A96A]/35"
               />
             </div>
 
@@ -223,7 +223,7 @@ export default function MirrorOutput({
                 type="button"
                 onClick={() => void saveAnswers()}
                 disabled={answersSaving || !answerOne.trim() || !answerTwo.trim()}
-                className="inline-flex min-w-[110px] items-center justify-center rounded-xl border border-[#c8a96a]/50 bg-[#c8a96a]/15 px-4 py-2 text-sm text-[#c8a96a] transition-colors hover:bg-[#c8a96a]/20 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-w-[110px] items-center justify-center rounded-xl border border-[#C8A96A]/55 bg-[#C8A96A]/15 px-4 py-2 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/20 disabled:cursor-not-allowed disabled:opacity-45"
               >
                 {answersSaving ? <LoadingDots /> : answersSaved ? "Saved" : "Save 2Q"}
               </button>
@@ -234,18 +234,22 @@ export default function MirrorOutput({
             type="button"
             onClick={() => void generateQuestions()}
             disabled={questionsLoading}
-            className="inline-flex min-w-[180px] items-center justify-center rounded-xl border border-[#c8a96a]/50 bg-[#c8a96a]/15 px-4 py-2 text-sm text-[#c8a96a] transition-colors hover:bg-[#c8a96a]/20 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-w-[180px] items-center justify-center rounded-xl border border-[#C8A96A]/55 bg-[#C8A96A]/15 px-4 py-2 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/20 disabled:cursor-not-allowed disabled:opacity-45"
           >
             {questionsLoading ? <LoadingDots /> : "Generate today's 2Q"}
           </button>
         )}
 
         {questionsError ? (
-          <p className="text-xs text-red-400">Couldn&apos;t generate questions. Try again.</p>
+          <p className="text-xs text-red-300">
+            The questions could not be generated. Please generate them again.
+          </p>
         ) : null}
 
         {answersError ? (
-          <p className="text-xs text-red-400">Couldn&apos;t save your 2Q. Try again.</p>
+          <p className="text-xs text-red-300">
+            Your 2Q could not be saved. Please save it again.
+          </p>
         ) : null}
 
         {answersSaved && !isWeekClose ? (
@@ -258,12 +262,12 @@ export default function MirrorOutput({
       </section>
 
       {answersSaved && isWeekClose ? (
-        <section className="space-y-5 rounded-3xl border border-[#c8a96a]/35 bg-[#c8a96a]/[0.06] px-6 py-6">
+        <section className="space-y-5 rounded-3xl border border-[#C8A96A]/30 bg-black/55 px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.22)] backdrop-blur-[3px]">
           <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#c8a96a]">
+            <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#C8A96A]">
               Weekly Mirror
             </p>
-            <p className="text-sm leading-7 text-[#c8a96a]/80">
+            <p className="text-sm leading-7 text-zinc-400">
               Your Mirror reflects the Resonance journey you have completed so far.
             </p>
           </div>
@@ -273,28 +277,28 @@ export default function MirrorOutput({
               <button
                 type="button"
                 onClick={() => setIsGeneratingMirror(true)}
-                className="inline-flex min-w-[150px] items-center justify-center rounded-xl border border-[#c8a96a]/50 bg-[#c8a96a]/15 px-4 py-2 text-sm text-[#c8a96a] transition-colors hover:bg-[#c8a96a]/20"
+                className="inline-flex min-w-[150px] items-center justify-center rounded-xl border border-[#C8A96A]/55 bg-[#C8A96A]/15 px-4 py-2 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/20"
               >
                 Open my Mirror
               </button>
             ) : (
-              <div className="rounded-2xl border border-[#c8a96a]/30 bg-[#c8a96a]/10 px-4 py-4">
-                <p className="text-sm text-[#c8a96a]/90">Opening your Mirror...</p>
-                <div className="mt-4">
+              <div className="rounded-2xl border border-zinc-800 bg-black/55 px-4 py-4">
+                <p className="text-sm text-zinc-300">Opening your Mirror...</p>
+                <div className="mt-4 text-[#C8A96A]">
                   <LoadingDots />
                 </div>
               </div>
             )
           ) : (
             <>
-              <div className="space-y-4">
+              <div className="space-y-4 rounded-2xl border border-zinc-800 bg-black/45 px-5 py-5">
                 {cleanMirrorOutput(mirror.output)
                   .split("\n\n")
                   .filter(Boolean)
                   .map((paragraph, index) => (
                     <p
                       key={index}
-                      className="whitespace-pre-wrap text-sm leading-7 text-[#c8a96a]/90"
+                      className="whitespace-pre-wrap text-sm leading-7 text-zinc-300"
                     >
                       {paragraph}
                     </p>
@@ -308,7 +312,7 @@ export default function MirrorOutput({
                 <input type="hidden" name="weekNumber" value={weekNumber} />
                 <button
                   type="submit"
-                  className="min-w-[150px] rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10"
+                  className="min-w-[150px] rounded-xl border border-[#C8A96A]/55 bg-[#C8A96A]/15 px-5 py-3 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/20"
                 >
                   Complete week
                 </button>
