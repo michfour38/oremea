@@ -3,6 +3,11 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
+import {
+  RESONANCE_LAUNCH_LABEL,
+  RESONANCE_LAUNCH_PRICE,
+  RESONANCE_REGULAR_PRICE,
+} from "@/src/lib/resonance/resonance-pricing";
 import { getRunContinuedDays } from "@/src/lib/resonance/resonance-run-data";
 import {
   getActiveResonanceRun,
@@ -188,6 +193,19 @@ export default async function EntryPage() {
                 available in the archive. Returning to the same room later opens a
                 new visit while preserving the earlier one.
               </p>
+
+              <div className="mt-5 inline-flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-full border border-[#c8a96a]/25 bg-black/30 px-4 py-2 text-sm">
+                <span className="text-xs uppercase tracking-[0.16em] text-[#c8a96a]/75">
+                  {RESONANCE_LAUNCH_LABEL}
+                </span>
+                <span className="text-zinc-500 line-through">
+                  {RESONANCE_REGULAR_PRICE}
+                </span>
+                <span className="text-lg text-[#c8a96a]">
+                  {RESONANCE_LAUNCH_PRICE}
+                </span>
+                <span className="text-zinc-500">per seven-day room</span>
+              </div>
             </div>
 
             <details className="group mt-8 rounded-3xl border border-[#c8a96a]/25 bg-black/35 backdrop-blur-[2px]">
@@ -335,11 +353,17 @@ export default async function EntryPage() {
                         {canPurchase ? (
                           <Link
                             href={`/resonance/purchase?week=${week.week_number}`}
-                            className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-2.5 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10"
+                            className="inline-flex flex-wrap items-center rounded-xl border border-[#c8a96a]/60 px-5 py-2.5 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10"
                           >
-                            {hasArchivedHistory
-                              ? `Purchase ${week.title} again · $5`
-                              : `Purchase ${week.title} · $5`}
+                            <span>
+                              {hasArchivedHistory
+                                ? `Purchase ${week.title} again`
+                                : `Purchase ${week.title}`}
+                            </span>
+                            <span className="ml-2 text-zinc-500 line-through">
+                              {RESONANCE_REGULAR_PRICE}
+                            </span>
+                            <span className="ml-2">{RESONANCE_LAUNCH_PRICE}</span>
                           </Link>
                         ) : null}
 
