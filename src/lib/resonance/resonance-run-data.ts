@@ -56,6 +56,14 @@ type MirrorRow = {
   created_at: Date;
 };
 
+type DayCloseRow = {
+  day_number: number;
+  continued_at: Date;
+  answer_one: string | null;
+  answer_two: string | null;
+  answered_at: Date | null;
+};
+
 export async function getRunPromptCompletions(
   runId: string,
   promptIds: string[],
@@ -100,11 +108,35 @@ export async function getRunContinuedDays(runId: string): Promise<Set<number>> {
   return new Set(rows.map((row) => row.day_number));
 }
 
-// Active-day authority lives here so the page, save API and server actions all
-// resolve progression from the same persisted facts. A day is closed only when
-// every currently published reflection is saved AND that day has been explicitly
-// continued. This also safely handles legacy runs where a continue marker exists
-// but newer/current prompt content is still incomplete.
+async function getRunDayCloseState(runId: string) {
+  const rows = await prisma.$queryRaw<DayCloseRow[]>`
+    SELECT
+      c."day_number",
+      c."continued_at",
+      g."answer_one",
+      g."answer_two",
+      g."answered_at"
+    FROM "journey_day_continues" c
+    LEFT JOIN "resonance_day_guidance" g
+      ON g."run_id" = c."run_id"
+      AND g."day_number" = c."day_number"
+    WHERE c."run_id" = ${runId}::uuid
+  `;
+
+  return new Map(rows.map((row) => [row.day_number, row]));
+}
+
+// One progression authority for the whole Resonance flow.
+//
+// Days 1-6 close only after ALL three things are true in this order:
+// 1. every currently published reflection is saved,
+// 2. both 2Q answers are saved,
+// 3. Continue is explicitly pressed AFTER the latest reflection/2Q save.
+//
+// Comparing timestamps matters for migrated/legacy runs: an old Continue marker
+// must never skip newly completed reflections or today's 2Q. Day 7 stays active
+// until completeResonanceRun closes the visit, because its final action is
+// Complete visit rather than ordinary day progression.
 export async function getRunActiveDay(
   runId: string,
   weekNumber: number,
@@ -139,26 +171,54 @@ export async function getRunActiveDay(
     day.day_prompts.map((prompt) => prompt.id),
   );
 
-  const [completionByPrompt, continuedDayNumbers] = await Promise.all([
+  const [completionByPrompt, closeStateByDay] = await Promise.all([
     getRunPromptCompletions(runId, promptIds),
-    getRunContinuedDays(runId),
+    getRunDayCloseState(runId),
   ]);
 
+  const finalDayNumber =
+    configuredDays[configuredDays.length - 1]?.day_number ?? 7;
+
   for (const day of configuredDays) {
-    const allPromptsDone = day.day_prompts.every((prompt) =>
-      completionByPrompt.has(prompt.id),
+    const completions = day.day_prompts
+      .map((prompt) => completionByPrompt.get(prompt.id))
+      .filter((completion): completion is RunPromptCompletion => Boolean(completion));
+
+    const allPromptsDone = completions.length === day.day_prompts.length;
+
+    // An active visit must remain on its closing day until Complete visit marks
+    // the run completed. This keeps Closing Mirror and final completion reachable.
+    if (day.day_number === finalDayNumber) return day.day_number;
+
+    if (!allPromptsDone) return day.day_number;
+
+    const closeState = closeStateByDay.get(day.day_number);
+    const guidanceAnswered = Boolean(
+      closeState?.answer_one?.trim() &&
+        closeState?.answer_two?.trim() &&
+        closeState?.answered_at,
     );
 
-    const dayClosed =
-      allPromptsDone && continuedDayNumbers.has(day.day_number);
+    if (!closeState || !guidanceAnswered || !closeState.answered_at) {
+      return day.day_number;
+    }
 
-    if (!dayClosed) return day.day_number;
+    const latestReflectionSave = completions.reduce(
+      (latest, completion) =>
+        completion.updatedAt.getTime() > latest.getTime()
+          ? completion.updatedAt
+          : latest,
+      completions[0].updatedAt,
+    );
+
+    const continueHappenedAfterEverything =
+      closeState.continued_at.getTime() >= closeState.answered_at.getTime() &&
+      closeState.continued_at.getTime() >= latestReflectionSave.getTime();
+
+    if (!continueHappenedAfterEverything) return day.day_number;
   }
 
-  // An active run should normally be completed immediately after Day 7 closes.
-  // Returning the last configured day keeps the state recoverable if completion
-  // and redirect were interrupted between those two writes.
-  return configuredDays[configuredDays.length - 1]?.day_number ?? null;
+  return finalDayNumber;
 }
 
 export async function getRunGuidance(
