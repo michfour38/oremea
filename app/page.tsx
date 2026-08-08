@@ -4,6 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 
 import { SiteShell } from "@/components/site/site-shell";
+import {
+  RESONANCE_LAUNCH_LABEL,
+  RESONANCE_LAUNCH_PRICE,
+  RESONANCE_REGULAR_PRICE,
+} from "@/src/lib/resonance/resonance-pricing";
 
 const products = [
   {
@@ -25,14 +30,14 @@ const products = [
     href: "/resonance",
     active: true,
     short:
-      "A self-paced reflective journey designed to help people understand the patterns they carry into connection.",
+      "A private seven-day reflection experience that helps you stay with what becomes visible.",
     action: "Enter Resonance",
     full: [
-      "Most people do not repeat relationship patterns because they are careless. They repeat them because the pattern became familiar before it became visible.",
-      "Resonance gives you a structured place to notice what happens inside connection: how you trust, protect, hope, withdraw, over-explain, test, soften, shut down, or reach.",
-      "Each reflection asks you to respond honestly to carefully sequenced prompts. Not to perform growth. Not to sound wise. Just to name what is actually there.",
-      "Over time, your reflections begin to show a shape. Repeated fears. Repeated longings. Repeated contradictions. Subtle shifts that are hard to see from inside one moment.",
-      "If you choose Mirror, the system reflects across your responses and helps reveal the deeper thread forming over time.",
+      "Resonance gives you a structured place to notice what happens inside connection across seven days, one thematic room at a time.",
+      "Each day you respond to carefully sequenced prompts in your own words. The Daily Mirror then reads those reflections together and reflects the pattern, tension, contrast, or movement becoming visible.",
+      "That Daily Mirror ends with two precise questions arising from the reflection, giving you somewhere specific to stay before you choose to continue.",
+      "On Day 7, a Closing Mirror reads across the full visit and reflects what persisted, changed, sharpened, or became newly visible over time.",
+      "Your completed visit remains available in your archive, and returning to the same room later creates a fresh visit while preserving the earlier one.",
       "Resonance creates the reflective foundation from which Compass can help turn awareness into movement.",
     ],
   },
@@ -124,6 +129,21 @@ export default function Home() {
                     <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-400">
                       {product.short}
                     </p>
+
+                    {product.name === "Resonance" ? (
+                      <div className="mt-4 flex flex-wrap items-baseline gap-2 text-sm">
+                        <span className="text-xs uppercase tracking-[0.14em] text-[#c8a96a]/75">
+                          {RESONANCE_LAUNCH_LABEL}
+                        </span>
+                        <span className="text-zinc-500 line-through">
+                          {RESONANCE_REGULAR_PRICE}
+                        </span>
+                        <span className="text-lg text-[#c8a96a]">
+                          {RESONANCE_LAUNCH_PRICE}
+                        </span>
+                        <span className="text-zinc-500">per seven-day room</span>
+                      </div>
+                    ) : null}
                   </div>
 
                   <button
