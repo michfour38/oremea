@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 const INPUT_SELECTOR =
-  '[data-resonance-root="true"] textarea:not(:disabled)';
+  '[data-resonance-root="true"] textarea[data-resonance-input="true"]:not(:disabled)';
 
 function isEditableElement(element: Element | null) {
   if (!(element instanceof HTMLElement)) return false;
@@ -26,73 +26,89 @@ function isVisible(element: HTMLElement) {
   );
 }
 
-function getDailyMirrorSection(input: HTMLTextAreaElement) {
-  if (input.dataset.resonanceInput !== "true") return null;
+function getNextInput() {
+  const inputs = Array.from(
+    document.querySelectorAll<HTMLTextAreaElement>(INPUT_SELECTOR),
+  );
 
+  return (
+    inputs.find(
+      (input) =>
+        input.isConnected &&
+        isVisible(input) &&
+        input.value.trim().length === 0,
+    ) ?? null
+  );
+}
+
+function getDailyMirrorSection(input: HTMLTextAreaElement) {
   const section = input.closest<HTMLElement>("section");
   if (!section) return null;
 
   const text = section.textContent ?? "";
-  return text.includes("Today's Mirror") && text.includes("2Q")
-    ? section
-    : null;
+  return text.includes("Today's Mirror") ? section : null;
 }
 
 function focusNextResonanceInput() {
   if (isEditableElement(document.activeElement)) return;
 
-  const inputs = Array.from(
-    document.querySelectorAll<HTMLTextAreaElement>(INPUT_SELECTOR),
-  );
-
-  const nextInput = inputs.find(
-    (input) => isVisible(input) && input.value.trim().length === 0,
-  );
-
+  const nextInput = getNextInput();
   if (!nextInput) return;
 
-  const dailyMirrorSection = getDailyMirrorSection(nextInput);
+  // Confirm the candidate survived the render that unlocked it. This prevents
+  // a transient input elsewhere in the tree from briefly stealing the viewport
+  // while router.refresh() is replacing the saved card with the next one.
+  window.setTimeout(() => {
+    if (isEditableElement(document.activeElement)) return;
 
-  if (dailyMirrorSection) {
-    // Once the Daily Mirror opens, keep its beginning in view so the participant
-    // reads the reflection from the top. Prime the first empty 2Q field at the
-    // same time without allowing browser focus to pull the viewport down to it.
-    dailyMirrorSection.scrollIntoView({
+    const confirmedInput = getNextInput();
+    if (!confirmedInput || confirmedInput !== nextInput) return;
+
+    const dailyMirrorSection = getDailyMirrorSection(confirmedInput);
+
+    if (dailyMirrorSection) {
+      dailyMirrorSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+
+      window.setTimeout(() => {
+        if (!isEditableElement(document.activeElement) && confirmedInput.isConnected) {
+          confirmedInput.focus({ preventScroll: true });
+        }
+      }, 180);
+
+      return;
+    }
+
+    confirmedInput.scrollIntoView({
       behavior: "smooth",
-      block: "start",
+      block: "center",
     });
 
     window.setTimeout(() => {
-      if (!isEditableElement(document.activeElement)) {
-        nextInput.focus({ preventScroll: true });
+      if (!isEditableElement(document.activeElement) && confirmedInput.isConnected) {
+        confirmedInput.focus({ preventScroll: true });
       }
     }, 180);
-
-    return;
-  }
-
-  nextInput.scrollIntoView({
-    behavior: "smooth",
-    block: "center",
-  });
-
-  window.setTimeout(() => {
-    if (!isEditableElement(document.activeElement)) {
-      nextInput.focus({ preventScroll: true });
-    }
-  }, 180);
+  }, 140);
 }
 
 export default function ResonanceInputFocus() {
   useEffect(() => {
-    let timer = window.setTimeout(focusNextResonanceInput, 220);
+    const root = document.querySelector<HTMLElement>(
+      '[data-resonance-root="true"]',
+    );
+    if (!root) return;
+
+    let timer = window.setTimeout(focusNextResonanceInput, 260);
 
     const observer = new MutationObserver(() => {
       window.clearTimeout(timer);
-      timer = window.setTimeout(focusNextResonanceInput, 180);
+      timer = window.setTimeout(focusNextResonanceInput, 240);
     });
 
-    observer.observe(document.body, {
+    observer.observe(root, {
       childList: true,
       subtree: true,
     });
