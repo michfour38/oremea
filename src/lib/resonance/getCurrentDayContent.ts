@@ -48,15 +48,15 @@ function isWithinEditWindow(createdAt: Date | null | undefined): boolean {
 }
 
 function applyGating(prompts: ResonancePromptDTO[]): ResonancePromptDTO[] {
-  let lastThreadCompleted = true;
+  let allPreviousCompleted = true;
 
   return prompts.map((prompt) => {
-    if (prompt.type === "mirror_exercise") {
-      return { ...prompt, isUnlocked: true };
+    const isUnlocked = allPreviousCompleted;
+
+    if (!prompt.isCompleted) {
+      allPreviousCompleted = false;
     }
 
-    const isUnlocked = lastThreadCompleted;
-    lastThreadCompleted = prompt.isCompleted;
     return { ...prompt, isUnlocked };
   });
 }
