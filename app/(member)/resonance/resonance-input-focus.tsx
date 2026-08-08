@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 const INPUT_SELECTOR =
-  'textarea[data-resonance-input="true"]:not(:disabled)';
+  '[data-resonance-root="true"] textarea:not(:disabled)';
 
 function isEditableElement(element: Element | null) {
   if (!(element instanceof HTMLElement)) return false;
