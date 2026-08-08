@@ -27,6 +27,15 @@ A participant should understand the literal question on the first read. If a tir
 - One thread question should have one main movement. A deeper exercise may contain several steps when the steps are explicit and easy to follow.
 - Read the question aloud. If the natural response is `what?`, the wording has failed even if the underlying construct is sound.
 
+## Room-independence boundary
+
+Every Resonance room must work as a complete, independently chosen seven-day visit.
+
+- No participant-facing seed may require completion of another Resonance room, assume a previous room was purchased, or assume a prior insight exists.
+- Integration rooms may invite the participant to gather material from their current life and current seven-day visit. Earlier Resonance material can be used if the participant brings it, but it cannot be a prerequisite for understanding or answering the question.
+- A seed must still make sense if this is the participant's first Resonance room.
+- Do not use chronology as a hidden hierarchy. Internal room numbers are data keys, not a required developmental ladder.
+
 ## Tone boundary
 
 Resonance is curious, exact, human, spacious, and quietly incisive. It sounds like a perceptive person asking a real question, not a therapist, researcher, course writer, or model demonstrating intelligence.
@@ -48,3 +57,4 @@ Every seed should eventually be compared across rooms for:
 9. Mirror yield
 10. participation yield
 11. first-read clarity
+12. room independence / prerequisite risk
