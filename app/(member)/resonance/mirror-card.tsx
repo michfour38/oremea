@@ -4,7 +4,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { ResonancePromptDTO } from "@/src/lib/resonance/getCurrentDayContent";
-import { submitPromptAction } from "./actions";
+import {
+  formatResonanceSaveError,
+  saveResonanceReflection,
+} from "./save-reflection-client";
 
 interface MirrorCardProps {
   prompt: ResonancePromptDTO;
@@ -65,23 +68,31 @@ export default function MirrorCard({
   async function handleSubmit(formData: FormData) {
     if (isSubmitting) return;
 
+    const promptId = String(formData.get("promptId") ?? "");
+    const response = String(formData.get("response") ?? "").trim();
+
+    if (!response) {
+      setSubmitError("Write a reflection before continuing.");
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError("");
 
     try {
-      const result = await submitPromptAction(formData);
+      const result = await saveResonanceReflection({ promptId, response });
 
-      if (!result?.ok) {
-        setSubmitError(result?.error ?? "This reflection could not be saved.");
+      if (!result.ok) {
+        setSubmitError(formatResonanceSaveError(result));
         return;
       }
 
       setSaved(true);
       router.refresh();
     } catch (error) {
-      console.error("Resonance deeper reflection save failed:", error);
+      console.error("Resonance deeper reflection save request failed:", error);
       setSubmitError(
-        "This reflection could not be saved. Please submit it again.",
+        "The save request could not reach Resonance. [CLIENT_NETWORK]",
       );
     } finally {
       setIsSubmitting(false);
