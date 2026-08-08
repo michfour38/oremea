@@ -12,6 +12,7 @@ Internal working record for later cross-room comparison. This file does not driv
 - Evidence preference: repeated actions, actual interaction sequences, first reads, observable consequences, participant-stated intentions, specific counterexamples, chosen experiments
 - Answer tolerance: a useful seed must still work with short answers, uncertainty, `nothing`, `depends`, humour, contradiction, correction, or rejection of the premise
 - Interpretation boundary: recurrence does not prove motive, identity, attachment style, trauma response, defence mechanism, emotional state, or hidden cause
+- First-read clarity boundary: the literal question must make sense on the first read; contrast may invite the answer but must never require mental reversal, abstract translation, or rereading to discover what is being asked
 
 ## Boundary with The Hearth
 
@@ -38,7 +39,7 @@ Potential overlap is intentional only where a different cross-section is being c
 | D1.1 | Thread | Around other people, what do you automatically start doing before anyone asks you to? | automatic social behaviour | asked / unasked | `automatic_behaviour`, `role`, `self_observation` |
 | D1.2 | Thread | What do you keep the closest eye on in a conversation—the other person, the mood in the room, your own words, or something else? | attention target | other / atmosphere / self / other | `attention`, `monitoring`, `choice_range` |
 | D1.3 | Thread | When a conversation goes differently from how you expected, what do you usually do next? | behaviour following expectation mismatch | expected / different | `expectation`, `next_move`, `behaviour` |
-| D1.4 | Thread | Think of the thing you often do in conversations. What does that leave the other person doing—or not needing to do? | relational consequence of own repeated behaviour | own action / other's available action | `effect`, `interaction`, `role_distribution` |
+| D1.4 | Thread | Think of the thing you often do in conversations. When you do that, what does the other person usually do less of, or leave for you to handle? | relational consequence of own repeated behaviour | own action / what other leaves to participant | `effect`, `interaction`, `role_distribution` |
 | D1.5 | Deeper | Think of one recent interaction. Write what you did, step by step, without explaining why. Looking at the sequence, what were you mostly doing—leading, fixing, smoothing, waiting, questioning, entertaining, withdrawing, or something else? | observable own-action sequence plus participant-selected description | actions before explanation | `episode`, `sequence`, `role`, `behaviour` |
 | D2.1 | Thread | What kind of moment seems to start the same old dance between you and someone else? | recurring initiating event | repeat / one-off | `pattern_start`, `recurrence`, `interaction` |
 | D2.2 | Thread | What do you usually do right after that? | own next move | initiating event / response | `sequence`, `own_move`, `behaviour` |
@@ -52,11 +53,11 @@ Potential overlap is intentional only where a different cross-section is being c
 | D3.5 | Deeper | Think of one recent moment where you had a quick read on someone. Write: what they did or said → what you thought it meant → what you did next → what happened after. | event-interpretation-action-outcome sequence | observable event / inferred meaning | `episode`, `interpretation`, `sequence`, `outcome` |
 | D4.1 | Thread | Across different relationships, what do you notice yourself repeatedly taking care of, managing, fixing, avoiding, or carrying? | repeated relational labour or avoidance | multiple contexts / repeated own move | `role`, `labour`, `recurrence`, `behaviour` |
 | D4.2 | Thread | When you do that, what are you usually hoping will happen? | participant-stated intention | action / intended outcome | `intention`, `role`, `outcome` |
-| D4.3 | Thread | What does doing that leave less room for—from you or from the other person? | participant-observed opportunity cost | repeated move / displaced possibility | `effect`, `role_distribution`, `availability` |
+| D4.3 | Thread | When you keep doing that, what do you or the other person end up doing less of? | participant-observed opportunity cost | repeated move / displaced action | `effect`, `role_distribution`, `availability` |
 | D4.4 | Thread | Think of a recent time you did not do your usual thing. What did you do instead? | counterexample behaviour | usual / different | `counterexample`, `behaviour`, `choice` |
 | D4.5 | Deeper | Compare one time you did your usual thing with one time you did something different. What changed in what you did, what they did, and how it ended? | comparative interaction evidence | usual / different | `comparison`, `sequence`, `outcome`, `counterexample` |
 | D5.1 | Thread | In a problem that keeps repeating with someone, what is the part you can actually see yourself doing again? | own recurring contribution | whole problem / own part | `contribution`, `recurrence`, `accountability` |
-| D5.2 | Thread | Think of a time you meant one thing but the result landed differently. How could you tell? | participant-stated intention and observable impact evidence | intention / result | `intention`, `impact`, `evidence` |
+| D5.2 | Thread | Think of a time you meant one thing, but what happened was different from what you intended. How could you tell? | participant-stated intention and observable impact evidence | intention / actual outcome | `intention`, `impact`, `evidence` |
 | D5.3 | Thread | When someone tells you about your part in something, what kind of feedback is easiest to hear and what kind is hardest? | feedback conditions participant identifies | easier / harder | `feedback`, `self_observation`, `contrast` |
 | D5.4 | Thread | In a shared problem, what belongs to your part and what clearly belongs to the other person's part? | participant's responsibility boundary | mine / theirs | `responsibility`, `boundary`, `contribution` |
 | D5.5 | Deeper | Choose one repeating difficulty. Write four lines: what I do; what they do; what happens between us; what neither of us controls. | distributed contribution map | self / other / interaction / conditions | `system_map`, `contribution`, `conditions`, `responsibility` |
@@ -93,3 +94,4 @@ Compare every seed on at least these axes:
 8. **Answer-range tolerance** — whether `IDK`, `nothing`, `both`, a correction, or a short concrete answer remains valid data.
 9. **Mirror yield** — whether the answer is likely to give the Daily Mirror observable material rather than polished self-theory.
 10. **Participation yield** — whether the question ultimately gives the participant something they can notice, choose, do, approach, or leave alone without prescribing the answer.
+11. **First-read clarity** — whether the literal question is immediately understandable without mentally reversing absence, unpacking abstract nouns, or rereading the sentence.
