@@ -124,7 +124,9 @@ export async function submitPromptAction(formData: FormData) {
   const promptId = String(formData.get("promptId") ?? "");
   const response = String(formData.get("response") ?? "").trim();
 
-  if (!promptId || !response) return;
+  if (!promptId || !response) {
+    return { ok: false, error: "Write a reflection before continuing." };
+  }
 
   const prompt = await prisma.day_prompts.findUnique({
     where: { id: promptId },
@@ -160,7 +162,7 @@ export async function submitPromptAction(formData: FormData) {
   });
 
   revalidatePath("/resonance");
-  redirect("/resonance");
+  return { ok: true };
 }
 
 export async function continueResonanceDayAction(formData: FormData) {

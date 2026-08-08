@@ -12,7 +12,7 @@ const products = [
     active: true,
     short:
       "A private reflective entry point that helps you see what is already present in your own words.",
-    action: "Choose Recognition",
+    action: "Enter Recognition",
     full: [
       "Recognition begins with what already has your attention.",
       "You respond to a carefully sequenced set of prompts in your own words, creating enough material for the system to reflect the pattern taking shape.",
@@ -42,7 +42,7 @@ const products = [
     active: true,
     short:
       "Turn self-awareness into one executable next step. Clarity. Direction. Execution.",
-    action: "Choose Compass",
+    action: "Enter Compass",
     full: [
       "The Compass is for the moment after awareness, when you know something matters but still do not know what to do next.",
       "It helps you move from scattered goals into one clear priority, then takes you deeper into why it matters.",
