@@ -4,6 +4,11 @@ import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import {
+  RESONANCE_LAUNCH_LABEL,
+  RESONANCE_LAUNCH_PRICE,
+  RESONANCE_REGULAR_PRICE,
+} from "@/src/lib/resonance/resonance-pricing";
+import {
   getActiveResonanceRun,
   getResonanceWeekRuns,
 } from "@/src/lib/resonance/resonance-week-run";
@@ -168,13 +173,28 @@ export default async function ResonancePurchasePage({ searchParams }: Props) {
                 </p>
                 <p className="mt-2 text-2xl text-zinc-100">One seven-day visit</p>
               </div>
-              <p className="text-2xl text-[#c8a96a]">$5</p>
+
+              <div className="text-right">
+                <p className="text-xs uppercase tracking-[0.18em] text-[#c8a96a]/70">
+                  {RESONANCE_LAUNCH_LABEL}
+                </p>
+                <div className="mt-1 flex items-baseline justify-end gap-3">
+                  <span className="text-sm text-zinc-500 line-through">
+                    {RESONANCE_REGULAR_PRICE}
+                  </span>
+                  <span className="text-3xl text-[#c8a96a]">
+                    {RESONANCE_LAUNCH_PRICE}
+                  </span>
+                </div>
+              </div>
             </div>
 
             <p className="mt-5 text-sm leading-7 text-zinc-300">
-              This purchase opens one fresh seven-day visit to {week.title}. When the
-              visit closes, your daily reflections, 2Q answers, and cumulative Mirror
-              remain available in your archive.
+              This purchase opens one fresh seven-day visit to {week.title}. Each day
+              moves through private reflections, a Daily Mirror, and 2Q. Day 7 also
+              opens a Closing Mirror across the full visit. When the visit closes,
+              your reflections, Mirrors, and 2Q answers remain available in your
+              archive.
             </p>
 
             {completedRuns.length > 0 ? (
@@ -191,7 +211,7 @@ export default async function ResonancePurchasePage({ searchParams }: Props) {
                   href={checkoutHref}
                   className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10"
                 >
-                  Purchase {week.title} · $5
+                  Purchase {week.title} · {RESONANCE_LAUNCH_PRICE}
                 </a>
               ) : (
                 <span className="inline-flex rounded-xl border border-white/10 px-5 py-3 text-sm text-zinc-500">
