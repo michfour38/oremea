@@ -12,6 +12,7 @@ import MirrorCard from "./mirror-card";
 import MemberNav from "../member-nav";
 import MirrorOutput from "../mirror/mirror-output";
 import AutoScrollToMirror from "./auto-scroll-to-mirror";
+import ResonanceInputFocus from "./resonance-input-focus";
 
 export const dynamic = "force-dynamic";
 
@@ -130,7 +131,13 @@ export default async function ResonancePage() {
       : null;
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden text-white">
+    <main
+      data-resonance-root="true"
+      className="relative min-h-screen overflow-x-hidden text-white"
+      style={{ caretColor: "#C8A96A" }}
+    >
+      <ResonanceInputFocus />
+
       <div
         className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat md:hidden"
         style={{ backgroundImage: `url(${backgrounds.mobile})` }}
