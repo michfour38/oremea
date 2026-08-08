@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import type { ResonancePromptDTO } from "@/src/lib/resonance/getCurrentDayContent";
+import {
+  formatResonanceSaveError,
+  saveResonanceReflection,
+} from "./save-reflection-client";
 
 interface PromptCardProps {
   prompt: ResonancePromptDTO;
@@ -41,31 +45,19 @@ export default function PromptCard({ prompt }: PromptCardProps) {
     setSubmitError("");
 
     try {
-      const request = await fetch("/api/resonance/reflections", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ promptId, response }),
-        cache: "no-store",
-      });
+      const result = await saveResonanceReflection({ promptId, response });
 
-      const result = await request.json().catch(() => null);
-
-      if (!request.ok || !result?.ok) {
-        setSubmitError(
-          result?.error ??
-            `This reflection could not be saved (HTTP ${request.status}). Please try again.`,
-        );
+      if (!result.ok) {
+        setSubmitError(formatResonanceSaveError(result));
         return;
       }
 
       setShowEdit(false);
       router.refresh();
     } catch (error) {
-      console.error("Resonance reflection save failed:", error);
+      console.error("Resonance reflection save request failed:", error);
       setSubmitError(
-        "The save request could not reach Resonance. Please try again.",
+        "The save request could not reach Resonance. [CLIENT_NETWORK]",
       );
     } finally {
       setIsSubmitting(false);
