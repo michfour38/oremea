@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import type { ResonancePromptDTO } from "@/src/lib/resonance/getCurrentDayContent";
@@ -28,8 +28,6 @@ export default function PromptCard({ prompt }: PromptCardProps) {
   const [showEdit, setShowEdit] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const incompleteCardRef = useRef<HTMLDivElement>(null);
-  const incompleteTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   async function handleSubmit(formData: FormData) {
     if (isSubmitting) return;
@@ -65,25 +63,6 @@ export default function PromptCard({ prompt }: PromptCardProps) {
     }
   }
 
-  useEffect(() => {
-    if (prompt.isCompleted || !prompt.isUnlocked) return;
-
-    const node = incompleteCardRef.current;
-    const textarea = incompleteTextareaRef.current;
-    if (!node) return;
-
-    const timer = window.setTimeout(() => {
-      node.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-
-      textarea?.focus({ preventScroll: true });
-    }, 150);
-
-    return () => window.clearTimeout(timer);
-  }, [prompt.isCompleted, prompt.isUnlocked, prompt.id]);
-
   if (!prompt.isUnlocked) {
     return (
       <div className="rounded-3xl border border-zinc-800 bg-black/45 px-6 py-6 opacity-65 backdrop-blur-[2px]">
@@ -96,21 +75,18 @@ export default function PromptCard({ prompt }: PromptCardProps) {
 
   if (!prompt.isCompleted) {
     return (
-      <div
-        ref={incompleteCardRef}
-        className="space-y-5 rounded-3xl border border-zinc-700 bg-black/55 px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.24)] backdrop-blur-[3px]"
-      >
+      <div className="space-y-5 rounded-3xl border border-zinc-700 bg-black/55 px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.24)] backdrop-blur-[3px]">
         <p className="text-base leading-7 text-zinc-100">{prompt.content}</p>
 
         <form action={handleSubmit} className="space-y-4">
           <input type="hidden" name="promptId" value={prompt.id} />
 
           <textarea
-            ref={incompleteTextareaRef}
+            data-resonance-input="true"
             name="response"
             placeholder="Write what feels true for you..."
             rows={4}
-            className="w-full resize-none rounded-2xl border border-zinc-700 bg-black/70 px-4 py-3 text-sm leading-7 text-zinc-100 placeholder:text-zinc-500 focus:border-[#C8A96A]/65 focus:outline-none focus:ring-1 focus:ring-[#C8A96A]/35"
+            className="w-full resize-none rounded-2xl border border-zinc-700 bg-black/70 px-4 py-3 text-sm leading-7 text-zinc-100 caret-[#C8A96A] placeholder:text-zinc-500 focus:border-[#C8A96A]/65 focus:outline-none focus:ring-1 focus:ring-[#C8A96A]/35"
           />
 
           {submitError ? (
@@ -145,10 +121,11 @@ export default function PromptCard({ prompt }: PromptCardProps) {
           <input type="hidden" name="promptId" value={prompt.id} />
 
           <textarea
+            data-resonance-input="true"
             name="response"
             defaultValue={prompt.response ?? ""}
             rows={4}
-            className="w-full resize-none rounded-2xl border border-zinc-700 bg-black/70 px-4 py-3 text-sm leading-7 text-zinc-100 placeholder:text-zinc-500 focus:border-[#C8A96A]/65 focus:outline-none focus:ring-1 focus:ring-[#C8A96A]/35"
+            className="w-full resize-none rounded-2xl border border-zinc-700 bg-black/70 px-4 py-3 text-sm leading-7 text-zinc-100 caret-[#C8A96A] placeholder:text-zinc-500 focus:border-[#C8A96A]/65 focus:outline-none focus:ring-1 focus:ring-[#C8A96A]/35"
           />
 
           {submitError ? (
