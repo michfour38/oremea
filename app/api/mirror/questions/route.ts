@@ -10,49 +10,138 @@ import {
 } from "@/src/lib/resonance/resonance-run-data";
 import { getActiveResonanceRun } from "@/src/lib/resonance/resonance-week-run";
 
-function parseQuestions(output: string) {
-  return output
-    .split("\n")
-    .map((line: string) =>
-      line
-        .trim()
-        .replace(/^[-•]\s*/, "")
-        .replace(/^\d+[\).\s-]+/, "")
-        .trim(),
-    )
-    .filter((line: string) => line.includes("?"))
-    .slice(0, 2);
+type PriorReflectionRow = {
+  day_number: number;
+  response: string;
+};
+
+type DailyMirrorSynthesis = {
+  dailyMirror: string;
+  questions: [string, string];
+};
+
+function dailyMirrorFromSnapshot(snapshot: unknown) {
+  if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) {
+    return "";
+  }
+
+  const value = (snapshot as Record<string, unknown>).dailyMirror;
+  return typeof value === "string" ? value.trim() : "";
 }
 
-async function callQuestionAPI(reflections: string[]) {
+function parseDailyMirror(output: string): DailyMirrorSynthesis | null {
+  const mirror = output.match(/<mirror>\s*([\s\S]*?)\s*<\/mirror>/i)?.[1]?.trim();
+  const questionOne = output
+    .match(/<question_one>\s*([\s\S]*?)\s*<\/question_one>/i)?.[1]
+    ?.trim();
+  const questionTwo = output
+    .match(/<question_two>\s*([\s\S]*?)\s*<\/question_two>/i)?.[1]
+    ?.trim();
+
+  if (!mirror || !questionOne || !questionTwo) return null;
+  if (!questionOne.includes("?") || !questionTwo.includes("?")) return null;
+
+  return {
+    dailyMirror: mirror,
+    questions: [questionOne, questionTwo],
+  };
+}
+
+async function getPriorRunReflections(
+  runId: string,
+  weekNumber: number,
+  dayNumber: number,
+) {
+  if (dayNumber <= 1) return [];
+
+  const rows = await prisma.$queryRaw<PriorReflectionRow[]>`
+    SELECT
+      d."day_number",
+      c."response"
+    FROM "prompt_completions" c
+    JOIN "day_prompts" p ON p."id" = c."prompt_id"
+    JOIN "journey_days" d ON d."id" = p."day_id"
+    JOIN "journey_weeks" w ON w."id" = d."week_id"
+    WHERE c."run_id" = ${runId}::uuid
+      AND w."week_number" = ${weekNumber}
+      AND d."day_number" < ${dayNumber}
+    ORDER BY d."day_number" ASC, p."prompt_order" ASC
+  `;
+
+  return rows
+    .map((row) => row.response?.trim())
+    .filter((value): value is string => Boolean(value))
+    .slice(-24);
+}
+
+async function callDailyMirrorAPI(params: {
+  reflections: string[];
+  priorReflections: string[];
+  dayNumber: number;
+}) {
+  const { reflections, priorReflections, dayNumber } = params;
+
   const prompt = `
-You are generating exactly TWO Resonance guiding reflection questions.
+You are the Resonance Daily Mirror.
 
 Resonance means: Help me stay with myself.
-Use only the participant's reflections from the day that just closed.
+The participant has completed Day ${dayNumber}. Your job is to read the whole day, reflect what is becoming visible, and then end with exactly TWO questions that arise from that reflection.
 
 ${OREMEA_EVIDENCE_BOUNDARY}
 
+THIS IS A MIRROR, NOT A QUESTION GENERATOR.
+The reflection is the main event. The two questions come at the end because the Mirror has already noticed something worth staying with.
+
+MIRROR JOB
+- read the participant's current-day reflections together, not as isolated answers
+- notice repetition, contrast, sequence, behaviour, cues, choices, language changes, and tensions that are directly supported by what they wrote
+- begin from the most alive, specific, revealing, or surprising detail in today's actual language
+- connect details when the participant's own material supports the connection
+- name a real pattern plainly when it is visible; do not dilute a clear observation into vague therapeutic language
+- distinguish what appears to be recurring from what seems newly visible today
+- notice where the participant describes one thing they want while their own behaviour or wording shows another movement, but only when that tension is actually present
+- preserve paradox instead of resolving it for them
+- where an interpretation goes beyond literal wording, make it visibly tentative rather than presenting it as fact
+- write with enough substance that the participant can recognise the day from a new angle
+
+VOICE
+- grounded, intelligent, direct, human
+- psychologically observant without diagnosing
+- warm without soothing everything
+- precise rather than polite
+- no generic affirmations
+- no coaching slogans
+- no mystical filler
+- no clinical language
+- do not default to validation, belonging, safety, worth, boundaries, attachment, or nervous-system language unless the participant actually supplied that material
+- do not turn every observation into a compliment
+- do not explain the participant to themselves as though you know them better than they do
+
+DEPTH
+Write a substantial Daily Mirror, usually 5-8 paragraphs and roughly 450-700 words when today's material supports that depth. Do not pad thin material merely to hit a length. Use short quoted phrases from the participant only when they sharpen the observation.
+
 QUESTION JOB
-- begin from what is fresh, alive, specific, corrected, contrasted, or newly visible in today's actual writing
-- let a precise phrase or distinction in their language guide the question before reaching for a broad pattern
-- ask what helps the participant notice more of what is already present
-- when two truths are both present, allow both to remain present instead of manufacturing a contradiction
-- ask about a tension only when the participant's own writing actually supports that tension
-- do not insert a motive, diagnosis, hidden need, identity, causal explanation, or conclusion into the question
-- do not make the question prove an interpretation the model invented
-- do not summarize the participant before asking
-- do not generate a Mirror synthesis
-- do not coach toward action; Resonance stays with recognition
-- do not use generic self-help language
-- do not ask "how do you feel?" or "what does this mean to you?"
+After the Mirror, ask exactly two questions.
+- each question must grow directly from something the Mirror just named
+- each must open an unresolved edge rather than merely ask the participant to repeat what they already said
+- at least one should press gently but clearly on the strongest supported tension, contradiction, or self-observation in today's material when one exists
+- avoid "how do you feel?" and "what does this mean to you?"
+- do not smuggle an unsupported motive or diagnosis into the premise
+- make the participant stop and look again
 
-Return exactly two questions and nothing else.
-Each question must be specific to the participant's actual reflections.
-Each question should open one clear doorway rather than contain several questions at once.
+PRIOR DAYS IN THIS SAME VISIT
+Use these only for continuity, recurrence, contrast, or change. Today's material remains foreground authority.
+${priorReflections.length ? priorReflections.join("\n\n") : "None yet."}
 
-TODAY'S PARTICIPANT REFLECTIONS:
+TODAY'S PARTICIPANT REFLECTIONS
 ${reflections.join("\n\n")}
+
+Return exactly this structure and nothing else:
+<mirror>
+Your substantial Daily Mirror reflection here.
+</mirror>
+<question_one>Your first precise question?</question_one>
+<question_two>Your second precise question?</question_two>
 `.trim();
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -64,7 +153,7 @@ ${reflections.join("\n\n")}
     },
     body: JSON.stringify({
       model: "claude-sonnet-4-5-20250929",
-      max_tokens: 350,
+      max_tokens: 1500,
       messages: [{ role: "user", content: prompt }],
     }),
   });
@@ -72,7 +161,7 @@ ${reflections.join("\n\n")}
   const data = await res.json();
 
   if (!res.ok) {
-    console.error("2Q API error:", data);
+    console.error("Daily Mirror API error:", data);
     return null;
   }
 
@@ -84,8 +173,7 @@ ${reflections.join("\n\n")}
         .trim()
     : "";
 
-  const questions = parseQuestions(text);
-  return questions.length === 2 ? questions : null;
+  return parseDailyMirror(text);
 }
 
 async function assertActiveCompletedDay(
@@ -146,15 +234,24 @@ async function assertActiveCompletedDay(
 function guidancePayload(
   guidance: Awaited<ReturnType<typeof getRunGuidance>>,
 ) {
+  const dailyMirror = guidance
+    ? dailyMirrorFromSnapshot(guidance.inputSnapshot)
+    : "";
+
   return {
-    questions: guidance
-      ? [guidance.questionOne, guidance.questionTwo]
-      : [],
-    answers: guidance
-      ? [guidance.answerOne ?? "", guidance.answerTwo ?? ""]
-      : [],
+    dailyMirror,
+    questions:
+      guidance && dailyMirror
+        ? [guidance.questionOne, guidance.questionTwo]
+        : [],
+    answers:
+      guidance && dailyMirror
+        ? [guidance.answerOne ?? "", guidance.answerTwo ?? ""]
+        : [],
     answered: Boolean(
-      guidance?.answerOne?.trim() && guidance?.answerTwo?.trim(),
+      dailyMirror &&
+        guidance?.answerOne?.trim() &&
+        guidance.answerTwo?.trim(),
     ),
   };
 }
@@ -164,7 +261,7 @@ export async function GET(request: Request) {
 
   if (!userId) {
     return NextResponse.json(
-      { questions: [], answers: [], answered: false },
+      { dailyMirror: "", questions: [], answers: [], answered: false },
       { status: 401 },
     );
   }
@@ -175,7 +272,7 @@ export async function GET(request: Request) {
 
   if (!weekNumber || !dayNumber) {
     return NextResponse.json(
-      { questions: [], answers: [], answered: false },
+      { dailyMirror: "", questions: [], answers: [], answered: false },
       { status: 400 },
     );
   }
@@ -183,7 +280,7 @@ export async function GET(request: Request) {
   const activeRun = await getActiveResonanceRun(userId);
   if (!activeRun || activeRun.weekNumber !== weekNumber) {
     return NextResponse.json(
-      { questions: [], answers: [], answered: false },
+      { dailyMirror: "", questions: [], answers: [], answered: false },
       { status: 400 },
     );
   }
@@ -216,7 +313,7 @@ export async function POST(request: Request) {
   }
 
   const existing = await getRunGuidance(activeRun.id, dayNumber);
-  if (existing) {
+  if (existing && dailyMirrorFromSnapshot(existing.inputSnapshot)) {
     return NextResponse.json(guidancePayload(existing));
   }
 
@@ -228,54 +325,83 @@ export async function POST(request: Request) {
 
   if (!completedDay) {
     return NextResponse.json(
-      { error: "Complete the current day before generating questions" },
+      { error: "Complete the current day before opening today's Mirror" },
       { status: 400 },
     );
   }
 
-  const questions = await callQuestionAPI(completedDay.reflections);
+  const priorReflections = await getPriorRunReflections(
+    completedDay.runId,
+    weekNumber,
+    dayNumber,
+  );
 
-  if (!questions) {
+  const synthesis = await callDailyMirrorAPI({
+    reflections: completedDay.reflections,
+    priorReflections,
+    dayNumber,
+  });
+
+  if (!synthesis) {
     return NextResponse.json(
-      { error: "Could not generate questions" },
+      { error: "Today's Mirror could not be generated. Please try again." },
       { status: 500 },
     );
   }
 
   const inputSnapshot = JSON.stringify({
-    type: "two_questions",
+    type: "daily_mirror_2q",
     runId: completedDay.runId,
     reflections: completedDay.reflections,
-    questions,
+    priorReflections,
+    dailyMirror: synthesis.dailyMirror,
+    questions: synthesis.questions,
   });
 
-  await prisma.$executeRaw`
-    INSERT INTO "resonance_day_guidance" (
-      "user_id",
-      "week_number",
-      "day_number",
-      "run_id",
-      "question_one",
-      "question_two",
-      "input_snapshot",
-      "generated_at",
-      "created_at",
-      "updated_at"
-    )
-    VALUES (
-      ${userId},
-      ${weekNumber},
-      ${dayNumber},
-      ${completedDay.runId}::uuid,
-      ${questions[0]},
-      ${questions[1]},
-      ${inputSnapshot}::jsonb,
-      CURRENT_TIMESTAMP,
-      CURRENT_TIMESTAMP,
-      CURRENT_TIMESTAMP
-    )
-    ON CONFLICT ("run_id", "day_number") DO NOTHING
-  `;
+  if (existing) {
+    await prisma.$executeRaw`
+      UPDATE "resonance_day_guidance"
+      SET
+        "question_one" = ${synthesis.questions[0]},
+        "question_two" = ${synthesis.questions[1]},
+        "answer_one" = NULL,
+        "answer_two" = NULL,
+        "answered_at" = NULL,
+        "input_snapshot" = ${inputSnapshot}::jsonb,
+        "generated_at" = CURRENT_TIMESTAMP,
+        "updated_at" = CURRENT_TIMESTAMP
+      WHERE "run_id" = ${completedDay.runId}::uuid
+        AND "day_number" = ${dayNumber}
+    `;
+  } else {
+    await prisma.$executeRaw`
+      INSERT INTO "resonance_day_guidance" (
+        "user_id",
+        "week_number",
+        "day_number",
+        "run_id",
+        "question_one",
+        "question_two",
+        "input_snapshot",
+        "generated_at",
+        "created_at",
+        "updated_at"
+      )
+      VALUES (
+        ${userId},
+        ${weekNumber},
+        ${dayNumber},
+        ${completedDay.runId}::uuid,
+        ${synthesis.questions[0]},
+        ${synthesis.questions[1]},
+        ${inputSnapshot}::jsonb,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+      )
+      ON CONFLICT ("run_id", "day_number") DO NOTHING
+    `;
+  }
 
   const created = await getRunGuidance(completedDay.runId, dayNumber);
   return NextResponse.json(guidancePayload(created));
@@ -329,9 +455,9 @@ export async function PATCH(request: Request) {
   }
 
   const guidance = await getRunGuidance(completedDay.runId, dayNumber);
-  if (!guidance) {
+  if (!guidance || !dailyMirrorFromSnapshot(guidance.inputSnapshot)) {
     return NextResponse.json(
-      { error: "Generate today's 2Q before answering it" },
+      { error: "Open today's Mirror before answering its 2Q" },
       { status: 400 },
     );
   }
@@ -348,6 +474,7 @@ export async function PATCH(request: Request) {
   `;
 
   return NextResponse.json({
+    dailyMirror: dailyMirrorFromSnapshot(guidance.inputSnapshot),
     questions: [guidance.questionOne, guidance.questionTwo],
     answers: [answerOne, answerTwo],
     answered: true,
