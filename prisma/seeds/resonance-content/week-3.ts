@@ -32,7 +32,7 @@ export const WEEK_3: ResonanceWeekSeed = {
           prompt_order: 4,
           type: "thread_prompt",
           label: null,
-          content: "What kind of help do you tend to notice most when nobody is doing it?",
+          content: "What is something someone does for you that you only realise helps when they stop doing it?",
         },
         {
           prompt_order: 5,
