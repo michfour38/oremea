@@ -252,16 +252,7 @@ export default function MirrorOutput({
                 ))}
             </div>
 
-            <div className="space-y-2 border-t border-[#C8A96A]/20 pt-6">
-              <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#C8A96A]">
-                2Q
-              </p>
-              <p className="text-sm leading-7 text-zinc-400">
-                Stay with what the Mirror has opened.
-              </p>
-            </div>
-
-            <div className="space-y-6">
+            <div className="space-y-6 border-t border-[#C8A96A]/20 pt-6">
               <div className="space-y-3">
                 <p className="text-base leading-8 text-zinc-100">{questions[0]}</p>
                 <textarea
