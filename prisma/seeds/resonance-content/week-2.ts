@@ -32,7 +32,7 @@ export const WEEK_2: ResonanceWeekSeed = {
           prompt_order: 4,
           type: "thread_prompt",
           label: null,
-          content: "Think of the thing you often do in conversations. What does that leave the other person doing—or not needing to do?",
+          content: "Think of the thing you often do in conversations. When you do that, what does the other person usually do less of, or leave for you to handle?",
         },
         {
           prompt_order: 5,
@@ -131,7 +131,7 @@ export const WEEK_2: ResonanceWeekSeed = {
           prompt_order: 3,
           type: "thread_prompt",
           label: null,
-          content: "What does doing that leave less room for—from you or from the other person?",
+          content: "When you keep doing that, what do you or the other person end up doing less of?",
         },
         {
           prompt_order: 4,
@@ -160,7 +160,7 @@ export const WEEK_2: ResonanceWeekSeed = {
           prompt_order: 2,
           type: "thread_prompt",
           label: null,
-          content: "Think of a time you meant one thing but the result landed differently. How could you tell?",
+          content: "Think of a time you meant one thing, but what happened was different from what you intended. How could you tell?",
         },
         {
           prompt_order: 3,
