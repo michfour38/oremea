@@ -1,0 +1,103 @@
+.recognition-theme {
+  --oremea-bg: #0a0a0a;
+  --oremea-surface: #111111;
+  --oremea-surface-deep: #0c0c0c;
+  --oremea-text: #f3f0ea;
+  --oremea-copy: #d4d4d4;
+  --oremea-muted: #a3a3a3;
+  --oremea-border: #3f3f46;
+  --oremea-gold: #c8a96a;
+}
+
+/*
+  Oremea visual hard rule:
+  warm gold is an accent, never body copy. Recognition must stay black/neutral,
+  with one gold only: #c8a96a.
+*/
+.recognition-theme main {
+  background: var(--oremea-bg) !important;
+  color: var(--oremea-text) !important;
+}
+
+.recognition-theme [class*="bg-[#11100D]"],
+.recognition-theme [class*="bg-[#14110B]"],
+.recognition-theme [class*="bg-[#0C0B08]"],
+.recognition-theme [class*="bg-[#1A140A]"] {
+  background-color: var(--oremea-surface) !important;
+}
+
+.recognition-theme [class*="border-[#4A3D25]"],
+.recognition-theme [class*="border-[#5C4A2B]"],
+.recognition-theme [class*="border-[#8E7140]"],
+.recognition-theme [class*="border-[#6D552D]"],
+.recognition-theme [class*="border-[#2A2418]"] {
+  border-color: var(--oremea-border) !important;
+}
+
+/* Neutralise the old beige/yellow copy palette. */
+.recognition-theme [class*="text-[#E2D8C5]"],
+.recognition-theme [class*="text-[#D8D0C0]"],
+.recognition-theme [class*="text-[#C9B98F]"],
+.recognition-theme [class*="text-[#B6A477]"],
+.recognition-theme [class*="text-[#BFBFBF]"],
+.recognition-theme [class*="text-[#B9B0A2]"],
+.recognition-theme [class*="text-[#B59A60]"] {
+  color: var(--oremea-copy) !important;
+}
+
+.recognition-theme h1,
+.recognition-theme h2,
+.recognition-theme h3 {
+  color: var(--oremea-text) !important;
+}
+
+.recognition-theme p {
+  color: var(--oremea-copy);
+}
+
+/* Micro labels may carry the single Oremea gold accent. */
+.recognition-theme p.text-xs[class*="tracking"] {
+  color: var(--oremea-gold) !important;
+}
+
+/* One gold only. Retire the previous yellow/gold variants. */
+.recognition-theme [class*="text-[#D6B97A]"],
+.recognition-theme [class*="text-[#C6A96B]"] {
+  color: var(--oremea-gold) !important;
+}
+
+.recognition-theme [class*="border-[#D6B97A]"],
+.recognition-theme [class*="border-[#C6A96B]"] {
+  border-color: var(--oremea-gold) !important;
+}
+
+.recognition-theme [class*="bg-[#D6B97A]"],
+.recognition-theme [class*="bg-[#C6A96B]"] {
+  background-color: var(--oremea-gold) !important;
+}
+
+.recognition-theme textarea,
+.recognition-theme input {
+  background: var(--oremea-surface-deep) !important;
+  border-color: #52525b !important;
+  color: var(--oremea-text) !important;
+  box-shadow: none !important;
+}
+
+.recognition-theme textarea::placeholder,
+.recognition-theme input::placeholder {
+  color: var(--oremea-muted) !important;
+  opacity: 1;
+}
+
+.recognition-theme textarea:focus,
+.recognition-theme input:focus {
+  border-color: var(--oremea-gold) !important;
+  box-shadow: 0 0 0 1px rgba(200, 169, 106, 0.28) !important;
+}
+
+.recognition-theme button:not(:disabled):focus-visible,
+.recognition-theme a:focus-visible {
+  outline: 2px solid var(--oremea-gold);
+  outline-offset: 3px;
+}
