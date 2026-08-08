@@ -62,30 +62,50 @@
 .recognition-theme h3,
 .recognition-theme [class*="text-white"],
 .recognition-theme [class*="text-zinc-"],
-.recognition-theme [class*="text-[#F3F0EA]"],
-.recognition-theme [class*="text-[#EAEAEA]"],
-.recognition-theme [class*="text-[#E2D8C5]"],
-.recognition-theme [class*="text-[#D8D0C0]"],
-.recognition-theme [class*="text-[#C9B98F]"],
-.recognition-theme [class*="text-[#BFBFBF]"],
-.recognition-theme [class*="text-[#B9B0A2]"],
-.recognition-theme [class*="text-[#B6A477]"],
-.recognition-theme [class*="text-[#B59A60]"],
-.recognition-theme [class*="text-[#9A9285]"] {
+.recognition-theme [class~="text-[#F3F0EA]"],
+.recognition-theme [class~="text-[#EAEAEA]"],
+.recognition-theme [class~="text-[#E2D8C5]"],
+.recognition-theme [class~="text-[#D8D0C0]"],
+.recognition-theme [class~="text-[#C9B98F]"],
+.recognition-theme [class~="text-[#BFBFBF]"],
+.recognition-theme [class~="text-[#B9B0A2]"],
+.recognition-theme [class~="text-[#B6A477]"],
+.recognition-theme [class~="text-[#B59A60]"],
+.recognition-theme [class~="text-[#9A9285]"] {
   color: var(--recognition-zinc) !important;
 }
 
 /* Small tracked labels are structural, so they get the single gold. */
 .recognition-theme p.text-xs[class*="tracking"],
-.recognition-theme [class*="text-[#C8A96A]"],
-.recognition-theme [class*="text-[#c8a96a]"],
-.recognition-theme [class*="text-[#C6A96B]"],
-.recognition-theme [class*="text-[#D6B97A]"],
-.recognition-theme [class*="text-[#f1dfb4]"],
-.recognition-theme [class*="text-[#E7C98B]"],
-.recognition-theme [class*="text-[#d8b15f]"],
-.recognition-theme [class*="text-[#A88A4A]"] {
+.recognition-theme [class~="text-[#C8A96A]"],
+.recognition-theme [class~="text-[#c8a96a]"],
+.recognition-theme [class~="text-[#C6A96B]"],
+.recognition-theme [class~="text-[#D6B97A]"],
+.recognition-theme [class~="text-[#f1dfb4]"],
+.recognition-theme [class~="text-[#E7C98B]"],
+.recognition-theme [class~="text-[#d8b15f]"],
+.recognition-theme [class~="text-[#A88A4A]"] {
   color: var(--recognition-gold) !important;
+}
+
+/* Give structural labels a quiet reading rail without colouring the body copy. */
+.recognition-theme p.mb-6.text-xs[class*="tracking"],
+.recognition-theme p.mb-8.text-xs[class*="tracking"] {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.recognition-theme p.mb-6.text-xs[class*="tracking"]::after,
+.recognition-theme p.mb-8.text-xs[class*="tracking"]::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--recognition-gold) 32%, transparent),
+    transparent
+  );
 }
 
 /* Keep the actual reading material equally available to the eye. */
