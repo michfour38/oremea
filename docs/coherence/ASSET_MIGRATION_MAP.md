@@ -24,10 +24,18 @@ Create a single traceable path from Canva master artwork to runtime assets witho
 | 10 | `works-lockup-tagline` | WORKS lockup with tagline |
 | 11 | `works-primary-logo` | Primary WORKS brand logo |
 | 12 | `sustain-primary-logo` | Primary Sustain logo |
-| 13 | `sustain-logo-tagline` | Sustain logo with tagline |
+| 13 | `sustain-logo-tagline` | Sustain logo with Oremea attribution |
 | 14 | `sustain-lockup-stacked` | Stacked Sustain lockup |
 | 15 | `sustain-wordmark` | Sustain wordmark only |
 | 16 | `sustain-mark` | Sustain standalone tree mark |
+
+## Source export receipt — 2026-08-08
+
+Both requested export sets were received and inspected:
+- PNG: pages 7–16, transparent RGBA exports
+- SVG: pages 7–16, vector exports
+
+The filenames match the canonical names above. Visual inspection confirms the exported compositions are distinct and correctly named. The source-export gate is therefore cleared.
 
 ## Migration manifest
 
@@ -44,36 +52,45 @@ Harmonize also contains multiple PNG/WebP background pairs (`bg-harmonize-entry`
 
 | Canva source | Current runtime asset | Canonical target | Status | Action |
 |---|---|---|---|---|
-| `works-mark` | `public/works/works-mark.png` | `public/products/works/works-mark.<runtime-ext>` | Existing asset found | Compare to Canva page 7; migrate after reference check |
-| `works-lockup` | No exact canonical-named runtime file confirmed | `public/products/works/works-lockup.<runtime-ext>` | Export required | Export from Canva page 8 |
-| `works-lockup-powered` | No exact canonical-named runtime file confirmed | `public/products/works/works-lockup-powered.<runtime-ext>` | Export required | Export from Canva page 9 |
-| `works-lockup-tagline` | No exact canonical-named runtime file confirmed | `public/products/works/works-lockup-tagline.<runtime-ext>` | Export required | Export from Canva page 10 |
-| `works-primary-logo` | `public/works/works-logo.png` is a likely predecessor, visual equivalence not yet proven | `public/products/works/works-primary-logo.<runtime-ext>` | Compare/export required | Compare current file to Canva page 11; use Canva export as canonical if different |
+| `works-mark` | `public/works/works-mark.png` | `public/products/works/works-mark.svg` + `.png` | Source received | Add canonical pair; retain legacy path until references are resolved |
+| `works-lockup` | No exact canonical-named runtime file confirmed | `public/products/works/works-lockup.svg` + `.png` | Source received | Add canonical pair |
+| `works-lockup-powered` | No exact canonical-named runtime file confirmed | `public/products/works/works-lockup-powered.svg` + `.png` | Source received | Add canonical pair |
+| `works-lockup-tagline` | No exact canonical-named runtime file confirmed | `public/products/works/works-lockup-tagline.svg` + `.png` | Source received | Add canonical pair |
+| `works-primary-logo` | `public/works/works-logo.png` is a predecessor | `public/products/works/works-primary-logo.svg` + `.png` | Source received | Add canonical pair; retain predecessor until references are resolved |
+
+Current branch inspection shows `public/works/works-logo.png` and `public/works/works-mark.png` are the only files presently in the legacy WORKS directory. No legacy deletion is part of this batch until reference resolution is conclusive.
 
 ### Sustain — standalone repository
 
-Full brand source target:
+Canonical brand source target:
 
 ```text
 assets/
   brand/
-    sustain-primary-logo.<ext>
-    sustain-logo-tagline.<ext>
-    sustain-lockup-stacked.<ext>
-    sustain-wordmark.<ext>
-    sustain-mark.<ext>
+    sustain-primary-logo.svg
+    sustain-primary-logo.png
+    sustain-logo-tagline.svg
+    sustain-logo-tagline.png
+    sustain-lockup-stacked.svg
+    sustain-lockup-stacked.png
+    sustain-wordmark.svg
+    sustain-wordmark.png
+    sustain-mark.svg
+    sustain-mark.png
 ```
 
-Current Expo scaffold assets are still generic:
+Actual Expo scaffold paths on `feature/sustain-v1` / `chore/coherence-standardization` are:
 
 ```text
-assets/adaptive-icon.png
-assets/favicon.png
 assets/icon.png
+assets/android-icon-foreground.png
+assets/android-icon-background.png
+assets/android-icon-monochrome.png
+assets/favicon.png
 assets/splash-icon.png
 ```
 
-Do not overwrite these directly with the Canva files. First derive platform-safe icon/splash assets from `sustain-mark`/`sustain-primary-logo` at Expo-required dimensions and safe zones.
+`app.json` currently references the first five of these directly. Platform-safe derivatives have been prepared from the canonical `sustain-mark`; the splash derivative is prepared for coherence even though the current `app.json` has no splash-screen plugin entry.
 
 Oremea should later receive only the Sustain presentation asset(s) it actually renders, under:
 
@@ -83,21 +100,36 @@ public/products/sustain/
 
 rather than duplicating the entire standalone brand set.
 
+## Runtime derivative rules used for Sustain
+
+- iOS/general app icon: opaque 1024×1024 canvas with the canonical Sustain mark centered inside a safe margin.
+- Android foreground: transparent 1024×1024 canvas with a conservative adaptive-icon safe footprint.
+- Android background: opaque 1024×1024 neutral white field.
+- Android monochrome: alpha silhouette derived from the same canonical mark geometry.
+- Web favicon: transparent 512×512 derivative from the canonical mark.
+- Splash icon: transparent 1024×1024 mark derivative.
+
+No redraw or alternate logo interpretation was introduced.
+
 ## Reference status
 
-Repository code search did not return reliable results for `works-logo`, `works-mark`, or `harmonize-bowl.webp`; this is not sufficient evidence that the assets are unused. Reference resolution remains required before any deletion/move.
+Repository code search did not return reliable results for legacy WORKS filenames. This is not sufficient evidence that the assets are unused. Legacy files therefore remain in place until reference resolution is proven from the target branch/runtime.
 
 ## Current safe boundary
 
-Ready now:
-- canonical names are settled
-- target directories are settled
-- obvious current asset families are inventoried
-- Sustain ownership boundary is settled
+Completed:
+- canonical names settled
+- target directories settled
+- PNG and SVG source exports received and inspected
+- Sustain ownership boundary settled
+- Sustain runtime derivative set prepared
+- standalone Sustain migration branch created: `chore/coherence-standardization`
 
-Blocked until Canva exports are supplied:
-- WORKS pages 8–11 canonical runtime assets
-- Sustain pages 12–16 canonical source exports
-- exact visual comparison of existing WORKS logo to Canva primary logo
+Still required before deployment:
+- place the binary/vector asset batch into the two repositories
+- confirm/update live code references to canonical WORKS paths
+- validate Expo icon rendering on iOS/Android/web
+- remove legacy duplicates only after reference checks pass
+- run final build/test pass
 
 Do not deploy this migration incrementally. Complete the asset/reference batch, verify, then deploy once.
