@@ -70,7 +70,7 @@ async function getActiveResonancePosition(runId: string, activeWeek: number) {
   });
 
   if (!week?.is_published) {
-    throw new Error("The active Resonance week is not available.");
+    throw new Error("The active Resonance room is not available.");
   }
 
   const promptIds = week.resonance_days.flatMap((day) =>
@@ -90,8 +90,7 @@ async function getActiveResonancePosition(runId: string, activeWeek: number) {
       completionByPrompt.has(prompt.id),
     );
 
-    const allDone =
-      allPromptsDone && continuedDayNumbers.has(day.day_number);
+    const allDone = allPromptsDone && continuedDayNumbers.has(day.day_number);
 
     if (!allDone) {
       return {
@@ -196,11 +195,10 @@ export default async function ResonancePage() {
             <header className="space-y-3">
               {content ? (
                 <>
-                  <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
-                    Week {content.weekNumber} · Day {content.dayNumber}
+                  <p className="text-xs uppercase tracking-[0.22em] text-[#C8A96A]">
+                    Resonance · Day {content.dayNumber}
                   </p>
                   <h1 className="text-4xl text-white">{content.weekTitle}</h1>
-                  <p className="text-zinc-300">Resonance by Oremea</p>
                   <p className="text-zinc-400">{content.weekTheme}</p>
                 </>
               ) : (
