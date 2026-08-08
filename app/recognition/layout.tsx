@@ -1,5 +1,6 @@
 import Link from "next/link";
 import "./recognition-theme.css";
+import RecognitionInputFocus from "./recognition-input-focus";
 
 export default function RecognitionLayout({
   children,
@@ -7,7 +8,12 @@ export default function RecognitionLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="recognition-theme">
+    <div
+      className="recognition-theme"
+      data-recognition-root="true"
+      style={{ caretColor: "#D6B97A" }}
+    >
+      <RecognitionInputFocus />
       <Link
         href="https://www.oremea.com"
         target="_blank"
