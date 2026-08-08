@@ -50,6 +50,7 @@ export default function MirrorOutput({
   mirror,
   reflectionsCompleted,
 }: MirrorOutputProps) {
+  const [dailyMirror, setDailyMirror] = useState("");
   const [questions, setQuestions] = useState<string[]>([]);
   const [answerOne, setAnswerOne] = useState("");
   const [answerTwo, setAnswerTwo] = useState("");
@@ -63,9 +64,9 @@ export default function MirrorOutput({
   const isVisitClose = dayNumber === 7;
 
   useEffect(() => {
-    if (!reflectionsCompleted || questions.length > 0) return;
+    if (!reflectionsCompleted || dailyMirror) return;
 
-    async function loadSavedQuestions() {
+    async function loadSavedMirror() {
       try {
         const res = await fetch(
           `/api/mirror/questions?weekNumber=${weekNumber}&dayNumber=${dayNumber}`,
@@ -78,10 +79,24 @@ export default function MirrorOutput({
           setQuestionsError(
             typeof data?.error === "string"
               ? data.error
-              : "Today's 2Q could not be loaded. Please try again.",
+              : "Today's Mirror could not be loaded. Please try again.",
           );
           return;
         }
+
+        const reflection =
+          typeof data?.dailyMirror === "string" ? data.dailyMirror.trim() : "";
+
+        if (!reflection) {
+          setDailyMirror("");
+          setQuestions([]);
+          setAnswerOne("");
+          setAnswerTwo("");
+          setAnswersSaved(false);
+          return;
+        }
+
+        setDailyMirror(reflection);
 
         if (Array.isArray(data?.questions) && data.questions.length === 2) {
           setQuestions(data.questions);
@@ -95,13 +110,13 @@ export default function MirrorOutput({
 
         setAnswersSaved(data?.answered === true);
       } catch (error) {
-        console.error("Saved 2Q load failed:", error);
-        setQuestionsError("Today's 2Q could not be loaded. Please try again.");
+        console.error("Saved Daily Mirror load failed:", error);
+        setQuestionsError("Today's Mirror could not be loaded. Please try again.");
       }
     }
 
-    void loadSavedQuestions();
-  }, [dayNumber, questions.length, reflectionsCompleted, weekNumber]);
+    void loadSavedMirror();
+  }, [dailyMirror, dayNumber, reflectionsCompleted, weekNumber]);
 
   useEffect(() => {
     if (!isGeneratingMirror) return;
@@ -113,8 +128,8 @@ export default function MirrorOutput({
     return () => window.clearTimeout(timer);
   }, [isGeneratingMirror, weekNumber]);
 
-  async function generateQuestions() {
-    if (questionsLoading || questions.length > 0) return;
+  async function generateDailyMirror() {
+    if (questionsLoading || dailyMirror) return;
 
     setQuestionsLoading(true);
     setQuestionsError(null);
@@ -131,29 +146,33 @@ export default function MirrorOutput({
         throw new Error(
           typeof data?.error === "string"
             ? data.error
-            : "Today's 2Q could not be generated.",
+            : "Today's Mirror could not be generated.",
         );
       }
 
-      if (!Array.isArray(data?.questions) || data.questions.length !== 2) {
-        throw new Error("Today's 2Q returned incomplete questions.");
+      const reflection =
+        typeof data?.dailyMirror === "string" ? data.dailyMirror.trim() : "";
+
+      if (!reflection) {
+        throw new Error("Today's Mirror returned without its reflection.");
       }
 
+      if (!Array.isArray(data?.questions) || data.questions.length !== 2) {
+        throw new Error("Today's Mirror returned without both 2Q questions.");
+      }
+
+      setDailyMirror(reflection);
       setQuestions(data.questions);
       setQuestionsError(null);
-
-      if (Array.isArray(data?.answers) && data.answers.length === 2) {
-        setAnswerOne(typeof data.answers[0] === "string" ? data.answers[0] : "");
-        setAnswerTwo(typeof data.answers[1] === "string" ? data.answers[1] : "");
-      }
-
-      setAnswersSaved(data?.answered === true);
+      setAnswerOne("");
+      setAnswerTwo("");
+      setAnswersSaved(false);
     } catch (error) {
-      console.error("Questions generation failed:", error);
+      console.error("Daily Mirror generation failed:", error);
       setQuestionsError(
         error instanceof Error && error.message
           ? error.message
-          : "Today's 2Q could not be generated. Please try again.",
+          : "Today's Mirror could not be generated. Please try again.",
       );
     } finally {
       setQuestionsLoading(false);
@@ -178,9 +197,16 @@ export default function MirrorOutput({
         }),
       });
 
-      if (!res.ok) throw new Error("2Q answers could not be saved");
+      const data = await res.json().catch(() => null);
 
-      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(
+          typeof data?.error === "string"
+            ? data.error
+            : "Your 2Q could not be saved.",
+        );
+      }
+
       if (!Array.isArray(data?.answers) || data.answers.length !== 2) {
         throw new Error("2Q answer response was invalid");
       }
@@ -200,55 +226,82 @@ export default function MirrorOutput({
 
   return (
     <div className="space-y-6">
-      <section className="space-y-5 rounded-3xl border border-[#C8A96A]/30 bg-black/55 px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.22)] backdrop-blur-[3px]">
+      <section className="space-y-6 rounded-3xl border border-[#C8A96A]/30 bg-black/55 px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.22)] backdrop-blur-[3px]">
         <div className="space-y-2">
           <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#C8A96A]">
-            Today&apos;s 2Q
+            Today&apos;s Mirror
           </p>
           <p className="text-sm leading-7 text-zinc-400">
-            Two questions drawn directly from what you reflected today.
+            A reflection across what became visible today, followed by two questions to stay with.
           </p>
         </div>
 
-        {questions.length === 2 ? (
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <p className="text-sm leading-7 text-zinc-200">{questions[0]}</p>
-              <textarea
-                value={answerOne}
-                onChange={(event) => {
-                  setAnswerOne(event.target.value);
-                  setAnswersSaved(false);
-                }}
-                rows={4}
-                placeholder="Stay with this question..."
-                className="w-full resize-none rounded-2xl border border-zinc-700 bg-black/70 px-4 py-3 text-sm leading-7 text-zinc-100 placeholder:text-zinc-500 focus:border-[#C8A96A]/65 focus:outline-none focus:ring-1 focus:ring-[#C8A96A]/35"
-              />
+        {dailyMirror && questions.length === 2 ? (
+          <div className="space-y-8">
+            <div className="space-y-5 rounded-2xl border border-zinc-800 bg-black/45 px-5 py-5">
+              {cleanMirrorOutput(dailyMirror)
+                .split(/\n\s*\n/)
+                .filter(Boolean)
+                .map((paragraph, index) => (
+                  <p
+                    key={index}
+                    className="whitespace-pre-wrap text-base leading-8 text-zinc-200"
+                  >
+                    {paragraph}
+                  </p>
+                ))}
             </div>
 
-            <div className="space-y-3">
-              <p className="text-sm leading-7 text-zinc-200">{questions[1]}</p>
-              <textarea
-                value={answerTwo}
-                onChange={(event) => {
-                  setAnswerTwo(event.target.value);
-                  setAnswersSaved(false);
-                }}
-                rows={4}
-                placeholder="Stay with this question..."
-                className="w-full resize-none rounded-2xl border border-zinc-700 bg-black/70 px-4 py-3 text-sm leading-7 text-zinc-100 placeholder:text-zinc-500 focus:border-[#C8A96A]/65 focus:outline-none focus:ring-1 focus:ring-[#C8A96A]/35"
-              />
+            <div className="space-y-2 border-t border-[#C8A96A]/20 pt-6">
+              <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#C8A96A]">
+                2Q
+              </p>
+              <p className="text-sm leading-7 text-zinc-400">
+                Stay with what the Mirror has opened.
+              </p>
             </div>
 
-            <div className="flex flex-wrap items-center justify-end gap-3 pt-1">
-              <button
-                type="button"
-                onClick={() => void saveAnswers()}
-                disabled={answersSaving || !answerOne.trim() || !answerTwo.trim()}
-                className="inline-flex min-w-[110px] items-center justify-center rounded-xl border border-[#C8A96A]/55 bg-[#C8A96A]/15 px-4 py-2 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/20 disabled:cursor-not-allowed disabled:opacity-45"
-              >
-                {answersSaving ? <LoadingDots /> : answersSaved ? "Saved" : "Save 2Q"}
-              </button>
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <p className="text-base leading-8 text-zinc-100">{questions[0]}</p>
+                <textarea
+                  data-resonance-input="true"
+                  value={answerOne}
+                  onChange={(event) => {
+                    setAnswerOne(event.target.value);
+                    setAnswersSaved(false);
+                  }}
+                  rows={4}
+                  placeholder="Stay with this question..."
+                  className="w-full resize-none rounded-2xl border border-zinc-700 bg-black/70 px-4 py-3 text-sm leading-7 text-zinc-100 caret-[#C8A96A] placeholder:text-zinc-500 focus:border-[#C8A96A]/65 focus:outline-none focus:ring-1 focus:ring-[#C8A96A]/35"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-base leading-8 text-zinc-100">{questions[1]}</p>
+                <textarea
+                  data-resonance-input="true"
+                  value={answerTwo}
+                  onChange={(event) => {
+                    setAnswerTwo(event.target.value);
+                    setAnswersSaved(false);
+                  }}
+                  rows={4}
+                  placeholder="Stay with this question..."
+                  className="w-full resize-none rounded-2xl border border-zinc-700 bg-black/70 px-4 py-3 text-sm leading-7 text-zinc-100 caret-[#C8A96A] placeholder:text-zinc-500 focus:border-[#C8A96A]/65 focus:outline-none focus:ring-1 focus:ring-[#C8A96A]/35"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center justify-end gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => void saveAnswers()}
+                  disabled={answersSaving || !answerOne.trim() || !answerTwo.trim()}
+                  className="inline-flex min-w-[110px] items-center justify-center rounded-xl border border-[#C8A96A]/55 bg-[#C8A96A]/15 px-4 py-2 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/20 disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  {answersSaving ? <LoadingDots /> : answersSaved ? "Saved" : "Save 2Q"}
+                </button>
+              </div>
             </div>
           </div>
         ) : (
@@ -266,16 +319,16 @@ export default function MirrorOutput({
             <div className="flex justify-end">
               <button
                 type="button"
-                onClick={() => void generateQuestions()}
+                onClick={() => void generateDailyMirror()}
                 disabled={questionsLoading}
                 className="inline-flex min-w-[180px] items-center justify-center rounded-xl border border-[#C8A96A]/55 bg-[#C8A96A]/15 px-4 py-2 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/20 disabled:cursor-not-allowed disabled:opacity-45"
               >
                 {questionsLoading ? (
                   <LoadingDots />
                 ) : questionsError ? (
-                  "Try today's 2Q again"
+                  "Try today's Mirror again"
                 ) : (
-                  "Generate today's 2Q"
+                  "Open today's Mirror"
                 )}
               </button>
             </div>
