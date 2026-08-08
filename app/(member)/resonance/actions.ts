@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { completeRunPrompt } from "@/src/lib/resonance/complete-run-prompt";
 import {
-  getRunContinuedDays,
+  getRunActiveDay,
   getRunGuidance,
   getRunMirror,
   getRunPromptCompletions,
@@ -16,16 +16,6 @@ import {
   completeResonanceRun,
   getActiveResonanceRun,
 } from "@/src/lib/resonance/resonance-week-run";
-
-async function getCurrentActiveDay(runId: string) {
-  const completedDays = await getRunContinuedDays(runId);
-
-  for (let dayNumber = 1; dayNumber <= 7; dayNumber += 1) {
-    if (!completedDays.has(dayNumber)) return dayNumber;
-  }
-
-  return null;
-}
 
 async function assertActiveDay(
   userId: string,
@@ -38,7 +28,7 @@ async function assertActiveDay(
     throw new Error("This Resonance room is no longer the active visit.");
   }
 
-  const currentDay = await getCurrentActiveDay(activeRun.id);
+  const currentDay = await getRunActiveDay(activeRun.id, weekNumber);
   if (currentDay !== dayNumber) {
     throw new Error("This Resonance day is no longer the active day.");
   }
