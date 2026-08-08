@@ -30,8 +30,6 @@ function CheckoutAction({
 export default function RecognitionPurchasePage() {
   const processCheckout =
     process.env.RECOGNITION_PROCESS_CHECKOUT_URL?.trim() || null;
-  const allAccessCheckout =
-    process.env.OREMEA_ALL_ACCESS_CHECKOUT_URL?.trim() || null;
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-zinc-950 text-white">
@@ -58,15 +56,15 @@ export default function RecognitionPurchasePage() {
             Recognition
           </p>
           <h1 className="mt-4 font-serif text-4xl font-light tracking-tight md:text-6xl">
-            Begin one complete process.
+            Begin one complete process
           </h1>
           <p className="mt-6 text-base leading-8 text-zinc-300">
             Recognition begins with what already has your attention and reflects
-            what your own words make visible.
+            what your own words make visible
           </p>
         </header>
 
-        <div className="mt-10 space-y-5">
+        <div className="mt-10">
           <section className="rounded-3xl border border-[#c8a96a]/35 bg-black/45 p-6 md:p-8">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
@@ -83,39 +81,13 @@ export default function RecognitionPurchasePage() {
             <p className="mt-5 text-sm leading-7 text-zinc-300">
               Includes the full Recognition question sequence, your generated
               reflection, one opportunity to answer again with greater depth, and
-              the completed process saved in your Recognition Archive.
+              the completed process saved in your Recognition Archive
             </p>
 
             <div className="mt-7">
               <CheckoutAction
                 href={processCheckout}
-                label="Choose one Recognition process · $3"
-              />
-            </div>
-          </section>
-
-          <section className="rounded-3xl border border-white/10 bg-black/40 p-6 md:p-8">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
-                  Monthly membership
-                </p>
-                <h2 className="mt-2 font-serif text-2xl text-zinc-100">
-                  Oremea All Access
-                </h2>
-              </div>
-              <p className="text-3xl text-[#f1dfb4]">$29.99/month</p>
-            </div>
-
-            <p className="mt-5 text-sm leading-7 text-zinc-300">
-              Recognition is included alongside Compass, Resonance, and the other
-              products available inside the Oremea membership.
-            </p>
-
-            <div className="mt-7">
-              <CheckoutAction
-                href={allAccessCheckout}
-                label="Choose Oremea All Access · $29.99/month"
+                label="Begin one Recognition process · $3"
               />
             </div>
           </section>
@@ -123,7 +95,7 @@ export default function RecognitionPurchasePage() {
 
         <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
           <p className="leading-7 text-zinc-500">
-            Prices are shown and charged in US dollars.
+            Prices are shown and charged in US dollars
           </p>
           <Link
             href="https://recognition.oremea.com/archive"
