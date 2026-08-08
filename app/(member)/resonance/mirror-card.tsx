@@ -139,6 +139,7 @@ export default function MirrorCard({
         <input type="hidden" name="promptId" value={prompt.id} />
 
         <textarea
+          data-resonance-input="true"
           name="response"
           value={text}
           onChange={(event) => {
@@ -148,7 +149,7 @@ export default function MirrorCard({
           }}
           placeholder={copy.placeholder}
           rows={6}
-          className="w-full resize-none rounded-2xl border border-zinc-700 bg-black/70 px-4 py-3 text-sm leading-7 text-zinc-100 placeholder:text-zinc-500 focus:border-[#C8A96A]/65 focus:outline-none focus:ring-1 focus:ring-[#C8A96A]/35"
+          className="w-full resize-none rounded-2xl border border-zinc-700 bg-black/70 px-4 py-3 text-sm leading-7 text-zinc-100 caret-[#C8A96A] placeholder:text-zinc-500 focus:border-[#C8A96A]/65 focus:outline-none focus:ring-1 focus:ring-[#C8A96A]/35"
         />
 
         {submitError ? (
