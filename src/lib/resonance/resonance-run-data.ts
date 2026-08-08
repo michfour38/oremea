@@ -100,6 +100,67 @@ export async function getRunContinuedDays(runId: string): Promise<Set<number>> {
   return new Set(rows.map((row) => row.day_number));
 }
 
+// Active-day authority lives here so the page, save API and server actions all
+// resolve progression from the same persisted facts. A day is closed only when
+// every currently published reflection is saved AND that day has been explicitly
+// continued. This also safely handles legacy runs where a continue marker exists
+// but newer/current prompt content is still incomplete.
+export async function getRunActiveDay(
+  runId: string,
+  weekNumber: number,
+): Promise<number | null> {
+  const week = await prisma.resonance_weeks.findUnique({
+    where: { week_number: weekNumber },
+    select: {
+      is_published: true,
+      resonance_days: {
+        orderBy: { day_number: "asc" },
+        select: {
+          day_number: true,
+          day_prompts: {
+            where: { is_published: true },
+            orderBy: { prompt_order: "asc" },
+            select: { id: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!week?.is_published) return null;
+
+  const configuredDays = week.resonance_days.filter(
+    (day) => day.day_prompts.length > 0,
+  );
+
+  if (configuredDays.length === 0) return null;
+
+  const promptIds = configuredDays.flatMap((day) =>
+    day.day_prompts.map((prompt) => prompt.id),
+  );
+
+  const [completionByPrompt, continuedDayNumbers] = await Promise.all([
+    getRunPromptCompletions(runId, promptIds),
+    getRunContinuedDays(runId),
+  ]);
+
+  for (const day of configuredDays) {
+    const allPromptsDone = day.day_prompts.every((prompt) =>
+      completionByPrompt.has(prompt.id),
+    );
+
+    const dayClosed =
+      allPromptsDone && continuedDayNumbers.has(day.day_number);
+
+    if (!dayClosed) return day.day_number;
+  }
+
+  // An active run should normally be completed immediately after Day 7 closes.
+  // Returning the last configured day keeps the state recoverable if completion
+  // and redirect were interrupted between those two writes.
+  return configuredDays[configuredDays.length - 1]?.day_number ?? null;
+}
+
 export async function getRunGuidance(
   runId: string,
   dayNumber: number,
