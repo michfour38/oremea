@@ -60,7 +60,7 @@ export default function MirrorOutput({
   const [questionsError, setQuestionsError] = useState(false);
   const [isGeneratingMirror, setIsGeneratingMirror] = useState(false);
 
-  const isWeekClose = dayNumber === 7;
+  const isVisitClose = dayNumber === 7;
 
   useEffect(() => {
     if (!reflectionsCompleted || questions.length > 0) return;
@@ -252,7 +252,7 @@ export default function MirrorOutput({
           </p>
         ) : null}
 
-        {answersSaved && !isWeekClose ? (
+        {answersSaved && !isVisitClose ? (
           <form action={continueResonanceDayAction} className="flex justify-end pt-2">
             <input type="hidden" name="weekNumber" value={weekNumber} />
             <input type="hidden" name="dayNumber" value={dayNumber} />
@@ -261,14 +261,14 @@ export default function MirrorOutput({
         ) : null}
       </section>
 
-      {answersSaved && isWeekClose ? (
+      {answersSaved && isVisitClose ? (
         <section className="space-y-5 rounded-3xl border border-[#C8A96A]/30 bg-black/55 px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.22)] backdrop-blur-[3px]">
           <div className="space-y-2">
             <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#C8A96A]">
-              Weekly Mirror
+              Closing Mirror
             </p>
             <p className="text-sm leading-7 text-zinc-400">
-              Your Mirror reflects the Resonance journey you have completed so far.
+              Your Mirror reflects this seven-day Resonance visit.
             </p>
           </div>
 
@@ -314,7 +314,7 @@ export default function MirrorOutput({
                   type="submit"
                   className="min-w-[150px] rounded-xl border border-[#C8A96A]/55 bg-[#C8A96A]/15 px-5 py-3 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/20"
                 >
-                  Complete week
+                  Complete visit
                 </button>
               </form>
             </>
