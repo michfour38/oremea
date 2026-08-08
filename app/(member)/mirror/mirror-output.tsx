@@ -57,7 +57,7 @@ export default function MirrorOutput({
   const [answersSaving, setAnswersSaving] = useState(false);
   const [answersError, setAnswersError] = useState(false);
   const [questionsLoading, setQuestionsLoading] = useState(false);
-  const [questionsError, setQuestionsError] = useState(false);
+  const [questionsError, setQuestionsError] = useState<string | null>(null);
   const [isGeneratingMirror, setIsGeneratingMirror] = useState(false);
 
   const isVisitClose = dayNumber === 7;
@@ -72,11 +72,20 @@ export default function MirrorOutput({
           { method: "GET" },
         );
 
-        if (!res.ok) return;
+        const data = await res.json().catch(() => null);
 
-        const data = await res.json();
+        if (!res.ok) {
+          setQuestionsError(
+            typeof data?.error === "string"
+              ? data.error
+              : "Today's 2Q could not be loaded. Please try again.",
+          );
+          return;
+        }
+
         if (Array.isArray(data?.questions) && data.questions.length === 2) {
           setQuestions(data.questions);
+          setQuestionsError(null);
         }
 
         if (Array.isArray(data?.answers) && data.answers.length === 2) {
@@ -87,6 +96,7 @@ export default function MirrorOutput({
         setAnswersSaved(data?.answered === true);
       } catch (error) {
         console.error("Saved 2Q load failed:", error);
+        setQuestionsError("Today's 2Q could not be loaded. Please try again.");
       }
     }
 
@@ -107,7 +117,7 @@ export default function MirrorOutput({
     if (questionsLoading || questions.length > 0) return;
 
     setQuestionsLoading(true);
-    setQuestionsError(false);
+    setQuestionsError(null);
 
     try {
       const res = await fetch(
@@ -115,14 +125,22 @@ export default function MirrorOutput({
         { method: "POST" },
       );
 
-      if (!res.ok) throw new Error("Questions request failed");
+      const data = await res.json().catch(() => null);
 
-      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(
+          typeof data?.error === "string"
+            ? data.error
+            : "Today's 2Q could not be generated.",
+        );
+      }
+
       if (!Array.isArray(data?.questions) || data.questions.length !== 2) {
-        throw new Error("Questions response was invalid");
+        throw new Error("Today's 2Q returned incomplete questions.");
       }
 
       setQuestions(data.questions);
+      setQuestionsError(null);
 
       if (Array.isArray(data?.answers) && data.answers.length === 2) {
         setAnswerOne(typeof data.answers[0] === "string" ? data.answers[0] : "");
@@ -132,7 +150,11 @@ export default function MirrorOutput({
       setAnswersSaved(data?.answered === true);
     } catch (error) {
       console.error("Questions generation failed:", error);
-      setQuestionsError(true);
+      setQuestionsError(
+        error instanceof Error && error.message
+          ? error.message
+          : "Today's 2Q could not be generated. Please try again.",
+      );
     } finally {
       setQuestionsLoading(false);
     }
@@ -230,21 +252,35 @@ export default function MirrorOutput({
             </div>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={() => void generateQuestions()}
-            disabled={questionsLoading}
-            className="inline-flex min-w-[180px] items-center justify-center rounded-xl border border-[#C8A96A]/55 bg-[#C8A96A]/15 px-4 py-2 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/20 disabled:cursor-not-allowed disabled:opacity-45"
-          >
-            {questionsLoading ? <LoadingDots /> : "Generate today's 2Q"}
-          </button>
-        )}
+          <div className="space-y-4">
+            {questionsError ? (
+              <div
+                role="alert"
+                aria-live="polite"
+                className="min-h-[112px] w-full rounded-2xl border border-red-400/30 bg-red-950/15 px-4 py-3 text-sm leading-7 text-red-300"
+              >
+                {questionsError}
+              </div>
+            ) : null}
 
-        {questionsError ? (
-          <p className="text-xs text-red-300">
-            The questions could not be generated. Please generate them again.
-          </p>
-        ) : null}
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => void generateQuestions()}
+                disabled={questionsLoading}
+                className="inline-flex min-w-[180px] items-center justify-center rounded-xl border border-[#C8A96A]/55 bg-[#C8A96A]/15 px-4 py-2 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/20 disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                {questionsLoading ? (
+                  <LoadingDots />
+                ) : questionsError ? (
+                  "Try today's 2Q again"
+                ) : (
+                  "Generate today's 2Q"
+                )}
+              </button>
+            </div>
+          </div>
+        )}
 
         {answersError ? (
           <p className="text-xs text-red-300">
