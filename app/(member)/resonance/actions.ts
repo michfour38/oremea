@@ -237,7 +237,7 @@ export async function completeResonanceWeekAction(formData: FormData) {
   assertGuidanceAnswered(guidance);
 
   if (!mirror || mirror.tier !== "full") {
-    throw new Error("Open the weekly Mirror before completing the week.");
+    throw new Error("Open the closing Mirror before completing this visit.");
   }
 
   await continueRunDay({
