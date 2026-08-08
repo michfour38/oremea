@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - name: Wait for Railway, seed room by room, and verify
+      - name: Wait for Railway, reset test visit, seed room by room, and verify
         env:
           RELEASE_SHA: ${{ github.sha }}
         run: |
@@ -59,6 +59,16 @@ jobs:
             cat "${response_file}" 2>/dev/null || true
             exit 1
           fi
+
+          echo "Cancelling the active Hearth test visit before prompt IDs change"
+          status=$(call_release "${endpoint}?phase=reset-test")
+          if [ "${status}" != "200" ] || \
+            ! jq -e '.ok == true and .phase == "reset-test"' "${response_file}" >/dev/null 2>&1; then
+            echo "The active Hearth test visit could not be reset safely."
+            cat "${response_file}" 2>/dev/null || true
+            exit 1
+          fi
+          jq -r '"Cancelled active Hearth test visits: \(.cancelledCount)"' "${response_file}"
 
           for week in $(seq 1 10); do
             seeded=false

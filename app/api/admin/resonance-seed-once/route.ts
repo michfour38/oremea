@@ -7,7 +7,8 @@ import { seedResonanceWeek } from "@/prisma/seeds/resonance-seed-lib";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const RELEASE_DEADLINE = Date.parse("2026-08-06T20:00:00Z");
+const RELEASE_DEADLINE = Date.parse("2026-08-08T21:00:00Z");
+const RESONANCE_TESTER_USER_ID = "user_3CLGEx3xqgXY6DsIHPyV3yOd1xi";
 let releaseComplete = false;
 
 function requestIsAuthorized(request: Request) {
@@ -34,6 +35,24 @@ export async function POST(request: Request) {
   try {
     if (phase === "ready") {
       return NextResponse.json({ ok: true, phase: "ready" });
+    }
+
+    if (phase === "reset-test") {
+      const cancelledCount = await prisma.$executeRaw`
+        UPDATE "resonance_week_runs"
+        SET
+          "status" = 'cancelled',
+          "updated_at" = CURRENT_TIMESTAMP
+        WHERE "user_id" = ${RESONANCE_TESTER_USER_ID}
+          AND "week_number" = 1
+          AND "status" = 'active'
+      `;
+
+      return NextResponse.json({
+        ok: true,
+        phase: "reset-test",
+        cancelledCount: Number(cancelledCount),
+      });
     }
 
     if (phase === "seed") {

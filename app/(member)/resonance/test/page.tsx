@@ -12,9 +12,9 @@ import MemberNav from "../../member-nav";
 export const dynamic = "force-dynamic";
 
 const RESONANCE_TESTER_USER_ID = "user_3CLGEx3xqgXY6DsIHPyV3yOd1xi";
-const TEST_WEEK_NUMBER = 7;
+const TEST_WEEK_NUMBER = 1;
 
-async function openForgeTestRun() {
+async function openHearthTestRun() {
   "use server";
 
   const { userId } = await auth();
@@ -65,25 +65,25 @@ export default async function ResonanceTestPage() {
       <div className="mx-auto flex min-h-[80vh] max-w-3xl items-center px-6 py-16">
         <section className="w-full rounded-3xl border border-[#c8a96a]/30 bg-black/40 p-8 md:p-12">
           <p className="text-xs uppercase tracking-[0.3em] text-[#c8a96a]/70">
-            Resonance testing · Conflict &amp; Repair
+            Resonance testing · Belonging &amp; relational safety
           </p>
           <h1 className="mt-4 text-4xl font-light tracking-tight">
-            The Forge
+            The Hearth
           </h1>
           <p className="mt-4 text-lg font-light text-zinc-200">
-            What happens between us when something comes under pressure?
+            What makes room for you to participate as yourself?
           </p>
           <p className="mt-6 max-w-2xl text-sm leading-7 text-zinc-400">
-            This opens one active seven-day test visit through the same gate used by a
-            verified purchase. The Forge will then open at Day 1.
+            This opens one fresh seven-day test visit through the same gate used by a
+            verified purchase. The Hearth will open at Day 1 with the current seed set.
           </p>
 
-          <form action={openForgeTestRun} className="mt-8">
+          <form action={openHearthTestRun} className="mt-8">
             <button
               type="submit"
               className="inline-flex rounded-xl border border-[#c8a96a]/60 px-6 py-3 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10"
             >
-              Open The Forge test visit
+              Open The Hearth test visit
             </button>
           </form>
         </section>
