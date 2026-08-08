@@ -1,5 +1,6 @@
 import Link from "next/link";
 import "./recognition-theme.css";
+import "./recognition-reading.css";
 import RecognitionInputFocus from "./recognition-input-focus";
 
 export default function RecognitionLayout({
