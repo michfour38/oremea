@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { completeRunPrompt } from "@/src/lib/resonance/complete-run-prompt";
-import { getRunContinuedDays } from "@/src/lib/resonance/resonance-run-data";
+import { getRunActiveDay } from "@/src/lib/resonance/resonance-run-data";
 import { getActiveResonanceRun } from "@/src/lib/resonance/resonance-week-run";
 
 const BUILD_SHA =
@@ -11,10 +11,7 @@ const BUILD_SHA =
   process.env.GIT_COMMIT_SHA ??
   "unknown";
 
-function json(
-  body: Record<string, unknown>,
-  status = 200,
-) {
+function json(body: Record<string, unknown>, status = 200) {
   return NextResponse.json(
     {
       ...body,
@@ -27,16 +24,6 @@ function json(
       },
     },
   );
-}
-
-async function getCurrentActiveDay(runId: string) {
-  const completedDays = await getRunContinuedDays(runId);
-
-  for (let dayNumber = 1; dayNumber <= 7; dayNumber += 1) {
-    if (!completedDays.has(dayNumber)) return dayNumber;
-  }
-
-  return null;
 }
 
 function failureDetails(error: unknown) {
@@ -176,7 +163,7 @@ export async function POST(request: Request) {
       throw new Error("This Resonance room is no longer the active visit.");
     }
 
-    const currentDay = await getCurrentActiveDay(activeRun.id);
+    const currentDay = await getRunActiveDay(activeRun.id, weekNumber);
 
     if (currentDay !== dayNumber) {
       throw new Error("This Resonance day is no longer the active day.");
