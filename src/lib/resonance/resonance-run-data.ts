@@ -15,6 +15,7 @@ export type RunGuidance = {
   questionTwo: string;
   answerOne: string | null;
   answerTwo: string | null;
+  inputSnapshot: unknown;
   generatedAt: Date;
 };
 
@@ -43,6 +44,7 @@ type GuidanceRow = {
   question_two: string;
   answer_one: string | null;
   answer_two: string | null;
+  input_snapshot: unknown;
   generated_at: Date;
 };
 
@@ -186,8 +188,6 @@ export async function getRunActiveDay(
 
     const allPromptsDone = completions.length === day.day_prompts.length;
 
-    // An active visit must remain on its closing day until Complete visit marks
-    // the run completed. This keeps Closing Mirror and final completion reachable.
     if (day.day_number === finalDayNumber) return day.day_number;
 
     if (!allPromptsDone) return day.day_number;
@@ -232,6 +232,7 @@ export async function getRunGuidance(
       "question_two",
       "answer_one",
       "answer_two",
+      "input_snapshot",
       "generated_at"
     FROM "resonance_day_guidance"
     WHERE "run_id" = ${runId}::uuid
@@ -248,6 +249,7 @@ export async function getRunGuidance(
     questionTwo: row.question_two,
     answerOne: row.answer_one,
     answerTwo: row.answer_two,
+    inputSnapshot: row.input_snapshot,
     generatedAt: row.generated_at,
   };
 }
