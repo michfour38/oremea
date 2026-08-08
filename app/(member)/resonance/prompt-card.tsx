@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import type { ResonancePromptDTO } from "@/src/lib/resonance/getCurrentDayContent";
-import { submitPromptAction } from "./actions";
 
 interface PromptCardProps {
   prompt: ResonancePromptDTO;
@@ -30,14 +29,34 @@ export default function PromptCard({ prompt }: PromptCardProps) {
   async function handleSubmit(formData: FormData) {
     if (isSubmitting) return;
 
+    const promptId = String(formData.get("promptId") ?? "");
+    const response = String(formData.get("response") ?? "").trim();
+
+    if (!response) {
+      setSubmitError("Write a reflection before continuing.");
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError("");
 
     try {
-      const result = await submitPromptAction(formData);
+      const request = await fetch("/api/resonance/reflections", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ promptId, response }),
+        cache: "no-store",
+      });
 
-      if (!result?.ok) {
-        setSubmitError(result?.error ?? "This reflection could not be saved.");
+      const result = await request.json().catch(() => null);
+
+      if (!request.ok || !result?.ok) {
+        setSubmitError(
+          result?.error ??
+            `This reflection could not be saved (HTTP ${request.status}). Please try again.`,
+        );
         return;
       }
 
@@ -46,7 +65,7 @@ export default function PromptCard({ prompt }: PromptCardProps) {
     } catch (error) {
       console.error("Resonance reflection save failed:", error);
       setSubmitError(
-        "This reflection could not be saved. Please submit it again.",
+        "The save request could not reach Resonance. Please try again.",
       );
     } finally {
       setIsSubmitting(false);
