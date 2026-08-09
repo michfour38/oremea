@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function NavItem({
   href,
@@ -38,6 +38,34 @@ export function SiteNav() {
   const { isSignedIn } = useUser();
   const pathname = usePathname();
   const [archiveOpen, setArchiveOpen] = useState(false);
+  const archiveMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!archiveOpen) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (
+        event.target instanceof Node &&
+        !archiveMenuRef.current?.contains(event.target)
+      ) {
+        setArchiveOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setArchiveOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [archiveOpen]);
 
   const isEnterPage = pathname === "/oremea/enter";
 
@@ -62,14 +90,12 @@ export function SiteNav() {
 
         <div className="flex items-center gap-3">
           {isSignedIn ? (
-            <div
-              className="relative"
-              onMouseLeave={() => setArchiveOpen(false)}
-            >
+            <div ref={archiveMenuRef} className="relative">
               <button
                 type="button"
                 aria-haspopup="menu"
                 aria-expanded={archiveOpen}
+                aria-controls="site-archive-menu"
                 onClick={() => setArchiveOpen((open) => !open)}
                 className="rounded-full border border-white/10 bg-black/20 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-zinc-300 transition hover:border-amber-200/30 hover:text-amber-100"
               >
@@ -78,6 +104,7 @@ export function SiteNav() {
 
               {archiveOpen ? (
                 <div
+                  id="site-archive-menu"
                   role="menu"
                   className="absolute right-0 top-12 z-[200] min-w-[230px] rounded-[1.5rem] border border-zinc-800/80 bg-zinc-950/95 p-3 shadow-[0_10px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl"
                 >
