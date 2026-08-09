@@ -45,9 +45,7 @@ export default async function CompassArchiveSessionPage({ params }: Props) {
     redirect("/sign-in");
   }
 
-  if (!(await getCompassAccessState(userId)).active) {
-    redirect("/");
-  }
+  const access = await getCompassAccessState(userId);
 
   const session = await prisma.compass_sessions.findFirst({
     where: {
@@ -117,6 +115,7 @@ export default async function CompassArchiveSessionPage({ params }: Props) {
           finalStep={
             session.final_step_confirmed_at ? session.final_step : null
           }
+          canRestoreToMap={access.active}
         />
       </section>
 

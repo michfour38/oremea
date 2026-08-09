@@ -26,12 +26,14 @@ export function CompassArchiveSessionView({
   endingState,
   resolutionText,
   finalStep,
+  canRestoreToMap,
 }: {
   sessionId: string;
   discussionMessages: DiscussionMessage[];
   endingState: CompassEndingState | null;
   resolutionText: string | null;
   finalStep: string | null;
+  canRestoreToMap: boolean;
 }) {
   const [view, setView] = useState<"discussion" | "map">("discussion");
   const [returningItemId, setReturningItemId] = useState<string | null>(null);
@@ -116,6 +118,13 @@ export function CompassArchiveSessionView({
 
   return (
     <div className="mt-8">
+      {!canRestoreToMap ? (
+        <p className="mb-6 rounded-2xl border border-zinc-800 bg-[#101010] px-5 py-4 text-sm leading-6 text-zinc-400">
+          Read-only Archive. Your saved work remains available; Map changes and
+          new Compass discussions require active access.
+        </p>
+      ) : null}
+
       {resolutionText || finalStep ? (
         <div className="mb-8 space-y-4">
           {resolutionText ? (
@@ -229,7 +238,7 @@ export function CompassArchiveSessionView({
               sourceMessageIndex: item.sourceMessageIndex,
             }))}
             onSource={jumpToDiscussion}
-            onReturn={returnToCurrentMap}
+            onReturn={canRestoreToMap ? returnToCurrentMap : undefined}
             returningItemId={returningItemId}
             returnedItemIds={returnedItemIds}
           />
@@ -244,7 +253,7 @@ export function CompassArchiveSessionView({
               sourceMessageIndex: item.sourceMessageIndex,
             }))}
             onSource={jumpToDiscussion}
-            onReturn={returnToCurrentMap}
+            onReturn={canRestoreToMap ? returnToCurrentMap : undefined}
             returningItemId={returningItemId}
             returnedItemIds={returnedItemIds}
           />
@@ -259,7 +268,7 @@ export function CompassArchiveSessionView({
               sourceMessageIndex: item.sourceMessageIndex,
             }))}
             onSource={jumpToDiscussion}
-            onReturn={returnToCurrentMap}
+            onReturn={canRestoreToMap ? returnToCurrentMap : undefined}
             returningItemId={returningItemId}
             returnedItemIds={returnedItemIds}
           />

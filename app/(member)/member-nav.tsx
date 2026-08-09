@@ -39,6 +39,7 @@ function ProductLink({
 export default function MemberNav() {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null)
   const [hasActiveMap, setHasActiveMap] = useState(false)
+  const [hasCompassAccess, setHasCompassAccess] = useState(false)
 
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -52,17 +53,25 @@ export default function MemberNav() {
 
     async function refreshMapAvailability() {
       try {
-        const response = await fetch("/api/compass/ending", {
-          method: "GET",
-          cache: "no-store",
-        })
+        const [accessResponse, mapResponse] = await Promise.all([
+          fetch("/api/compass/access", { cache: "no-store" }),
+          fetch("/api/compass/ending", {
+            method: "GET",
+            cache: "no-store",
+          }),
+        ])
 
-        if (!response.ok) {
+        const accessData = await accessResponse.json().catch(() => null)
+        const activeAccess = Boolean(accessResponse.ok && accessData?.active)
+
+        if (!cancelled) setHasCompassAccess(activeAccess)
+
+        if (!activeAccess || !mapResponse.ok) {
           if (!cancelled) setHasActiveMap(false)
           return
         }
 
-        const data = await response.json()
+        const data = await mapResponse.json()
         const items = Array.isArray(data?.state?.mapItems)
           ? data.state.mapItems
           : []
@@ -73,7 +82,10 @@ export default function MemberNav() {
 
         if (!cancelled) setHasActiveMap(hasActive)
       } catch {
-        if (!cancelled) setHasActiveMap(false)
+        if (!cancelled) {
+          setHasCompassAccess(false)
+          setHasActiveMap(false)
+        }
       }
     }
 
@@ -116,13 +128,15 @@ export default function MemberNav() {
               label="Resonance"
               pathname={pathname}
             />
-            <ProductLink
-              href="https://compass.oremea.com/begin"
-              activePath="/compass"
-              label="Compass"
-              pathname={pathname}
-            />
-            {hasActiveMap ? (
+            {hasCompassAccess ? (
+              <ProductLink
+                href="https://compass.oremea.com/begin"
+                activePath="/compass"
+                label="Compass"
+                pathname={pathname}
+              />
+            ) : null}
+            {hasCompassAccess && hasActiveMap ? (
               <ProductLink
                 href="https://compass.oremea.com/map"
                 activePath="/compass/map"

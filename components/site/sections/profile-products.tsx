@@ -204,12 +204,12 @@ export function ProfileProducts() {
                     href={
                       products.compass.active
                         ? "https://compass.oremea.com/begin"
-                        : "https://compass.oremea.com"
+                        : "https://compass.oremea.com/archive"
                     }
                     action={
                       products.compass.active
                         ? "Continue Compass"
-                        : "Return to Compass"
+                        : "Open Compass Archive"
                     }
                     completed={products.compass.status === "completed"}
                   />
