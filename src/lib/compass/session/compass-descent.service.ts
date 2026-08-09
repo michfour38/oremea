@@ -616,7 +616,6 @@ function buildSafeWhyQuestion({
 }): string {
   const supportedCompoundQuestion = buildSupportedCompoundWhyQuestion({
     sourceAnswer,
-    evidenceText,
   })
   const subject = extractSafeWhySubject(sourceAnswer)
   const candidates = [
@@ -656,13 +655,10 @@ function buildSafeWhyQuestion({
 
 function buildSupportedCompoundWhyQuestion({
   sourceAnswer,
-  evidenceText,
 }: {
   sourceAnswer: string
-  evidenceText: string
 }): string | null {
   const source = sourceAnswer.toLowerCase()
-  const evidence = `${sourceAnswer}\n${evidenceText}`.toLowerCase()
   const consistencyLessonWasSupplied =
     /\bshowing\b[\s\S]{0,100}\b(?:boring\s+)?consistency\b[\s\S]{0,100}\bsuccess\b/i.test(
       source,
@@ -678,15 +674,15 @@ function buildSupportedCompoundWhyQuestion({
 
   const completedCommitmentWasSupplied =
     /\bsaid\b[\s\S]{0,180}\bwould\b[\s\S]{0,180}\b(?:did|done|completed|created|built)\b/i.test(
-      evidence,
+      source,
     )
   const creationWasSupplied =
     /\b(?:creat(?:e|ed|ing)|built|build|building)\b[\s\S]{0,100}\b(?:work|product|code)\b|\b(?:work|product|code)\b[\s\S]{0,100}\b(?:creat(?:e|ed|ing)|built|build|building)\b/i.test(
-      evidence,
+      source,
     )
   const actualTimeWasSupplied =
     /\btime\b[\s\S]{0,100}\b(?:actual|actually|active|actively|invested|put)\b|\b(?:actual|actually|active|actively|invested|put)\b[\s\S]{0,100}\btime\b/i.test(
-      evidence,
+      source,
     )
 
   if (
@@ -697,14 +693,14 @@ function buildSupportedCompoundWhyQuestion({
     return null
   }
 
-  const outcome = /\bthriv(?:e|es|ed|ing)\b/i.test(evidence)
+  const outcome = /\bthriv(?:e|es|ed|ing)\b/i.test(source)
     ? "your thriving"
-    : /\bsuccess(?:ful|fully)?\b|\bsucceed(?:ed|ing|s)?\b/i.test(evidence)
+    : /\bsuccess(?:ful|fully)?\b|\bsucceed(?:ed|ing|s)?\b/i.test(source)
       ? "your success"
       : "what you created"
-  const creation = /\bwork\b/i.test(evidence)
+  const creation = /\bwork\b/i.test(source)
     ? "creating the work"
-    : /\bproduct\b/i.test(evidence)
+    : /\bproduct\b/i.test(source)
       ? "building the product"
       : "creating from code"
 
@@ -799,7 +795,7 @@ export function validateCompassQuestion({
       normalized,
     ) &&
     Boolean(
-      buildSupportedCompoundWhyQuestion({ sourceAnswer, evidenceText }) ||
+      buildSupportedCompoundWhyQuestion({ sourceAnswer }) ||
         extractSafeWhySubject(sourceAnswer),
     )
   ) {
@@ -907,12 +903,11 @@ export function validateCompassQuestion({
     )
   }
 
-  const recentQuestions = priorQuestions
+  const earlierQuestions = priorQuestions
     .map((item) => item.trim())
     .filter(Boolean)
-    .slice(-3)
 
-  if (recentQuestions.some((item) => item.toLowerCase() === lower)) {
+  if (earlierQuestions.some((item) => item.toLowerCase() === lower)) {
     throw new Error("The Descent question repeats an earlier question.")
   }
 
