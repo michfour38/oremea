@@ -14,7 +14,7 @@ const sections: readonly LegalSection[] = [
   {
     title: "2. Contact and Information Officer",
     paragraphs: [
-      "Head of the private body and Information Officer: Michelle Fourie\nEmail: support@oremea.com\nTelephone: 061 537 5188\nBusiness location: Gauteng, South Africa.\nAddress for formal service: available through support@oremea.com on a valid request.",
+      "Head of the private body and Information Officer: Michelle Fourie\nEmail: support@oremea.com\nTelephone: 061 537 5188\nBusiness location: South Africa.\nAddress for formal service: available through support@oremea.com on a valid request.",
       "PAIA requests and related correspondence may be sent to support@oremea.com with the subject line 'PAIA request'.",
     ],
   },

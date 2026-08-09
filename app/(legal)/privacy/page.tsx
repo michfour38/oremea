@@ -143,7 +143,7 @@ const sections: readonly LegalSection[] = [
   {
     title: "18. Information Officer, complaints and changes",
     paragraphs: [
-      "Information Officer and responsible party contact: Michelle Fourie, support@oremea.com, 061 537 5188, Gauteng, South Africa.",
+      "Information Officer and responsible party contact: Michelle Fourie, support@oremea.com, 061 537 5188, South Africa.",
       "Privacy complaints may also be submitted to the Information Regulator through its official complaints process. Oremea may update this policy when services, providers or legal requirements change. Material changes will be communicated reasonably and renewed consent obtained where required.",
     ],
   },

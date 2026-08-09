@@ -34,5 +34,5 @@ export const OREMEA_OPERATOR = {
   legalForm: "sole proprietor",
   email: "support@oremea.com",
   telephone: "061 537 5188",
-  address: "Gauteng, South Africa",
+  address: "South Africa",
 } as const;
