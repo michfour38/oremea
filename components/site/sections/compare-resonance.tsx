@@ -1,5 +1,10 @@
 import Link from "next/link";
 import type { CompareMode } from "@/app/compare/page";
+import { ProductLaunchPrice } from "@/components/site/product-launch-price";
+import {
+  RESONANCE_LAUNCH_PRICE,
+  RESONANCE_REGULAR_PRICE,
+} from "@/src/lib/resonance/resonance-pricing";
 
 type CompareResonanceProps = {
   mode: CompareMode;
@@ -54,19 +59,19 @@ export function CompareResonance({
         Like finally recognising the difference between attraction, attachment, clarity, and repetition.
       </p>
 
-      <div className="mt-10 flex flex-wrap gap-4">
-        <Link
-          href="/oremea/enter"
-          className="rounded-full border border-white/10 px-5 py-2 text-sm text-zinc-300 transition hover:border-amber-200/30 hover:text-amber-100"
-        >
-          Resonance — R520
-        </Link>
+      <ProductLaunchPrice
+        className="mt-10"
+        regularPrice={RESONANCE_REGULAR_PRICE}
+        launchPrice={RESONANCE_LAUNCH_PRICE}
+        unit="per seven-day room"
+      />
 
+      <div className="mt-4 flex flex-wrap gap-4">
         <Link
-          href="/oremea/enter"
+          href="https://resonance.oremea.com"
           className="rounded-full border border-amber-200/20 bg-amber-100/[0.05] px-5 py-2 text-sm text-amber-100 transition hover:border-amber-100/50 hover:bg-amber-100/[0.08]"
         >
-          Resonance + Mirror — R1240
+          Enter Resonance
         </Link>
       </div>
     </div>
@@ -92,24 +97,25 @@ export function CompareResonance({
                   </p>
 
                   <ul className="grid gap-3 text-base leading-7 text-zinc-400 md:grid-cols-2">
-                    <li>• self-paced reflective journey</li>
-                    <li>• approximately 10-week structure</li>
-                    <li>• guided reflective frameworks</li>
-                    <li>• pattern recognition systems</li>
-                    <li>• communication awareness</li>
-                    <li>• 2Q synthesis reflections</li>
+                    <li>• one seven-day thematic room</li>
+                    <li>• guided daily reflections</li>
+                    <li>• Daily Mirrors</li>
+                    <li>• two precise mirror questions each day</li>
+                    <li>• a Day 7 Closing Mirror</li>
+                    <li>• the completed visit in your archive</li>
                   </ul>
                 </div>
 
                 <div>
                   <p className="mb-4 text-sm uppercase tracking-[0.18em] text-amber-100/70">
-                    Expanded Recognition Tools
+                    Mirrors
                   </p>
 
                   <p className="text-base leading-8 text-zinc-400">
-                    Mirror provides optional deeper reflective synthesis
-                    across user-generated reflections, emotional contradictions,
-                    behavioural repetition, and recurring relational patterns over time.
+                    Daily Mirrors reflect what is becoming visible across each
+                    day&apos;s responses. The Closing Mirror reads across the full
+                    seven-day visit and reflects what persisted, changed, or
+                    became newly visible.
                   </p>
                 </div>
 
@@ -120,19 +126,18 @@ export function CompareResonance({
                   </p>
                 </div>
 
+                <ProductLaunchPrice
+                  regularPrice={RESONANCE_REGULAR_PRICE}
+                  launchPrice={RESONANCE_LAUNCH_PRICE}
+                  unit="per seven-day room"
+                />
+
                 <div className="flex flex-wrap gap-4 pt-2">
                   <Link
-                    href="/oremea/enter"
-                    className="rounded-full border border-white/10 px-5 py-2 text-sm text-zinc-300 transition hover:border-amber-200/30 hover:text-amber-100"
-                  >
-                    Resonance — R520
-                  </Link>
-
-                  <Link
-                    href="/oremea/enter"
+                    href="https://resonance.oremea.com"
                     className="rounded-full border border-amber-200/20 bg-amber-100/[0.05] px-5 py-2 text-sm text-amber-100 transition hover:border-amber-100/50 hover:bg-amber-100/[0.08]"
                   >
-                    Resonance + Mirror — R1240
+                    Enter Resonance
                   </Link>
                 </div>
               </div>

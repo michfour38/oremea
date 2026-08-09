@@ -58,10 +58,9 @@ export function ExploreEcosystem() {
                 </h3>
 
                 <p className="mt-6 text-base leading-8 text-zinc-300">
-                  A self-paced guided reflection experience structured across
-                  approximately 10 weeks, designed to help users better understand
-                  relational patterns, communication tendencies, emotional loops,
-                  and reflective honesty.
+                  A private seven-day reflection experience, one thematic room
+                  at a time, with Daily Mirrors and a Closing Mirror that help
+                  what persists, changes, or becomes newly visible take shape.
                 </p>
               </div>
 
