@@ -11,7 +11,7 @@ export function SiteFooter() {
     <footer className="border-t border-white/10 bg-zinc-950">
       <div className="mx-auto flex max-w-7xl flex-col gap-12 px-5 py-14 md:flex-row md:justify-between">
         <div className="max-w-md">
-          <p className="text-sm font-semibold tracking-[0.32em] text-amber-100">
+          <p className="text-sm font-semibold tracking-[0.32em] text-[#b79a63]">
             OREMEA
           </p>
 
@@ -33,22 +33,22 @@ export function SiteFooter() {
             </p>
 
             <div className="flex flex-col gap-3 text-zinc-300">
-              <Link href="/explore" className="transition hover:text-amber-100">
+              <Link href="/explore" className="transition hover:text-[#b79a63]">
                 Explore
               </Link>
 
               <Link
                 href="/about/oremea"
-                className="transition hover:text-amber-100"
+                className="transition hover:text-[#b79a63]"
               >
                 About Oremea
               </Link>
 
-              <Link href="/reviews" className="transition hover:text-amber-100">
+              <Link href="/reviews" className="transition hover:text-[#b79a63]">
                 Reviews
               </Link>
 
-              <Link href="/compare" className="transition hover:text-amber-100">
+              <Link href="/compare" className="transition hover:text-[#b79a63]">
                 Compare
               </Link>
             </div>
@@ -62,26 +62,26 @@ export function SiteFooter() {
             <div className="flex flex-col gap-3 text-zinc-300">
               <Link
                 href="https://recognition.oremea.com"
-                className="transition hover:text-amber-100"
+                className="transition hover:text-[#b79a63]"
               >
                 Recognition
               </Link>
 
               <Link
                 href="/resonance"
-                className="transition hover:text-amber-100"
+                className="transition hover:text-[#b79a63]"
               >
                 Resonance
               </Link>
 
               <Link
                 href="https://compass.oremea.com"
-                className="transition hover:text-amber-100"
+                className="transition hover:text-[#b79a63]"
               >
                 Compass
               </Link>
 
-              <Link href="/works" className="transition hover:text-amber-100">
+              <Link href="/works" className="transition hover:text-[#b79a63]">
                 WORKS
               </Link>
             </div>
@@ -97,7 +97,7 @@ export function SiteFooter() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="transition hover:text-amber-100"
+                  className="transition hover:text-[#b79a63]"
                 >
                   {link.label}
                 </Link>
@@ -115,7 +115,7 @@ export function SiteFooter() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="transition hover:text-amber-100"
+                  className="transition hover:text-[#b79a63]"
                 >
                   {link.label}
                 </Link>
@@ -129,20 +129,20 @@ export function SiteFooter() {
             </p>
 
             <div className="flex flex-col gap-3 text-zinc-300">
-              <Link href="/contact" className="transition hover:text-amber-100">
+              <Link href="/contact" className="transition hover:text-[#b79a63]">
                 Contact
               </Link>
 
-              <a
-                href={"mailto:" + OREMEA_OPERATOR.email}
-                className="transition hover:text-amber-100"
+              <Link
+                href="/contact#contact-form"
+                className="transition hover:text-[#b79a63]"
               >
                 {OREMEA_OPERATOR.email}
-              </a>
+              </Link>
 
               <a
                 href={"tel:" + OREMEA_OPERATOR.telephone.replace(/\s/g, "")}
-                className="transition hover:text-amber-100"
+                className="transition hover:text-[#b79a63]"
               >
                 {OREMEA_OPERATOR.telephone}
               </a>

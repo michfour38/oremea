@@ -187,12 +187,12 @@ export function LegalDocument({
               <p className="text-sm text-zinc-200">
                 Operated by {OREMEA_OPERATOR.name}, {OREMEA_OPERATOR.legalForm}
               </p>
-              <a
-                href={`mailto:${OREMEA_OPERATOR.email}`}
+              <Link
+                href="/contact#contact-form"
                 className="mt-2 inline-block text-sm text-amber-100/80 transition hover:text-amber-100"
               >
                 {OREMEA_OPERATOR.email}
-              </a>
+              </Link>
             </div>
             <Link
               href={returnLink.href}

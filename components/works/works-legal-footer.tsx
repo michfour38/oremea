@@ -45,12 +45,12 @@ export function WorksLegalFooter() {
             © {new Date().getFullYear()} Oremea · Operated by{" "}
             {OREMEA_OPERATOR.name}, {OREMEA_OPERATOR.legalForm}
           </p>
-          <a
-            href={"mailto:" + OREMEA_OPERATOR.email}
+          <Link
+            href="/contact#contact-form"
             className="transition hover:text-black"
           >
             {OREMEA_OPERATOR.email}
-          </a>
+          </Link>
         </div>
       </div>
     </footer>

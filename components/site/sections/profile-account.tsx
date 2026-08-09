@@ -29,31 +29,27 @@ export function ProfileAccount() {
 
   return (
     <section className="border-b border-white/5 bg-black/25">
-      <div className="mx-auto max-w-6xl px-5 py-10 md:py-14">
-        <div className="mb-6 flex items-end justify-between gap-6">
+      <div className="mx-auto max-w-6xl px-5 py-7 md:py-8">
+        <div className="mb-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.28em] text-amber-200/70">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-[#b79a63]">
               Account
             </p>
-            <h2 className="mt-3 text-2xl font-light text-zinc-100 md:text-3xl">
-              The person behind the participation
+            <h2 className="mt-2 text-2xl font-light text-zinc-100">
+              Account details
             </h2>
           </div>
-
-          <span className="hidden rounded-full border border-amber-100/20 bg-amber-100/[0.06] px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-amber-100 sm:inline-flex">
-            Signed in
-          </span>
         </div>
 
-        <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-zinc-950/55 shadow-2xl shadow-black/20 backdrop-blur-md">
-          <div className="grid md:grid-cols-[17rem_minmax(0,1fr)]">
-            <div className="border-b border-white/10 bg-gradient-to-br from-amber-100/[0.09] to-transparent p-6 md:border-b-0 md:border-r md:p-8">
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-950/60 shadow-xl shadow-black/15 backdrop-blur-md">
+          <div className="grid md:grid-cols-[15rem_minmax(0,1fr)]">
+            <div className="border-b border-white/10 bg-[#b79a63]/[0.045] p-5 md:border-b-0 md:border-r md:p-6">
               <div className="flex items-center gap-4 md:block">
                 <button
                   type="button"
                   onClick={() => openUserProfile()}
                   disabled={!isLoaded}
-                  className="group relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-amber-100/30 bg-amber-100/[0.07] text-xl tracking-[0.12em] text-amber-100 transition hover:border-amber-100/70 focus:outline-none focus:ring-2 focus:ring-amber-100/50 disabled:cursor-wait md:h-20 md:w-20 md:text-2xl"
+                  className="group relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#b79a63]/35 bg-[#b79a63]/[0.06] text-lg tracking-[0.12em] text-[#b79a63] transition hover:border-[#b79a63]/70 focus:outline-none focus:ring-2 focus:ring-[#b79a63]/40 disabled:cursor-wait md:h-16 md:w-16 md:text-xl"
                   aria-label="Open account settings to update your profile photo"
                 >
                   {isLoaded && imageUrl ? (
@@ -68,12 +64,12 @@ export function ProfileAccount() {
                   ) : (
                     <span>{isLoaded ? initials : ""}</span>
                   )}
-                  <span className="absolute inset-x-0 bottom-0 bg-zinc-950/85 py-1 text-[8px] uppercase tracking-[0.12em] text-amber-100 opacity-0 transition group-hover:opacity-100">
+                  <span className="absolute inset-x-0 bottom-0 bg-zinc-950/85 py-1 text-[8px] uppercase tracking-[0.12em] text-[#b79a63] opacity-0 transition group-hover:opacity-100">
                     Edit
                   </span>
                 </button>
-                <div className="md:mt-6">
-                  <p className="text-xl font-light text-white md:text-2xl">
+                <div className="md:mt-4">
+                  <p className="text-lg font-light text-zinc-100 md:text-xl">
                     {isLoaded ? displayName : "Loading your account…"}
                   </p>
                   <p className="mt-2 text-xs uppercase tracking-[0.2em] text-zinc-500">
@@ -83,7 +79,7 @@ export function ProfileAccount() {
                     type="button"
                     onClick={() => openUserProfile()}
                     disabled={!isLoaded}
-                    className="mt-3 text-xs text-amber-100/70 underline decoration-amber-100/25 underline-offset-4 transition hover:text-amber-100 disabled:text-zinc-600"
+                    className="mt-2 text-xs text-[#b79a63]/75 underline decoration-[#b79a63]/30 underline-offset-4 transition hover:text-[#b79a63] disabled:text-zinc-600"
                   >
                     Update profile photo
                   </button>
@@ -118,11 +114,11 @@ export function ProfileAccount() {
 
 function AccountDetail({ label, value }: { label: string; value: string }) {
   return (
-    <div className="min-w-0 bg-zinc-950/90 p-6 md:p-8">
+    <div className="min-w-0 bg-zinc-950/90 p-5 md:p-6">
       <dt className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">
         {label}
       </dt>
-      <dd className="mt-3 break-words text-base text-zinc-200 md:text-lg">
+      <dd className="mt-2 break-words text-sm text-zinc-200 md:text-base">
         {value}
       </dd>
     </div>

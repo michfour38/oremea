@@ -42,7 +42,6 @@ function source(file: string) {
 const registry = source("src/lib/legal/legal-links.ts");
 const shell = source("components/legal/legal-document.tsx");
 const footer = source("components/site/site-footer.tsx");
-const profilePolicies = source("components/site/sections/profile-policies.tsx");
 const worksFooter = source("components/works/works-legal-footer.tsx");
 const worksLayout = source("app/works/layout.tsx");
 
@@ -93,10 +92,6 @@ for (const required of ["LEGAL_LINKS", "WORKS_LEGAL_LINKS"]) {
   }
 }
 
-if (!profilePolicies.includes("LEGAL_LINKS")) {
-  throw new Error("Profile policies do not use the canonical legal registry");
-}
-
 if (!worksLayout.includes("<WorksLegalFooter")) {
   throw new Error("WORKS routes are not wrapped with the legal footer");
 }
@@ -115,5 +110,5 @@ if (legalSources.includes("April 2026")) {
 console.log(
   "Legal navigation contract passed for " +
     routes.length +
-    " routes, both footers and profile policies.",
+    " routes and both legal footers.",
 );

@@ -117,10 +117,10 @@ export function ProfileProducts() {
 
   return (
     <section className="border-b border-white/5 bg-zinc-950/60">
-      <div className="mx-auto max-w-6xl px-5 py-12 md:py-16">
+      <div className="mx-auto max-w-6xl px-5 py-8 md:py-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.28em] text-amber-200/70">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-[#b79a63]">
               Participation record
             </p>
             <h2 className="mt-3 text-3xl font-light text-white md:text-4xl">
@@ -135,7 +135,7 @@ export function ProfileProducts() {
         {loading ? <ProfileLoadingState /> : null}
 
         {!loading && error ? (
-          <div className="mt-8 rounded-3xl border border-amber-100/20 bg-amber-100/[0.06] p-6">
+          <div className="mt-6 rounded-2xl border border-[#b79a63]/20 bg-[#b79a63]/[0.05] p-5">
             <p className="text-sm text-zinc-100">{error}</p>
             <button
               type="button"
@@ -149,7 +149,7 @@ export function ProfileProducts() {
 
         {!loading && !error ? (
           <>
-            <div className="mt-8 grid overflow-hidden rounded-[2rem] border border-white/10 bg-white/10 sm:grid-cols-3">
+            <div className="mt-6 grid overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-3">
               <ParticipationMetric
                 label="Spaces opened"
                 value={String(openedSpaces).padStart(2, "0")}
@@ -196,7 +196,7 @@ export function ProfileProducts() {
                 ) : null}
               </div>
             ) : (
-              <div className="mt-5 rounded-[2rem] border border-white/10 bg-white/[0.025] p-7 md:p-9">
+              <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.025] p-5 md:p-6">
                 <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
                   Your first space is ready when you are
                 </p>
@@ -206,7 +206,7 @@ export function ProfileProducts() {
                 </p>
                 <Link
                   href="/explore"
-                  className="mt-6 inline-flex rounded-full border border-amber-100/25 bg-amber-100/[0.06] px-5 py-3 text-sm tracking-[0.12em] text-amber-100 transition hover:border-amber-100/55 hover:bg-amber-100/10"
+                  className="mt-5 inline-flex rounded-full border border-[#b79a63]/30 bg-[#b79a63]/[0.05] px-4 py-2.5 text-sm tracking-[0.08em] text-[#b79a63] transition hover:border-[#b79a63]/65 hover:bg-[#b79a63]/10"
                 >
                   Explore Oremea →
                 </Link>
@@ -221,13 +221,13 @@ export function ProfileProducts() {
 
 function ProfileLoadingState() {
   return (
-    <div className="mt-8 space-y-5" aria-label="Loading participation record">
-      <div className="grid gap-px overflow-hidden rounded-[2rem] border border-white/10 bg-white/10 sm:grid-cols-3">
+    <div className="mt-6 space-y-4" aria-label="Loading participation record">
+      <div className="grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-3">
         {[0, 1, 2].map((item) => (
           <div key={item} className="h-28 animate-pulse bg-zinc-950/80" />
         ))}
       </div>
-      <div className="h-80 animate-pulse rounded-[2rem] border border-white/10 bg-white/[0.03]" />
+      <div className="h-64 animate-pulse rounded-2xl border border-white/10 bg-white/[0.03]" />
     </div>
   );
 }
@@ -242,10 +242,10 @@ function ParticipationMetric({
   accent?: boolean;
 }) {
   return (
-    <div className="bg-zinc-950/90 p-6 md:p-8">
+    <div className="bg-zinc-950/90 p-5 md:p-6">
       <p
         className={`text-4xl font-light tabular-nums md:text-5xl ${
-          accent ? "text-amber-100" : "text-zinc-100"
+          accent ? "text-[#b79a63]" : "text-zinc-100"
         }`}
       >
         {value}
@@ -270,16 +270,14 @@ function ResonanceRecordCard({ resonance }: { resonance: ResonanceRecord }) {
       : "Begin Resonance";
 
   return (
-    <article className="relative mt-5 overflow-hidden rounded-[2rem] border border-amber-100/20 bg-[linear-gradient(135deg,rgba(120,83,34,0.2),rgba(9,9,11,0.92)_48%)] shadow-2xl shadow-black/25">
-      <div className="absolute right-0 top-0 h-48 w-48 rounded-full bg-amber-200/10 blur-3xl" />
-
+    <article className="relative mt-4 overflow-hidden rounded-2xl border border-[#b79a63]/20 bg-zinc-950/80 shadow-xl shadow-black/20">
       <div className="relative grid gap-0 lg:grid-cols-[minmax(0,1.25fr)_minmax(19rem,0.75fr)]">
-        <div className="p-7 md:p-10">
+        <div className="p-6 md:p-7">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs uppercase tracking-[0.26em] text-amber-100/70">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-[#b79a63]">
               Resonance
             </p>
-            <span className="rounded-full border border-amber-100/20 bg-black/25 px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] text-amber-100">
+            <span className="rounded-full border border-[#b79a63]/25 bg-black/25 px-3 py-1.5 text-[10px] uppercase tracking-[0.16em] text-[#b79a63]">
               {resonance.activeRun
                 ? "In progress"
                 : resonance.completedCount > 0
@@ -288,7 +286,7 @@ function ResonanceRecordCard({ resonance }: { resonance: ResonanceRecord }) {
             </span>
           </div>
 
-          <h3 className="mt-5 text-4xl font-light text-white md:text-5xl">
+          <h3 className="mt-4 text-3xl font-light text-zinc-100 md:text-4xl">
             {completionLabel}
           </h3>
           <p className="mt-4 max-w-2xl text-base leading-7 text-zinc-300">
@@ -305,7 +303,7 @@ function ResonanceRecordCard({ resonance }: { resonance: ResonanceRecord }) {
                 : "Your Resonance access is ready. The first completed course will appear here."}
           </p>
 
-          <div className="mt-8">
+          <div className="mt-6">
             <div className="flex items-center justify-between gap-4 text-[10px] uppercase tracking-[0.18em] text-zinc-500">
               <span>Course progression</span>
               <span>
@@ -337,9 +335,9 @@ function ResonanceRecordCard({ resonance }: { resonance: ResonanceRecord }) {
                     }`}
                     className={`h-2 rounded-full ${
                       isCompleted
-                        ? "bg-amber-200"
+                        ? "bg-[#b79a63]"
                         : isActive
-                          ? "bg-amber-200/45 ring-1 ring-amber-100/60"
+                          ? "bg-[#b79a63]/45 ring-1 ring-[#b79a63]/60"
                           : "bg-white/10"
                     }`}
                   />
@@ -348,10 +346,10 @@ function ResonanceRecordCard({ resonance }: { resonance: ResonanceRecord }) {
             </div>
           </div>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link
               href={primaryHref}
-              className="inline-flex items-center justify-center rounded-full bg-amber-100 px-5 py-3 text-sm font-medium text-zinc-950 transition hover:bg-white"
+              className="inline-flex items-center justify-center rounded-full bg-[#b79a63] px-5 py-2.5 text-sm font-medium text-zinc-950 transition hover:brightness-110"
             >
               {primaryAction} →
             </Link>
@@ -364,7 +362,7 @@ function ResonanceRecordCard({ resonance }: { resonance: ResonanceRecord }) {
           </div>
         </div>
 
-        <div className="border-t border-white/10 bg-black/25 p-7 lg:border-l lg:border-t-0 md:p-10">
+        <div className="border-t border-white/10 bg-black/25 p-6 lg:border-l lg:border-t-0 md:p-7">
           <p className="text-[11px] uppercase tracking-[0.22em] text-zinc-500">
             Completed courses
           </p>
@@ -377,7 +375,7 @@ function ResonanceRecordCard({ resonance }: { resonance: ResonanceRecord }) {
                   className="rounded-2xl border border-white/10 bg-white/[0.035] p-4"
                 >
                   <div className="flex items-start gap-4">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-amber-100/25 bg-amber-100/[0.07] text-sm text-amber-100">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#b79a63]/25 bg-[#b79a63]/[0.06] text-sm text-[#b79a63]">
                       {course.weekNumber}
                     </span>
                     <div className="min-w-0">
@@ -421,22 +419,22 @@ function ProductCard({
   return (
     <Link
       href={href}
-      className="group rounded-[2rem] border border-white/10 bg-white/[0.025] p-7 transition hover:-translate-y-0.5 hover:border-amber-100/25 hover:bg-white/[0.045]"
+      className="group rounded-2xl border border-white/10 bg-white/[0.025] p-6 transition hover:-translate-y-0.5 hover:border-[#b79a63]/25 hover:bg-white/[0.045]"
     >
       <div className="flex items-center justify-between gap-4">
-        <p className="text-xs uppercase tracking-[0.24em] text-amber-100/70">
+        <p className="text-[11px] uppercase tracking-[0.22em] text-[#b79a63]">
           {eyebrow}
         </p>
         <span
           className={`h-2.5 w-2.5 rounded-full ${
-            completed ? "bg-amber-200" : "bg-zinc-600"
+            completed ? "bg-[#b79a63]" : "bg-zinc-600"
           }`}
           aria-hidden="true"
         />
       </div>
       <h3 className="mt-5 text-3xl font-light text-white">{title}</h3>
       <p className="mt-4 text-sm leading-7 text-zinc-400">{description}</p>
-      <p className="mt-7 text-sm text-zinc-200 transition group-hover:text-amber-100">
+      <p className="mt-5 text-sm text-zinc-200 transition group-hover:text-[#b79a63]">
         {action} →
       </p>
     </Link>

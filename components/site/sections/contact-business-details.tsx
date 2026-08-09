@@ -1,9 +1,9 @@
 export function ContactBusinessDetails() {
   return (
     <section>
-      <div className="mx-auto max-w-6xl px-5 py-20">
+      <div className="mx-auto max-w-5xl px-5 py-12">
         <div className="grid gap-8 md:grid-cols-2">
-          <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-8">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
             <p className="text-sm uppercase tracking-[0.18em] text-zinc-500">
               Business Information
             </p>
@@ -14,9 +14,7 @@ export function ContactBusinessDetails() {
                   Business
                 </p>
 
-                <p className="mt-2 text-zinc-200">
-                  Oremea
-                </p>
+                <p className="mt-2 text-zinc-200">Oremea</p>
               </div>
 
               <div>
@@ -24,12 +22,8 @@ export function ContactBusinessDetails() {
                   Location
                 </p>
 
-                <p className="mt-2 text-zinc-200">
-                  South Africa
-                </p>
-                <p className="text-zinc-500">
-                Local is Lekker
-              </p>
+                <p className="mt-2 text-zinc-200">South Africa</p>
+                <p className="text-zinc-500">Local is Lekker</p>
               </div>
 
               <div>
@@ -37,15 +31,13 @@ export function ContactBusinessDetails() {
                   Contact Email
                 </p>
 
-                <p className="mt-2 text-zinc-200">
-                  support@oremea.com
-                </p>
+                <p className="mt-2 text-zinc-200">support@oremea.com</p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-3xl border border-amber-200/10 bg-amber-100/[0.03] p-8">
-            <p className="text-sm uppercase tracking-[0.18em] text-amber-100/70">
+          <div className="rounded-2xl border border-[#b79a63]/15 bg-[#b79a63]/[0.03] p-6">
+            <p className="text-sm uppercase tracking-[0.18em] text-[#b79a63]">
               Platform Positioning
             </p>
 
@@ -53,8 +45,8 @@ export function ContactBusinessDetails() {
               <p>
                 Oremea is a structured self-awareness and relational
                 intelligence ecosystem offering guided reflective systems,
-                execution frameworks, communication-awareness tools,
-                and intentional relational environments.
+                execution frameworks, communication-awareness tools, and
+                intentional relational environments.
               </p>
 
               <p>
