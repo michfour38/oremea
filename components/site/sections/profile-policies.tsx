@@ -1,11 +1,6 @@
 import Link from "next/link";
 
-const policies = [
-  { label: "Terms", href: "/terms" },
-  { label: "Privacy", href: "/privacy" },
-  { label: "Refunds", href: "/refunds" },
-  { label: "Disclaimer", href: "/disclaimer" },
-];
+import { LEGAL_LINKS } from "@/src/lib/legal/legal-links";
 
 export function ProfilePolicies() {
   return (
@@ -31,7 +26,7 @@ export function ProfilePolicies() {
           className="mt-8 grid gap-px overflow-hidden rounded-[2rem] border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-4"
           aria-label="Profile policies"
         >
-          {policies.map((policy) => (
+          {LEGAL_LINKS.map((policy) => (
             <Link
               key={policy.href}
               href={policy.href}
