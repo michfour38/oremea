@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 const MAX_WEBHOOK_AGE_SECONDS = 5 * 60;
+const WEBHOOK_SECRET_PREFIX = "whsec_";
 
 export function verifyWhopWebhook({
   body,
@@ -37,7 +38,15 @@ export function verifyWhopWebhook({
   }
 
   const signedContent = `${webhookId}.${webhookTimestamp}.${body}`;
-  const expected = createHmac("sha256", secret)
+  const signingKey = secret.startsWith(WEBHOOK_SECRET_PREFIX)
+    ? Buffer.from(secret.slice(WEBHOOK_SECRET_PREFIX.length), "base64")
+    : Buffer.from(secret, "utf8");
+
+  if (signingKey.length === 0) {
+    return false;
+  }
+
+  const expected = createHmac("sha256", signingKey)
     .update(signedContent)
     .digest();
   const signatures = Array.from(
