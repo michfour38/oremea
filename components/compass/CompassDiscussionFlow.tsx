@@ -252,6 +252,7 @@ export function CompassDiscussionFlow({
       setEndingError("");
       setEndingState(data?.state ?? null);
       setBoundaryMessage(data?.boundaryMessage ?? null);
+      window.dispatchEvent(new Event("compass-map-changed"));
       return data?.state ?? null;
     } catch {
       setEndingError("Compass could not update the Map yet.");
@@ -721,13 +722,22 @@ export function CompassDiscussionFlow({
 
               <button
                 type="button"
+                onClick={() => void openMap()}
+                disabled={endingBusy}
+                className="secondary-button disabled:cursor-wait disabled:opacity-60"
+              >
+                {endingBusy ? "Building Map..." : "Open Map"}
+              </button>
+
+              <button
+                type="button"
                 onClick={() => void finishDiscussion()}
                 disabled={finishingDiscussion}
                 className="secondary-button disabled:cursor-wait disabled:opacity-60"
               >
                 {finishingDiscussion
                   ? "Saving discussion..."
-                  : "Pause and save this discussion"}
+                  : "Pause, save, and return to Oremea"}
               </button>
 
               {finishDiscussionError ? (
