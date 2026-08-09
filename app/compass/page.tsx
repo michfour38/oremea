@@ -883,24 +883,23 @@ async function completeCompassProcess() {
 
   return (
     <main className="min-h-screen bg-[#090909] text-stone-100">
-<MemberNav />
-      <section className="relative z-0 min-h-screen overflow-hidden px-5 py-8 sm:px-8 lg:px-12">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(184,134,64,0.08),_transparent_28%),linear-gradient(180deg,_rgba(16,16,16,0.96),_rgba(9,9,9,1))]" />
+      <MemberNav />
+      <section className="relative isolate min-h-screen overflow-x-clip px-3 pb-12 sm:px-5 lg:px-8">
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_rgba(184,134,64,0.08),_transparent_28%),linear-gradient(180deg,_rgba(16,16,16,0.96),_rgba(9,9,9,1))]" />
 
-        <div className="relative z-0 mx-auto max-w-3xl">
-          <header className="mb-5 pt-1 text-center">
-            <div className="mx-auto mb-2 flex justify-center">
-              <Image
-                src="/images/compass-logo.webp"
-                alt="The Compass by Oremea"
-                width={640}
-                height={180}
-                priority
-                className="h-auto w-[380px] sm:w-[560px]"
-              />
-            </div>
+        <header className="compass-masthead sticky top-0 z-0 mx-auto flex min-h-[350px] max-w-3xl flex-col justify-center py-8 text-center sm:min-h-[390px]">
+          <div className="mx-auto mb-2 flex justify-center">
+            <Image
+              src="/images/compass-logo.webp"
+              alt="The Compass by Oremea"
+              width={640}
+              height={180}
+              priority
+              className="h-auto w-[380px] sm:w-[560px]"
+            />
+          </div>
 
-            <p
+          <p
   className={`mx-auto max-w-2xl text-base leading-relaxed ${BODY_TEXT} sm:text-lg`}
 >
   Turn self-awareness into one executable next step
@@ -910,8 +909,10 @@ async function completeCompassProcess() {
   Clarity • Direction • Execution
 </p>
 
-          </header>
+        </header>
 
+        <div className="compass-process-layer relative z-10 mx-auto max-w-[56rem] rounded-t-[2.25rem] border-x border-t border-white/[0.07] px-2 py-6 sm:px-6 sm:py-8">
+          <div className="compass-process-inner mx-auto max-w-3xl">
           {showBackButton && (
             <button
               type="button"
@@ -1136,6 +1137,7 @@ description=""
   onComplete={completeCompassProcess}
 />
           )}
+          </div>
         </div>
       </section>
 
@@ -1220,6 +1222,38 @@ description=""
   background: #1f1710;
   box-shadow: 0 0 0 1px rgba(216, 177, 95, 0.15);
 }
+
+        .compass-masthead {
+          transform: translateZ(0);
+        }
+
+        .compass-process-layer {
+          background: linear-gradient(
+            180deg,
+            rgba(9, 9, 9, 0.7) 0%,
+            rgba(9, 9, 9, 0.88) 13rem,
+            rgba(9, 9, 9, 0.98) 32rem
+          );
+          box-shadow: 0 -24px 80px rgba(0, 0, 0, 0.42);
+          -webkit-backdrop-filter: blur(14px) saturate(112%);
+          backdrop-filter: blur(14px) saturate(112%);
+        }
+
+        .compass-process-layer .compass-process-inner > section {
+          background: rgba(15, 15, 15, 0.84);
+          -webkit-backdrop-filter: blur(20px) saturate(108%);
+          backdrop-filter: blur(20px) saturate(108%);
+        }
+
+        @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+          .compass-process-layer {
+            background: rgba(9, 9, 9, 0.94);
+          }
+
+          .compass-process-layer .compass-process-inner > section {
+            background: rgba(15, 15, 15, 0.96);
+          }
+        }
       `}</style>
     </main>
   );
