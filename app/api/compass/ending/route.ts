@@ -15,6 +15,7 @@ import {
   getCompassBoundaryMessage,
   type CompassScopeCategory,
 } from "@/src/lib/compass/scope-boundary"
+import { getCompassAccessState } from "@/src/lib/compass/compass-access"
 
 export const dynamic = "force-dynamic"
 
@@ -24,6 +25,10 @@ export async function GET() {
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    if (!(await getCompassAccessState(userId)).active) {
+      return NextResponse.json({ error: "Compass access has ended." }, { status: 403 })
     }
 
     const session = await getSession(userId)
@@ -56,6 +61,10 @@ export async function POST(request: Request) {
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    if (!(await getCompassAccessState(userId)).active) {
+      return NextResponse.json({ error: "Compass access has ended." }, { status: 403 })
     }
 
     const body = await request.json()

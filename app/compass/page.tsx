@@ -173,11 +173,26 @@ const possibilityMirror = useMemo(
       try {
         setIsRestoring(true);
 
+        const accessResponse = await fetch("/api/compass/access", {
+          cache: "no-store",
+        });
+        const accessData = await accessResponse.json().catch(() => null);
+
+        if (!accessResponse.ok || !accessData?.active) {
+          window.location.replace("/");
+          return;
+        }
+
         const response = await fetch("/api/compass/session", {
           method: "GET",
         });
 
         if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            window.location.replace("/");
+            return;
+          }
+
           setPhase("intro");
           return;
         }
@@ -192,7 +207,7 @@ const possibilityMirror = useMemo(
         }
       } catch (error) {
         console.error("Failed to load Compass session:", error);
-        setPhase("intro");
+        window.location.replace("/");
       } finally {
         setSessionLoaded(true);
         setIsRestoring(false);

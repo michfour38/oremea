@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getRunActiveDay } from "@/src/lib/resonance/resonance-run-data";
+import { getCompassAccessState } from "@/src/lib/compass/compass-access";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,13 @@ export async function GET() {
     const user = await currentUser();
     const email = user?.primaryEmailAddress?.emailAddress || "";
 
-    const [resonanceEntitlement, resonanceRuns, recognitionLead, compassSession] =
+    const [
+      resonanceEntitlement,
+      resonanceRuns,
+      recognitionLead,
+      compassSession,
+      compassAccess,
+    ] =
       await Promise.all([
         prisma.oremea_entitlements.findFirst({
           where: {
@@ -83,6 +90,8 @@ export async function GET() {
             updated_at: true,
           },
         }),
+
+        getCompassAccessState(userId),
       ]);
 
     const completedRuns = resonanceRuns.filter(
@@ -190,12 +199,16 @@ export async function GET() {
             }
           : null,
 
-        compass: compassSession
+        compass: compassSession || compassAccess.source
           ? {
-              active: compassSession.status !== "completed",
-              status: compassSession.status,
-              phase: compassSession.phase,
-              updatedAt: compassSession.updated_at.toISOString(),
+              active: compassAccess.active,
+              status: compassAccess.active
+                ? compassSession?.status ?? "ready"
+                : "access_ended",
+              phase: compassSession?.phase ?? null,
+              updatedAt: compassSession?.updated_at.toISOString() ?? null,
+              expiresAt: compassAccess.expiresAt?.toISOString() ?? null,
+              daysRemaining: compassAccess.daysRemaining,
             }
           : null,
       },

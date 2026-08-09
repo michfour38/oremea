@@ -5,12 +5,17 @@ import { CompassArchiveWheel } from "./CompassArchiveWheel";
 
 import { prisma } from "@/lib/prisma";
 import MemberNav from "@/app/(member)/member-nav";
+import { getCompassAccessState } from "@/src/lib/compass/compass-access";
 
 export default async function CompassArchivePage() {
   const { userId } = await auth();
 
   if (!userId) {
     redirect("/sign-in");
+  }
+
+  if (!(await getCompassAccessState(userId)).active) {
+    redirect("/");
   }
 
   await prisma.compass_sessions.findMany({
