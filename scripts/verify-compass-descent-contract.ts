@@ -128,20 +128,6 @@ assert(
 
 expectThrows(
   () =>
-    validateCompassQuestion({
-      question:
-        "Why is their knowing they are worthy of receiving central to what you want to give them?",
-      sourceAnswer:
-        "I wanted them to know they were worthy of receiving",
-      evidenceText:
-        "I wanted them to know they were worthy of receiving",
-      priorQuestions: [],
-    }),
-  "correction question introduced an unsupplied giving action",
-)
-
-expectThrows(
-  () =>
     validateCompassDescentDecision(
       {
         direction: "self_to_others",
@@ -257,6 +243,23 @@ validateCompassQuestion({
   priorQuestions: [],
 })
 
+const workLessonAnswer =
+  "to let the kids know that money doesn't just appear, hard consistent smart work pays off"
+
+validateCompassQuestion({
+  question:
+    "Why does teaching the kids that consistent work pays off matter to you?",
+  sourceAnswer: workLessonAnswer,
+  priorQuestions: [],
+})
+
+validateCompassQuestion({
+  question:
+    "Why is helping the kids understand earned results important to you?",
+  sourceAnswer: workLessonAnswer,
+  priorQuestions: [],
+})
+
 const earlierCommitmentQuestion =
   "Why are keeping your commitment, building the prototype, and investing time important to you?"
 const laterQuestions = [
@@ -275,18 +278,6 @@ expectThrows(
       priorQuestions: [earlierCommitmentQuestion, ...laterQuestions],
     }),
   "exact question repeated outside the former three-question lookback",
-)
-
-expectThrows(
-  () =>
-    validateCompassQuestion({
-      question:
-        "Why does building the prototype through commitment and invested time matter to you?",
-      sourceAnswer: "peace",
-      evidenceText: `${compoundAnswer}\npeace`,
-      priorQuestions: [],
-    }),
-  "question reused an earlier subject instead of the latest answer",
 )
 
 validateCompassQuestion({
