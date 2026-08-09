@@ -107,11 +107,10 @@ function resonanceDomainResponse(req: NextRequest) {
   const host = getHostname(req);
   const { pathname } = req.nextUrl;
 
+  // On the Resonance host, /entry is the actual destination after a visit
+  // completes. Let it render directly instead of bouncing it through / and
+  // back into an internal /entry rewrite.
   if (host === RESONANCE_HOST) {
-    if (pathname === "/entry" || pathname === "/entry/") {
-      return redirectResonancePath(req, "/");
-    }
-
     return null;
   }
 
