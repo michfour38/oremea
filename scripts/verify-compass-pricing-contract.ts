@@ -8,8 +8,8 @@ function assert(condition: unknown, message: string): asserts condition {
 }
 
 assert(
-  formatCompassPrice(COMPASS_PRICING.foundingPriceCents) === "$19.99",
-  "Compass founding access must remain $19.99.",
+  formatCompassPrice(COMPASS_PRICING.launchPriceCents) === "$19.99",
+  "Compass launch offer must remain $19.99.",
 )
 assert(
   formatCompassPrice(COMPASS_PRICING.standardPriceCents) === "$29.99",

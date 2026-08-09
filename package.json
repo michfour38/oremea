@@ -20,7 +20,8 @@
     "test:compass-descent": "tsx scripts/verify-compass-descent-contract.ts",
     "test:compass-resolution": "tsx scripts/verify-compass-resolution-contract.ts",
     "test:compass-pricing": "tsx scripts/verify-compass-pricing-contract.ts",
-    "test:compass": "npm run test:compass-descent && npm run test:compass-resolution && npm run test:compass-pricing"
+    "test:compass": "npm run test:compass-descent && npm run test:compass-resolution && npm run test:compass-pricing",
+    "test:recognition-pricing": "tsx scripts/verify-recognition-pricing-contract.ts"
   },
   "prisma": {
     "schema": "./prisma",
