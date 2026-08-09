@@ -66,7 +66,7 @@ export default function CompassAccessPage() {
             The Compass
           </p>
           <h1 className="mt-4 font-serif text-4xl font-light tracking-tight md:text-6xl">
-            Choose how you enter Compass.
+            Choose how you enter Compass
           </h1>
           <p className="mt-6 text-base leading-8 text-zinc-300">
             Compass turns what matters into clear direction, a working Map, and
