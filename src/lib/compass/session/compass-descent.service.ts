@@ -46,11 +46,7 @@ CONCISE DESCENT QUESTION STANDARD — TIGHTEN WITHOUT FLATTENING
 - never replace a specific compound answer with a generic abstraction or "this" merely to make the question shorter
 - never stack a because-clause, dash-clause, and with/where-clause into one question
 - faithful synthesis may name an explicit relationship concisely: "said you would and did" can become "keeping your commitment"
-
-Example:
-Source: "I succeeded because I said I would build the product and then I did. I built it from code, and I can account for the time it actually took."
-Faithful and concise: "Why does it matter that success comes from keeping your commitment, building the product, and actually putting in the time?"
-Flattened and forbidden: "Why does follow-through matter to you?"
+- these are behavioural rules, not a fixed sentence; phrase each question naturally from the participant's immediately preceding answer
 `.trim()
 
 type DecisionValidationContext = {
@@ -60,7 +56,6 @@ type DecisionValidationContext = {
   currentQuestion: string
   recursiveLayers: CompassRecursiveLayer[]
   attempts: CompassDescentAttempt[]
-  questionFailureMode?: "throw" | "fallback"
 }
 
 export async function generateCompassDescentQuestion({
@@ -173,7 +168,6 @@ export async function evaluateCompassDescentAnswer({
         currentQuestion,
         recursiveLayers,
         attempts,
-        questionFailureMode: "fallback",
       }),
   })
 }
@@ -227,12 +221,11 @@ COMPASS DESCENT QUESTION POLICY — WHY ONLY
 - when the participant names what they want for another person, ask why that supplied intended experience matters
 - do not move into possibility, planning, strategy, repair, action, coaching, or execution
 - preserve the participant's living language and do not add emotion or intensity
-- every content premise in the question must already exist in the participant's goal or answers
+- name or faithfully synthesize the immediately preceding answer as the subject; never substitute "this", "that", "it", or "your answer" when the answer contains substantive meaning
+- every content premise in the question must come from the immediately preceding answer
 - neutral inquiry words may open importance or significance; they may not supply deserving, worth, safety, love, identity, control, pressure, shame, or another construct the participant has not supplied
 
 Examples of form, not templates:
-- Why does this matter to you?
-- Why is this important to you?
 - Why did receiving as little as possible matter to you?
 - Why is freedom to create from within important to you?
 - Why does their knowing they are loved matter to you?
@@ -314,11 +307,10 @@ Required consistency:
 COMPASS QUESTION POLICY — WHY ONLY
 Every next question begins with the exact word "Why".
 Every next question asks why the participant's supplied answer matters, is important, or is significant.
-The subject changes as the participant answers. The inquiry does not.
+The immediately preceding answer becomes the subject. The subject changes as the participant answers. The inquiry does not.
+When the answer contains substantive meaning, name or faithfully synthesize it; never replace it with "this", "that", "it", or "your answer".
 
 Allowed grammatical movement:
-- Why is this important to you?
-- Why does this matter to you?
 - Why did receiving as little as possible matter to you?
 - Why was being seen as grateful significant to you?
 - Why would their knowing they are loved matter to you?
@@ -334,7 +326,7 @@ Hard boundaries:
 - do not move into possibility, planning, action, repair, coaching, or execution
 - do not validate or contradict a self-judgment
 - do not infer an unspoken emotion, motive, identity, deserving, worth, safety, love, control, pressure, shame, or meaning
-- every content premise in the question must be grounded in the participant's goal or answers; neutral why-language may open importance but may not provide meaning
+- every content premise in the question must come from the immediately preceding answer; neutral why-language may open importance but may not provide meaning
 - do not use "carry so much weight"
 - do not change the inquiry merely to avoid rhetorical repetition; the repetition is intentional
 - do not repeat an identical full question
@@ -574,24 +566,12 @@ export function validateCompassDescentDecision(
     ]
     const questionSource = substantiveAnswer || context.sourceAnswer
 
-    try {
-      validateCompassQuestion({
-        question,
-        sourceAnswer: questionSource,
-        priorQuestions,
-        evidenceText: decisionEvidenceText,
-      })
-    } catch (error) {
-      if (context.questionFailureMode !== "fallback") {
-        throw error
-      }
-
-      resolvedQuestion = buildSafeWhyQuestion({
-        sourceAnswer: questionSource,
-        evidenceText: decisionEvidenceText,
-        priorQuestions,
-      })
-    }
+    validateCompassQuestion({
+      question,
+      sourceAnswer: questionSource,
+      priorQuestions,
+      evidenceText: decisionEvidenceText,
+    })
   }
 
   return {
@@ -614,12 +594,8 @@ function buildSafeWhyQuestion({
   evidenceText: string
   priorQuestions: string[]
 }): string {
-  const supportedCompoundQuestion = buildSupportedCompoundWhyQuestion({
-    sourceAnswer,
-  })
   const subject = extractSafeWhySubject(sourceAnswer)
   const candidates = [
-    ...(supportedCompoundQuestion ? [supportedCompoundQuestion] : []),
     ...(subject
       ? [
           `Why does ${subject} matter to you?`,
@@ -627,11 +603,13 @@ function buildSafeWhyQuestion({
           `Why is ${subject} significant to you?`,
         ]
       : []),
-    "Why does this matter to you?",
-    "Why is this important to you?",
-    "Why is this significant to you?",
-    "Why does this remain important to you?",
-    "Why is this the reason beneath the goal?",
+    ...(!hasSubstantiveWhySubject(sourceAnswer)
+      ? [
+          "Why does this matter to you?",
+          "Why is this important to you?",
+          "Why is this significant to you?",
+        ]
+      : []),
   ]
 
   for (const candidate of candidates) {
@@ -651,60 +629,6 @@ function buildSafeWhyQuestion({
   throw new Error(
     "Compass could not form a distinct evidence-grounded Why question.",
   )
-}
-
-function buildSupportedCompoundWhyQuestion({
-  sourceAnswer,
-}: {
-  sourceAnswer: string
-}): string | null {
-  const source = sourceAnswer.toLowerCase()
-  const consistencyLessonWasSupplied =
-    /\bshowing\b[\s\S]{0,100}\b(?:boring\s+)?consistency\b[\s\S]{0,100}\bsuccess\b/i.test(
-      source,
-    )
-  const ordinaryLifeContrastWasSupplied =
-    /\blife\b[\s\S]{0,120}\b(?:doesn['’]?t|does\s+not)\b[\s\S]{0,80}\balways\b[\s\S]{0,80}\bhype\b[\s\S]{0,80}\bholidays?\b/i.test(
-      source,
-    )
-
-  if (consistencyLessonWasSupplied && ordinaryLifeContrastWasSupplied) {
-    return "Why does it matter that showing boring consistency can mean success and that life does not always need hype or holidays?"
-  }
-
-  const completedCommitmentWasSupplied =
-    /\bsaid\b[\s\S]{0,180}\bwould\b[\s\S]{0,180}\b(?:did|done|completed|created|built)\b/i.test(
-      source,
-    )
-  const creationWasSupplied =
-    /\b(?:creat(?:e|ed|ing)|built|build|building)\b[\s\S]{0,100}\b(?:work|product|code)\b|\b(?:work|product|code)\b[\s\S]{0,100}\b(?:creat(?:e|ed|ing)|built|build|building)\b/i.test(
-      source,
-    )
-  const actualTimeWasSupplied =
-    /\btime\b[\s\S]{0,100}\b(?:actual|actually|active|actively|invested|put)\b|\b(?:actual|actually|active|actively|invested|put)\b[\s\S]{0,100}\btime\b/i.test(
-      source,
-    )
-
-  if (
-    !completedCommitmentWasSupplied ||
-    !creationWasSupplied ||
-    !actualTimeWasSupplied
-  ) {
-    return null
-  }
-
-  const outcome = /\bthriv(?:e|es|ed|ing)\b/i.test(source)
-    ? "your thriving"
-    : /\bsuccess(?:ful|fully)?\b|\bsucceed(?:ed|ing|s)?\b/i.test(source)
-      ? "your success"
-      : "what you created"
-  const creation = /\bwork\b/i.test(source)
-    ? "creating the work"
-    : /\bproduct\b/i.test(source)
-      ? "building the product"
-      : "creating from code"
-
-  return `Why does it matter that ${outcome} comes from keeping your commitment, ${creation}, and actually putting in the time?`
 }
 
 function extractSafeWhySubject(sourceAnswer: string): string {
@@ -764,7 +688,6 @@ function expectedHistoryAction({
 export function validateCompassQuestion({
   question,
   sourceAnswer,
-  evidenceText = sourceAnswer,
   priorQuestions,
 }: {
   question: string
@@ -791,13 +714,8 @@ export function validateCompassQuestion({
   assertCompassQuestionIsConcise(normalized)
 
   if (
-    /^(?:why does this matter to you|why is this (?:important|significant) to you)\?$/i.test(
-      normalized,
-    ) &&
-    Boolean(
-      buildSupportedCompoundWhyQuestion({ sourceAnswer }) ||
-        extractSafeWhySubject(sourceAnswer),
-    )
+    usesGenericWhySubject(normalized) &&
+    hasSubstantiveWhySubject(sourceAnswer)
   ) {
     throw new Error(
       "The Descent question flattened an available grounded subject into a generic this.",
@@ -890,10 +808,10 @@ export function validateCompassQuestion({
 
   const unsupportedTerms = findUnsupportedEvidenceTerms({
     text: normalized,
-    evidenceText,
+    evidenceText: sourceAnswer,
     allowedTerms: [
       ...DESCENT_INQUIRY_TERMS,
-      ...getEvidenceSupportedInquiryTerms(evidenceText),
+      ...getEvidenceSupportedInquiryTerms(sourceAnswer),
     ],
   })
 
@@ -911,6 +829,29 @@ export function validateCompassQuestion({
     throw new Error("The Descent question repeats an earlier question.")
   }
 
+}
+
+function usesGenericWhySubject(question: string): boolean {
+  return /^(?:why does (?:this|that|it|your answer|the answer|what you (?:said|wrote|described)) (?:matter|remain important) to you|why is (?:this|that|it|your answer|the answer|what you (?:said|wrote|described)) (?:important|significant) to you)\?$/i.test(
+    question,
+  )
+}
+
+function hasSubstantiveWhySubject(sourceAnswer: string): boolean {
+  const normalized = sourceAnswer
+    .trim()
+    .toLowerCase()
+    .replace(/[’']/g, "'")
+    .replace(/\s+/g, " ")
+
+  if (!normalized) return false
+
+  const hasOnlyUncertainty =
+    /^(?:(?:i|we)\s+)?(?:(?:(?:do|did)\s+not|don't|didn't)\s+(?:know|understand)|(?:am|are)?\s*(?:not\s+sure|unsure|uncertain|unclear))(?:\s+(?:yet|really))?[.!?]*$/i.test(
+      normalized,
+    )
+
+  return !hasOnlyUncertainty
 }
 
 function assertCompassQuestionIsConcise(question: string) {
