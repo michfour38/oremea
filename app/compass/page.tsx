@@ -884,10 +884,10 @@ async function completeCompassProcess() {
   return (
     <main className="min-h-screen bg-[#090909] text-stone-100">
       <MemberNav />
-      <section className="relative isolate min-h-screen overflow-x-clip px-3 pb-12 sm:px-5 lg:px-8">
+      <section className="relative isolate min-h-screen px-3 pb-12 sm:px-5 lg:px-8">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_rgba(184,134,64,0.08),_transparent_28%),linear-gradient(180deg,_rgba(16,16,16,0.96),_rgba(9,9,9,1))]" />
 
-        <header className="compass-masthead sticky top-0 z-0 mx-auto flex min-h-[350px] max-w-3xl flex-col justify-center py-8 text-center sm:min-h-[390px]">
+        <header className="compass-masthead pointer-events-none fixed inset-x-0 top-0 z-0 mx-auto flex h-[390px] max-w-3xl flex-col justify-center px-5 pt-16 text-center sm:h-[420px] sm:px-8">
           <div className="mx-auto mb-2 flex justify-center">
             <Image
               src="/images/compass-logo.webp"
@@ -910,6 +910,8 @@ async function completeCompassProcess() {
 </p>
 
         </header>
+
+        <div aria-hidden="true" className="h-[390px] sm:h-[420px]" />
 
         <div className="compass-process-layer relative z-10 mx-auto max-w-[56rem] rounded-t-[2.25rem] border-x border-t border-white/[0.07] px-2 py-6 sm:px-6 sm:py-8">
           <div className="compass-process-inner mx-auto max-w-3xl">
@@ -1223,26 +1225,22 @@ description=""
   box-shadow: 0 0 0 1px rgba(216, 177, 95, 0.15);
 }
 
-        .compass-masthead {
-          transform: translateZ(0);
-        }
-
         .compass-process-layer {
           background: linear-gradient(
             180deg,
-            rgba(9, 9, 9, 0.7) 0%,
-            rgba(9, 9, 9, 0.88) 13rem,
-            rgba(9, 9, 9, 0.98) 32rem
+            rgba(9, 9, 9, 0.18) 0%,
+            rgba(9, 9, 9, 0.52) 16rem,
+            rgba(9, 9, 9, 0.96) 44rem
           );
           box-shadow: 0 -24px 80px rgba(0, 0, 0, 0.42);
-          -webkit-backdrop-filter: blur(14px) saturate(112%);
-          backdrop-filter: blur(14px) saturate(112%);
+          -webkit-backdrop-filter: blur(2px) saturate(108%);
+          backdrop-filter: blur(2px) saturate(108%);
         }
 
         .compass-process-layer .compass-process-inner > section {
-          background: rgba(15, 15, 15, 0.84);
-          -webkit-backdrop-filter: blur(20px) saturate(108%);
-          backdrop-filter: blur(20px) saturate(108%);
+          background: rgba(15, 15, 15, 0.62);
+          -webkit-backdrop-filter: blur(6px) saturate(106%);
+          backdrop-filter: blur(6px) saturate(106%);
         }
 
         @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
