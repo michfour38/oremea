@@ -311,6 +311,7 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/recognition(.*)",
   "/api/recognition(.*)",
+  "/api/webhooks/whop",
   "/compass/access(.*)",
   // This one-time release endpoint performs its own exact-deployment-SHA and
   // expiry checks. Clerk must let the GitHub release runner reach those checks.

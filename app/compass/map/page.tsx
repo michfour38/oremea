@@ -1,9 +1,18 @@
+import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import MemberNav from "@/app/(member)/member-nav";
 import { CompassMapWorkspace } from "./CompassMapWorkspace";
+import { getCompassAccessState } from "@/src/lib/compass/compass-access";
 
-export default function CompassMapPage() {
+export default async function CompassMapPage() {
+  const { userId } = auth();
+
+  if (!userId || !(await getCompassAccessState(userId)).active) {
+    redirect("/");
+  }
+
   return (
     <main className="min-h-screen bg-[#090909] text-white">
       <MemberNav />

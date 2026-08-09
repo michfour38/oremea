@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
 import { prisma } from "@/lib/prisma"
+import { getCompassAccessState } from "@/src/lib/compass/compass-access"
 import { createEmptyCompassEndingState } from "@/src/lib/compass/ending/ending-types"
 import { runELConversation } from "@/src/lib/el"
 
@@ -10,6 +11,21 @@ export async function POST(request: Request) {
     const body = await request.json()
     const product = body.product ?? "compass"
     const stage = body.stage ?? "discussion"
+
+    if (product === "compass") {
+      const { userId } = auth()
+
+      if (!userId) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      }
+
+      if (!(await getCompassAccessState(userId)).active) {
+        return NextResponse.json(
+          { error: "Compass access has ended." },
+          { status: 403 },
+        )
+      }
+    }
 
     const result = await runELConversation({
       product,

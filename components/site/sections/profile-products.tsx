@@ -36,8 +36,10 @@ type ResonanceRecord = {
 type CompassRecord = {
   active: boolean;
   status: string;
-  phase: string;
-  updatedAt: string;
+  phase: string | null;
+  updatedAt: string | null;
+  expiresAt: string | null;
+  daysRemaining: number | null;
 };
 
 type ProfileProductsPayload = {
@@ -185,12 +187,30 @@ export function ProfileProducts() {
                 {products?.compass ? (
                   <ProductCard
                     eyebrow="Compass"
-                    title={formatStatus(
-                      products.compass.phase || products.compass.status,
-                    )}
-                    description="Your direction-setting session is saved and ready to continue or review."
-                    href="/compass"
-                    action="Open Compass"
+                    title={
+                      products.compass.active
+                        ? formatStatus(
+                            products.compass.phase || products.compass.status,
+                          )
+                        : "Access ended"
+                    }
+                    description={
+                      products.compass.active
+                        ? products.compass.expiresAt
+                          ? `Your Compass record is ready with ${products.compass.daysRemaining} ${products.compass.daysRemaining === 1 ? "day" : "days"} of access remaining.`
+                          : "Your direction-setting session is saved and ready to continue or review."
+                        : "Your Compass record remains connected to this account. Choose another 30 days when you are ready to continue."
+                    }
+                    href={
+                      products.compass.active
+                        ? "https://compass.oremea.com/begin"
+                        : "https://compass.oremea.com"
+                    }
+                    action={
+                      products.compass.active
+                        ? "Continue Compass"
+                        : "Return to Compass"
+                    }
                     completed={products.compass.status === "completed"}
                   />
                 ) : null}

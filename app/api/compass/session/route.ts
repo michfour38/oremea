@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { createEmptyCompassEndingState } from "@/src/lib/compass/ending/ending-types";
+import { getCompassAccessState } from "@/src/lib/compass/compass-access";
 import { validateCompassCompletion } from "@/src/lib/compass/session/completion-contract";
 import {
   getActiveCompassSession,
@@ -27,6 +28,13 @@ export async function GET() {
       return NextResponse.json(
         { session: null },
         { status: 401 },
+      );
+    }
+
+    if (!(await getCompassAccessState(userId)).active) {
+      return NextResponse.json(
+        { success: false, session: null, error: "Compass access has ended." },
+        { status: 403 },
       );
     }
 
@@ -68,6 +76,13 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 },
+      );
+    }
+
+    if (!(await getCompassAccessState(userId)).active) {
+      return NextResponse.json(
+        { error: "Compass access has ended." },
+        { status: 403 },
       );
     }
 

@@ -9,6 +9,7 @@ import {
   type CompassEndingState,
 } from "@/src/lib/compass/ending/ending-types";
 import type { CompassScopeCategory } from "@/src/lib/compass/scope-boundary";
+import { getCompassAccessState } from "@/src/lib/compass/compass-access";
 
 import { CompassArchiveSessionView } from "./CompassArchiveSessionView";
 
@@ -42,6 +43,10 @@ export default async function CompassArchiveSessionPage({ params }: Props) {
 
   if (!userId) {
     redirect("/sign-in");
+  }
+
+  if (!(await getCompassAccessState(userId)).active) {
+    redirect("/");
   }
 
   const session = await prisma.compass_sessions.findFirst({

@@ -1,9 +1,11 @@
+import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 
 import {
   COMPASS_PRICING,
   formatCompassPrice,
 } from "@/src/lib/compass/compass-pricing";
+import { getCompassAccessState } from "@/src/lib/compass/compass-access";
 
 export const dynamic = "force-dynamic";
 
@@ -32,8 +34,13 @@ function CheckoutAction({
   );
 }
 
-export default function CompassAccessPage() {
+export default async function CompassAccessPage() {
+  const { userId } = auth();
+  const access = userId ? await getCompassAccessState(userId) : null;
   const compassCheckout = process.env.COMPASS_CHECKOUT_URL?.trim() || null;
+  const checkoutHref = userId
+    ? compassCheckout
+    : "/sign-in?redirect_url=%2F";
   const launchPrice = formatCompassPrice(
     COMPASS_PRICING.launchPriceCents,
   );
@@ -75,6 +82,27 @@ export default function CompassAccessPage() {
         </header>
 
         <div className="mt-10">
+          {access?.active ? (
+            <section className="rounded-3xl border border-[#c8a96a]/35 bg-black/45 p-6 md:p-8">
+              <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
+                Access active
+              </p>
+              <h2 className="mt-3 font-serif text-3xl text-zinc-100">
+                Compass is ready
+              </h2>
+              <p className="mt-5 text-sm leading-7 text-zinc-300">
+                {access.expiresAt
+                  ? `${access.daysRemaining} ${access.daysRemaining === 1 ? "day" : "days"} remaining. Access ends ${access.expiresAt.toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}.`
+                  : "Your Oremea owner access is active."}
+              </p>
+              <Link
+                href="/begin"
+                className="mt-7 inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/10"
+              >
+                Continue Compass
+              </Link>
+            </section>
+          ) : (
           <section className="rounded-3xl border border-[#c8a96a]/35 bg-black/45 p-6 md:p-8">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
@@ -101,15 +129,25 @@ export default function CompassAccessPage() {
 
             <div className="mt-7">
               <CheckoutAction
-                href={compassCheckout}
-                label={`Enter Compass · ${launchPrice}`}
+                href={checkoutHref}
+                label={
+                  userId
+                    ? `Enter Compass · ${launchPrice}`
+                    : "Sign in to enter Compass"
+                }
               />
             </div>
 
             <p className="mt-4 text-xs leading-6 text-zinc-500">
               Standard {COMPASS_PRICING.accessDays}-day access will be {standardPrice}.
             </p>
+            <p className="mt-2 text-xs leading-6 text-zinc-500">
+              {userId
+                ? "Use the same email address as your Oremea account at checkout. Your 30 days begin when payment succeeds."
+                : "Sign in first so your purchase can be connected to your Oremea account."}
+            </p>
           </section>
+          )}
         </div>
 
         <p className="mt-8 text-sm leading-7 text-zinc-500">

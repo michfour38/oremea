@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { getCompassAccessState } from "@/src/lib/compass/compass-access";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,13 @@ export async function POST(request: Request) {
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!(await getCompassAccessState(userId)).active) {
+      return NextResponse.json(
+        { error: "Compass access has ended." },
+        { status: 403 },
+      );
     }
 
     const body = await request.json();
