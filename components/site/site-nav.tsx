@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
+import { useState } from "react";
 
 function NavItem({
   href,
@@ -36,6 +37,7 @@ function NavItem({
 export function SiteNav() {
   const { isSignedIn } = useUser();
   const pathname = usePathname();
+  const [archiveOpen, setArchiveOpen] = useState(false);
 
   const isEnterPage = pathname === "/oremea/enter";
 
@@ -59,6 +61,51 @@ export function SiteNav() {
         </div>
 
         <div className="flex items-center gap-3">
+          {isSignedIn ? (
+            <div
+              className="relative"
+              onMouseLeave={() => setArchiveOpen(false)}
+            >
+              <button
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={archiveOpen}
+                onClick={() => setArchiveOpen((open) => !open)}
+                className="rounded-full border border-white/10 bg-black/20 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-zinc-300 transition hover:border-amber-200/30 hover:text-amber-100"
+              >
+                Archive
+              </button>
+
+              {archiveOpen ? (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-12 z-[200] min-w-[230px] rounded-[1.5rem] border border-zinc-800/80 bg-zinc-950/95 p-3 shadow-[0_10px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+                >
+                  <a
+                    role="menuitem"
+                    href="https://recognition.oremea.com/archive"
+                    className="block rounded-full border border-[#3A3224] bg-[#17130D] px-4 py-2 text-center text-sm normal-case tracking-normal text-[#E7C98B] transition hover:border-[#C8A96A] hover:bg-[#21190F]"
+                  >
+                    Recognition Archive
+                  </a>
+                  <a
+                    role="menuitem"
+                    href="https://resonance.oremea.com/archive?view=day"
+                    className="mt-2 block rounded-full border border-[#3A3224] bg-[#17130D] px-4 py-2 text-center text-sm normal-case tracking-normal text-[#E7C98B] transition hover:border-[#C8A96A] hover:bg-[#21190F]"
+                  >
+                    Resonance Archive
+                  </a>
+                  <a
+                    role="menuitem"
+                    href="https://compass.oremea.com/archive"
+                    className="mt-2 block rounded-full border border-[#3A3224] bg-[#17130D] px-4 py-2 text-center text-sm normal-case tracking-normal text-[#E7C98B] transition hover:border-[#C8A96A] hover:bg-[#21190F]"
+                  >
+                    Compass Archive
+                  </a>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
 
           <Link
             href={isSignedIn ? "/profile" : "/sign-in"}
