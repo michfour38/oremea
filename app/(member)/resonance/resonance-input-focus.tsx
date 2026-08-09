@@ -14,6 +14,20 @@ function isEditableElement(element: Element | null) {
   );
 }
 
+function isInteractiveElement(element: Element | null) {
+  if (!(element instanceof HTMLElement)) return false;
+
+  return (
+    isEditableElement(element) ||
+    element.matches(
+      "button, a[href], select, summary, [role='button'], [role='menuitem']",
+    ) ||
+    element.closest(
+      "button, a[href], select, summary, [role='button'], [role='menuitem']",
+    ) !== null
+  );
+}
+
 function isVisible(element: HTMLElement) {
   const rect = element.getBoundingClientRect();
   const style = window.getComputedStyle(element);
@@ -50,7 +64,10 @@ function getDailyMirrorSection(input: HTMLTextAreaElement) {
 }
 
 function focusNextResonanceInput() {
-  if (isEditableElement(document.activeElement)) return;
+  // Never take focus away from something the participant deliberately chose,
+  // including navigation buttons and menu links. Automatic focus is only for
+  // transitions where the page itself has released focus.
+  if (isInteractiveElement(document.activeElement)) return;
 
   const nextInput = getNextInput();
   if (!nextInput) return;
@@ -59,7 +76,7 @@ function focusNextResonanceInput() {
   // a transient input elsewhere in the tree from briefly stealing the viewport
   // while router.refresh() is replacing the saved card with the next one.
   window.setTimeout(() => {
-    if (isEditableElement(document.activeElement)) return;
+    if (isInteractiveElement(document.activeElement)) return;
 
     const confirmedInput = getNextInput();
     if (!confirmedInput || confirmedInput !== nextInput) return;
@@ -73,7 +90,10 @@ function focusNextResonanceInput() {
       });
 
       window.setTimeout(() => {
-        if (!isEditableElement(document.activeElement) && confirmedInput.isConnected) {
+        if (
+          !isInteractiveElement(document.activeElement) &&
+          confirmedInput.isConnected
+        ) {
           confirmedInput.focus({ preventScroll: true });
         }
       }, 180);
@@ -87,7 +107,10 @@ function focusNextResonanceInput() {
     });
 
     window.setTimeout(() => {
-      if (!isEditableElement(document.activeElement) && confirmedInput.isConnected) {
+      if (
+        !isInteractiveElement(document.activeElement) &&
+        confirmedInput.isConnected
+      ) {
         confirmedInput.focus({ preventScroll: true });
       }
     }, 180);
@@ -103,7 +126,20 @@ export default function ResonanceInputFocus() {
 
     let timer = window.setTimeout(focusNextResonanceInput, 260);
 
-    const observer = new MutationObserver(() => {
+    const observer = new MutationObserver((mutations) => {
+      // Opening or closing MemberNav menus must not be treated as a Resonance
+      // progression event. Those DOM changes previously re-fired autofocus and
+      // pulled the participant back down to the current reflection textarea.
+      const navigationOnly = mutations.every((mutation) => {
+        const target =
+          mutation.target instanceof Element
+            ? mutation.target
+            : mutation.target.parentElement;
+        return target?.closest("nav") !== null;
+      });
+
+      if (navigationOnly) return;
+
       window.clearTimeout(timer);
       timer = window.setTimeout(focusNextResonanceInput, 240);
     });
