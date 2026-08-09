@@ -16,7 +16,7 @@ const sections: readonly LegalSection[] = [
     title: "2. Operator and supplier information",
     paragraphs: [
       "Oremea is operated by Michelle Fourie, a sole proprietor trading as Oremea.",
-      "Website: www.oremea.com\nEmail: support@oremea.com\nTelephone: 061 537 5188\nPhysical address and address for legal service: 20 Price Road, Illiondale, Edenvale, Gauteng, Republic of South Africa, 1609.",
+      "Website: www.oremea.com\nEmail: support@oremea.com\nTelephone: 061 537 5188\nBusiness location: Gauteng, South Africa.\nAddress for legal service: available through support@oremea.com on a valid request.",
     ],
   },
   {
@@ -175,7 +175,7 @@ const sections: readonly LegalSection[] = [
     paragraphs: [
       "These Terms are governed by the laws of the Republic of South Africa. Where applicable consumer law grants access to a tribunal, ombud, commission or court, that right remains. Otherwise, disputes may be heard by a court with jurisdiction in Gauteng, South Africa.",
       "Oremea may update these Terms when services, laws, commercial arrangements or the legal operator change. Material changes will be communicated reasonably, and renewed acceptance will be requested where required.",
-      "Questions may be sent to support@oremea.com or directed to Oremea at 20 Price Road, Illiondale, Edenvale, Gauteng, Republic of South Africa, 1609; telephone 061 537 5188.",
+      "Questions may be sent to support@oremea.com or directed by telephone to 061 537 5188.",
     ],
   },
 ];

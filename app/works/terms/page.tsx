@@ -119,7 +119,7 @@ const sections: readonly LegalSection[] = [
   {
     title: "16. Law and contact",
     paragraphs: [
-      "These Terms are governed by South African law. Questions may be sent to support@oremea.com or directed to Oremea at 20 Price Road, Illiondale, Edenvale, Gauteng, Republic of South Africa, 1609; telephone 061 537 5188.",
+      "These Terms are governed by South African law. Questions may be sent to support@oremea.com or directed by telephone to 061 537 5188.",
     ],
   },
 ];

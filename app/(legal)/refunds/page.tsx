@@ -14,7 +14,7 @@ const sections: readonly LegalSection[] = [
   {
     title: "2. Supplier information",
     paragraphs: [
-      "Oremea is operated by Michelle Fourie, a sole proprietor trading as Oremea. Contact: support@oremea.com, 061 537 5188, 20 Price Road, Illiondale, Edenvale, Gauteng, Republic of South Africa, 1609.",
+      "Oremea is operated by Michelle Fourie, a sole proprietor trading as Oremea. Contact: support@oremea.com, 061 537 5188, Gauteng, South Africa.",
     ],
   },
   {

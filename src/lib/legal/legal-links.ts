@@ -34,6 +34,5 @@ export const OREMEA_OPERATOR = {
   legalForm: "sole proprietor",
   email: "support@oremea.com",
   telephone: "061 537 5188",
-  address:
-    "20 Price Road, Illiondale, Edenvale, Gauteng, Republic of South Africa, 1609",
+  address: "Gauteng, South Africa",
 } as const;
