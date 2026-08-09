@@ -47,7 +47,9 @@ type ProfileProductsPayload = {
 };
 
 function formatStatus(value: string) {
-  return value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
+  return value
+    .replaceAll("_", " ")
+    .replace(/^./, (letter) => letter.toUpperCase());
 }
 
 function formatDate(value: string | null) {
@@ -76,12 +78,15 @@ export function ProfileProducts() {
         const data = await response.json();
 
         if (!response.ok || !data.success) {
-          throw new Error(data.error || "Your participation record could not be loaded.");
+          throw new Error(
+            data.error || "Your participation record could not be loaded.",
+          );
         }
 
         setProducts(data.products);
       } catch (caught) {
-        if (caught instanceof DOMException && caught.name === "AbortError") return;
+        if (caught instanceof DOMException && caught.name === "AbortError")
+          return;
 
         setError(
           caught instanceof Error
@@ -98,8 +103,9 @@ export function ProfileProducts() {
   }, []);
 
   const openedSpaces = products
-    ? [products.recognition, products.resonance, products.compass].filter(Boolean)
-        .length
+    ? [products.recognition, products.resonance, products.compass].filter(
+        Boolean,
+      ).length
     : 0;
   const activeSpaces = products
     ? [products.recognition, products.resonance, products.compass].filter(
@@ -129,8 +135,8 @@ export function ProfileProducts() {
         {loading ? <ProfileLoadingState /> : null}
 
         {!loading && error ? (
-          <div className="mt-8 rounded-3xl border border-rose-300/20 bg-rose-300/[0.06] p-6">
-            <p className="text-sm text-rose-100">{error}</p>
+          <div className="mt-8 rounded-3xl border border-amber-100/20 bg-amber-100/[0.06] p-6">
+            <p className="text-sm text-zinc-100">{error}</p>
             <button
               type="button"
               onClick={() => window.location.reload()}
@@ -316,7 +322,8 @@ function ResonanceRecordCard({ resonance }: { resonance: ResonanceRecord }) {
               {Array.from({ length: resonance.totalCourses }, (_, index) => {
                 const courseNumber = index + 1;
                 const isCompleted = completedCourses.has(courseNumber);
-                const isActive = resonance.activeRun?.weekNumber === courseNumber;
+                const isActive =
+                  resonance.activeRun?.weekNumber === courseNumber;
 
                 return (
                   <span
@@ -422,7 +429,7 @@ function ProductCard({
         </p>
         <span
           className={`h-2.5 w-2.5 rounded-full ${
-            completed ? "bg-emerald-300" : "bg-amber-200"
+            completed ? "bg-amber-200" : "bg-zinc-600"
           }`}
           aria-hidden="true"
         />

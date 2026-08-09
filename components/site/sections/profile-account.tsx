@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
 
 function initialsFor(name: string) {
   return name
@@ -21,9 +21,11 @@ function formatMemberSince(value: Date | null | undefined) {
 }
 
 export function ProfileAccount() {
+  const { openUserProfile } = useClerk();
   const { isLoaded, user } = useUser();
   const displayName = user?.fullName || user?.firstName || "Oremea Member";
   const initials = initialsFor(displayName) || "O";
+  const imageUrl = user?.hasImage ? user.imageUrl : null;
 
   return (
     <section className="border-b border-white/5 bg-black/25">
@@ -38,7 +40,7 @@ export function ProfileAccount() {
             </h2>
           </div>
 
-          <span className="hidden rounded-full border border-emerald-300/20 bg-emerald-300/[0.06] px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-emerald-100 sm:inline-flex">
+          <span className="hidden rounded-full border border-amber-100/20 bg-amber-100/[0.06] px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-amber-100 sm:inline-flex">
             Signed in
           </span>
         </div>
@@ -47,9 +49,29 @@ export function ProfileAccount() {
           <div className="grid md:grid-cols-[17rem_minmax(0,1fr)]">
             <div className="border-b border-white/10 bg-gradient-to-br from-amber-100/[0.09] to-transparent p-6 md:border-b-0 md:border-r md:p-8">
               <div className="flex items-center gap-4 md:block">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full border border-amber-100/25 bg-amber-100/[0.07] text-xl tracking-[0.12em] text-amber-100 md:h-20 md:w-20 md:text-2xl">
-                  {isLoaded ? initials : ""}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => openUserProfile()}
+                  disabled={!isLoaded}
+                  className="group relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-amber-100/30 bg-amber-100/[0.07] text-xl tracking-[0.12em] text-amber-100 transition hover:border-amber-100/70 focus:outline-none focus:ring-2 focus:ring-amber-100/50 disabled:cursor-wait md:h-20 md:w-20 md:text-2xl"
+                  aria-label="Open account settings to update your profile photo"
+                >
+                  {isLoaded && imageUrl ? (
+                    // Clerk imports the account image supplied by Google sign-in.
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={imageUrl}
+                      alt=""
+                      referrerPolicy="no-referrer"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span>{isLoaded ? initials : ""}</span>
+                  )}
+                  <span className="absolute inset-x-0 bottom-0 bg-zinc-950/85 py-1 text-[8px] uppercase tracking-[0.12em] text-amber-100 opacity-0 transition group-hover:opacity-100">
+                    Edit
+                  </span>
+                </button>
                 <div className="md:mt-6">
                   <p className="text-xl font-light text-white md:text-2xl">
                     {isLoaded ? displayName : "Loading your account…"}
@@ -57,6 +79,14 @@ export function ProfileAccount() {
                   <p className="mt-2 text-xs uppercase tracking-[0.2em] text-zinc-500">
                     Oremea participant
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => openUserProfile()}
+                    disabled={!isLoaded}
+                    className="mt-3 text-xs text-amber-100/70 underline decoration-amber-100/25 underline-offset-4 transition hover:text-amber-100 disabled:text-zinc-600"
+                  >
+                    Update profile photo
+                  </button>
                 </div>
               </div>
             </div>
@@ -72,7 +102,9 @@ export function ProfileAccount() {
               />
               <AccountDetail
                 label="Member since"
-                value={isLoaded ? formatMemberSince(user?.createdAt) : "Loading…"}
+                value={
+                  isLoaded ? formatMemberSince(user?.createdAt) : "Loading…"
+                }
               />
               <AccountDetail label="Participation" value="Self-led" />
               <AccountDetail label="Reflection record" value="Private" />
