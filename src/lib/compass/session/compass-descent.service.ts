@@ -32,21 +32,24 @@ const AREA_LABELS: Record<CompassGoalArea, string> = {
 }
 
 const COMPASS_MODEL = "claude-sonnet-4-5-20250929"
-const MAX_DESCENT_QUESTION_WORDS = 28
+const MAX_DESCENT_QUESTION_WORDS = 24
 
 const CONCISE_DESCENT_QUESTION_STANDARD = `
 CONCISE DESCENT QUESTION STANDARD — TIGHTEN WITHOUT FLATTENING
-- write one clean question, normally 12–24 words and never more than ${MAX_DESCENT_QUESTION_WORDS} words
-- compress the grammar, never the participant's meaning
+- write one immediately understandable question, normally 12–20 words and never more than ${MAX_DESCENT_QUESTION_WORDS} words
+- use one grammatical spine that a participant can understand in one read
+- compress the participant's wording into faithful human synthesis; do not mechanically preserve every clause
 - preserve distinct supplied meanings when they operate together through cause, contrast, qualification, or accountability
+- use a short parallel list when several supplied meanings belong together
 - remove duplicated subjects, filler, and scaffolding such as "your state of"
 - never paste the participant's complete answer inside "Why does it matter to you that..."
 - never replace a specific compound answer with a generic abstraction or "this" merely to make the question shorter
-- use punctuation to hold linked supplied meanings together cleanly
+- never stack a because-clause, dash-clause, and with/where-clause into one question
+- faithful synthesis may name an explicit relationship concisely: "said you would and did" can become "keeping your commitment"
 
 Example:
 Source: "I succeeded because I said I would build the product and then I did. I built it from code, and I can account for the time it actually took."
-Faithful and concise: "Why does succeeding because you built the product from code as promised—with the time it actually took accounted for—matter to you?"
+Faithful and concise: "Why does it matter that success comes from keeping your commitment, building the product, and actually putting in the time?"
 Flattened and forbidden: "Why does follow-through matter to you?"
 `.trim()
 
@@ -725,6 +728,24 @@ export function validateCompassQuestion({
 
   assertCompassQuestionIsConcise(normalized)
 
+  if (/^why does .+\bbecause\b.+matter to you\?$/i.test(normalized)) {
+    throw new Error(
+      "The Descent question embeds a because-clause inside its subject; recast it with one clear grammatical spine.",
+    )
+  }
+
+  const stackedClauseCount = [
+    /\bbecause\b/i,
+    /[—–]/,
+    /,\s+(?:with|where|while)\b/i,
+  ].filter((pattern) => pattern.test(normalized)).length
+
+  if (stackedClauseCount >= 3) {
+    throw new Error(
+      "The Descent question stacks too many linked clauses to understand in one read.",
+    )
+  }
+
   if (/\b(right now|now|today|currently|at present|in this moment|here)\b/i.test(lower)) {
     throw new Error("The Descent question pulls the participant back into the present.")
   }
@@ -831,15 +852,64 @@ function getEvidenceSupportedInquiryTerms(
   evidenceText: string,
 ): string[] {
   const normalized = evidenceText.toLowerCase()
+  const supportedTerms: string[] = []
 
   const recurrenceWasSupplied =
     /\b(?:always|constantly|continually|continuously|repeatedly|regularly|every\s+time|again\s+and\s+again|only\s+ever)\b/i.test(
       normalized,
     )
 
-  return recurrenceWasSupplied
-    ? ["repeat", "repeated", "repeatedly", "recurring", "recurrence"]
-    : []
+  if (recurrenceWasSupplied) {
+    supportedTerms.push(
+      "repeat",
+      "repeated",
+      "repeatedly",
+      "recurring",
+      "recurrence",
+    )
+  }
+
+  const completedCommitmentWasSupplied =
+    /\bsaid\b[\s\S]{0,160}\bwould\b[\s\S]{0,160}\b(?:did|done|completed|created|built)\b/i.test(
+      normalized,
+    )
+
+  if (completedCommitmentWasSupplied) {
+    supportedTerms.push(
+      "commitment",
+      "commitments",
+      "committed",
+      "keeping",
+      "kept",
+      "promise",
+      "promised",
+    )
+  }
+
+  if (/\bbecause\b/i.test(normalized)) {
+    supportedTerms.push("come", "comes", "coming")
+  }
+
+  const actualTimeWasSupplied =
+    /\btime\b[\s\S]{0,100}\b(?:actual|actually|active|actively|invested|put)\b|\b(?:actual|actually|active|actively|invested|put)\b[\s\S]{0,100}\btime\b/i.test(
+      normalized,
+    )
+
+  if (actualTimeWasSupplied) {
+    supportedTerms.push(
+      "actual",
+      "actually",
+      "active",
+      "actively",
+      "invest",
+      "invested",
+      "investing",
+      "put",
+      "putting",
+    )
+  }
+
+  return supportedTerms
 }
 
 const DESCENT_INQUIRY_TERMS = [
