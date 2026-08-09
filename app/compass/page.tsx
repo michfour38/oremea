@@ -378,9 +378,10 @@ const possibilityMirror = useMemo(
   }
 
   if (phase === "discussion") {
-  setPhase("core_reflection");
-  return;
-}
+    // Discussion owns its Map as a nested view. Leaving the Map must never
+    // rewind the completed reflection or regenerate earlier Compass stages.
+    return;
+  }
 
   if (phase === "execution_check") {
     setPhase("discussion");
@@ -877,9 +878,13 @@ async function completeCompassProcess() {
     );
   }
 
-  const showBackButton = !["loading", "resume", "intro", "analyzing"].includes(
-    phase,
-  );
+  const showBackButton = ![
+    "loading",
+    "resume",
+    "intro",
+    "analyzing",
+    "discussion",
+  ].includes(phase);
 
   return (
     <main className="min-h-screen bg-[#090909] text-stone-100">
@@ -1086,8 +1091,9 @@ description=""
   recursiveLayers={recursiveLayers}
   extraReflection={extraReflection}
   onExtraReflectionChange={setExtraReflection}
-  onContinue={() => {
-    const mirrorText = compassMirrorOutput || coreReflection.reflection;
+  onContinue={(savedMirror) => {
+    const mirrorText =
+      savedMirror || compassMirrorOutput || coreReflection.reflection;
 
     setDiscussionMessages([
       {

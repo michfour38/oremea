@@ -650,6 +650,16 @@ export function CompassDiscussionFlow({
           : "Compass is holding the goals, dependencies, decisions, and other things already asking for your attention. You only need to carry the movement in front of you."
       }
     >
+      {view === "map" ? (
+        <button
+          type="button"
+          onClick={() => setView("discussion")}
+          className="text-left text-sm text-zinc-400 transition hover:text-[#d8b15f]"
+        >
+          ← Back to Discussion
+        </button>
+      ) : null}
+
       {activeMapItems.length > 0 ? (
         <button
           type="button"
