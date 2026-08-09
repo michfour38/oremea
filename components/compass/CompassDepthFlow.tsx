@@ -33,12 +33,8 @@ export function CompassDepthIntro({
       description={`You have chosen ${selectedAreaLabel}. Now Compass begins identifying what matters most beneath the surface of that choice.`}
     >
       <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-        Over seven layers, Compass keeps asking why. Each genuine answer becomes
-        the subject of the next why.
-      </p>
-
-      <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
-        The repetition is intentional.
+        Across seven layers, Compass keeps asking why to follow what matters
+        beneath your first answer.
       </p>
 
       <button onClick={onBegin} className="primary-button">
@@ -346,11 +342,6 @@ export function CompassDepthFlow({
       title=""
       description=""
     >
-      <p className="text-sm leading-relaxed text-zinc-400">
-        Each answer becomes the subject of the next why. The repetition is
-        intentional.
-      </p>
-
       {visibleCarriedAnswer ? (
         <div className="rounded-[1.3rem] border border-zinc-700 bg-[#141414] p-5">
           <p className="text-xs uppercase tracking-[0.2em] text-zinc-300">
@@ -390,7 +381,7 @@ export function CompassDepthFlow({
       <textarea
         value={recursiveAnswer}
         onChange={(event) => onAnswerChange(event.target.value)}
-        placeholder="Answer in your own words."
+        placeholder="✱ The repetition is intentional. Answer in your own words; each response shapes the next why."
         rows={7}
         disabled={
           isQuestionLoading ||
@@ -398,7 +389,7 @@ export function CompassDepthFlow({
           Boolean(questionError) ||
           !currentQuestion
         }
-        className="compass-textarea"
+        className="compass-textarea compass-descent-textarea"
       />
 
       <button

@@ -1210,6 +1210,11 @@ description=""
           color: #a1a1aa;
         }
 
+        .compass-descent-textarea::placeholder {
+          color: #d66a6a;
+          opacity: 1;
+        }
+
         .compass-textarea:focus {
   border-color: #d8b15f;
   background: #1f1710;
