@@ -172,13 +172,13 @@ expectThrows(
 )
 
 const compoundAnswer =
-  "I am thriving because I said I would create the work and then I did. I created it from code. Delay can be justified by time actually invested, not claimed."
+  "I am proud because I said I would build the prototype and then did. I learned the tools and invested the time."
 
 expectThrows(
   () =>
     validateCompassQuestion({
       question:
-        "Why does it matter to you that your state of thriving is because you said you would create the work and then you did it, creating it from code, where delay can be justified by how much time you actually invested, not claimed?",
+        "Why does it matter to you that you are proud because you said you would build the prototype and then did, learning the tools and investing all of the time required to finish it?",
       sourceAnswer: compoundAnswer,
       evidenceText: compoundAnswer,
       priorQuestions: [],
@@ -188,7 +188,15 @@ expectThrows(
 
 validateCompassQuestion({
   question:
-    "Why does it matter that your thriving comes from keeping your commitment, creating the work, and actually putting in the time?",
+    "Why are keeping your commitment, building the prototype, and investing time important to you?",
+  sourceAnswer: compoundAnswer,
+  evidenceText: compoundAnswer,
+  priorQuestions: [],
+})
+
+validateCompassQuestion({
+  question:
+    "Why does building the prototype through commitment and invested time matter to you?",
   sourceAnswer: compoundAnswer,
   evidenceText: compoundAnswer,
   priorQuestions: [],
@@ -197,8 +205,19 @@ validateCompassQuestion({
 expectThrows(
   () =>
     validateCompassQuestion({
+      question: "Why does this matter to you?",
+      sourceAnswer: compoundAnswer,
+      evidenceText: compoundAnswer,
+      priorQuestions: [],
+    }),
+  "compound answer flattened into generic this",
+)
+
+expectThrows(
+  () =>
+    validateCompassQuestion({
       question:
-        "Why does thriving because you said you would do it and did—creating the work from code, with delay justified by time you actively put in—matter to you?",
+        "Why does pride because you said you would build it and did—learning the tools, with time invested—matter to you?",
       sourceAnswer: compoundAnswer,
       evidenceText: compoundAnswer,
       priorQuestions: [],
@@ -206,34 +225,8 @@ expectThrows(
   "word-limited question still stacked the participant's clauses mechanically",
 )
 
-const recoveredCompoundDecision = validateCompassDescentDecision(
-  {
-    direction: "self_to_self",
-    movement: "compound_meaning",
-    answerForm: "meaning",
-    substantiveAnswer: compoundAnswer,
-    historyAction: "append",
-    advanceLayer: true,
-    question:
-      "Why does thriving because you said you would do it and did—creating the work from code, with delay justified by time you actively put in—matter to you?",
-  },
-  {
-    ...baseContext,
-    layer: 3,
-    sourceAnswer: compoundAnswer,
-    evidenceText: compoundAnswer,
-    questionFailureMode: "fallback",
-  },
-)
-
-assert(
-  recoveredCompoundDecision.question ===
-    "Why does it matter that your thriving comes from keeping your commitment, creating the work, and actually putting in the time?",
-  "The compound fallback must return the locked human question.",
-)
-
 const consistencyLessonAnswer =
-  "showing boring consistency = success is an important lesson, life doesn't always need to be hype and holidays"
+  "Consistency means success to me, and life does not always need hype or holidays."
 
 expectThrows(
   () =>
@@ -247,7 +240,7 @@ expectThrows(
 )
 
 const consistencyLessonQuestion =
-  "Why does it matter that showing boring consistency can mean success and that life does not always need hype or holidays?"
+  "Why do consistency, success, and life without hype or holidays matter to you?"
 
 validateCompassQuestion({
   question: consistencyLessonQuestion,
@@ -256,87 +249,44 @@ validateCompassQuestion({
   priorQuestions: [],
 })
 
-const recoveredConsistencyLesson = validateCompassDescentDecision(
-  {
-    direction: "self_to_self",
-    movement: "compound_meaning",
-    answerForm: "meaning",
-    substantiveAnswer: consistencyLessonAnswer,
-    historyAction: "append",
-    advanceLayer: true,
-    question: "Why does this matter to you?",
-  },
-  {
-    ...baseContext,
-    layer: 5,
-    sourceAnswer: consistencyLessonAnswer,
-    evidenceText: consistencyLessonAnswer,
-    questionFailureMode: "fallback",
-  },
-)
-
-assert(
-  recoveredConsistencyLesson.question === consistencyLessonQuestion,
-  "Layer 5 must preserve the supplied consistency, success, and ordinary-life contrast.",
-)
-
 const earlierCommitmentQuestion =
-  "Why does it matter that your thriving comes from keeping your commitment, creating the work, and actually putting in the time?"
+  "Why are keeping your commitment, building the prototype, and investing time important to you?"
 const laterQuestions = [
-  "Why does showing your family that consistency creates success matter to you?",
   consistencyLessonQuestion,
-  "Why is an ordinary life important to you?",
-  "Why is ordinary life important to you?",
+  "Why does steady progress matter to you?",
+  "Why is rest important to you?",
+  "Why does an ordinary life matter to you?",
 ]
 
 expectThrows(
   () =>
     validateCompassQuestion({
       question: earlierCommitmentQuestion,
-      sourceAnswer: "peace",
-      evidenceText: `${compoundAnswer}\npeace`,
+      sourceAnswer: compoundAnswer,
+      evidenceText: compoundAnswer,
       priorQuestions: [earlierCommitmentQuestion, ...laterQuestions],
     }),
   "exact question repeated outside the former three-question lookback",
 )
 
-const crossLayerFallback = validateCompassDescentDecision(
-  {
-    direction: "self_to_self",
-    movement: "new_meaning",
-    answerForm: "meaning",
-    substantiveAnswer: "peace",
-    historyAction: "append",
-    advanceLayer: true,
-    question: earlierCommitmentQuestion,
-  },
-  {
-    ...baseContext,
-    layer: 6,
-    sourceAnswer: "peace",
-    evidenceText: `${compoundAnswer}\npeace`,
-    recursiveLayers: [
-      {
-        ...acceptedLayer,
-        question: earlierCommitmentQuestion,
-        answer: compoundAnswer,
-      },
-      ...laterQuestions.map((question, index) => ({
-        ...acceptedLayer,
-        layer: index + 2,
-        question,
-        answer: `Later answer ${index + 1}`,
-      })),
-    ],
-    currentQuestion: laterQuestions[laterQuestions.length - 1],
-    questionFailureMode: "fallback",
-  },
+expectThrows(
+  () =>
+    validateCompassQuestion({
+      question:
+        "Why does building the prototype through commitment and invested time matter to you?",
+      sourceAnswer: "peace",
+      evidenceText: `${compoundAnswer}\npeace`,
+      priorQuestions: [],
+    }),
+  "question reused an earlier subject instead of the latest answer",
 )
 
-assert(
-  crossLayerFallback.question === "Why does peace matter to you?",
-  "A later fallback must follow only the latest answer, not recycle an earlier compound question.",
-)
+validateCompassQuestion({
+  question: "Why does peace matter to you?",
+  sourceAnswer: "peace",
+  evidenceText: `${compoundAnswer}\npeace`,
+  priorQuestions: laterQuestions,
+})
 
 expectThrows(
   () =>
@@ -454,17 +404,17 @@ expectThrows(
   "invalid generated question still rejected by the strict contract",
 )
 
-const fallbackDecision = validateCompassDescentDecision(
-  invalidQuestionDecision,
+const repairedDecision = validateCompassDescentDecision(
   {
-    ...baseContext,
-    questionFailureMode: "fallback",
+    ...invalidQuestionDecision,
+    question: "Why does freedom matter to you?",
   },
+  baseContext,
 )
 
 assert(
-  fallbackDecision.question === "Why does freedom matter to you?",
-  "The live path must replace rejected model wording with the supplied subject and Why.",
+  repairedDecision.question === "Why does freedom matter to you?",
+  "A repaired model response may vary while remaining grounded in the latest answer.",
 )
 
 console.log("Compass Descent contract checks passed.")
