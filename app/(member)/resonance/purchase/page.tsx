@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -9,12 +11,15 @@ import {
   RESONANCE_REGULAR_PRICE,
 } from "@/src/lib/resonance/resonance-pricing";
 import {
+  createPurchasedResonanceRun,
   getActiveResonanceRun,
   getResonanceWeekRuns,
 } from "@/src/lib/resonance/resonance-week-run";
 import MemberNav from "../../member-nav";
 
 export const dynamic = "force-dynamic";
+
+const RESONANCE_TESTER_USER_ID = "user_3CLGEx3xqgXY6DsIHPyV3yOd1xi";
 
 type Props = {
   searchParams?: {
@@ -91,6 +96,39 @@ const ROOM_PURCHASE_DETAILS: Record<number, RoomPurchaseDetail> = {
   },
 };
 
+async function completeTesterPurchase(formData: FormData) {
+  "use server";
+
+  const { userId } = await auth();
+  if (!userId) redirect("/sign-in");
+  if (userId !== RESONANCE_TESTER_USER_ID) redirect("/entry");
+
+  const weekNumber = Number(formData.get("weekNumber"));
+  if (!Number.isInteger(weekNumber) || weekNumber < 1 || weekNumber > 10) {
+    redirect("/entry");
+  }
+
+  const [week, activeRun] = await Promise.all([
+    prisma.resonance_weeks.findUnique({
+      where: { week_number: weekNumber },
+      select: { is_published: true },
+    }),
+    getActiveResonanceRun(userId),
+  ]);
+
+  if (!week?.is_published) redirect("/entry");
+  if (activeRun) redirect("/resonance");
+
+  await createPurchasedResonanceRun({
+    userId,
+    weekNumber,
+    purchaseSource: "manual_test",
+    purchaseReference: `manual-test-${userId}-${weekNumber}-${randomUUID()}`,
+  });
+
+  redirect("/resonance");
+}
+
 export default async function ResonancePurchasePage({ searchParams }: Props) {
   const { userId } = await auth();
   if (!userId) {
@@ -129,6 +167,7 @@ export default async function ResonancePurchasePage({ searchParams }: Props) {
   const checkoutHref = checkoutBase
     ? `${checkoutBase}${checkoutBase.includes("?") ? "&" : "?"}week=${weekNumber}`
     : null;
+  const isTester = userId === RESONANCE_TESTER_USER_ID;
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-zinc-950 text-white">
@@ -191,10 +230,10 @@ export default async function ResonancePurchasePage({ searchParams }: Props) {
 
             <p className="mt-5 text-sm leading-7 text-zinc-300">
               This purchase opens one fresh seven-day visit to {week.title}. Each day
-              moves through private reflections, a Daily Mirror, and 2Q. Day 7 also
-              opens a Closing Mirror across the full visit. When the visit closes,
-              your reflections, Mirrors, and 2Q answers remain available in your
-              archive.
+              moves through private reflections, a Daily Mirror, and two follow-up
+              questions. Day 7 also opens a Closing Mirror across the full visit. When
+              the visit closes, your reflections, Mirrors, and answers remain available
+              in your archive.
             </p>
 
             {completedRuns.length > 0 ? (
@@ -206,7 +245,17 @@ export default async function ResonancePurchasePage({ searchParams }: Props) {
             ) : null}
 
             <div className="mt-7 flex flex-wrap gap-3">
-              {checkoutHref ? (
+              {isTester ? (
+                <form action={completeTesterPurchase}>
+                  <input type="hidden" name="weekNumber" value={week.week_number} />
+                  <button
+                    type="submit"
+                    className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10"
+                  >
+                    Purchase {week.title} · {RESONANCE_LAUNCH_PRICE}
+                  </button>
+                </form>
+              ) : checkoutHref ? (
                 <a
                   href={checkoutHref}
                   className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10"
