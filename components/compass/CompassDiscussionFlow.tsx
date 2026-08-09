@@ -41,24 +41,45 @@ type FinalizationStage =
   | "confirm"
   | "saved";
 
-function MapThinkingIndicator() {
+function ThinkingDots() {
   const delays = ["0ms", "180ms", "360ms"];
 
+  return (
+    <span className="inline-flex h-7 items-center gap-2" aria-hidden="true">
+      {delays.map((delay) => (
+        <span
+          key={delay}
+          className="h-3 w-3 animate-bounce rounded-full bg-[#d8b15f] motion-reduce:animate-pulse"
+          style={{ animationDelay: delay, animationDuration: "900ms" }}
+        />
+      ))}
+    </span>
+  );
+}
+
+function MapThinkingIndicator() {
   return (
     <div
       className="flex items-center rounded-2xl border border-zinc-800 p-5 text-sm text-zinc-300"
       aria-live="polite"
     >
       <span>Holding the pieces together</span>
-      <span className="ml-2 inline-flex items-center gap-1" aria-hidden="true">
-        {delays.map((delay) => (
-          <span
-            key={delay}
-            className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#d8b15f]"
-            style={{ animationDelay: delay }}
-          />
-        ))}
+      <span className="ml-3">
+        <ThinkingDots />
       </span>
+    </div>
+  );
+}
+
+function DiscussionThinkingIndicator() {
+  return (
+    <div
+      className="flex min-h-10 items-center"
+      role="status"
+      aria-live="polite"
+      aria-label="Compass is working"
+    >
+      <ThinkingDots />
     </div>
   );
 }
@@ -669,13 +690,17 @@ export function CompassDiscussionFlow({
                     : "bg-[#121212] text-zinc-100"
                 }`}
               >
-                <p
-                  className={`whitespace-pre-line ${
-                    message.role === "compass" ? BODY_TEXT : "text-zinc-100"
-                  }`}
-                >
-                  {message.content}
-                </p>
+                {message.role === "compass" && message.content === "..." ? (
+                  <DiscussionThinkingIndicator />
+                ) : (
+                  <p
+                    className={`whitespace-pre-line ${
+                      message.role === "compass" ? BODY_TEXT : "text-zinc-100"
+                    }`}
+                  >
+                    {message.content}
+                  </p>
+                )}
               </div>
             ))}
           </div>
