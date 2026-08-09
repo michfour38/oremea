@@ -7,17 +7,17 @@ export function ProfileAccount() {
 
   return (
     <section className="border-b border-white/5">
-      <div className="mx-auto max-w-6xl px-5 py-20">
-        <div className="mb-10">
+      <div className="mx-auto max-w-6xl px-5 py-10 md:py-12">
+        <div className="mb-5">
           <p className="text-xs uppercase tracking-[0.28em] text-amber-200/70">
             Account
           </p>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-10">
-          <div className="grid gap-10 md:grid-cols-2">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-6 md:p-7">
+          <div className="grid gap-x-10 gap-y-6 md:grid-cols-2">
             <div>
-              <p className="mb-3 text-sm uppercase tracking-[0.18em] text-zinc-500">
+              <p className="mb-2 text-sm uppercase tracking-[0.18em] text-zinc-500">
                 Name
               </p>
 
@@ -27,7 +27,7 @@ export function ProfileAccount() {
             </div>
 
             <div>
-              <p className="mb-3 text-sm uppercase tracking-[0.18em] text-zinc-500">
+              <p className="mb-2 text-sm uppercase tracking-[0.18em] text-zinc-500">
                 Email
               </p>
 
@@ -37,7 +37,7 @@ export function ProfileAccount() {
             </div>
 
             <div>
-              <p className="mb-3 text-sm uppercase tracking-[0.18em] text-zinc-500">
+              <p className="mb-2 text-sm uppercase tracking-[0.18em] text-zinc-500">
                 Member Since
               </p>
 
@@ -49,7 +49,7 @@ export function ProfileAccount() {
             </div>
 
             <div>
-              <p className="mb-3 text-sm uppercase tracking-[0.18em] text-zinc-500">
+              <p className="mb-2 text-sm uppercase tracking-[0.18em] text-zinc-500">
                 Participation Style
               </p>
 
