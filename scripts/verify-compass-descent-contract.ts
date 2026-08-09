@@ -280,6 +280,64 @@ assert(
   "Layer 5 must preserve the supplied consistency, success, and ordinary-life contrast.",
 )
 
+const earlierCommitmentQuestion =
+  "Why does it matter that your thriving comes from keeping your commitment, creating the work, and actually putting in the time?"
+const laterQuestions = [
+  "Why does showing your family that consistency creates success matter to you?",
+  consistencyLessonQuestion,
+  "Why is an ordinary life important to you?",
+  "Why is ordinary life important to you?",
+]
+
+expectThrows(
+  () =>
+    validateCompassQuestion({
+      question: earlierCommitmentQuestion,
+      sourceAnswer: "peace",
+      evidenceText: `${compoundAnswer}\npeace`,
+      priorQuestions: [earlierCommitmentQuestion, ...laterQuestions],
+    }),
+  "exact question repeated outside the former three-question lookback",
+)
+
+const crossLayerFallback = validateCompassDescentDecision(
+  {
+    direction: "self_to_self",
+    movement: "new_meaning",
+    answerForm: "meaning",
+    substantiveAnswer: "peace",
+    historyAction: "append",
+    advanceLayer: true,
+    question: earlierCommitmentQuestion,
+  },
+  {
+    ...baseContext,
+    layer: 6,
+    sourceAnswer: "peace",
+    evidenceText: `${compoundAnswer}\npeace`,
+    recursiveLayers: [
+      {
+        ...acceptedLayer,
+        question: earlierCommitmentQuestion,
+        answer: compoundAnswer,
+      },
+      ...laterQuestions.map((question, index) => ({
+        ...acceptedLayer,
+        layer: index + 2,
+        question,
+        answer: `Later answer ${index + 1}`,
+      })),
+    ],
+    currentQuestion: laterQuestions[laterQuestions.length - 1],
+    questionFailureMode: "fallback",
+  },
+)
+
+assert(
+  crossLayerFallback.question === "Why does peace matter to you?",
+  "A later fallback must follow only the latest answer, not recycle an earlier compound question.",
+)
+
 expectThrows(
   () =>
     validateCompassQuestion({
