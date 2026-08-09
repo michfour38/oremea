@@ -18,7 +18,9 @@
     "db:verify:resonance": "tsx prisma/scripts/verify-resonance-seed.ts",
     "typecheck": "tsc --noEmit",
     "test:compass-descent": "tsx scripts/verify-compass-descent-contract.ts",
-    "test:compass": "npm run test:compass-descent"
+    "test:compass-resolution": "tsx scripts/verify-compass-resolution-contract.ts",
+    "test:compass-pricing": "tsx scripts/verify-compass-pricing-contract.ts",
+    "test:compass": "npm run test:compass-descent && npm run test:compass-resolution && npm run test:compass-pricing"
   },
   "prisma": {
     "schema": "./prisma",

@@ -1,5 +1,10 @@
 import Link from "next/link";
 
+import {
+  COMPASS_PRICING,
+  formatCompassPrice,
+} from "@/src/lib/compass/compass-pricing";
+
 export const dynamic = "force-dynamic";
 
 function CheckoutAction({
@@ -29,6 +34,12 @@ function CheckoutAction({
 
 export default function CompassAccessPage() {
   const compassCheckout = process.env.COMPASS_CHECKOUT_URL?.trim() || null;
+  const foundingPrice = formatCompassPrice(
+    COMPASS_PRICING.foundingPriceCents,
+  );
+  const standardPrice = formatCompassPrice(
+    COMPASS_PRICING.standardPriceCents,
+  );
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-zinc-950 text-white">
@@ -68,31 +79,42 @@ export default function CompassAccessPage() {
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
-                  Compass membership
+                  Founding access
                 </p>
                 <h2 className="mt-2 font-serif text-2xl text-zinc-100">
-                  Compass
+                  Compass · {COMPASS_PRICING.accessDays} days
                 </h2>
               </div>
-              <p className="text-3xl text-[#f1dfb4]">$9.99/month</p>
+              <div className="text-right">
+                <p className="text-sm text-zinc-500 line-through">
+                  {standardPrice}
+                </p>
+                <p className="text-3xl text-[#f1dfb4]">{foundingPrice}</p>
+              </div>
             </div>
 
             <p className="mt-5 text-sm leading-7 text-zinc-300">
-              Full access to Compass, your Map, ongoing discussions, and your
-              Compass Archive while your membership is active.
+              One complete month of Compass, including your Map, ongoing
+              discussions, and Compass Archive. This purchase does not renew
+              automatically.
             </p>
 
             <div className="mt-7">
               <CheckoutAction
                 href={compassCheckout}
-                label="Choose Compass · $9.99/month"
+                label={`Enter Compass · ${foundingPrice}`}
               />
             </div>
+
+            <p className="mt-4 text-xs leading-6 text-zinc-500">
+              Standard {COMPASS_PRICING.accessDays}-day access will be {standardPrice}.
+            </p>
           </section>
         </div>
 
         <p className="mt-8 text-sm leading-7 text-zinc-500">
-          Prices are shown and charged in US dollars.
+          Prices are shown and charged in US dollars. Access ends after
+          {` ${COMPASS_PRICING.accessDays} days`} unless you choose to return.
         </p>
       </section>
     </main>

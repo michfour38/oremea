@@ -810,23 +810,29 @@ pauseThen(() => setPhase("discussion"));
 async function completeCompassProcess() {
   setHasStarted(true);
 
-  await fetch("/api/compass/session", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      phase: "complete",
-      selectedArea,
-      areaResponses,
-      recursiveLayers,
-      possibilityAnswers,
-      resistanceMap,
-      discussionMessages,
-      proposedStep,
-      finalStep,
-    }),
-  });
+  try {
+    const response = await fetch("/api/compass/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        phase: "complete",
+        selectedArea,
+        areaResponses,
+        recursiveLayers,
+        possibilityAnswers,
+        resistanceMap,
+        discussionMessages,
+        proposedStep,
+        finalStep,
+      }),
+    });
+
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
   function moveToExecutionCheck() {
@@ -1247,9 +1253,11 @@ function normalizePhase(value: string | null | undefined): CompassPhase {
 "possibility_mirror",
     "resistance",
     "discussion",
-    "execution_check",
-    "complete",
   ];
+
+  if (value === "execution_check" || value === "complete") {
+    return "discussion";
+  }
 
   if (value && allowed.includes(value as CompassPhase)) {
     return value as CompassPhase;

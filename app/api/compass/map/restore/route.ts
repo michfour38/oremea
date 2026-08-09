@@ -94,6 +94,10 @@ export async function POST(request: Request) {
         data: {
           detected_patterns:
             nextState as unknown as Prisma.InputJsonValue,
+          resolution_text: null,
+          resolution_confirmed_at: null,
+          final_step: null,
+          final_step_confirmed_at: null,
         },
       });
     } else {
@@ -185,6 +189,9 @@ function restoreItemIntoState(
     ...state,
     mapItems,
     mapReviewed: false,
+    resolutionCandidate: null,
+    resolutionConfirmed: false,
+    resolutionConfirmedAt: null,
     updatedAt: now,
   };
 }

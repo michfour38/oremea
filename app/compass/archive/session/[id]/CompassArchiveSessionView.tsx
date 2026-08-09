@@ -24,10 +24,14 @@ export function CompassArchiveSessionView({
   sessionId,
   discussionMessages,
   endingState,
+  resolutionText,
+  finalStep,
 }: {
   sessionId: string;
   discussionMessages: DiscussionMessage[];
   endingState: CompassEndingState | null;
+  resolutionText: string | null;
+  finalStep: string | null;
 }) {
   const [view, setView] = useState<"discussion" | "map">("discussion");
   const [returningItemId, setReturningItemId] = useState<string | null>(null);
@@ -112,6 +116,32 @@ export function CompassArchiveSessionView({
 
   return (
     <div className="mt-8">
+      {resolutionText || finalStep ? (
+        <div className="mb-8 space-y-4">
+          {resolutionText ? (
+            <section className="rounded-[1.5rem] border border-zinc-800 bg-[#121212] p-5">
+              <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
+                Confirmed resolution
+              </p>
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-300">
+                {resolutionText}
+              </p>
+            </section>
+          ) : null}
+
+          {finalStep ? (
+            <section className="rounded-[1.5rem] border border-[#3A3224] bg-[#17130D] p-5">
+              <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
+                Chosen movement
+              </p>
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-300">
+                {finalStep}
+              </p>
+            </section>
+          ) : null}
+        </div>
+      ) : null}
+
       <div className="grid grid-cols-2 rounded-full border border-zinc-800 bg-[#101010] p-1">
         <button
           type="button"

@@ -57,6 +57,9 @@ export type CompassEndingState = {
   movements: CompassMovement[]
   currentMovementId: string | null
   reframe: string | null
+  resolutionCandidate: string | null
+  resolutionConfirmed: boolean
+  resolutionConfirmedAt: string | null
   followUpQuestion: string | null
   movementReady: boolean
   scopeCategory: CompassScopeCategory
@@ -77,6 +80,7 @@ export type CompassEndingEngineResult = {
   scopeCategory: CompassScopeCategory
   mapItems: CompassMapCandidate[]
   reframe: string | null
+  resolution: string | null
   movement: {
     instruction: string
     reason: string | null
@@ -96,6 +100,9 @@ export function createEmptyCompassEndingState(
     movements: [],
     currentMovementId: null,
     reframe: null,
+    resolutionCandidate: null,
+    resolutionConfirmed: false,
+    resolutionConfirmedAt: null,
     followUpQuestion: null,
     movementReady: false,
     scopeCategory: "in_scope",
