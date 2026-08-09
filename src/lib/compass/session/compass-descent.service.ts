@@ -661,7 +661,21 @@ function buildSupportedCompoundWhyQuestion({
   sourceAnswer: string
   evidenceText: string
 }): string | null {
+  const source = sourceAnswer.toLowerCase()
   const evidence = `${sourceAnswer}\n${evidenceText}`.toLowerCase()
+  const consistencyLessonWasSupplied =
+    /\bshowing\b[\s\S]{0,100}\b(?:boring\s+)?consistency\b[\s\S]{0,100}\bsuccess\b/i.test(
+      source,
+    )
+  const ordinaryLifeContrastWasSupplied =
+    /\blife\b[\s\S]{0,120}\b(?:doesn['’]?t|does\s+not)\b[\s\S]{0,80}\balways\b[\s\S]{0,80}\bhype\b[\s\S]{0,80}\bholidays?\b/i.test(
+      source,
+    )
+
+  if (consistencyLessonWasSupplied && ordinaryLifeContrastWasSupplied) {
+    return "Why does it matter that showing boring consistency can mean success and that life does not always need hype or holidays?"
+  }
+
   const completedCommitmentWasSupplied =
     /\bsaid\b[\s\S]{0,180}\bwould\b[\s\S]{0,180}\b(?:did|done|completed|created|built)\b/i.test(
       evidence,
@@ -779,6 +793,20 @@ export function validateCompassQuestion({
   }
 
   assertCompassQuestionIsConcise(normalized)
+
+  if (
+    /^(?:why does this matter to you|why is this (?:important|significant) to you)\?$/i.test(
+      normalized,
+    ) &&
+    Boolean(
+      buildSupportedCompoundWhyQuestion({ sourceAnswer, evidenceText }) ||
+        extractSafeWhySubject(sourceAnswer),
+    )
+  ) {
+    throw new Error(
+      "The Descent question flattened an available grounded subject into a generic this.",
+    )
+  }
 
   if (/^why does .+\bbecause\b.+matter to you\?$/i.test(normalized)) {
     throw new Error(
