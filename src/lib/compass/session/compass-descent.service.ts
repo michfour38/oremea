@@ -33,6 +33,25 @@ const AREA_LABELS: Record<CompassGoalArea, string> = {
 
 const COMPASS_MODEL = "claude-sonnet-4-5-20250929"
 const MAX_DESCENT_QUESTION_WORDS = 24
+const PROTECTED_UNSUPPLIED_QUESTION_TERMS = [
+  "abandon",
+  "control",
+  "create",
+  "deserve",
+  "future",
+  "give",
+  "identity",
+  "interfere",
+  "love",
+  "pressure",
+  "protect",
+  "provide",
+  "repeat",
+  "safety",
+  "shame",
+  "trauma",
+  "worth",
+] as const
 
 const CONCISE_DESCENT_QUESTION_STANDARD = `
 CONCISE DESCENT QUESTION STANDARD — TIGHTEN WITHOUT FLATTENING
@@ -399,7 +418,7 @@ async function callMirrorWithRepair<T>({
 }): Promise<T> {
   let validationError = ""
 
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
     const repair =
       attempt === 0
         ? ""
@@ -814,10 +833,24 @@ export function validateCompassQuestion({
       ...getEvidenceSupportedInquiryTerms(sourceAnswer),
     ],
   })
+  const unsupportedProtectedTerms = unsupportedTerms.filter((term) =>
+    PROTECTED_UNSUPPLIED_QUESTION_TERMS.some((protectedTerm) =>
+      lexicalRootsOverlap(term, protectedTerm),
+    ),
+  )
 
-  if (unsupportedTerms.length > 0) {
+  if (unsupportedProtectedTerms.length > 0) {
     throw new Error(
-      `The Descent question introduces unsupported content: ${unsupportedTerms.join(", ")}.`,
+      `The Descent question introduces an unsupported premise: ${unsupportedProtectedTerms.join(", ")}.`,
+    )
+  }
+
+  if (
+    hasSubstantiveWhySubject(sourceAnswer) &&
+    !questionHasLatestAnswerAnchor({ question: normalized, sourceAnswer })
+  ) {
+    throw new Error(
+      "The Descent question does not keep the immediately preceding answer as its subject.",
     )
   }
 
@@ -834,6 +867,146 @@ export function validateCompassQuestion({
 function usesGenericWhySubject(question: string): boolean {
   return /^(?:why does (?:this|that|it|your answer|the answer|what you (?:said|wrote|described)) (?:matter|remain important) to you|why is (?:this|that|it|your answer|the answer|what you (?:said|wrote|described)) (?:important|significant) to you)\?$/i.test(
     question,
+  )
+}
+
+function questionHasLatestAnswerAnchor({
+  question,
+  sourceAnswer,
+}: {
+  question: string
+  sourceAnswer: string
+}): boolean {
+  const sourceRoots = [
+    ...getQuestionContentRoots(sourceAnswer),
+    ...getEvidenceSupportedInquiryTerms(sourceAnswer).map(toQuestionLexicalRoot),
+  ]
+  const questionRoots = getQuestionContentRoots(question)
+
+  return questionRoots.some((questionRoot) =>
+    sourceRoots.some((sourceRoot) =>
+      lexicalRootsOverlap(questionRoot, sourceRoot),
+    ),
+  )
+}
+
+function getQuestionContentRoots(input: string): string[] {
+  const ignored = new Set([
+    "about",
+    "after",
+    "again",
+    "also",
+    "answer",
+    "before",
+    "being",
+    "both",
+    "because",
+    "could",
+    "clear",
+    "didn",
+    "does",
+    "doesn",
+    "doing",
+    "don",
+    "each",
+    "even",
+    "from",
+    "have",
+    "having",
+    "important",
+    "importance",
+    "into",
+    "just",
+    "matter",
+    "matters",
+    "meaning",
+    "more",
+    "most",
+    "other",
+    "ours",
+    "reason",
+    "should",
+    "significant",
+    "significance",
+    "that",
+    "their",
+    "them",
+    "then",
+    "there",
+    "these",
+    "they",
+    "this",
+    "those",
+    "through",
+    "until",
+    "very",
+    "were",
+    "what",
+    "when",
+    "where",
+    "which",
+    "with",
+    "without",
+    "would",
+    "your",
+    "yours",
+  ])
+
+  return [
+    ...new Set(
+      (input.toLowerCase().match(/[a-z]+/g) ?? [])
+        .filter((word) => word.length >= 4 && !ignored.has(word))
+        .map(toQuestionLexicalRoot),
+    ),
+  ]
+}
+
+function toQuestionLexicalRoot(input: string): string {
+  let word = input.toLowerCase().replace(/[^a-z]/g, "")
+
+  for (const suffix of [
+    "ations",
+    "ation",
+    "ments",
+    "ment",
+    "ness",
+    "ities",
+    "ity",
+    "ingly",
+    "edly",
+    "ing",
+    "ed",
+    "ies",
+    "es",
+    "s",
+  ]) {
+    if (word.length - suffix.length >= 4 && word.endsWith(suffix)) {
+      word = word.slice(0, -suffix.length)
+      break
+    }
+  }
+
+  if (word.length >= 8 && word.endsWith("ly")) {
+    word = word.slice(0, -2)
+  }
+
+  if (word.length > 5 && word.endsWith("e")) {
+    word = word.slice(0, -1)
+  }
+
+  return word
+}
+
+function lexicalRootsOverlap(left: string, right: string): boolean {
+  const leftRoot = toQuestionLexicalRoot(left)
+  const rightRoot = toQuestionLexicalRoot(right)
+
+  if (leftRoot === rightRoot) return true
+
+  const shorterLength = Math.min(leftRoot.length, rightRoot.length)
+  return (
+    shorterLength >= 5 &&
+    (leftRoot.startsWith(rightRoot) || rightRoot.startsWith(leftRoot))
   )
 }
 
