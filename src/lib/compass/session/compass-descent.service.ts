@@ -152,23 +152,189 @@ export async function evaluateCompassDescentAnswer({
     attempts,
   })
 
-  return callMirrorWithRepair({
-    prompt,
-    maxTokens: 520,
-    validate: (value) =>
-      validateCompassDescentDecision(value, {
-        layer,
-        sourceAnswer: currentAnswer,
-        evidenceText: [
-          selectedAreaAnswer,
-          ...recursiveLayers.map((item) => item.answer),
-          currentAnswer,
-        ].join("\n"),
-        currentQuestion,
-        recursiveLayers,
-        attempts,
-      }),
+  try {
+    return await callMirrorWithRepair({
+      prompt,
+      maxTokens: 520,
+      validate: (value) =>
+        validateCompassDescentDecision(value, {
+          layer,
+          sourceAnswer: currentAnswer,
+          evidenceText: [
+            selectedAreaAnswer,
+            ...recursiveLayers.map((item) => item.answer),
+            currentAnswer,
+          ].join("\n"),
+          currentQuestion,
+          recursiveLayers,
+          attempts,
+        }),
+    })
+  } catch (error) {
+    console.error(
+      "Compass Descent decision recovered after Mirror failure:",
+      error instanceof Error ? error.message : "Unknown Mirror failure.",
+    )
+
+    return recoverCompassDescentDecision({
+      layer,
+      selectedArea,
+      areaResponses,
+      recursiveLayers,
+      currentQuestion,
+      currentAnswer,
+      attempts,
+    })
+  }
+}
+
+async function recoverCompassDescentDecision({
+  layer,
+  selectedArea,
+  areaResponses,
+  recursiveLayers,
+  currentQuestion,
+  currentAnswer,
+  attempts,
+}: {
+  layer: number
+  selectedArea: CompassGoalArea
+  areaResponses: CompassAreaResponse[]
+  recursiveLayers: CompassRecursiveLayer[]
+  currentQuestion: string
+  currentAnswer: string
+  attempts: CompassDescentAttempt[]
+}): Promise<CompassDescentDecision> {
+  const answer = currentAnswer.trim()
+  const normalizedAnswer = normalizeComparisonText(answer)
+  const isUncertaintyOnly = isOnlyUncertaintyAnswer(answer)
+  const isCorrection =
+    recursiveLayers.length > 0 &&
+    /^(?:no\b|actually\b|correction\b|that(?:'s| is) not what i meant\b|i meant\b)/i.test(
+      answer,
+    )
+  const isExactRepetition = [
+    ...recursiveLayers.map((item) => item.answer),
+    ...attempts.map((item) => item.answer),
+  ].some((item) => normalizeComparisonText(item) === normalizedAnswer)
+
+  const movement: CompassDescentDecision["movement"] = isUncertaintyOnly
+    ? "uncertainty_only"
+    : isCorrection
+      ? "correction"
+      : isExactRepetition
+        ? "repetition"
+        : "new_meaning"
+  const historyAction = expectedHistoryAction({
+    movement,
+    hasAcceptedLayer: recursiveLayers.length > 0,
   })
+  const substantiveAnswer = isUncertaintyOnly ? null : answer
+
+  if (historyAction === "stay") {
+    return {
+      direction: "self_to_self",
+      movement,
+      answerForm: "other",
+      substantiveAnswer,
+      historyAction,
+      advanceLayer: false,
+      question: currentQuestion,
+    }
+  }
+
+  if (layer === 7 && historyAction === "append") {
+    return {
+      direction: "self_to_self",
+      movement,
+      answerForm: "meaning",
+      substantiveAnswer,
+      historyAction,
+      advanceLayer: true,
+      question: null,
+    }
+  }
+
+  const recoveredLayers = buildRecoveredLayers({
+    layer,
+    recursiveLayers,
+    currentQuestion,
+    answer,
+    historyAction,
+  })
+  const priorQuestions = [
+    ...recoveredLayers.map((item) => item.question),
+    ...attempts.map((item) => item.question),
+  ]
+
+  let question: string
+
+  try {
+    question = await generateCompassDescentQuestion({
+      layer: historyAction === "append" ? layer + 1 : layer,
+      selectedArea,
+      areaResponses,
+      recursiveLayers: recoveredLayers,
+    })
+  } catch {
+    question = buildCompassRecoveryWhyQuestion({
+      sourceAnswer: answer,
+      priorQuestions,
+    })
+  }
+
+  return {
+    direction: "self_to_self",
+    movement,
+    answerForm: "meaning",
+    substantiveAnswer,
+    historyAction,
+    advanceLayer: historyAction === "append",
+    question,
+  }
+}
+
+function buildRecoveredLayers({
+  layer,
+  recursiveLayers,
+  currentQuestion,
+  answer,
+  historyAction,
+}: {
+  layer: number
+  recursiveLayers: CompassRecursiveLayer[]
+  currentQuestion: string
+  answer: string
+  historyAction: CompassDescentHistoryAction
+}): CompassRecursiveLayer[] {
+  const recoveredLayer: CompassRecursiveLayer = {
+    layer,
+    question: currentQuestion,
+    answer,
+    detectedValueWords: [],
+    detectedReasonWords: [],
+  }
+
+  if (historyAction === "replace_previous") {
+    return [...recursiveLayers.slice(0, -1), recoveredLayer]
+  }
+
+  return [...recursiveLayers, recoveredLayer]
+}
+
+function normalizeComparisonText(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[’']/g, "'")
+    .replace(/[^a-z0-9']+/g, " ")
+    .replace(/\s+/g, " ")
+}
+
+function isOnlyUncertaintyAnswer(value: string): boolean {
+  return /^(?:(?:i|we)\s+)?(?:(?:(?:do|did)\s+not|don't|didn't)\s+(?:know|understand)|(?:am|are)?\s*(?:not\s+sure|unsure|uncertain|unclear))(?:\s+(?:yet|really))?[.!?]*$/i.test(
+    value.trim().replace(/[’]/g, "'"),
+  )
 }
 
 function buildQuestionPrompt({
@@ -594,7 +760,15 @@ function buildSafeWhyQuestion({
   priorQuestions: string[]
 }): string {
   const subject = extractSafeWhySubject(sourceAnswer)
+  const quotedSubject = extractQuotedWhySubject(sourceAnswer)
   const candidates = [
+    ...(quotedSubject
+      ? [
+          `Why does “${quotedSubject}” matter to you?`,
+          `Why is “${quotedSubject}” important to you?`,
+          `Why is “${quotedSubject}” significant to you?`,
+        ]
+      : []),
     ...(subject
       ? [
           `Why does ${subject} matter to you?`,
@@ -627,6 +801,65 @@ function buildSafeWhyQuestion({
 
   throw new Error(
     "Compass could not form a distinct evidence-grounded Why question.",
+  )
+}
+
+export function buildCompassRecoveryWhyQuestion({
+  sourceAnswer,
+  priorQuestions,
+}: {
+  sourceAnswer: string
+  priorQuestions: string[]
+}): string {
+  try {
+    return buildSafeWhyQuestion({
+      sourceAnswer,
+      evidenceText: sourceAnswer,
+      priorQuestions,
+    })
+  } catch {
+    const earlierQuestions = new Set(
+      priorQuestions.map((item) => item.trim().toLowerCase()),
+    )
+    const candidates = [
+      "Why does the reason you just gave matter to you?",
+      "Why is the reason you just gave important to you?",
+      "Why is the reason you just gave significant to you?",
+    ]
+
+    return (
+      candidates.find(
+        (candidate) => !earlierQuestions.has(candidate.toLowerCase()),
+      ) ?? candidates[0]
+    )
+  }
+}
+
+function extractQuotedWhySubject(sourceAnswer: string): string {
+  const sourceWordCount = sourceAnswer.trim().split(/\s+/).filter(Boolean).length
+
+  if (sourceWordCount <= 6) return ""
+
+  const fragments = sourceAnswer
+    .split(/\n|[,;:]+|[.!?]+|\s+[—–-]\s+/)
+    .map((item) =>
+      item
+        .trim()
+        .replace(/^[\s"'“”‘’()[\]{}]+/, "")
+        .replace(/[\s"'“”‘’()[\]{}]+$/, "")
+        .replace(
+          /^(?:it means|that means|this means|meaning|because|and|but|so|then)\s+/i,
+          "",
+        )
+        .trim(),
+    )
+    .filter(Boolean)
+
+  return (
+    fragments.find((fragment) => {
+      const wordCount = fragment.split(/\s+/).filter(Boolean).length
+      return wordCount >= 2 && wordCount <= 16
+    }) ?? ""
   )
 }
 

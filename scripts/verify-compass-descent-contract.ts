@@ -1,4 +1,5 @@
 import {
+  buildCompassRecoveryWhyQuestion,
   validateCompassDescentDecision,
   validateCompassQuestion,
 } from "../src/lib/compass/session/compass-descent.service"
@@ -70,6 +71,25 @@ validateCompassQuestion({
   question: "Why did repeatedly receiving one item matter to you?",
   sourceAnswer: "I only ever received one item",
   evidenceText: "I only ever received one item",
+  priorQuestions: [],
+})
+
+const recoveredQuestion = buildCompassRecoveryWhyQuestion({
+  sourceAnswer:
+    "because the old workflow cannot scale forever, consistent practice builds readiness before the next project",
+  priorQuestions: [],
+})
+
+assert(
+  recoveredQuestion ===
+    "Why does “the old workflow cannot scale forever” matter to you?",
+  "Recovery must retain a concise supplied clause instead of dropping the answer.",
+)
+
+validateCompassQuestion({
+  question: recoveredQuestion,
+  sourceAnswer:
+    "because the old workflow cannot scale forever, consistent practice builds readiness before the next project",
   priorQuestions: [],
 })
 
