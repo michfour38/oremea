@@ -81,7 +81,7 @@ const repetition = validateCompassDescentDecision(
     substantiveAnswer: "I do not want them to go without",
     historyAction: "stay",
     advanceLayer: false,
-    question: "Why is this most important to you?",
+    question: "Why does not wanting them to go without remain important to you?",
   },
   baseContext,
 )
@@ -97,7 +97,7 @@ const uncertainty = validateCompassDescentDecision(
     historyAction: "stay",
     advanceLayer: false,
     question:
-      "Why does this matter to you, even if the reason is not clear yet?",
+      "Why does wanting them to have enough matter, even if the reason is not clear yet?",
   },
   {
     ...baseContext,
@@ -246,6 +246,14 @@ validateCompassQuestion({
   question: consistencyLessonQuestion,
   sourceAnswer: consistencyLessonAnswer,
   evidenceText: consistencyLessonAnswer,
+  priorQuestions: [],
+})
+
+validateCompassQuestion({
+  question:
+    "Why are boring consistency, success, and an ordinary life important to you?",
+  sourceAnswer:
+    "showing boring consistency = success is an important lesson, life doesn't always need to be hype and holidays",
   priorQuestions: [],
 })
 
