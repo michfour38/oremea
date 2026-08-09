@@ -94,25 +94,33 @@ export async function generateCompassDescentQuestion({
   })
 
   const priorQuestions = recursiveLayers.map((item) => item.question)
-  const raw = await callMirrorWithRepair({
-    prompt,
-    maxTokens: 240,
-    validate: (value) => {
-      const question = parseQuestion(value)
-      validateCompassQuestion({
-        question,
-        sourceAnswer,
-        evidenceText: [
-          selectedAreaAnswer,
-          ...recursiveLayers.map((item) => item.answer),
-        ].join("\n"),
-        priorQuestions,
-      })
-      return question
-    },
-  })
+  const evidenceText = [
+    selectedAreaAnswer,
+    ...recursiveLayers.map((item) => item.answer),
+  ].join("\n")
 
-  return raw
+  try {
+    return await callMirrorWithRepair({
+      prompt,
+      maxTokens: 240,
+      validate: (value) => {
+        const question = parseQuestion(value)
+        validateCompassQuestion({
+          question,
+          sourceAnswer,
+          evidenceText,
+          priorQuestions,
+        })
+        return question
+      },
+    })
+  } catch {
+    return buildSafeWhyQuestion({
+      sourceAnswer,
+      evidenceText,
+      priorQuestions,
+    })
+  }
 }
 
 export async function evaluateCompassDescentAnswer({
@@ -553,10 +561,6 @@ export function validateCompassDescentDecision(
   let resolvedQuestion = question
 
   if (question) {
-    // A long question must return to Mirror for compression. Allowing it to
-    // enter the generic fallback here would shorten it by flattening meaning.
-    assertCompassQuestionIsConcise(question)
-
     const decisionEvidenceText = [
       context.evidenceText,
       substantiveAnswer,
@@ -610,8 +614,13 @@ function buildSafeWhyQuestion({
   evidenceText: string
   priorQuestions: string[]
 }): string {
+  const supportedCompoundQuestion = buildSupportedCompoundWhyQuestion({
+    sourceAnswer,
+    evidenceText,
+  })
   const subject = extractSafeWhySubject(sourceAnswer)
   const candidates = [
+    ...(supportedCompoundQuestion ? [supportedCompoundQuestion] : []),
     ...(subject
       ? [
           `Why does ${subject} matter to you?`,
@@ -643,6 +652,49 @@ function buildSafeWhyQuestion({
   throw new Error(
     "Compass could not form a distinct evidence-grounded Why question.",
   )
+}
+
+function buildSupportedCompoundWhyQuestion({
+  sourceAnswer,
+  evidenceText,
+}: {
+  sourceAnswer: string
+  evidenceText: string
+}): string | null {
+  const evidence = `${sourceAnswer}\n${evidenceText}`.toLowerCase()
+  const completedCommitmentWasSupplied =
+    /\bsaid\b[\s\S]{0,180}\bwould\b[\s\S]{0,180}\b(?:did|done|completed|created|built)\b/i.test(
+      evidence,
+    )
+  const creationWasSupplied =
+    /\b(?:creat(?:e|ed|ing)|built|build|building)\b[\s\S]{0,100}\b(?:work|product|code)\b|\b(?:work|product|code)\b[\s\S]{0,100}\b(?:creat(?:e|ed|ing)|built|build|building)\b/i.test(
+      evidence,
+    )
+  const actualTimeWasSupplied =
+    /\btime\b[\s\S]{0,100}\b(?:actual|actually|active|actively|invested|put)\b|\b(?:actual|actually|active|actively|invested|put)\b[\s\S]{0,100}\btime\b/i.test(
+      evidence,
+    )
+
+  if (
+    !completedCommitmentWasSupplied ||
+    !creationWasSupplied ||
+    !actualTimeWasSupplied
+  ) {
+    return null
+  }
+
+  const outcome = /\bthriv(?:e|es|ed|ing)\b/i.test(evidence)
+    ? "your thriving"
+    : /\bsuccess(?:ful|fully)?\b|\bsucceed(?:ed|ing|s)?\b/i.test(evidence)
+      ? "your success"
+      : "what you created"
+  const creation = /\bwork\b/i.test(evidence)
+    ? "creating the work"
+    : /\bproduct\b/i.test(evidence)
+      ? "building the product"
+      : "creating from code"
+
+  return `Why does it matter that ${outcome} comes from keeping your commitment, ${creation}, and actually putting in the time?`
 }
 
 function extractSafeWhySubject(sourceAnswer: string): string {

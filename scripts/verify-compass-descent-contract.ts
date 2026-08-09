@@ -206,6 +206,32 @@ expectThrows(
   "word-limited question still stacked the participant's clauses mechanically",
 )
 
+const recoveredCompoundDecision = validateCompassDescentDecision(
+  {
+    direction: "self_to_self",
+    movement: "compound_meaning",
+    answerForm: "meaning",
+    substantiveAnswer: compoundAnswer,
+    historyAction: "append",
+    advanceLayer: true,
+    question:
+      "Why does thriving because you said you would do it and did—creating the work from code, with delay justified by time you actively put in—matter to you?",
+  },
+  {
+    ...baseContext,
+    layer: 3,
+    sourceAnswer: compoundAnswer,
+    evidenceText: compoundAnswer,
+    questionFailureMode: "fallback",
+  },
+)
+
+assert(
+  recoveredCompoundDecision.question ===
+    "Why does it matter that your thriving comes from keeping your commitment, creating the work, and actually putting in the time?",
+  "The compound fallback must return the locked human question.",
+)
+
 expectThrows(
   () =>
     validateCompassQuestion({

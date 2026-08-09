@@ -1211,7 +1211,7 @@ description=""
         }
 
         .compass-descent-textarea::placeholder {
-          color: #d66a6a;
+          color: #f4f4f5;
           opacity: 1;
         }
 
