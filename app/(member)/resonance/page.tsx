@@ -198,6 +198,7 @@ export default async function ResonancePage() {
 
                 <div id="mirror" className="mt-10 scroll-mt-24">
                   <MirrorOutput
+                    key={`${content.weekNumber}-${content.dayNumber}`}
                     weekNumber={content.weekNumber}
                     dayNumber={content.dayNumber}
                     mirror={currentMirror}
