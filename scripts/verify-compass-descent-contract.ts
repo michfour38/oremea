@@ -82,14 +82,40 @@ const recoveredQuestion = buildCompassRecoveryWhyQuestion({
 
 assert(
   recoveredQuestion ===
-    "Why does “the old workflow cannot scale forever” matter to you?",
-  "Recovery must retain a concise supplied clause instead of dropping the answer.",
+    "Why do “the old workflow cannot scale forever” and “consistent practice builds readiness before the next project” matter to you?",
+  "Recovery must retain every supplied clause instead of selecting only one.",
 )
 
 validateCompassQuestion({
   question: recoveredQuestion,
   sourceAnswer:
     "because the old workflow cannot scale forever, consistent practice builds readiness before the next project",
+  priorQuestions: [],
+})
+
+const linkedTimingAnswer =
+  "because a parent cannot support children forever, learn to work hard and honestly now so they're in practice, not still needing to learn later"
+const linkedTimingQuestion = buildCompassRecoveryWhyQuestion({
+  sourceAnswer: linkedTimingAnswer,
+  priorQuestions: [],
+})
+
+assert(
+  linkedTimingQuestion ===
+    "Why do “a parent cannot support children forever”, “learn to work hard and honestly now”, and “not needing to learn later” matter to you?",
+  "Recovery must preserve the constraint, preparation, and supplied now/later contrast together.",
+)
+
+validateCompassQuestion({
+  question: linkedTimingQuestion,
+  sourceAnswer: linkedTimingAnswer,
+  priorQuestions: [],
+})
+
+validateCompassQuestion({
+  question:
+    "Why is preparing children to work hard and honestly now, before support ends, important to you?",
+  sourceAnswer: linkedTimingAnswer,
   priorQuestions: [],
 })
 
