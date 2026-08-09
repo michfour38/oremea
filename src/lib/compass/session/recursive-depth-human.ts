@@ -33,9 +33,10 @@ const VALUE_WORDS = [
   "movement",
 ]
 
-const DESCENT_QUESTION_KEY = "oremea-compass-descent-question-v18"
+const DESCENT_QUESTION_KEY = "oremea-compass-descent-question-v19"
 const DESCENT_ATTEMPTS_KEY = "oremea-compass-descent-attempts-v3"
 const LEGACY_DESCENT_QUESTION_KEYS = [
+  "oremea-compass-descent-question-v18",
   "oremea-compass-descent-question-v17",
   "oremea-compass-descent-question-v16",
   "oremea-compass-descent-question-v15",
