@@ -282,6 +282,8 @@ export function CompassDiscussionFlow({
   }
 
   async function openMap() {
+    if (endingBusy) return;
+
     setView("map");
 
     const needsRefresh =
@@ -650,37 +652,38 @@ export function CompassDiscussionFlow({
           : "Compass is holding the goals, dependencies, decisions, and other things already asking for your attention. You only need to carry the movement in front of you."
       }
     >
-      {view === "map" ? (
+      <div
+        role="tablist"
+        aria-label="Compass workspace"
+        className="grid grid-cols-2 rounded-full border border-zinc-800 bg-[#101010] p-1"
+      >
         <button
           type="button"
+          role="tab"
+          aria-selected={view === "discussion"}
           onClick={() => setView("discussion")}
-          className="text-left text-sm text-zinc-400 transition hover:text-[#d8b15f]"
+          className={`rounded-full px-4 py-2 text-sm transition ${
+            view === "discussion"
+              ? "bg-[#21190F] text-[#E7C98B]"
+              : "text-zinc-500 hover:text-zinc-300"
+          }`}
         >
-          ← Back to Discussion
+          Discussion
         </button>
-      ) : null}
-
-      {activeMapItems.length > 0 ? (
         <button
           type="button"
-          onClick={() => window.location.assign("/compass/map")}
-          className="w-full rounded-[1.5rem] border border-[#3A3224] bg-[#17130D] p-5 text-left transition hover:border-[#d8b15f]"
+          role="tab"
+          aria-selected={view === "map"}
+          onClick={() => void openMap()}
+          className={`rounded-full px-4 py-2 text-sm transition ${
+            view === "map"
+              ? "bg-[#21190F] text-[#E7C98B]"
+              : "text-zinc-500 hover:text-zinc-300"
+          }`}
         >
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
-                What&apos;s asking for attention
-              </p>
-              <p className="mt-2 text-sm leading-6 text-zinc-400">
-                Open the Map to order, complete, edit, or archive what is active.
-              </p>
-            </div>
-            <span className="shrink-0 text-sm text-[#E7C98B]">
-              {activeMapItems.length}
-            </span>
-          </div>
+          Map{activeMapItems.length > 0 ? ` · ${activeMapItems.length}` : ""}
         </button>
-      ) : null}
+      </div>
 
       {boundaryMessage ? (
         <div className="rounded-[1.4rem] border border-[#6B4035] bg-[#1A1110] p-5 text-sm leading-relaxed text-zinc-200">
@@ -728,15 +731,6 @@ export function CompassDiscussionFlow({
 
               <button onClick={onSend} className="primary-button">
                 Continue discussion
-              </button>
-
-              <button
-                type="button"
-                onClick={() => void openMap()}
-                disabled={endingBusy}
-                className="secondary-button disabled:cursor-wait disabled:opacity-60"
-              >
-                {endingBusy ? "Building Map..." : "Open Map"}
               </button>
 
               <button
