@@ -31,14 +31,16 @@ const AREA_LABELS: Record<CompassGoalArea, string> = {
 }
 
 const COMPASS_MODEL = "claude-sonnet-4-5-20250929"
-const MAX_DESCENT_QUESTION_WORDS = 24
+const MAX_DESCENT_QUESTION_WORDS = 28
 
 const CONCISE_DESCENT_QUESTION_STANDARD = `
 CONCISE DESCENT QUESTION STANDARD — TIGHTEN WITHOUT FLATTENING
-- write one immediately understandable question, normally 12–20 words and never more than ${MAX_DESCENT_QUESTION_WORDS} words
+- write one immediately understandable question, normally 12–24 words and never more than ${MAX_DESCENT_QUESTION_WORDS} words
 - use one grammatical spine that a participant can understand in one read
 - compress the participant's wording into faithful human synthesis; do not mechanically preserve every clause
 - preserve distinct supplied meanings when they operate together through cause, contrast, qualification, or accountability
+- every distinct meaning in the latest answer must survive the tightening; never select one clause and discard the others
+- preserve supplied timing and contrast when they change the meaning, including now/later and before/after relationships
 - use a short parallel list when several supplied meanings belong together
 - remove duplicated subjects, filler, and scaffolding such as "your state of"
 - never paste the participant's complete answer inside "Why does it matter to you that..."
@@ -759,14 +761,16 @@ function buildSafeWhyQuestion({
   evidenceText: string
   priorQuestions: string[]
 }): string {
-  const subject = extractSafeWhySubject(sourceAnswer)
-  const quotedSubject = extractQuotedWhySubject(sourceAnswer)
+  const sourceFragments = extractWhyFragments(sourceAnswer)
+  const compoundSubject = buildQuotedCompoundSubject(sourceFragments)
+  const subject =
+    sourceFragments.length <= 1 ? extractSafeWhySubject(sourceAnswer) : ""
   const candidates = [
-    ...(quotedSubject
+    ...(compoundSubject
       ? [
-          `Why does “${quotedSubject}” matter to you?`,
-          `Why is “${quotedSubject}” important to you?`,
-          `Why is “${quotedSubject}” significant to you?`,
+          `Why do ${compoundSubject} matter to you?`,
+          `Why are ${compoundSubject} important to you?`,
+          `Why are ${compoundSubject} significant to you?`,
         ]
       : []),
     ...(subject
@@ -811,36 +815,15 @@ export function buildCompassRecoveryWhyQuestion({
   sourceAnswer: string
   priorQuestions: string[]
 }): string {
-  try {
-    return buildSafeWhyQuestion({
-      sourceAnswer,
-      evidenceText: sourceAnswer,
-      priorQuestions,
-    })
-  } catch {
-    const earlierQuestions = new Set(
-      priorQuestions.map((item) => item.trim().toLowerCase()),
-    )
-    const candidates = [
-      "Why does the reason you just gave matter to you?",
-      "Why is the reason you just gave important to you?",
-      "Why is the reason you just gave significant to you?",
-    ]
-
-    return (
-      candidates.find(
-        (candidate) => !earlierQuestions.has(candidate.toLowerCase()),
-      ) ?? candidates[0]
-    )
-  }
+  return buildSafeWhyQuestion({
+    sourceAnswer,
+    evidenceText: sourceAnswer,
+    priorQuestions,
+  })
 }
 
-function extractQuotedWhySubject(sourceAnswer: string): string {
-  const sourceWordCount = sourceAnswer.trim().split(/\s+/).filter(Boolean).length
-
-  if (sourceWordCount <= 6) return ""
-
-  const fragments = sourceAnswer
+function extractWhyFragments(sourceAnswer: string): string[] {
+  return sourceAnswer
     .split(/\n|[,;:]+|[.!?]+|\s+[—–-]\s+/)
     .map((item) =>
       item
@@ -851,16 +834,28 @@ function extractQuotedWhySubject(sourceAnswer: string): string {
           /^(?:it means|that means|this means|meaning|because|and|but|so|then)\s+/i,
           "",
         )
+        .replace(
+          /\s+so\s+(?:they|he|she|we|you)(?:['’]re|\s+are)\s+in\s+practice$/i,
+          "",
+        )
+        .replace(/\bnot\s+still\s+needing\b/i, "not needing")
         .trim(),
     )
     .filter(Boolean)
+}
 
-  return (
-    fragments.find((fragment) => {
-      const wordCount = fragment.split(/\s+/).filter(Boolean).length
-      return wordCount >= 2 && wordCount <= 16
-    }) ?? ""
-  )
+function buildQuotedCompoundSubject(fragments: string[]): string {
+  if (fragments.length < 2 || fragments.length > 3) return ""
+
+  const quoted = fragments.map((fragment) => `“${fragment}”`)
+  const joined =
+    quoted.length === 2
+      ? `${quoted[0]} and ${quoted[1]}`
+      : `${quoted[0]}, ${quoted[1]}, and ${quoted[2]}`
+  const candidate = `Why do ${joined} matter to you?`
+  const wordCount = candidate.split(/\s+/).filter(Boolean).length
+
+  return wordCount <= MAX_DESCENT_QUESTION_WORDS ? joined : ""
 }
 
 function extractSafeWhySubject(sourceAnswer: string): string {
@@ -972,7 +967,16 @@ export function validateCompassQuestion({
     )
   }
 
-  if (/\b(right now|now|today|currently|at present|in this moment|here)\b/i.test(lower)) {
+  const questionUsesPresentTime =
+    /\b(right now|now|today|currently|at present|in this moment|here)\b/i.test(
+      lower,
+    )
+  const sourceSuppliesPresentTime =
+    /\b(right now|now|today|currently|at present|in this moment|here)\b/i.test(
+      source,
+    )
+
+  if (questionUsesPresentTime && !sourceSuppliesPresentTime) {
     throw new Error("The Descent question pulls the participant back into the present.")
   }
 
