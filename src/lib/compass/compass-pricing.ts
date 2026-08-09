@@ -1,7 +1,7 @@
 export const COMPASS_PRICING = {
   currency: "USD",
   accessDays: 30,
-  foundingPriceCents: 1999,
+  launchPriceCents: 1999,
   standardPriceCents: 2999,
   autoRenews: false,
 } as const

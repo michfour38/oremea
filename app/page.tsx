@@ -18,8 +18,8 @@ import {
   formatRecognitionPrice,
 } from "@/src/lib/recognition/recognition-pricing";
 
-const COMPASS_FOUNDING_PRICE = formatCompassPrice(
-  COMPASS_PRICING.foundingPriceCents,
+const COMPASS_LAUNCH_PRICE = formatCompassPrice(
+  COMPASS_PRICING.launchPriceCents,
 );
 const COMPASS_STANDARD_PRICE = formatCompassPrice(
   COMPASS_PRICING.standardPriceCents,
@@ -184,13 +184,13 @@ export default function Home() {
                     {product.name === "The Compass" ? (
                       <div className="mt-4 flex flex-wrap items-baseline gap-2 text-sm">
                         <span className="text-xs uppercase tracking-[0.14em] text-[#c8a96a]/75">
-                          Founding access
+                          Launch offer
                         </span>
                         <span className="text-zinc-500 line-through">
                           {COMPASS_STANDARD_PRICE}
                         </span>
                         <span className="text-lg text-[#c8a96a]">
-                          {COMPASS_FOUNDING_PRICE}
+                          {COMPASS_LAUNCH_PRICE}
                         </span>
                         <span className="text-zinc-500">per 30 days</span>
                       </div>

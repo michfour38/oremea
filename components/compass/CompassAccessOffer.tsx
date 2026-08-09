@@ -10,8 +10,8 @@ type CompassAccessOfferProps = {
 export function CompassAccessOffer({
   onFirstMonth,
 }: CompassAccessOfferProps) {
-  const foundingPrice = formatCompassPrice(
-    COMPASS_PRICING.foundingPriceCents,
+  const launchPrice = formatCompassPrice(
+    COMPASS_PRICING.launchPriceCents,
   );
   const standardPrice = formatCompassPrice(
     COMPASS_PRICING.standardPriceCents,
@@ -34,16 +34,16 @@ export function CompassAccessOffer({
       </p>
 
       <button onClick={onFirstMonth} className="primary-button mt-6">
-        Enter Compass · {foundingPrice}
+        Enter Compass · {launchPrice}
       </button>
 
       <div className="mt-8 border-t border-[#2a2418] pt-6">
         <p className="text-sm font-medium text-stone-200">
-          Founding access
+          Launch offer
         </p>
 
         <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-          Your first {COMPASS_PRICING.accessDays} days are {foundingPrice}.
+          Your first {COMPASS_PRICING.accessDays} days are {launchPrice}.
           Standard {COMPASS_PRICING.accessDays}-day access will be {standardPrice}.
           Nothing renews automatically.
         </p>

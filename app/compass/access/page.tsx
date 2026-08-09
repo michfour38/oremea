@@ -34,8 +34,8 @@ function CheckoutAction({
 
 export default function CompassAccessPage() {
   const compassCheckout = process.env.COMPASS_CHECKOUT_URL?.trim() || null;
-  const foundingPrice = formatCompassPrice(
-    COMPASS_PRICING.foundingPriceCents,
+  const launchPrice = formatCompassPrice(
+    COMPASS_PRICING.launchPriceCents,
   );
   const standardPrice = formatCompassPrice(
     COMPASS_PRICING.standardPriceCents,
@@ -79,7 +79,7 @@ export default function CompassAccessPage() {
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
-                  Founding access
+                  Launch offer
                 </p>
                 <h2 className="mt-2 font-serif text-2xl text-zinc-100">
                   Compass · {COMPASS_PRICING.accessDays} days
@@ -89,7 +89,7 @@ export default function CompassAccessPage() {
                 <p className="text-sm text-zinc-500 line-through">
                   {standardPrice}
                 </p>
-                <p className="text-3xl text-[#f1dfb4]">{foundingPrice}</p>
+                <p className="text-3xl text-[#f1dfb4]">{launchPrice}</p>
               </div>
             </div>
 
@@ -102,7 +102,7 @@ export default function CompassAccessPage() {
             <div className="mt-7">
               <CheckoutAction
                 href={compassCheckout}
-                label={`Enter Compass · ${foundingPrice}`}
+                label={`Enter Compass · ${launchPrice}`}
               />
             </div>
 
