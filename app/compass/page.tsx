@@ -887,7 +887,7 @@ async function completeCompassProcess() {
       <section className="relative isolate min-h-screen px-3 pb-12 sm:px-5 lg:px-8">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_rgba(184,134,64,0.08),_transparent_28%),linear-gradient(180deg,_rgba(16,16,16,0.96),_rgba(9,9,9,1))]" />
 
-        <header className="compass-masthead pointer-events-none fixed inset-x-0 top-0 z-0 mx-auto flex h-[390px] max-w-3xl flex-col justify-center px-5 pt-16 text-center sm:h-[420px] sm:px-8">
+        <header className="compass-masthead pointer-events-none fixed inset-x-0 top-0 z-0 mx-auto flex h-[320px] max-w-3xl flex-col justify-center px-5 pt-16 text-center sm:h-[340px] sm:px-8">
           <div className="mx-auto mb-2 flex justify-center">
             <Image
               src="/images/compass-logo.webp"
@@ -911,7 +911,7 @@ async function completeCompassProcess() {
 
         </header>
 
-        <div aria-hidden="true" className="h-[390px] sm:h-[420px]" />
+        <div aria-hidden="true" className="h-[280px] sm:h-[300px]" />
 
         <div className="compass-process-layer relative z-10 mx-auto max-w-[56rem] rounded-t-[2.25rem] border-x border-t border-white/[0.07] px-2 py-6 sm:px-6 sm:py-8">
           <div className="compass-process-inner mx-auto max-w-3xl">
