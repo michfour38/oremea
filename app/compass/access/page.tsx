@@ -127,9 +127,9 @@ export default async function CompassAccessPage() {
             </div>
 
             <p className="mt-5 text-sm leading-7 text-zinc-300">
-              One complete month of Compass, including your Map, ongoing
-              discussions, and Compass Archive. This purchase does not renew
-              automatically.
+              One complete month of active Compass, including Map changes and
+              ongoing discussions. Your saved Compass Archive remains
+              available afterward. This purchase does not renew automatically.
             </p>
 
             <div className="mt-7">

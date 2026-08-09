@@ -14,9 +14,7 @@ export default async function CompassArchivePage() {
     redirect("/sign-in");
   }
 
-  if (!(await getCompassAccessState(userId)).active) {
-    redirect("/");
-  }
+  const access = await getCompassAccessState(userId);
 
   await prisma.compass_sessions.findMany({
     where: {
@@ -44,10 +42,14 @@ export default async function CompassArchivePage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(216,177,95,0.12),transparent_38%),linear-gradient(180deg,rgba(9,9,9,0.4),rgba(9,9,9,1))]" />
 
         <Link
-          href="/compass"
+          href={
+            access.active
+              ? "/compass"
+              : "https://www.oremea.com/profile"
+          }
           className="relative z-10 self-start text-sm text-zinc-500 underline underline-offset-4 transition hover:text-[#d8b15f]"
         >
-          ← Return to Compass
+          {access.active ? "← Return to Compass" : "← Return to Oremea"}
         </Link>
 
         <div className="relative z-10 text-center">
@@ -60,7 +62,8 @@ export default async function CompassArchivePage() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-zinc-400">
-            Return to previous goal sets, conversations, and movements.
+            Return to previous goal sets, conversations, and movements. Your
+            saved Archive remains available between Compass access periods.
           </p>
         </div>
 

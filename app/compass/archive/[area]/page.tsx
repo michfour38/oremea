@@ -4,7 +4,6 @@ import Link from "next/link";
 
 import { prisma } from "@/lib/prisma";
 import MemberNav from "@/app/(member)/member-nav";
-import { getCompassAccessState } from "@/src/lib/compass/compass-access";
 
 type Props = {
   params: {
@@ -137,10 +136,6 @@ export default async function CompassAreaArchivePage({ params }: Props) {
 
   if (!userId) {
     redirect("/sign-in");
-  }
-
-  if (!(await getCompassAccessState(userId)).active) {
-    redirect("/");
   }
 
   const areaLabel = areaLabels[params.area];
