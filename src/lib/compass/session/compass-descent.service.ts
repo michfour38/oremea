@@ -32,6 +32,23 @@ const AREA_LABELS: Record<CompassGoalArea, string> = {
 }
 
 const COMPASS_MODEL = "claude-sonnet-4-5-20250929"
+const MAX_DESCENT_QUESTION_WORDS = 28
+
+const CONCISE_DESCENT_QUESTION_STANDARD = `
+CONCISE DESCENT QUESTION STANDARD — TIGHTEN WITHOUT FLATTENING
+- write one clean question, normally 12–24 words and never more than ${MAX_DESCENT_QUESTION_WORDS} words
+- compress the grammar, never the participant's meaning
+- preserve distinct supplied meanings when they operate together through cause, contrast, qualification, or accountability
+- remove duplicated subjects, filler, and scaffolding such as "your state of"
+- never paste the participant's complete answer inside "Why does it matter to you that..."
+- never replace a specific compound answer with a generic abstraction or "this" merely to make the question shorter
+- use punctuation to hold linked supplied meanings together cleanly
+
+Example:
+Source: "I succeeded because I said I would build the product and then I did. I built it from code, and I can account for the time it actually took."
+Faithful and concise: "Why does succeeding because you built the product from code as promised—with the time it actually took accounted for—matter to you?"
+Flattened and forbidden: "Why does follow-through matter to you?"
+`.trim()
 
 type DecisionValidationContext = {
   layer: number
@@ -181,6 +198,8 @@ ${OREMEA_EVIDENCE_BOUNDARY}
 
 ${MEANING_MOVEMENT_STANDARD}
 
+${CONCISE_DESCENT_QUESTION_STANDARD}
+
 COMPASS DESCENT QUESTION POLICY — WHY ONLY
 - every participant-facing Descent question must begin with the exact word "Why"
 - every question must remain semantically equivalent to asking why the participant's supplied answer matters, is important, or is significant
@@ -263,6 +282,8 @@ ${MIRROR_AUTHORING_STANDARD}
 ${OREMEA_EVIDENCE_BOUNDARY}
 
 ${MEANING_MOVEMENT_STANDARD}
+
+${CONCISE_DESCENT_QUESTION_STANDARD}
 
 COMPASS HISTORY ACTION
 Choose exactly one:
@@ -529,6 +550,10 @@ export function validateCompassDescentDecision(
   let resolvedQuestion = question
 
   if (question) {
+    // A long question must return to Mirror for compression. Allowing it to
+    // enter the generic fallback here would shorten it by flattening meaning.
+    assertCompassQuestionIsConcise(question)
+
     const decisionEvidenceText = [
       context.evidenceText,
       substantiveAnswer,
@@ -698,6 +723,8 @@ export function validateCompassQuestion({
     throw new Error("The Descent question is too long.")
   }
 
+  assertCompassQuestionIsConcise(normalized)
+
   if (/\b(right now|now|today|currently|at present|in this moment|here)\b/i.test(lower)) {
     throw new Error("The Descent question pulls the participant back into the present.")
   }
@@ -788,6 +815,16 @@ export function validateCompassQuestion({
     throw new Error("The Descent question repeats an earlier question.")
   }
 
+}
+
+function assertCompassQuestionIsConcise(question: string) {
+  const wordCount = question.trim().split(/\s+/).filter(Boolean).length
+
+  if (wordCount > MAX_DESCENT_QUESTION_WORDS) {
+    throw new Error(
+      `The Descent question has ${wordCount} words; tighten it to ${MAX_DESCENT_QUESTION_WORDS} or fewer without flattening the participant's meaning.`,
+    )
+  }
 }
 
 function getEvidenceSupportedInquiryTerms(

@@ -171,6 +171,29 @@ expectThrows(
   "question did not begin with Why",
 )
 
+const compoundAnswer =
+  "I am thriving because I said I would create the work and then I did. I created it from code. Delay can be justified by time actually invested, not claimed."
+
+expectThrows(
+  () =>
+    validateCompassQuestion({
+      question:
+        "Why does it matter to you that your state of thriving is because you said you would create the work and then you did it, creating it from code, where delay can be justified by how much time you actually invested, not claimed?",
+      sourceAnswer: compoundAnswer,
+      evidenceText: compoundAnswer,
+      priorQuestions: [],
+    }),
+  "compound question copied the full answer instead of tightening it",
+)
+
+validateCompassQuestion({
+  question:
+    "Why does thriving because you said you would create the work from code, then did—with delay justified by time actually invested—matter to you?",
+  sourceAnswer: compoundAnswer,
+  evidenceText: compoundAnswer,
+  priorQuestions: [],
+})
+
 expectThrows(
   () =>
     validateCompassQuestion({
