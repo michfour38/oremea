@@ -1,5 +1,4 @@
 import { OREMEA_EVIDENCE_BOUNDARY } from "@/src/lib/oremea/evidence-boundary"
-import { findUnsupportedEvidenceTerms } from "@/src/lib/oremea/evidence-grounding"
 import { MIRROR_AUTHORING_STANDARD } from "@/src/lib/oremea/mirror-authoring"
 import {
   MEANING_MOVEMENT_STANDARD,
@@ -33,25 +32,6 @@ const AREA_LABELS: Record<CompassGoalArea, string> = {
 
 const COMPASS_MODEL = "claude-sonnet-4-5-20250929"
 const MAX_DESCENT_QUESTION_WORDS = 24
-const PROTECTED_UNSUPPLIED_QUESTION_TERMS = [
-  "abandon",
-  "control",
-  "create",
-  "deserve",
-  "future",
-  "give",
-  "identity",
-  "interfere",
-  "love",
-  "pressure",
-  "protect",
-  "provide",
-  "repeat",
-  "safety",
-  "shame",
-  "trauma",
-  "worth",
-] as const
 
 const CONCISE_DESCENT_QUESTION_STANDARD = `
 CONCISE DESCENT QUESTION STANDARD — TIGHTEN WITHOUT FLATTENING
@@ -768,7 +748,8 @@ export function validateCompassQuestion({
     /\bbecome(?:s|became|becoming)?\s+possible\b/i.test(lower) ||
     /\b(?:lead|leads|led|leading)\s+to\b/i.test(lower) ||
     /\b(?:allow|allows|allowing)\s+(?:you|them|him|her|someone|people)\s+to\b/i.test(lower) ||
-    /\bopens?\s+(?:up\s+)?(?:a|the|new|more)\b/i.test(lower)
+    /\bopens?\s+(?:up\s+)?(?:a|the|new|more)\b/i.test(lower) ||
+    /\bcreate(?:s|d|ing)?\s+(?:a\s+)?future\b/i.test(lower)
 
   if (movesIntoPossibility) {
     throw new Error("The Descent question moves into Possibility instead of asking why.")
@@ -801,6 +782,8 @@ export function validateCompassQuestion({
   }
 
   const inferredLabels = [
+    "abandon",
+    "deserv",
     "frustrat",
     "hurt",
     "painful",
@@ -811,10 +794,14 @@ export function validateCompassQuestion({
     "relief",
     "longing",
     "overwhelm",
+    "shame",
+    "trauma",
   ].some((label) => lower.includes(label) && !source.includes(label))
 
   if (inferredLabels) {
-    throw new Error("The Descent question adds an emotion the participant did not supply.")
+    throw new Error(
+      "The Descent question adds an emotion or meaning the participant did not supply.",
+    )
   }
 
   const inventedIntensity = ["deeply", "extremely", "devastating"].some(
@@ -825,32 +812,18 @@ export function validateCompassQuestion({
     throw new Error("The Descent question adds unsupported intensity.")
   }
 
-  const unsupportedTerms = findUnsupportedEvidenceTerms({
-    text: normalized,
-    evidenceText: sourceAnswer,
-    allowedTerms: [
-      ...DESCENT_INQUIRY_TERMS,
-      ...getEvidenceSupportedInquiryTerms(sourceAnswer),
-    ],
-  })
-  const unsupportedProtectedTerms = unsupportedTerms.filter((term) =>
-    PROTECTED_UNSUPPLIED_QUESTION_TERMS.some((protectedTerm) =>
-      lexicalRootsOverlap(term, protectedTerm),
-    ),
-  )
-
-  if (unsupportedProtectedTerms.length > 0) {
-    throw new Error(
-      `The Descent question introduces an unsupported premise: ${unsupportedProtectedTerms.join(", ")}.`,
+  const questionClaimsRecurrence =
+    /\b(?:always|constant(?:ly)?|continual(?:ly)?|recur(?:s|red|ring|rence)?|repeat(?:s|ed|ing|edly)?)\b/i.test(
+      normalized,
     )
-  }
+  const sourceSuppliesRecurrence =
+    /\b(?:always|constant(?:ly)?|continual(?:ly)?|every\s+time|again\s+and\s+again|only\s+ever|recur(?:s|red|ring|rence)?|repeat(?:s|ed|ing|edly)?)\b/i.test(
+      sourceAnswer,
+    )
 
-  if (
-    hasSubstantiveWhySubject(sourceAnswer) &&
-    !questionHasLatestAnswerAnchor({ question: normalized, sourceAnswer })
-  ) {
+  if (questionClaimsRecurrence && !sourceSuppliesRecurrence) {
     throw new Error(
-      "The Descent question does not keep the immediately preceding answer as its subject.",
+      "The Descent question adds recurrence the participant did not supply.",
     )
   }
 
@@ -867,146 +840,6 @@ export function validateCompassQuestion({
 function usesGenericWhySubject(question: string): boolean {
   return /^(?:why does (?:this|that|it|your answer|the answer|what you (?:said|wrote|described)) (?:matter|remain important) to you|why is (?:this|that|it|your answer|the answer|what you (?:said|wrote|described)) (?:important|significant) to you)\?$/i.test(
     question,
-  )
-}
-
-function questionHasLatestAnswerAnchor({
-  question,
-  sourceAnswer,
-}: {
-  question: string
-  sourceAnswer: string
-}): boolean {
-  const sourceRoots = [
-    ...getQuestionContentRoots(sourceAnswer),
-    ...getEvidenceSupportedInquiryTerms(sourceAnswer).map(toQuestionLexicalRoot),
-  ]
-  const questionRoots = getQuestionContentRoots(question)
-
-  return questionRoots.some((questionRoot) =>
-    sourceRoots.some((sourceRoot) =>
-      lexicalRootsOverlap(questionRoot, sourceRoot),
-    ),
-  )
-}
-
-function getQuestionContentRoots(input: string): string[] {
-  const ignored = new Set([
-    "about",
-    "after",
-    "again",
-    "also",
-    "answer",
-    "before",
-    "being",
-    "both",
-    "because",
-    "could",
-    "clear",
-    "didn",
-    "does",
-    "doesn",
-    "doing",
-    "don",
-    "each",
-    "even",
-    "from",
-    "have",
-    "having",
-    "important",
-    "importance",
-    "into",
-    "just",
-    "matter",
-    "matters",
-    "meaning",
-    "more",
-    "most",
-    "other",
-    "ours",
-    "reason",
-    "should",
-    "significant",
-    "significance",
-    "that",
-    "their",
-    "them",
-    "then",
-    "there",
-    "these",
-    "they",
-    "this",
-    "those",
-    "through",
-    "until",
-    "very",
-    "were",
-    "what",
-    "when",
-    "where",
-    "which",
-    "with",
-    "without",
-    "would",
-    "your",
-    "yours",
-  ])
-
-  return [
-    ...new Set(
-      (input.toLowerCase().match(/[a-z]+/g) ?? [])
-        .filter((word) => word.length >= 4 && !ignored.has(word))
-        .map(toQuestionLexicalRoot),
-    ),
-  ]
-}
-
-function toQuestionLexicalRoot(input: string): string {
-  let word = input.toLowerCase().replace(/[^a-z]/g, "")
-
-  for (const suffix of [
-    "ations",
-    "ation",
-    "ments",
-    "ment",
-    "ness",
-    "ities",
-    "ity",
-    "ingly",
-    "edly",
-    "ing",
-    "ed",
-    "ies",
-    "es",
-    "s",
-  ]) {
-    if (word.length - suffix.length >= 4 && word.endsWith(suffix)) {
-      word = word.slice(0, -suffix.length)
-      break
-    }
-  }
-
-  if (word.length >= 8 && word.endsWith("ly")) {
-    word = word.slice(0, -2)
-  }
-
-  if (word.length > 5 && word.endsWith("e")) {
-    word = word.slice(0, -1)
-  }
-
-  return word
-}
-
-function lexicalRootsOverlap(left: string, right: string): boolean {
-  const leftRoot = toQuestionLexicalRoot(left)
-  const rightRoot = toQuestionLexicalRoot(right)
-
-  if (leftRoot === rightRoot) return true
-
-  const shorterLength = Math.min(leftRoot.length, rightRoot.length)
-  return (
-    shorterLength >= 5 &&
-    (leftRoot.startsWith(rightRoot) || rightRoot.startsWith(leftRoot))
   )
 }
 
@@ -1036,91 +869,6 @@ function assertCompassQuestionIsConcise(question: string) {
     )
   }
 }
-
-function getEvidenceSupportedInquiryTerms(
-  evidenceText: string,
-): string[] {
-  const normalized = evidenceText.toLowerCase()
-  const supportedTerms: string[] = []
-
-  const recurrenceWasSupplied =
-    /\b(?:always|constantly|continually|continuously|repeatedly|regularly|every\s+time|again\s+and\s+again|only\s+ever)\b/i.test(
-      normalized,
-    )
-
-  if (recurrenceWasSupplied) {
-    supportedTerms.push(
-      "repeat",
-      "repeated",
-      "repeatedly",
-      "recurring",
-      "recurrence",
-    )
-  }
-
-  const completedCommitmentWasSupplied =
-    /\bsaid\b[\s\S]{0,160}\bwould\b[\s\S]{0,160}\b(?:did|done|completed|created|built)\b/i.test(
-      normalized,
-    )
-
-  if (completedCommitmentWasSupplied) {
-    supportedTerms.push(
-      "commitment",
-      "commitments",
-      "committed",
-      "keeping",
-      "kept",
-      "promise",
-      "promised",
-    )
-  }
-
-  if (/\bbecause\b/i.test(normalized)) {
-    supportedTerms.push("come", "comes", "coming")
-  }
-
-  const actualTimeWasSupplied =
-    /\btime\b[\s\S]{0,100}\b(?:actual|actually|active|actively|invested|put)\b|\b(?:actual|actually|active|actively|invested|put)\b[\s\S]{0,100}\btime\b/i.test(
-      normalized,
-    )
-
-  if (actualTimeWasSupplied) {
-    supportedTerms.push(
-      "actual",
-      "actually",
-      "active",
-      "actively",
-      "invest",
-      "invested",
-      "investing",
-      "put",
-      "putting",
-    )
-  }
-
-  return supportedTerms
-}
-
-const DESCENT_INQUIRY_TERMS = [
-  "answer",
-  "central",
-  "clear",
-  "closer",
-  "closest",
-  "feel",
-  "feels",
-  "goal",
-  "important",
-  "importance",
-  "itself",
-  "matter",
-  "matters",
-  "meaning",
-  "meant",
-  "reason",
-  "significance",
-  "significant",
-] as const
 
 export function getCompassQuestionFrame(question: string): string | null {
   const normalized = question.trim().toLowerCase()
