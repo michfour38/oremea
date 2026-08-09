@@ -188,11 +188,23 @@ expectThrows(
 
 validateCompassQuestion({
   question:
-    "Why does thriving because you said you would create the work from code, then did—with delay justified by time actually invested—matter to you?",
+    "Why does it matter that your thriving comes from keeping your commitment, creating the work, and actually putting in the time?",
   sourceAnswer: compoundAnswer,
   evidenceText: compoundAnswer,
   priorQuestions: [],
 })
+
+expectThrows(
+  () =>
+    validateCompassQuestion({
+      question:
+        "Why does thriving because you said you would do it and did—creating the work from code, with delay justified by time you actively put in—matter to you?",
+      sourceAnswer: compoundAnswer,
+      evidenceText: compoundAnswer,
+      priorQuestions: [],
+    }),
+  "word-limited question still stacked the participant's clauses mechanically",
+)
 
 expectThrows(
   () =>
