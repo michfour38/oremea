@@ -1,76 +1,49 @@
 import Link from "next/link";
 
+const policies = [
+  { label: "Terms", href: "/terms" },
+  { label: "Privacy", href: "/privacy" },
+  { label: "Refunds", href: "/refunds" },
+  { label: "Disclaimer", href: "/disclaimer" },
+];
+
 export function ProfilePolicies() {
   return (
-    <section>
-      <div className="mx-auto max-w-6xl px-5 py-10 md:py-12">
-        <div className="mb-5">
-          <p className="text-xs uppercase tracking-[0.28em] text-amber-200/70">
-            Policies & Information
-          </p>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-6">
-            <h3 className="text-2xl font-light text-zinc-100">
-              Platform Policies
-            </h3>
-
-            <p className="mt-4 text-base leading-7 text-zinc-400">
-              Oremea maintains transparent platform policies, privacy standards, and participation guidelines across the ecosystem.
+    <section className="bg-black/30">
+      <div className="mx-auto max-w-6xl px-5 py-12 md:py-16">
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-xs uppercase tracking-[0.28em] text-amber-200/70">
+              Stewardship
             </p>
-
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <Link
-                href="/terms"
-                className="rounded-2xl border border-white/10 bg-black/20 px-5 py-3 text-sm tracking-[0.16em] text-zinc-300 transition hover:border-white/20 hover:text-white"
-              >
-                Terms
-              </Link>
-
-              <Link
-                href="/privacy"
-                className="rounded-2xl border border-white/10 bg-black/20 px-5 py-3 text-sm tracking-[0.16em] text-zinc-300 transition hover:border-white/20 hover:text-white"
-              >
-                Privacy
-              </Link>
-
-              <Link
-                href="/refunds"
-                className="rounded-2xl border border-white/10 bg-black/20 px-5 py-3 text-sm tracking-[0.16em] text-zinc-300 transition hover:border-white/20 hover:text-white"
-              >
-                Refunds
-              </Link>
-
-              <Link
-                href="/disclaimer"
-                className="rounded-2xl border border-white/10 bg-black/20 px-5 py-3 text-sm tracking-[0.16em] text-zinc-300 transition hover:border-white/20 hover:text-white"
-              >
-                Disclaimer
-              </Link>
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-amber-200/10 bg-amber-100/[0.03] p-6">
-            <p className="text-sm uppercase tracking-[0.18em] text-amber-100/70">
-              Ecosystem Principles
+            <h2 className="mt-3 text-3xl font-light text-white">
+              Your work remains yours
+            </h2>
+            <p className="mt-4 text-sm leading-7 text-zinc-400">
+              Private reflections stay private until you intentionally choose to
+              share them. Saved progress supports continuity across the Oremea
+              ecosystem.
             </p>
-
-            <div className="mt-4 space-y-3 text-base leading-7 text-zinc-400">
-              <p>
-                Oremea is built around structured awareness, reflective clarity, intentional communication, and self-led participation.
-              </p>
-
-              <p>
-                Private reflections remain private unless intentionally shared by the user.
-              </p>
-
-              <p>
-                The ecosystem is designed to support awareness, execution, alignment, and intentional connection without dependency-driven engagement systems.
-              </p>
-            </div>
           </div>
         </div>
+
+        <nav
+          className="mt-8 grid gap-px overflow-hidden rounded-[2rem] border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-4"
+          aria-label="Profile policies"
+        >
+          {policies.map((policy) => (
+            <Link
+              key={policy.href}
+              href={policy.href}
+              className="group flex items-center justify-between bg-zinc-950/90 px-6 py-5 text-sm text-zinc-300 transition hover:bg-amber-100/[0.06] hover:text-white"
+            >
+              {policy.label}
+              <span className="text-zinc-600 transition group-hover:translate-x-0.5 group-hover:text-amber-100">
+                →
+              </span>
+            </Link>
+          ))}
+        </nav>
       </div>
     </section>
   );

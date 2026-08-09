@@ -1,54 +1,49 @@
+import Link from "next/link";
+
 export function ProfileSupport() {
   return (
-    <section className="border-b border-white/5 bg-zinc-950/60">
-      <div className="mx-auto max-w-6xl px-5 py-10 md:py-12">
-        <div className="mb-5">
-          <p className="text-xs uppercase tracking-[0.28em] text-amber-200/70">
-            Support
-          </p>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-6">
-            <p className="text-sm uppercase tracking-[0.18em] text-zinc-500">
-              Contact
+    <section className="border-b border-white/5 bg-zinc-950/65">
+      <div className="mx-auto max-w-6xl px-5 py-12 md:py-16">
+        <div className="grid overflow-hidden rounded-[2rem] border border-white/10 bg-white/10 lg:grid-cols-2">
+          <div className="bg-zinc-950/90 p-7 md:p-10">
+            <p className="text-xs uppercase tracking-[0.28em] text-amber-200/70">
+              Support
             </p>
-
-            <h3 className="mt-3 text-2xl font-light text-zinc-100">
-              Need assistance?
-            </h3>
-
-            <p className="mt-4 text-base leading-7 text-zinc-400">
-              Oremea support is available for account assistance, access questions,
-              payment concerns, and platform-related support.
+            <h2 className="mt-4 text-3xl font-light text-white">
+              A clear way back in
+            </h2>
+            <p className="mt-4 max-w-lg text-base leading-7 text-zinc-400">
+              Account access, payment questions, saved progress, and platform
+              support all begin in one place.
             </p>
-
-            <div className="mt-5">
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <a
                 href="mailto:support@oremea.com"
-                className="inline-flex rounded-full border border-amber-200/20 bg-amber-100/[0.05] px-5 py-3 text-sm tracking-[0.16em] text-amber-100 transition hover:border-amber-100/50 hover:bg-amber-100/[0.08]"
+                className="inline-flex items-center justify-center rounded-full bg-amber-100 px-5 py-3 text-sm font-medium text-zinc-950 transition hover:bg-white"
               >
-                support@oremea.com
+                Email support
               </a>
+              <Link
+                href="/contact"
+                className="inline-flex items-center justify-center rounded-full border border-white/15 px-5 py-3 text-sm text-zinc-200 transition hover:border-white/35 hover:text-white"
+              >
+                Contact Oremea
+              </Link>
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-black/20 p-6">
-            <p className="text-sm uppercase tracking-[0.18em] text-zinc-500">
-              Important
+          <div className="bg-amber-100/[0.045] p-7 md:p-10">
+            <p className="text-xs uppercase tracking-[0.24em] text-amber-100/65">
+              The container
             </p>
-
-            <div className="mt-4 space-y-3 text-base leading-7 text-zinc-400">
+            <div className="mt-5 space-y-5 text-sm leading-7 text-zinc-300">
               <p>
-                Oremea is designed around self-led reflective systems and intentional participation.
+                Oremea holds self-led reflective work, structured participation,
+                and the records created through that work.
               </p>
-
               <p>
-                The platform does not provide therapy, crisis support, or medical services.
-              </p>
-
-              <p>
-                Expanded recognition tools support reflective synthesis and awareness rather than replacing personal judgment or professional care.
+                Personal judgment remains the authority. Clinical, crisis, and
+                medical care remain with qualified professionals.
               </p>
             </div>
           </div>
