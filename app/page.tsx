@@ -9,6 +9,27 @@ import {
   RESONANCE_LAUNCH_PRICE,
   RESONANCE_REGULAR_PRICE,
 } from "@/src/lib/resonance/resonance-pricing";
+import {
+  COMPASS_PRICING,
+  formatCompassPrice,
+} from "@/src/lib/compass/compass-pricing";
+import {
+  RECOGNITION_PRICING,
+  formatRecognitionPrice,
+} from "@/src/lib/recognition/recognition-pricing";
+
+const COMPASS_FOUNDING_PRICE = formatCompassPrice(
+  COMPASS_PRICING.foundingPriceCents,
+);
+const COMPASS_STANDARD_PRICE = formatCompassPrice(
+  COMPASS_PRICING.standardPriceCents,
+);
+const RECOGNITION_LAUNCH_PRICE = formatRecognitionPrice(
+  RECOGNITION_PRICING.launchPriceCents,
+);
+const RECOGNITION_REGULAR_PRICE = formatRecognitionPrice(
+  RECOGNITION_PRICING.regularPriceCents,
+);
 
 const products = [
   {
@@ -130,6 +151,21 @@ export default function Home() {
                       {product.short}
                     </p>
 
+                    {product.name === "Recognition" ? (
+                      <div className="mt-4 flex flex-wrap items-baseline gap-2 text-sm">
+                        <span className="text-xs uppercase tracking-[0.14em] text-[#c8a96a]/75">
+                          Launch offer
+                        </span>
+                        <span className="text-zinc-500 line-through">
+                          {RECOGNITION_REGULAR_PRICE}
+                        </span>
+                        <span className="text-lg text-[#c8a96a]">
+                          {RECOGNITION_LAUNCH_PRICE}
+                        </span>
+                        <span className="text-zinc-500">per complete process</span>
+                      </div>
+                    ) : null}
+
                     {product.name === "Resonance" ? (
                       <div className="mt-4 flex flex-wrap items-baseline gap-2 text-sm">
                         <span className="text-xs uppercase tracking-[0.14em] text-[#c8a96a]/75">
@@ -142,6 +178,21 @@ export default function Home() {
                           {RESONANCE_LAUNCH_PRICE}
                         </span>
                         <span className="text-zinc-500">per seven-day room</span>
+                      </div>
+                    ) : null}
+
+                    {product.name === "The Compass" ? (
+                      <div className="mt-4 flex flex-wrap items-baseline gap-2 text-sm">
+                        <span className="text-xs uppercase tracking-[0.14em] text-[#c8a96a]/75">
+                          Founding access
+                        </span>
+                        <span className="text-zinc-500 line-through">
+                          {COMPASS_STANDARD_PRICE}
+                        </span>
+                        <span className="text-lg text-[#c8a96a]">
+                          {COMPASS_FOUNDING_PRICE}
+                        </span>
+                        <span className="text-zinc-500">per 30 days</span>
                       </div>
                     ) : null}
                   </div>

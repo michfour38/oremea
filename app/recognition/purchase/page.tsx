@@ -1,5 +1,10 @@
 import Link from "next/link";
 
+import {
+  RECOGNITION_PRICING,
+  formatRecognitionPrice,
+} from "@/src/lib/recognition/recognition-pricing";
+
 export const dynamic = "force-dynamic";
 
 function CheckoutAction({
@@ -30,6 +35,12 @@ function CheckoutAction({
 export default function RecognitionPurchasePage() {
   const processCheckout =
     process.env.RECOGNITION_PROCESS_CHECKOUT_URL?.trim() || null;
+  const launchPrice = formatRecognitionPrice(
+    RECOGNITION_PRICING.launchPriceCents,
+  );
+  const regularPrice = formatRecognitionPrice(
+    RECOGNITION_PRICING.regularPriceCents,
+  );
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-zinc-950 text-white">
@@ -68,7 +79,19 @@ export default function RecognitionPurchasePage() {
                   One Recognition process
                 </h2>
               </div>
-              <p className="text-3xl text-[#f1dfb4]">$9.99</p>
+              <div className="text-right">
+                <p className="text-xs uppercase tracking-[0.18em] text-[#c8a96a]/70">
+                  Launch offer
+                </p>
+                <div className="mt-1 flex items-baseline justify-end gap-3">
+                  <span className="text-sm text-zinc-500 line-through">
+                    {regularPrice}
+                  </span>
+                  <span className="text-3xl text-[#f1dfb4]">
+                    {launchPrice}
+                  </span>
+                </div>
+              </div>
             </div>
 
             <p className="mt-5 text-sm leading-7 text-zinc-300">
@@ -80,7 +103,7 @@ export default function RecognitionPurchasePage() {
             <div className="mt-7">
               <CheckoutAction
                 href={processCheckout}
-                label="Begin one Recognition process · $9.99"
+                label={`Begin one Recognition process · ${launchPrice}`}
               />
             </div>
           </section>
