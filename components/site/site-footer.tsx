@@ -1,10 +1,6 @@
 import Link from "next/link";
 
-import {
-  LEGAL_LINKS,
-  OREMEA_OPERATOR,
-  WORKS_LEGAL_LINKS,
-} from "@/src/lib/legal/legal-links";
+import { LEGAL_LINKS, OREMEA_OPERATOR } from "@/src/lib/legal/legal-links";
 
 export function SiteFooter() {
   return (
@@ -26,7 +22,7 @@ export function SiteFooter() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-10 text-sm sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid grid-cols-1 gap-10 text-sm sm:grid-cols-2 xl:grid-cols-4">
           <div>
             <p className="mb-4 text-[11px] uppercase tracking-[0.18em] text-zinc-500">
               Ecosystem
@@ -80,10 +76,6 @@ export function SiteFooter() {
               >
                 Compass
               </Link>
-
-              <Link href="/works" className="transition hover:text-[#b79a63]">
-                WORKS
-              </Link>
             </div>
           </div>
 
@@ -94,24 +86,6 @@ export function SiteFooter() {
 
             <div className="flex flex-col gap-3 text-zinc-300">
               {LEGAL_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="transition hover:text-[#b79a63]"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-4 text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-              WORKS legal
-            </p>
-
-            <div className="flex flex-col gap-3 text-zinc-300">
-              {WORKS_LEGAL_LINKS.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}

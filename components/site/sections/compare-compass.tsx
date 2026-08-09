@@ -23,7 +23,7 @@ export function CompareCompass({ mode }: CompareCompassProps) {
       <div className="mx-auto max-w-6xl px-5 py-24">
         <div className="grid gap-14 md:grid-cols-[0.95fr_1.05fr]">
           <div>
-            <p className="mb-5 text-xs uppercase tracking-[0.28em] text-amber-200/70">
+            <p className="mb-5 text-xs uppercase tracking-[0.28em] text-[#b79a63]">
               Direction & Execution
             </p>
 
@@ -39,25 +39,28 @@ export function CompareCompass({ mode }: CompareCompassProps) {
           <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-10">
             {mode === "experience" ? (
               <div className="space-y-8">
-                <div className="rounded-3xl border border-[#2A2418] bg-[#11100D] p-8">
-                  <p className="font-serif text-2xl leading-relaxed text-[#EAEAEA] md:text-3xl">
+                <div className="rounded-3xl border border-white/10 bg-zinc-950/80 p-8">
+                  <p className="font-serif text-2xl leading-relaxed text-zinc-100 md:text-3xl">
                     Like finally knowing what to do next.
                   </p>
 
-                  <p className="mt-8 font-serif text-xl leading-relaxed text-[#BFBFBF]">
-                    Like several competing priorities collapsing into one clear direction.
+                  <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
+                    Like several competing priorities collapsing into one clear
+                    direction.
                   </p>
 
-                  <p className="mt-8 font-serif text-xl leading-relaxed text-[#BFBFBF]">
-                    Like seeing why a goal matters before deciding how to pursue it.
+                  <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
+                    Like seeing why a goal matters before deciding how to pursue
+                    it.
                   </p>
 
-                  <p className="mt-8 font-serif text-xl leading-relaxed text-[#BFBFBF]">
+                  <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
                     Like understanding what keeps interrupting movement.
                   </p>
 
-                  <p className="mt-8 font-serif text-xl leading-relaxed text-[#BFBFBF]">
-                    Like making an agreement with yourself you can actually keep.
+                  <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
+                    Like making an agreement with yourself you can actually
+                    keep.
                   </p>
 
                   <ProductLaunchPrice
@@ -70,7 +73,7 @@ export function CompareCompass({ mode }: CompareCompassProps) {
                   <div className="mt-4 flex flex-wrap gap-4">
                     <Link
                       href="https://compass.oremea.com"
-                      className="rounded-full border border-amber-200/20 bg-amber-100/[0.05] px-5 py-2 text-sm text-amber-100 transition hover:border-amber-100/50 hover:bg-amber-100/[0.08]"
+                      className="rounded-full border border-[#b79a63]/25 bg-[#b79a63]/[0.05] px-5 py-2 text-sm text-[#b79a63] transition hover:border-[#b79a63]/55 hover:bg-[#b79a63]/10"
                     >
                       Enter Compass
                     </Link>
@@ -85,16 +88,13 @@ export function CompareCompass({ mode }: CompareCompassProps) {
                   </p>
 
                   <p className="text-base leading-8 text-zinc-300">
-                    Compass is a structured goal-setting, decision-making,
-                    and execution process.
-
-                    It helps transform awareness into movement by identifying
-                    what matters most, what keeps interrupting progress,
-                    and what next step can realistically be taken.
-
-                    Rather than generating more possibilities, Compass narrows
-                    attention toward one executable direction and helps build
-                    confidence through action.
+                    Compass is a structured goal-setting, decision-making, and
+                    execution process. It helps transform awareness into
+                    movement by identifying what matters most, what keeps
+                    interrupting progress, and what next step can realistically
+                    be taken. Rather than generating more possibilities, Compass
+                    narrows attention toward one executable direction and helps
+                    build confidence through action.
                   </p>
                 </div>
 
@@ -128,16 +128,12 @@ export function CompareCompass({ mode }: CompareCompassProps) {
 
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-6">
                   <p className="text-sm leading-7 text-zinc-400">
-                    Most people do not struggle because they lack goals.
-
-                    They struggle because movement becomes interrupted.
-
-                    Compass helps reveal what matters most, what creates resistance,
-                    and what action can realistically be sustained.
-
-                    Confidence is built through kept agreements with yourself.
-
-                    Compass helps you begin there.
+                    Most people do not struggle because they lack goals. They
+                    struggle because movement becomes interrupted. Compass helps
+                    reveal what matters most, what creates resistance, and what
+                    action can realistically be sustained. Confidence is built
+                    through kept agreements with yourself. Compass helps you
+                    begin there.
                   </p>
                 </div>
 
@@ -150,7 +146,7 @@ export function CompareCompass({ mode }: CompareCompassProps) {
                 <div className="flex flex-wrap gap-4 pt-2">
                   <Link
                     href="https://compass.oremea.com"
-                    className="rounded-full border border-amber-200/20 bg-amber-100/[0.05] px-5 py-2 text-sm text-amber-100 transition hover:border-amber-100/50 hover:bg-amber-100/[0.08]"
+                    className="rounded-full border border-[#b79a63]/25 bg-[#b79a63]/[0.05] px-5 py-2 text-sm text-[#b79a63] transition hover:border-[#b79a63]/55 hover:bg-[#b79a63]/10"
                   >
                     Enter Compass
                   </Link>
