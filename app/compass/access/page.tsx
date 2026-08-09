@@ -38,9 +38,14 @@ export default async function CompassAccessPage() {
   const { userId } = auth();
   const access = userId ? await getCompassAccessState(userId) : null;
   const compassCheckout = process.env.COMPASS_CHECKOUT_URL?.trim() || null;
-  const checkoutHref = userId
-    ? compassCheckout
-    : "/sign-in?redirect_url=%2F";
+  const fulfillmentConfigured = Boolean(
+    process.env.WHOP_COMPASS_PRODUCT_ID?.trim(),
+  );
+  const checkoutHref = !userId
+    ? "/sign-in?redirect_url=%2F"
+    : fulfillmentConfigured
+      ? compassCheckout
+      : null;
   const launchPrice = formatCompassPrice(
     COMPASS_PRICING.launchPriceCents,
   );
