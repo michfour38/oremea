@@ -232,6 +232,54 @@ assert(
   "The compound fallback must return the locked human question.",
 )
 
+const consistencyLessonAnswer =
+  "showing boring consistency = success is an important lesson, life doesn't always need to be hype and holidays"
+
+expectThrows(
+  () =>
+    validateCompassQuestion({
+      question: "Why does this matter to you?",
+      sourceAnswer: consistencyLessonAnswer,
+      evidenceText: consistencyLessonAnswer,
+      priorQuestions: [],
+    }),
+  "substantive consistency lesson flattened into generic this",
+)
+
+const consistencyLessonQuestion =
+  "Why does it matter that showing boring consistency can mean success and that life does not always need hype or holidays?"
+
+validateCompassQuestion({
+  question: consistencyLessonQuestion,
+  sourceAnswer: consistencyLessonAnswer,
+  evidenceText: consistencyLessonAnswer,
+  priorQuestions: [],
+})
+
+const recoveredConsistencyLesson = validateCompassDescentDecision(
+  {
+    direction: "self_to_self",
+    movement: "compound_meaning",
+    answerForm: "meaning",
+    substantiveAnswer: consistencyLessonAnswer,
+    historyAction: "append",
+    advanceLayer: true,
+    question: "Why does this matter to you?",
+  },
+  {
+    ...baseContext,
+    layer: 5,
+    sourceAnswer: consistencyLessonAnswer,
+    evidenceText: consistencyLessonAnswer,
+    questionFailureMode: "fallback",
+  },
+)
+
+assert(
+  recoveredConsistencyLesson.question === consistencyLessonQuestion,
+  "Layer 5 must preserve the supplied consistency, success, and ordinary-life contrast.",
+)
+
 expectThrows(
   () =>
     validateCompassQuestion({
