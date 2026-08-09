@@ -3,9 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 
+import { ProductLaunchPrice } from "@/components/site/product-launch-price";
 import { SiteShell } from "@/components/site/site-shell";
 import {
-  RESONANCE_LAUNCH_LABEL,
   RESONANCE_LAUNCH_PRICE,
   RESONANCE_REGULAR_PRICE,
 } from "@/src/lib/resonance/resonance-pricing";
@@ -152,48 +152,30 @@ export default function Home() {
                     </p>
 
                     {product.name === "Recognition" ? (
-                      <div className="mt-4 flex flex-wrap items-baseline gap-2 text-sm">
-                        <span className="text-xs uppercase tracking-[0.14em] text-[#c8a96a]/75">
-                          Launch offer
-                        </span>
-                        <span className="text-zinc-500 line-through">
-                          {RECOGNITION_REGULAR_PRICE}
-                        </span>
-                        <span className="text-lg text-[#c8a96a]">
-                          {RECOGNITION_LAUNCH_PRICE}
-                        </span>
-                        <span className="text-zinc-500">per complete process</span>
-                      </div>
+                      <ProductLaunchPrice
+                        className="mt-4"
+                        regularPrice={RECOGNITION_REGULAR_PRICE}
+                        launchPrice={RECOGNITION_LAUNCH_PRICE}
+                        unit="per complete process"
+                      />
                     ) : null}
 
                     {product.name === "Resonance" ? (
-                      <div className="mt-4 flex flex-wrap items-baseline gap-2 text-sm">
-                        <span className="text-xs uppercase tracking-[0.14em] text-[#c8a96a]/75">
-                          {RESONANCE_LAUNCH_LABEL}
-                        </span>
-                        <span className="text-zinc-500 line-through">
-                          {RESONANCE_REGULAR_PRICE}
-                        </span>
-                        <span className="text-lg text-[#c8a96a]">
-                          {RESONANCE_LAUNCH_PRICE}
-                        </span>
-                        <span className="text-zinc-500">per seven-day room</span>
-                      </div>
+                      <ProductLaunchPrice
+                        className="mt-4"
+                        regularPrice={RESONANCE_REGULAR_PRICE}
+                        launchPrice={RESONANCE_LAUNCH_PRICE}
+                        unit="per seven-day room"
+                      />
                     ) : null}
 
                     {product.name === "The Compass" ? (
-                      <div className="mt-4 flex flex-wrap items-baseline gap-2 text-sm">
-                        <span className="text-xs uppercase tracking-[0.14em] text-[#c8a96a]/75">
-                          Launch offer
-                        </span>
-                        <span className="text-zinc-500 line-through">
-                          {COMPASS_STANDARD_PRICE}
-                        </span>
-                        <span className="text-lg text-[#c8a96a]">
-                          {COMPASS_LAUNCH_PRICE}
-                        </span>
-                        <span className="text-zinc-500">per 30 days</span>
-                      </div>
+                      <ProductLaunchPrice
+                        className="mt-4"
+                        regularPrice={COMPASS_STANDARD_PRICE}
+                        launchPrice={COMPASS_LAUNCH_PRICE}
+                        unit="per 30 days"
+                      />
                     ) : null}
                   </div>
 

@@ -1,5 +1,17 @@
 import Link from "next/link";
 import type { CompareMode } from "@/app/compare/page";
+import { ProductLaunchPrice } from "@/components/site/product-launch-price";
+import {
+  COMPASS_PRICING,
+  formatCompassPrice,
+} from "@/src/lib/compass/compass-pricing";
+
+const COMPASS_LAUNCH_PRICE = formatCompassPrice(
+  COMPASS_PRICING.launchPriceCents,
+);
+const COMPASS_REGULAR_PRICE = formatCompassPrice(
+  COMPASS_PRICING.standardPriceCents,
+);
 
 type CompareCompassProps = {
   mode: CompareMode;
@@ -48,12 +60,19 @@ export function CompareCompass({ mode }: CompareCompassProps) {
                     Like making an agreement with yourself you can actually keep.
                   </p>
 
-                  <div className="mt-10 flex flex-wrap gap-4">
+                  <ProductLaunchPrice
+                    className="mt-10"
+                    regularPrice={COMPASS_REGULAR_PRICE}
+                    launchPrice={COMPASS_LAUNCH_PRICE}
+                    unit="per 30 days"
+                  />
+
+                  <div className="mt-4 flex flex-wrap gap-4">
                     <Link
                       href="https://compass.oremea.com"
                       className="rounded-full border border-amber-200/20 bg-amber-100/[0.05] px-5 py-2 text-sm text-amber-100 transition hover:border-amber-100/50 hover:bg-amber-100/[0.08]"
                     >
-                      Compass — $9.99/month
+                      Enter Compass
                     </Link>
                   </div>
                 </div>
@@ -122,12 +141,18 @@ export function CompareCompass({ mode }: CompareCompassProps) {
                   </p>
                 </div>
 
+                <ProductLaunchPrice
+                  regularPrice={COMPASS_REGULAR_PRICE}
+                  launchPrice={COMPASS_LAUNCH_PRICE}
+                  unit="per 30 days"
+                />
+
                 <div className="flex flex-wrap gap-4 pt-2">
                   <Link
                     href="https://compass.oremea.com"
                     className="rounded-full border border-amber-200/20 bg-amber-100/[0.05] px-5 py-2 text-sm text-amber-100 transition hover:border-amber-100/50 hover:bg-amber-100/[0.08]"
                   >
-                    Compass — $9.99/month
+                    Enter Compass
                   </Link>
                 </div>
               </div>
