@@ -25,20 +25,17 @@ function getReflectionStage(ratio: number): ReflectionStage {
 function getStageCopy(stage: ReflectionStage) {
   if (stage === "early") {
     return {
-      helper: "A private space to stay a little longer with what is here.",
       placeholder: "Write what feels true for you...",
     };
   }
 
   if (stage === "middle") {
     return {
-      helper: "A private space to notice what is becoming clearer.",
       placeholder: "What feels clearer for you here?",
     };
   }
 
   return {
-    helper: "A private space for what has begun to take shape.",
     placeholder: "What feels true now that did not feel clear before?",
   };
 }
@@ -116,7 +113,6 @@ export default function MirrorCard({
           <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#C8A96A]">
             Deeper reflection
           </p>
-          <p className="text-xs leading-6 text-zinc-400">{copy.helper}</p>
         </div>
 
         <p className="whitespace-pre-wrap text-base leading-8 text-zinc-200">
@@ -138,7 +134,6 @@ export default function MirrorCard({
         <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#C8A96A]">
           Deeper reflection
         </p>
-        <p className="text-xs leading-6 text-zinc-400">{copy.helper}</p>
       </div>
 
       <p className="whitespace-pre-wrap text-base leading-8 text-zinc-200">
