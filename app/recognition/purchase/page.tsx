@@ -7,6 +7,12 @@ import {
 
 export const dynamic = "force-dynamic";
 
+type Props = {
+  searchParams?: {
+    access?: string;
+  };
+};
+
 function CheckoutAction({
   href,
   label,
@@ -32,10 +38,11 @@ function CheckoutAction({
   );
 }
 
-export default function RecognitionPurchasePage() {
+export default function RecognitionPurchasePage({ searchParams }: Props) {
   const processCheckout =
     process.env.RECOGNITION_PROCESS_CHECKOUT_URL?.trim() || null;
   const price = formatRecognitionPrice(RECOGNITION_PRICING.launchPriceCents);
+  const accessRequired = searchParams?.access === "required";
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-zinc-950 text-white">
@@ -55,13 +62,22 @@ export default function RecognitionPurchasePage() {
             Recognition
           </p>
           <h1 className="mt-4 font-serif text-4xl font-light tracking-tight md:text-6xl">
-            Begin one complete process
+            An accountability partner for staying in contact with your own words
           </h1>
           <p className="mt-6 text-base leading-8 text-zinc-300">
-            Recognition begins with what already has your attention and reflects
-            what your own words make visible.
+            Bring whatever has your attention. Recognition stays with what you
+            actually say, notices distinctions and recurrence, and can bring your
+            own earlier words back when they matter.
           </p>
         </header>
+
+        {accessRequired ? (
+          <div className="mt-8 rounded-2xl border border-[#7b6338] bg-[#17130c] px-5 py-4 text-sm leading-7 text-[#e4d3ae]">
+            No Recognition purchase was found for the email on this signed-in
+            account. Use the same email at checkout, or sign in with the account
+            that already purchased Recognition.
+          </div>
+        ) : null}
 
         <div className="mt-10">
           <section className="rounded-3xl border border-[#c8a96a]/35 bg-black/45 p-6 md:p-8">
@@ -71,27 +87,35 @@ export default function RecognitionPurchasePage() {
                   One-time purchase
                 </p>
                 <h2 className="mt-2 font-serif text-2xl text-zinc-100">
-                  One Recognition process
+                  Ongoing Recognition access
                 </h2>
               </div>
               <p className="text-3xl text-[#f1dfb4]">{price}</p>
             </div>
 
             <p className="mt-5 text-sm leading-7 text-zinc-300">
-              Includes the complete answer-responsive Recognition sequence, your
-              generated reflection, one included second pass, and the completed
-              process saved in your Recognition Archive.
+              There is no fixed question sequence and no required destination.
+              Recognition becomes one continuing private conversation: return when
+              something needs to be seen clearly, and the conversation can remember
+              your own earlier evidence without treating old AI output as truth.
             </p>
             <p className="mt-4 text-sm leading-7 text-zinc-400">
-              Begin with the same email address you use at checkout. Each successful
-              purchase opens one new Recognition process.
+              Purchase with an email on the Oremea account you will use for
+              Recognition. Your account protects the longitudinal conversation from
+              anyone who merely knows your email address.
             </p>
 
-            <div className="mt-7">
+            <div className="mt-7 flex flex-wrap items-center gap-4">
               <CheckoutAction
                 href={processCheckout}
-                label={`Begin one Recognition process · ${price}`}
+                label={`Open Recognition · ${price}`}
               />
+              <Link
+                href="/sign-in?redirect_url=%2Fbegin"
+                className="text-sm text-zinc-400 underline underline-offset-4 transition hover:text-[#f1dfb4]"
+              >
+                Already purchased? Sign in
+              </Link>
             </div>
           </section>
         </div>
