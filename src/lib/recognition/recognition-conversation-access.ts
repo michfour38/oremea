@@ -1,11 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import {
-  RECOGNITION_PRODUCT_KEY,
-  normalizeRecognitionEmail,
-  readRecognitionLedger,
-} from "./recognition-access";
+import { normalizeRecognitionEmail } from "./recognition-access";
 
-const FOUNDING_USER_PREFIX = "recognition-email:";
 const MEMBERSHIP_USER_PREFIX = "recognition-membership-email:";
 const DEFAULT_RECOGNITION_OWNER_USER_ID = "user_3CLGEx3xqgXY6DsIHPyV3yOd1xi";
 
@@ -13,7 +8,7 @@ export const RECOGNITION_MEMBERSHIP_PRODUCT_KEY = "recognition_membership";
 
 export type RecognitionConversationAccess = {
   active: boolean;
-  source: "owner" | "founding" | "membership" | null;
+  source: "owner" | "membership" | null;
   matchedEmail: string | null;
   purchasedAt: Date | null;
   expiresAt: Date | null;
@@ -53,10 +48,6 @@ function readMembershipReference(value: string | null): RecognitionMembershipRef
 
 function membershipUserId(email: string) {
   return `${MEMBERSHIP_USER_PREFIX}${normalizeRecognitionEmail(email)}`;
-}
-
-function foundingUserId(email: string) {
-  return `${FOUNDING_USER_PREFIX}${normalizeRecognitionEmail(email)}`;
 }
 
 function validDateOrNull(value?: Date | null) {
@@ -203,44 +194,6 @@ export async function getRecognitionConversationAccess({
       source: null,
       matchedEmail: null,
       purchasedAt: null,
-      expiresAt: null,
-    };
-  }
-
-  const foundingEntitlements = await prisma.oremea_entitlements.findMany({
-    where: {
-      product_key: RECOGNITION_PRODUCT_KEY,
-      user_id: {
-        in: normalizedEmails.map(foundingUserId),
-      },
-      status: "active",
-      revoked_at: null,
-    },
-    select: {
-      user_id: true,
-      source_reference: true,
-      granted_at: true,
-    },
-  });
-
-  for (const entitlement of foundingEntitlements) {
-    const ledger = readRecognitionLedger(entitlement.source_reference);
-    if (ledger.payments.length === 0) continue;
-
-    const matchedEmail = entitlement.user_id.startsWith(FOUNDING_USER_PREFIX)
-      ? entitlement.user_id.slice(FOUNDING_USER_PREFIX.length)
-      : null;
-    const latestPayment = [...ledger.payments].sort(
-      (a, b) => Date.parse(b.paidAt) - Date.parse(a.paidAt),
-    )[0];
-
-    return {
-      active: true,
-      source: "founding",
-      matchedEmail,
-      purchasedAt: latestPayment?.paidAt
-        ? new Date(latestPayment.paidAt)
-        : entitlement.granted_at,
       expiresAt: null,
     };
   }
