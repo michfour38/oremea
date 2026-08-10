@@ -8,6 +8,7 @@ function read(path: string) {
 const removedFixedProcessPaths = [
   "app/recognition/recognition-experience.tsx",
   "src/lib/recognition/recognition.questions.ts",
+  "src/lib/recognition/recognition.service.ts",
   "app/api/recognition/check/route.ts",
   "app/api/recognition/generate/route.ts",
   "app/api/recognition/progress/route.ts",
@@ -31,11 +32,13 @@ const publicRecognitionSources = [
   "components/site/sections/explore-ecosystem.tsx",
   "components/site/sections/compare-hero.tsx",
   "components/site/sections/compare-final-guidance.tsx",
+  "app/(legal)/terms/page.tsx",
+  "app/(legal)/privacy/page.tsx",
 ].map(read).join("\n");
 
 assert.match(
   publicRecognitionSources,
-  /accountability partner|accountability to your own words|accountable to your own words/i,
+  /accountability partner|accountability conversation|accountability to your own words|accountable to your own words/i,
   "Recognition public copy must communicate ongoing accountability to the participant's own words.",
 );
 assert.match(
@@ -47,6 +50,11 @@ assert.doesNotMatch(
   publicRecognitionSources,
   /full question sequence|guided question sequence|one-process|one process|generated reflection|complete the questions|second pass/i,
   "Recognition public copy must not describe the retired fixed-process product.",
+);
+assert.doesNotMatch(
+  publicRecognitionSources,
+  /Recognition, Resonance and Compass provide structured reflection, guided questions/i,
+  "Legal copy must not collapse Recognition back into the retired guided-question product.",
 );
 assert.doesNotMatch(
   publicRecognitionSources,
@@ -78,6 +86,18 @@ assert.doesNotMatch(
   archiveSource,
   /entry_mirror_sessions|Earlier Recognition format|Past completed Recognitions|legacy/i,
   "Recognition Archive must represent the ongoing conversation only.",
+);
+
+const privacySource = read("app/(legal)/privacy/page.tsx");
+assert.match(
+  privacySource,
+  /Recognition conversation messages and participant-controlled remembered excerpts/i,
+  "Privacy copy must describe Recognition's ongoing conversation and controlled memory accurately.",
+);
+assert.match(
+  privacySource,
+  /inspect and remove/i,
+  "Privacy copy must preserve participant control over Recognition long-term memory.",
 );
 
 const boundarySource = read("docs/product-boundaries.md");
