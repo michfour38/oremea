@@ -1,5 +1,8 @@
+import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
+import { getRecognitionConversationAccess } from "@/src/lib/recognition/recognition-conversation-access";
 import {
   RECOGNITION_PRICING,
   formatRecognitionPrice,
@@ -38,7 +41,22 @@ function CheckoutAction({
   );
 }
 
-export default function RecognitionPurchasePage({ searchParams }: Props) {
+export default async function RecognitionPurchasePage({ searchParams }: Props) {
+  const user = await currentUser();
+  if (user) {
+    const emails = user.emailAddresses
+      .map((item) => item.emailAddress.trim().toLowerCase())
+      .filter(Boolean);
+    const access = await getRecognitionConversationAccess({
+      userId: user.id,
+      emails,
+    });
+
+    if (access.active) {
+      redirect("https://recognition.oremea.com/begin");
+    }
+  }
+
   const processCheckout =
     process.env.RECOGNITION_PROCESS_CHECKOUT_URL?.trim() || null;
   const price = formatRecognitionPrice(RECOGNITION_PRICING.launchPriceCents);
