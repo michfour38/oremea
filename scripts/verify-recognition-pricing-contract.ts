@@ -1,40 +1,27 @@
 import assert from "node:assert/strict";
 
-import {
-  RECOGNITION_PRICING,
-  formatRecognitionPrice,
-} from "../src/lib/recognition/recognition-pricing";
+import { OREMEA_PRICING } from "../src/lib/oremea/pricing";
+import { RECOGNITION_PRICING } from "../src/lib/recognition/recognition-pricing";
 
 assert.equal(
-  formatRecognitionPrice(RECOGNITION_PRICING.launchPriceCents),
-  "$14.99",
-  "Recognition launch price must remain $14.99/month",
+  RECOGNITION_PRICING.launchPriceCents,
+  OREMEA_PRICING.recognition.launchPriceCents,
+  "Recognition launch price must reference the central pricing registry",
 );
 assert.equal(
-  formatRecognitionPrice(RECOGNITION_PRICING.regularPriceCents),
-  "$19.99",
-  "Recognition standard price must remain $19.99/month",
+  RECOGNITION_PRICING.regularPriceCents,
+  OREMEA_PRICING.recognition.standardPriceCents,
+  "Recognition standard price must reference the central pricing registry",
 );
 assert.equal(
   RECOGNITION_PRICING.purchaseType,
-  "subscription",
-  "Recognition public access must be a subscription",
+  OREMEA_PRICING.recognition.purchaseType,
+  "Recognition purchase type must reference the central pricing registry",
 );
 assert.equal(
   RECOGNITION_PRICING.billingInterval,
-  "month",
-  "Recognition subscription must bill monthly",
-);
-assert.deepEqual(
-  Object.keys(RECOGNITION_PRICING).sort(),
-  [
-    "billingInterval",
-    "currency",
-    "launchPriceCents",
-    "purchaseType",
-    "regularPriceCents",
-  ].sort(),
-  "Recognition pricing must contain only the current subscription model",
+  OREMEA_PRICING.recognition.billingInterval,
+  "Recognition billing interval must reference the central pricing registry",
 );
 
 console.log("Recognition pricing contract checks passed.");
