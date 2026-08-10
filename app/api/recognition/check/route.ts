@@ -1,33 +1,30 @@
 import { NextResponse } from "next/server";
+
 import { prisma } from "@/lib/prisma";
+import { getRecognitionCreditState } from "@/src/lib/recognition/recognition-access";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-
-    const email = String(body?.email || "")
-      .trim()
-      .toLowerCase();
+    const email = String(body?.email || "").trim().toLowerCase();
 
     if (!email || !email.includes("@")) {
-      return NextResponse.json(
-        { error: "Valid email required." },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Valid email required." }, { status: 400 });
     }
 
-    const lead = await prisma.entry_leads.findUnique({
-      where: { email },
-      select: {
-        entry_mirror_sessions: {
-          select: {
-            entry_mirror_outputs: {
-              select: { id: true },
+    const [lead, creditState] = await Promise.all([
+      prisma.entry_leads.findUnique({
+        where: { email },
+        select: {
+          entry_mirror_sessions: {
+            select: {
+              entry_mirror_outputs: { select: { id: true } },
             },
           },
         },
-      },
-    });
+      }),
+      getRecognitionCreditState(email),
+    ]);
 
     const outputCount =
       lead?.entry_mirror_sessions.reduce(
@@ -38,10 +35,10 @@ export async function POST(req: Request) {
     return NextResponse.json({
       alreadyCompleted: false,
       hasPreviousRecognition: outputCount > 0,
+      ...creditState,
     });
   } catch (error) {
     console.error("Recognition check failed:", error);
-
     return NextResponse.json(
       { error: "Could not check Recognition status." },
       { status: 500 },

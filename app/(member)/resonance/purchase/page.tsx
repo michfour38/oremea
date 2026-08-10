@@ -5,6 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
+import { getResonanceCheckoutUrl } from "@/src/lib/resonance/resonance-commerce";
 import {
   RESONANCE_LAUNCH_LABEL,
   RESONANCE_LAUNCH_PRICE,
@@ -22,9 +23,7 @@ export const dynamic = "force-dynamic";
 const RESONANCE_TESTER_USER_ID = "user_3CLGEx3xqgXY6DsIHPyV3yOd1xi";
 
 type Props = {
-  searchParams?: {
-    week?: string;
-  };
+  searchParams?: { week?: string };
 };
 
 type RoomPurchaseDetail = {
@@ -145,11 +144,7 @@ export default async function ResonancePurchasePage({ searchParams }: Props) {
   const [week, activeRun, previousRuns] = await Promise.all([
     prisma.resonance_weeks.findUnique({
       where: { week_number: weekNumber },
-      select: {
-        week_number: true,
-        title: true,
-        is_published: true,
-      },
+      select: { week_number: true, title: true, is_published: true },
     }),
     getActiveResonanceRun(userId),
     getResonanceWeekRuns(userId, weekNumber),
@@ -162,11 +157,7 @@ export default async function ResonancePurchasePage({ searchParams }: Props) {
   const completedRuns = previousRuns.filter((run) => run.status === "completed");
   const nextRunNumber =
     previousRuns.reduce((highest, run) => Math.max(highest, run.runNumber), 0) + 1;
-
-  const checkoutBase = process.env.RESONANCE_WEEK_CHECKOUT_URL?.trim() || "";
-  const checkoutHref = checkoutBase
-    ? `${checkoutBase}${checkoutBase.includes("?") ? "&" : "?"}week=${weekNumber}`
-    : null;
+  const checkoutHref = getResonanceCheckoutUrl(weekNumber);
   const isTester = userId === RESONANCE_TESTER_USER_ID;
 
   return (
@@ -244,6 +235,11 @@ export default async function ResonancePurchasePage({ searchParams }: Props) {
               </p>
             ) : null}
 
+            <p className="mt-4 text-sm leading-7 text-zinc-400">
+              Use the same email address at Whop that belongs to this Oremea account so
+              the successful payment can open the room automatically.
+            </p>
+
             <div className="mt-7 flex flex-wrap gap-3">
               {isTester ? (
                 <form action={completeTesterPurchase}>
@@ -264,7 +260,7 @@ export default async function ResonancePurchasePage({ searchParams }: Props) {
                 </a>
               ) : (
                 <span className="inline-flex rounded-xl border border-white/10 px-5 py-3 text-sm text-zinc-500">
-                  Checkout connection pending
+                  Checkout connection pending for this room
                 </span>
               )}
 

@@ -1,8 +1,9 @@
 export const RECOGNITION_PRICING = {
   currency: "USD",
-  launchPriceCents: 699,
+  launchPriceCents: 999,
   regularPriceCents: 999,
   purchaseType: "one_time",
+  includedRefinements: 1,
 } as const;
 
 export function formatRecognitionPrice(priceCents: number) {
