@@ -1,6 +1,10 @@
 import { generateAI } from "@/src/lib/ai/ai-gateway";
 import { OREMEA_EVIDENCE_BOUNDARY } from "@/src/lib/oremea/evidence-boundary";
 import { MIRROR_AUTHORING_STANDARD } from "@/src/lib/oremea/mirror-authoring";
+import {
+  recognitionMemoryQuoteIsBounded,
+  selectRecognitionMemoryForPrompt,
+} from "./recognition-context";
 
 export type RecognitionConversationRole = "user" | "assistant";
 
@@ -114,6 +118,22 @@ Long-term memory contains exact participant quotes only. It is an index back to 
 Use a remembered quote only when relevant to the current message.
 Never cite an old AI reply as evidence about the participant.
 When an old quote and a current quote differ, current material has foreground authority.
+
+SAFETY OVERRIDE
+If the newest participant message indicates immediate danger of suicide, self-harm, violence, abuse requiring urgent escape, or a medical emergency, immediate safety outranks ordinary recursive accountability.
+In that case:
+- stay calm and plain
+- encourage immediate local emergency help and a nearby trusted person who can physically assist
+- ask at most one direct safety question when it helps establish whether danger is immediate
+- do not challenge an absolute, debate responsibility, intensify shame, diagnose, or continue a normal accountability thread until immediate danger is addressed
+Recognition is not a crisis service or emergency responder.
+
+FORM EXAMPLES — NEVER TEMPLATES
+Use these only to understand the level of precision and firmness. Never copy their content unless the participant supplied the same evidence.
+- Participant says “Everything is on my plate.” Recognition may narrow the absolute: “Everything is a lot of territory. What is actually on your plate today?”
+- Participant says “I have no choice,” after previously naming choices they made. Recognition may place both statements together and ask what “no choice” means in this context.
+- Another person caused a consequence. Recognition preserves that attribution before examining where the participant actually enters the situation; visibility does not transfer responsibility.
+- The participant corrects an earlier account. Recognition treats the correction as current rather than defending its previous reading.
 `.trim();
 
 type RawModelResponse = {
@@ -139,6 +159,7 @@ export function readRecognitionMemory(value: unknown): RecognitionConversationMe
       const value = item as RawRememberItem;
       if (
         typeof value.quote !== "string" ||
+        !recognitionMemoryQuoteIsBounded(value.quote) ||
         typeof value.turnIndex !== "number" ||
         !Number.isInteger(value.turnIndex) ||
         typeof value.kind !== "string" ||
@@ -186,7 +207,7 @@ function findExactParticipantQuote(
   requestedTurnIndex: number,
 ) {
   const exactQuote = quote.trim();
-  if (!exactQuote) return null;
+  if (!recognitionMemoryQuoteIsBounded(exactQuote)) return null;
 
   const candidates = participantMessages.filter(
     (message) =>
@@ -222,6 +243,7 @@ export function mergeRecognitionMemory({
       const item = raw as RawRememberItem;
       if (
         typeof item.quote !== "string" ||
+        !recognitionMemoryQuoteIsBounded(item.quote) ||
         typeof item.turnIndex !== "number" ||
         !Number.isInteger(item.turnIndex) ||
         typeof item.kind !== "string" ||
@@ -278,15 +300,23 @@ export function buildRecognitionConversationPrompt({
     )
     .join("\n\n");
 
+  const currentParticipantMessage = [...recentMessages]
+    .reverse()
+    .find((message) => message.role === "user")?.content ?? "";
+  const promptMemory = selectRecognitionMemoryForPrompt(
+    memory.anchors,
+    currentParticipantMessage,
+  );
+
   const memoryText =
-    memory.anchors.length > 0
-      ? memory.anchors
+    promptMemory.length > 0
+      ? promptMemory
           .map(
             (anchor) =>
               `- turn ${anchor.turnIndex} · ${anchor.kind}: "${anchor.quote}"`,
           )
           .join("\n")
-      : "None yet.";
+      : "None relevant enough to carry into this turn.";
 
   return `
 You are Recognition by Oremea.
@@ -298,7 +328,7 @@ ${OREMEA_EVIDENCE_BOUNDARY}
 
 ${RECOGNITION_CONVERSATION_STANDARD}
 
-LONG-TERM PARTICIPANT EVIDENCE INDEX:
+SELECTED LONG-TERM PARTICIPANT EVIDENCE:
 ${memoryText}
 
 RECENT CONVERSATION:
@@ -308,7 +338,7 @@ Write Recognition's next reply to the newest PARTICIPANT message.
 
 MEMORY CAPTURE
 Return at most ${MAX_REMEMBER_PER_TURN} memory items, and only when the newest participant message contains exact wording genuinely useful for future continuity or accountability.
-Each memory quote must be copied character-for-character from a PARTICIPANT message in the recent conversation.
+Each memory quote must be a short evidence-sized excerpt copied character-for-character from a PARTICIPANT message in the recent conversation.
 Use the participant message's turn number exactly.
 Allowed kinds: statement, value, choice, clarity, uncertainty, responsibility, boundary, commitment, correction.
 Do not remember generated Recognition wording.
