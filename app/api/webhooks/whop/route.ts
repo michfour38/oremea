@@ -2,7 +2,6 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { grantCompassAccess } from "@/src/lib/compass/compass-access";
-import { grantRecognitionCredit } from "@/src/lib/recognition/recognition-access";
 import { setRecognitionMembershipAccess } from "@/src/lib/recognition/recognition-conversation-access";
 import { getResonanceWeekForWhopProduct } from "@/src/lib/resonance/resonance-commerce";
 import { createPurchasedResonanceRun } from "@/src/lib/resonance/resonance-week-run";
@@ -194,23 +193,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const recognitionProductId = process.env.WHOP_RECOGNITION_PRODUCT_ID?.trim();
-  if (recognitionProductId && payment.productId === recognitionProductId) {
-    const credit = await grantRecognitionCredit({
-      email: payment.email,
-      paymentId: payment.paymentId,
-      paidAt: payment.paidAt,
-    });
-
-    return NextResponse.json({
-      received: true,
-      fulfilled: true,
-      product: "recognition",
-      access: "founding",
-      availableProcesses: credit.availableProcesses,
-    });
-  }
-
   const resonanceWeek = getResonanceWeekForWhopProduct(payment.productId);
   if (resonanceWeek) {
     const user = await findExactlyOneOremeaUser(payment.email);
@@ -236,7 +218,7 @@ export async function POST(request: Request) {
       received: true,
       fulfilled: true,
       product: "resonance",
-      weekNumber: run.weekNumber,
+      weekNumber: resonanceWeek,
       runNumber: run.runNumber,
       runId: run.id,
     });
