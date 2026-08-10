@@ -1,13 +1,13 @@
 model recognition_threads {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id         String   @unique
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         String    @unique
   primary_email   String?
-  status          String   @default("active")
-  memory_snapshot Json     @default("{}")
-  message_count   Int      @default(0)
+  status          String    @default("active")
+  memory_snapshot Json      @default("{}")
+  message_count   Int       @default(0)
   last_message_at DateTime? @db.Timestamptz(6)
-  created_at      DateTime @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime @updatedAt @db.Timestamptz(6)
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime  @updatedAt @db.Timestamptz(6)
 
   messages recognition_messages[]
 
@@ -21,12 +21,14 @@ model recognition_messages {
   role              String
   content           String   @db.Text
   turn_index        Int
+  client_message_id String?
   evidence_snapshot Json     @default("{}")
   created_at        DateTime @default(now()) @db.Timestamptz(6)
 
   thread recognition_threads @relation(fields: [thread_id], references: [id], onDelete: Cascade)
 
   @@unique([thread_id, turn_index])
+  @@unique([thread_id, client_message_id])
   @@index([thread_id, created_at])
   @@index([role])
 }
