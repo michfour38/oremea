@@ -16,6 +16,7 @@ const publicPricingSource = publicPricingFiles
 
 const forbiddenLegacyCopy = [
   /\$9\.99\/month/i,
+  /Recognition[^\n]{0,120}one-time access/i,
   /\bR520\b/i,
   /\bR1240\b/i,
   /approximately 10 weeks/i,
@@ -40,5 +41,21 @@ for (const file of publicPricingFiles.filter((file) =>
     `${file} must use the shared launch-price presentation.`,
   );
 }
+
+const recognitionHomepage = readFileSync("app/page.tsx", "utf8");
+const recognitionCompare = readFileSync(
+  "components/site/sections/compare-recognition.tsx",
+  "utf8",
+);
+assert.match(
+  recognitionHomepage,
+  /unit="\/ month"/,
+  "Homepage Recognition pricing must present monthly subscription access.",
+);
+assert.match(
+  recognitionCompare,
+  /unit="\/ month"/,
+  "Compare Recognition pricing must present monthly subscription access.",
+);
 
 console.log("Public pricing contract checks passed.");
