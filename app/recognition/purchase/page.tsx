@@ -57,9 +57,10 @@ export default async function RecognitionPurchasePage({ searchParams }: Props) {
     }
   }
 
-  const processCheckout =
-    process.env.RECOGNITION_PROCESS_CHECKOUT_URL?.trim() || null;
-  const price = formatRecognitionPrice(RECOGNITION_PRICING.launchPriceCents);
+  const subscriptionCheckout =
+    process.env.RECOGNITION_SUBSCRIPTION_CHECKOUT_URL?.trim() || null;
+  const launchPrice = formatRecognitionPrice(RECOGNITION_PRICING.launchPriceCents);
+  const regularPrice = formatRecognitionPrice(RECOGNITION_PRICING.regularPriceCents);
   const accessRequired = searchParams?.access === "required";
 
   return (
@@ -91,48 +92,62 @@ export default async function RecognitionPurchasePage({ searchParams }: Props) {
 
         {accessRequired ? (
           <div className="mt-8 rounded-2xl border border-[#7b6338] bg-[#17130c] px-5 py-4 text-sm leading-7 text-[#e4d3ae]">
-            No Recognition purchase was found for the email on this signed-in
+            No active Recognition access was found for an email on this signed-in
             account. Use the same email at checkout, or sign in with the account
-            that already purchased Recognition.
+            that already has Recognition.
           </div>
         ) : null}
 
         <div className="mt-10">
           <section className="rounded-3xl border border-[#c8a96a]/35 bg-black/45 p-6 md:p-8">
-            <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="flex flex-wrap items-end justify-between gap-5">
               <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
-                  One-time purchase
+                <p className="text-xs uppercase tracking-[0.22em] text-[#c8a96a]">
+                  Launch offer
                 </p>
                 <h2 className="mt-2 font-serif text-2xl text-zinc-100">
-                  Ongoing Recognition access
+                  Ongoing Recognition
                 </h2>
               </div>
-              <p className="text-3xl text-[#f1dfb4]">{price}</p>
+              <div className="text-right">
+                <p className="text-sm text-zinc-500 line-through">
+                  {regularPrice}/month
+                </p>
+                <p className="mt-1 text-3xl text-[#f1dfb4]">
+                  {launchPrice}<span className="ml-1 text-sm text-zinc-500">/month</span>
+                </p>
+              </div>
             </div>
 
             <p className="mt-5 text-sm leading-7 text-zinc-300">
               There is no fixed question sequence and no required destination.
-              Recognition becomes one continuing private conversation: return when
-              something needs to be seen clearly, and the conversation can remember
-              your own earlier evidence without treating old AI output as truth.
+              Recognition is one continuing private conversation: return whenever
+              something needs to be seen clearly, and the conversation can bring
+              forward your own earlier evidence without treating old AI output as
+              truth.
             </p>
             <p className="mt-4 text-sm leading-7 text-zinc-400">
-              Purchase with an email on the Oremea account you will use for
-              Recognition. Your account protects the longitudinal conversation from
-              anyone who merely knows your email address.
+              Your full private conversation remains available to you. You can
+              inspect or remove carried-forward memory, clear remembered excerpts,
+              or delete the ongoing conversation and start fresh without affecting
+              your access.
+            </p>
+            <p className="mt-4 text-sm leading-7 text-zinc-400">
+              Subscribe with an email on the Oremea account you will use for
+              Recognition. Existing $9.99 founding purchasers keep their lifetime
+              Recognition access and do not need to subscribe again.
             </p>
 
             <div className="mt-7 flex flex-wrap items-center gap-4">
               <CheckoutAction
-                href={processCheckout}
-                label={`Open Recognition · ${price}`}
+                href={subscriptionCheckout}
+                label={`Open Recognition · ${launchPrice}/month`}
               />
               <Link
                 href="/sign-in?redirect_url=%2Fbegin"
                 className="text-sm text-zinc-400 underline underline-offset-4 transition hover:text-[#f1dfb4]"
               >
-                Already purchased? Sign in
+                Already have access? Sign in
               </Link>
             </div>
           </section>
