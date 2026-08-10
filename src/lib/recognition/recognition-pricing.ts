@@ -1,9 +1,11 @@
 export const RECOGNITION_PRICING = {
   currency: "USD",
-  launchPriceCents: 999,
-  regularPriceCents: 999,
-  purchaseType: "one_time",
-  includedRefinements: 1,
+  launchPriceCents: 1499,
+  regularPriceCents: 1999,
+  billingInterval: "month",
+  purchaseType: "subscription",
+  legacyFoundingPriceCents: 999,
+  legacyFoundingAccess: "lifetime",
 } as const;
 
 export function formatRecognitionPrice(priceCents: number) {
