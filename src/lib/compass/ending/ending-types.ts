@@ -19,6 +19,8 @@ export type CompassMapItemStatus =
   | "completed"
   | "released"
 
+export type CompassMapItemSource = "compass" | "user"
+
 export type CompassMapItem = {
   id: string
   content: string
@@ -30,6 +32,8 @@ export type CompassMapItem = {
   sourceSnippet: string | null
   createdAt: string
   completedAt: string | null
+  source?: CompassMapItemSource
+  scheduledFor?: string | null
 }
 
 export type CompassMovementStatus =
