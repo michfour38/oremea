@@ -1,5 +1,5 @@
 import { currentUser } from "@clerk/nextjs/server";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
@@ -12,6 +12,13 @@ import { getRecognitionConversationAccess } from "@/src/lib/recognition/recognit
 
 const RECENT_MESSAGE_LIMIT = 30;
 const MAX_MESSAGE_LENGTH = 8000;
+
+class RecognitionConversationStaleError extends Error {
+  constructor() {
+    super("Recognition changed while this reply was being prepared.");
+    this.name = "RecognitionConversationStaleError";
+  }
+}
 
 function userEmails(user: Awaited<ReturnType<typeof currentUser>>) {
   if (!user) return [];
@@ -132,10 +139,7 @@ export async function POST(request: Request) {
       });
 
       if (!currentThread || currentThread.message_count !== thread.message_count) {
-        throw new Prisma.PrismaClientKnownRequestError(
-          "Recognition changed while this reply was being prepared.",
-          { code: "P2028", clientVersion: Prisma.prismaVersion.client },
-        );
+        throw new RecognitionConversationStaleError();
       }
 
       await transaction.recognition_messages.createMany({
@@ -165,7 +169,7 @@ export async function POST(request: Request) {
       await transaction.recognition_threads.update({
         where: { id: thread.id },
         data: {
-          memory_snapshot: generated.memory,
+          memory_snapshot: generated.memory as Prisma.InputJsonValue,
           message_count: assistantTurnIndex,
           last_message_at: now,
           primary_email: primaryEmail ?? undefined,
@@ -192,9 +196,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("POST /api/recognition/conversation failed:", error);
 
-    const isStale =
-      error instanceof Error &&
-      error.message.includes("Recognition changed while this reply was being prepared");
+    const isStale = error instanceof RecognitionConversationStaleError;
 
     return NextResponse.json(
       {
