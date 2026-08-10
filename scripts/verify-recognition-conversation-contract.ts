@@ -7,6 +7,13 @@ import {
   buildRecognitionConversationPrompt,
   mergeRecognitionMemory,
 } from "../src/lib/recognition/recognition-conversation";
+import {
+  RECOGNITION_MEMORY_PROMPT_MAX_ANCHORS,
+  RECOGNITION_MEMORY_QUOTE_MAX_CHARS,
+  RECOGNITION_RECENT_CONTEXT_MAX_MESSAGES,
+  selectRecognitionMemoryForPrompt,
+  trimRecognitionRecentContext,
+} from "../src/lib/recognition/recognition-context";
 
 assert.match(
   RECOGNITION_CONVERSATION_STANDARD,
@@ -32,6 +39,16 @@ assert.match(
   RECOGNITION_CONVERSATION_STANDARD,
   /correction has current authority/i,
   "Participant corrections must outrank historical wording.",
+);
+assert.match(
+  RECOGNITION_CONVERSATION_STANDARD,
+  /SAFETY OVERRIDE/,
+  "Immediate safety must outrank ordinary recursive accountability.",
+);
+assert.match(
+  RECOGNITION_CONVERSATION_STANDARD,
+  /do not challenge an absolute, debate responsibility/i,
+  "Recognition must not intensify accountability during immediate danger.",
 );
 
 const participantMessages = [
@@ -70,7 +87,7 @@ assert.equal(
   "Recognition memory must preserve participant wording rather than a generated summary.",
 );
 
-const punctuationChanged = mergeRecognitionMemory({
+const wrongTurn = mergeRecognitionMemory({
   existing: EMPTY_RECOGNITION_MEMORY,
   participantMessages,
   remember: [
@@ -82,9 +99,33 @@ const punctuationChanged = mergeRecognitionMemory({
   ],
 });
 assert.equal(
-  punctuationChanged.anchors.length,
+  wrongTurn.anchors.length,
   0,
   "Recognition memory must reject a quote attached to the wrong participant turn.",
+);
+
+const oversizedQuote = "x".repeat(RECOGNITION_MEMORY_QUOTE_MAX_CHARS + 1);
+const oversizedMemory = mergeRecognitionMemory({
+  existing: EMPTY_RECOGNITION_MEMORY,
+  participantMessages: [
+    {
+      role: "user" as const,
+      content: oversizedQuote,
+      turnIndex: 9,
+    },
+  ],
+  remember: [
+    {
+      quote: oversizedQuote,
+      turnIndex: 9,
+      kind: "statement",
+    },
+  ],
+});
+assert.equal(
+  oversizedMemory.anchors.length,
+  0,
+  "Recognition memory must stay excerpt-sized rather than storing whole long messages.",
 );
 
 const prompt = buildRecognitionConversationPrompt({
@@ -101,6 +142,47 @@ assert.match(
   prompt,
   /Long-term memory contains exact participant quotes only/i,
   "Longitudinal memory must remain evidence-indexed.",
+);
+
+const longConversation = Array.from({ length: 40 }, (_, index) => ({
+  role: index % 2 === 0 ? ("user" as const) : ("assistant" as const),
+  content: `message-${index} ${"context ".repeat(180)}`,
+  turnIndex: index + 1,
+}));
+const trimmedConversation = trimRecognitionRecentContext(longConversation);
+assert.ok(
+  trimmedConversation.length <= RECOGNITION_RECENT_CONTEXT_MAX_MESSAGES,
+  "Recognition must cap the number of recent messages sent back to the model.",
+);
+assert.equal(
+  trimmedConversation.at(-1)?.turnIndex,
+  40,
+  "Context trimming must always retain the newest message.",
+);
+
+const anchorPool = Array.from({ length: 30 }, (_, index) => ({
+  quote:
+    index === 3
+      ? "school fees and transport are taking my attention"
+      : `historical participant excerpt ${index}`,
+  turnIndex: index + 1,
+  kind: "statement" as const,
+}));
+const selectedMemory = selectRecognitionMemoryForPrompt(
+  anchorPool,
+  "School transport and fees are back in my attention today.",
+);
+assert.ok(
+  selectedMemory.length <= RECOGNITION_MEMORY_PROMPT_MAX_ANCHORS,
+  "Recognition must not resend the whole longitudinal memory index every turn.",
+);
+assert.ok(
+  selectedMemory.some((anchor) => anchor.turnIndex === 4),
+  "Relevant older participant evidence should survive memory selection.",
+);
+assert.ok(
+  selectedMemory.some((anchor) => anchor.turnIndex === 30),
+  "Recent participant evidence should remain available even without lexical overlap.",
 );
 
 const pageSource = readFileSync("app/recognition/page.tsx", "utf8");
@@ -135,8 +217,26 @@ assert.match(
 );
 assert.match(
   apiSource,
+  /trimRecognitionRecentContext/,
+  "Recognition must bound recent model context without truncating the stored archive.",
+);
+assert.match(
+  apiSource,
   /memory_snapshot/,
   "Recognition must persist bounded longitudinal evidence memory.",
+);
+
+const memoryApiSource = readFileSync("app/api/recognition/memory/route.ts", "utf8");
+assert.match(
+  memoryApiSource,
+  /EMPTY_RECOGNITION_MEMORY/,
+  "Participants must be able to clear Recognition's long-term memory index.",
+);
+const archiveSource = readFileSync("app/recognition/archive/page.tsx", "utf8");
+assert.match(
+  archiveSource,
+  /RecognitionMemoryControls/,
+  "Recognition Archive must expose participant control over carried-forward memory.",
 );
 
 console.log("Recognition conversation contract checks passed.");
