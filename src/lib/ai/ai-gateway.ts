@@ -8,6 +8,7 @@ export type GenerateAIParams = {
   maxTokens?: number
   system?: string
   cacheSystem?: boolean
+  outputSchema?: Record<string, unknown>
 }
 
 export type AIUsage = {
@@ -65,6 +66,7 @@ export async function generateAIWithUsage({
   maxTokens = 1400,
   system,
   cacheSystem = false,
+  outputSchema,
 }: GenerateAIParams): Promise<GenerateAIResult | null> {
   const effectivePrompt = PARTICIPANT_EVIDENCE_TASKS.has(task)
     ? `${OREMEA_EVIDENCE_BOUNDARY}\n\n${prompt}`
@@ -85,6 +87,7 @@ export async function generateAIWithUsage({
       maxTokens,
       system,
       cacheSystem,
+      outputSchema,
     })
 
     if (result) {
@@ -106,6 +109,7 @@ async function callAnthropicModel({
   maxTokens,
   system,
   cacheSystem,
+  outputSchema,
   allowTokenRetry = true,
 }: {
   task: string
@@ -114,6 +118,7 @@ async function callAnthropicModel({
   maxTokens: number
   system?: string
   cacheSystem: boolean
+  outputSchema?: Record<string, unknown>
   allowTokenRetry?: boolean
 }): Promise<GenerateAIResult | null> {
   try {
@@ -143,6 +148,16 @@ async function callAnthropicModel({
           model,
           max_tokens: maxTokens,
           ...(systemBlocks ? { system: systemBlocks } : {}),
+          ...(outputSchema
+            ? {
+                output_config: {
+                  format: {
+                    type: "json_schema",
+                    schema: outputSchema,
+                  },
+                },
+              }
+            : {}),
           messages: [
             {
               role: "user",
@@ -168,6 +183,7 @@ async function callAnthropicModel({
           maxTokens: Math.min(maxTokens * 2, 4000),
           system,
           cacheSystem,
+          outputSchema,
           allowTokenRetry: false,
         })
       }
