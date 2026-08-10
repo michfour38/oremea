@@ -25,10 +25,16 @@ assert.equal(
   "month",
   "Recognition subscription must bill monthly",
 );
-assert.equal(
-  Object.prototype.hasOwnProperty.call(RECOGNITION_PRICING, "legacyFoundingPriceCents"),
-  false,
-  "Recognition must not retain a legacy founding price",
+assert.deepEqual(
+  Object.keys(RECOGNITION_PRICING).sort(),
+  [
+    "billingInterval",
+    "currency",
+    "launchPriceCents",
+    "purchaseType",
+    "regularPriceCents",
+  ].sort(),
+  "Recognition pricing must contain only the current subscription model",
 );
 
 console.log("Recognition pricing contract checks passed.");
