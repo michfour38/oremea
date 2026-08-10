@@ -7,23 +7,33 @@ import {
 
 assert.equal(
   formatRecognitionPrice(RECOGNITION_PRICING.launchPriceCents),
-  "$9.99",
-  "Recognition price must remain $9.99",
+  "$14.99",
+  "Recognition launch price must remain $14.99/month",
 );
 assert.equal(
   formatRecognitionPrice(RECOGNITION_PRICING.regularPriceCents),
-  "$9.99",
-  "Recognition canonical price must remain $9.99",
+  "$19.99",
+  "Recognition standard price must remain $19.99/month",
 );
 assert.equal(
   RECOGNITION_PRICING.purchaseType,
-  "one_time",
-  "Recognition must remain a one-time purchase",
+  "subscription",
+  "Recognition public access must be a subscription",
 );
 assert.equal(
-  RECOGNITION_PRICING.includedRefinements,
-  1,
-  "Recognition must include exactly one second pass",
+  RECOGNITION_PRICING.billingInterval,
+  "month",
+  "Recognition subscription must bill monthly",
+);
+assert.equal(
+  formatRecognitionPrice(RECOGNITION_PRICING.legacyFoundingPriceCents),
+  "$9.99",
+  "Historical Recognition founding purchasers must remain recorded at $9.99",
+);
+assert.equal(
+  RECOGNITION_PRICING.legacyFoundingAccess,
+  "lifetime",
+  "Historical $9.99 Recognition purchasers must retain lifetime founding access",
 );
 
 console.log("Recognition pricing contract checks passed.");
