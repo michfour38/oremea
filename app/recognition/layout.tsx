@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import "./recognition-theme.css";
 import "./recognition-reading.css";
 import RecognitionInputFocus from "./recognition-input-focus";
+
+export const metadata: Metadata = {
+  title: "Recognition | Oremea",
+  description:
+    "An ongoing private recursive accountability conversation that helps you see yourself clearly and stay accountable to your own words without directing your next move.",
+};
 
 export default function RecognitionLayout({
   children,
