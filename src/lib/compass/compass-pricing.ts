@@ -1,14 +1,10 @@
-export const COMPASS_PRICING = {
-  currency: "USD",
-  accessDays: 30,
-  launchPriceCents: 1999,
-  standardPriceCents: 2999,
-  autoRenews: false,
-} as const
+import {
+  OREMEA_PRICING,
+  formatProductPrice,
+} from "@/src/lib/oremea/pricing"
+
+export const COMPASS_PRICING = OREMEA_PRICING.compass
 
 export function formatCompassPrice(priceCents: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: COMPASS_PRICING.currency,
-  }).format(priceCents / 100)
+  return formatProductPrice("compass", priceCents)
 }
