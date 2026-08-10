@@ -5,10 +5,7 @@ export function getResonanceCheckoutUrl(weekNumber: number) {
     return null;
   }
 
-  const specific = process.env[`RESONANCE_WEEK_${weekNumber}_CHECKOUT_URL`]?.trim();
-  if (specific) return specific;
-
-  return process.env.RESONANCE_WEEK_CHECKOUT_URL?.trim() || null;
+  return process.env[`RESONANCE_WEEK_${weekNumber}_CHECKOUT_URL`]?.trim() || null;
 }
 
 export function getResonanceWeekForWhopProduct(productId: string) {
