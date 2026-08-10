@@ -156,7 +156,7 @@ export default function Home() {
                         className="mt-4"
                         regularPrice={RECOGNITION_REGULAR_PRICE}
                         launchPrice={RECOGNITION_LAUNCH_PRICE}
-                        unit="one-time access"
+                        unit="/ month"
                       />
                     ) : null}
 
