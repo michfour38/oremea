@@ -29,6 +29,8 @@ const publicRecognitionSources = [
   "app/recognition/archive/page.tsx",
   "components/site/sections/compare-recognition.tsx",
   "components/site/sections/explore-ecosystem.tsx",
+  "components/site/sections/compare-hero.tsx",
+  "components/site/sections/compare-final-guidance.tsx",
 ].map(read).join("\n");
 
 assert.match(
@@ -45,6 +47,11 @@ assert.doesNotMatch(
   publicRecognitionSources,
   /full question sequence|guided question sequence|one-process|one process|generated reflection|complete the questions|second pass/i,
   "Recognition public copy must not describe the retired fixed-process product.",
+);
+assert.doesNotMatch(
+  publicRecognitionSources,
+  /Oremea is designed as a progression|structured progression/i,
+  "Recognition must not be framed as a compulsory first step toward another product.",
 );
 
 const accessSource = read("src/lib/recognition/recognition-access.ts");
@@ -71,6 +78,18 @@ assert.doesNotMatch(
   archiveSource,
   /entry_mirror_sessions|Earlier Recognition format|Past completed Recognitions|legacy/i,
   "Recognition Archive must represent the ongoing conversation only.",
+);
+
+const boundarySource = read("docs/product-boundaries.md");
+assert.match(
+  boundarySource,
+  /Recognition must not become early Compass/i,
+  "The internal product boundary must explicitly prevent Recognition from becoming directional Compass logic.",
+);
+assert.match(
+  boundarySource,
+  /Pricing has one source of truth: `src\/lib\/oremea\/pricing\.ts`/,
+  "Internal product boundaries must preserve the central pricing registry rule.",
 );
 
 console.log("Recognition product identity contract checks passed.");
