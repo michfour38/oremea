@@ -134,8 +134,7 @@ export default async function RecognitionPurchasePage({ searchParams }: Props) {
             </p>
             <p className="mt-4 text-sm leading-7 text-zinc-400">
               Subscribe with an email on the Oremea account you will use for
-              Recognition. Existing $9.99 founding purchasers keep their lifetime
-              Recognition access and do not need to subscribe again.
+              Recognition. Active membership keeps the ongoing conversation available.
             </p>
 
             <div className="mt-7 flex flex-wrap items-center gap-4">
