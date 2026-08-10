@@ -26,6 +26,7 @@ for (const path of removedFixedProcessPaths) {
 
 const publicRecognitionSources = [
   "app/page.tsx",
+  "app/recognition/layout.tsx",
   "app/recognition/purchase/page.tsx",
   "app/recognition/archive/page.tsx",
   "components/site/sections/compare-recognition.tsx",
@@ -60,6 +61,13 @@ assert.doesNotMatch(
   publicRecognitionSources,
   /Oremea is designed as a progression|structured progression/i,
   "Recognition must not be framed as a compulsory first step toward another product.",
+);
+
+const recognitionMetadata = read("app/recognition/layout.tsx");
+assert.match(
+  recognitionMetadata,
+  /ongoing private recursive accountability conversation/i,
+  "Recognition metadata must describe the current ongoing product rather than generic Oremea copy.",
 );
 
 const accessSource = read("src/lib/recognition/recognition-access.ts");
