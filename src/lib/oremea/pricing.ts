@@ -19,8 +19,8 @@ export const OREMEA_PRICING = {
     launchPriceCents: 1999,
     standardPriceCents: 2999,
     accessDays: 30,
-    purchaseType: "one_time",
-    autoRenews: false,
+    accessOptions: ["30_day_pass", "monthly_subscription"],
+    billingInterval: "month",
   },
 } as const;
 
