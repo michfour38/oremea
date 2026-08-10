@@ -1,11 +1,13 @@
 import Link from "next/link";
 import type { CompareMode } from "@/app/compare/page";
 import { ProductLaunchPrice } from "@/components/site/product-launch-price";
+import { OREMEA_PRODUCT_REGISTRY } from "@/src/lib/oremea/product-registry";
 import {
   COMPASS_PRICING,
   formatCompassPrice,
 } from "@/src/lib/compass/compass-pricing";
 
+const COMPASS_PRODUCT = OREMEA_PRODUCT_REGISTRY.compass;
 const COMPASS_LAUNCH_PRICE = formatCompassPrice(
   COMPASS_PRICING.launchPriceCents,
 );
@@ -28,7 +30,7 @@ export function CompareCompass({ mode }: CompareCompassProps) {
             </p>
 
             <h2 className="text-4xl font-light leading-tight text-zinc-100">
-              Compass
+              {COMPASS_PRODUCT.name}
             </h2>
 
             <p className="mt-6 text-lg leading-8 text-zinc-400">
@@ -67,12 +69,12 @@ export function CompareCompass({ mode }: CompareCompassProps) {
                     className="mt-10"
                     regularPrice={COMPASS_REGULAR_PRICE}
                     launchPrice={COMPASS_LAUNCH_PRICE}
-                    unit="per 30 days"
+                    unit={COMPASS_PRODUCT.access.unit}
                   />
 
                   <div className="mt-4 flex flex-wrap gap-4">
                     <Link
-                      href="https://compass.oremea.com"
+                      href={COMPASS_PRODUCT.entryUrl}
                       className="rounded-full border border-[#b79a63]/25 bg-[#b79a63]/[0.05] px-5 py-2 text-sm text-[#b79a63] transition hover:border-[#b79a63]/55 hover:bg-[#b79a63]/10"
                     >
                       Enter Compass
@@ -140,12 +142,12 @@ export function CompareCompass({ mode }: CompareCompassProps) {
                 <ProductLaunchPrice
                   regularPrice={COMPASS_REGULAR_PRICE}
                   launchPrice={COMPASS_LAUNCH_PRICE}
-                  unit="per 30 days"
+                  unit={COMPASS_PRODUCT.access.unit}
                 />
 
                 <div className="flex flex-wrap gap-4 pt-2">
                   <Link
-                    href="https://compass.oremea.com"
+                    href={COMPASS_PRODUCT.entryUrl}
                     className="rounded-full border border-[#b79a63]/25 bg-[#b79a63]/[0.05] px-5 py-2 text-sm text-[#b79a63] transition hover:border-[#b79a63]/55 hover:bg-[#b79a63]/10"
                   >
                     Enter Compass
