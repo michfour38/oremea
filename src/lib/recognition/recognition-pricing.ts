@@ -4,8 +4,6 @@ export const RECOGNITION_PRICING = {
   regularPriceCents: 1999,
   billingInterval: "month",
   purchaseType: "subscription",
-  legacyFoundingPriceCents: 999,
-  legacyFoundingAccess: "lifetime",
 } as const;
 
 export function formatRecognitionPrice(priceCents: number) {
