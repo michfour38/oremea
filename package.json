@@ -10,7 +10,7 @@
     "postinstall": "prisma generate",
     "lint": "next lint",
     "db:migrate": "prisma migrate dev",
-    "db:migrate:deploy": "prisma migrate deploy --schema=prisma",
+    "db:migrate:deploy": "node scripts/deploy-migrations.mjs",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
@@ -19,6 +19,7 @@
     "db:verify:resonance": "tsx prisma/scripts/verify-resonance-seed.ts",
     "typecheck": "tsc --noEmit",
     "test:central-pricing": "tsx scripts/verify-central-pricing-contract.ts",
+    "test:production-migrations": "tsx scripts/verify-production-migration-contract.ts",
     "test:compass-descent": "tsx scripts/verify-compass-descent-contract.ts",
     "test:compass-resolution": "tsx scripts/verify-compass-resolution-contract.ts",
     "test:compass-pricing": "tsx scripts/verify-compass-pricing-contract.ts",
@@ -30,7 +31,7 @@
     "test:recognition-conversation": "tsx scripts/verify-recognition-conversation-contract.ts && tsx scripts/verify-recognition-ai-envelope-contract.ts && tsx scripts/verify-recognition-privacy-contract.ts && tsx scripts/verify-recognition-product-identity-contract.ts",
     "test:commerce-routing": "tsx scripts/verify-commerce-routing-contract.ts",
     "test:public-pricing": "tsx scripts/verify-public-pricing-contract.ts",
-    "test:launch": "npm run test:central-pricing && npm run test:recognition-pricing && npm run test:recognition-conversation && npm run test:commerce-routing && npm run test:public-pricing && npm run test:compass"
+    "test:launch": "npm run test:central-pricing && npm run test:production-migrations && npm run test:recognition-pricing && npm run test:recognition-conversation && npm run test:commerce-routing && npm run test:public-pricing && npm run test:compass"
   },
   "prisma": {
     "schema": "./prisma",
