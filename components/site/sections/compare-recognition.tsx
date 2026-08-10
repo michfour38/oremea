@@ -64,7 +64,7 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
                     className="mt-10"
                     regularPrice={RECOGNITION_REGULAR_PRICE}
                     launchPrice={RECOGNITION_LAUNCH_PRICE}
-                    unit="one-time access"
+                    unit="/ month"
                   />
 
                   <div className="mt-4 flex flex-wrap gap-4">
@@ -104,7 +104,7 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
                     <li>• observation vs interpretation separation</li>
                     <li>• responsibility and participation clarity</li>
                     <li>• corrections with current authority</li>
-                    <li>• no forced action or destination</li>
+                    <li>• participant-controlled memory</li>
                     <li>• preserved private conversation archive</li>
                   </ul>
                 </div>
@@ -120,7 +120,7 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
                 <ProductLaunchPrice
                   regularPrice={RECOGNITION_REGULAR_PRICE}
                   launchPrice={RECOGNITION_LAUNCH_PRICE}
-                  unit="one-time access"
+                  unit="/ month"
                 />
 
                 <div className="flex flex-wrap gap-4 pt-2">
