@@ -26,14 +26,9 @@ assert.equal(
   "Recognition subscription must bill monthly",
 );
 assert.equal(
-  formatRecognitionPrice(RECOGNITION_PRICING.legacyFoundingPriceCents),
-  "$9.99",
-  "Historical Recognition founding purchasers must remain recorded at $9.99",
-);
-assert.equal(
-  RECOGNITION_PRICING.legacyFoundingAccess,
-  "lifetime",
-  "Historical $9.99 Recognition purchasers must retain lifetime founding access",
+  Object.prototype.hasOwnProperty.call(RECOGNITION_PRICING, "legacyFoundingPriceCents"),
+  false,
+  "Recognition must not retain a legacy founding price",
 );
 
 console.log("Recognition pricing contract checks passed.");
