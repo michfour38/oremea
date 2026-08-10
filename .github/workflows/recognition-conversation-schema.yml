@@ -81,6 +81,7 @@ jobs:
               .messages == "recognition_messages" and
               .userIndex == "recognition_threads_user_id_key" and
               .turnIndex == "recognition_messages_thread_id_turn_index_key" and
+              .clientMessageIndex == "recognition_messages_thread_id_client_message_id_key" and
               .foreignKey == "recognition_messages_thread_id_fkey"
             ' "${response_file}" >/dev/null 2>&1; then
             echo "Recognition production schema verification failed."
