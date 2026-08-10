@@ -1,14 +1,18 @@
+import {
+  OREMEA_PRODUCT_REGISTRY,
+  formatOremeaPrice,
+} from "@/src/lib/oremea/product-registry";
+
+const COMPASS_PRODUCT = OREMEA_PRODUCT_REGISTRY.compass;
+
 export const COMPASS_PRICING = {
-  currency: "USD",
-  accessDays: 30,
-  launchPriceCents: 1999,
-  standardPriceCents: 2999,
-  autoRenews: false,
-} as const
+  currency: COMPASS_PRODUCT.pricing.currency,
+  accessDays: COMPASS_PRODUCT.access.days,
+  launchPriceCents: COMPASS_PRODUCT.pricing.launchPriceCents,
+  standardPriceCents: COMPASS_PRODUCT.pricing.regularPriceCents,
+  autoRenews: COMPASS_PRODUCT.access.autoRenews,
+} as const;
 
 export function formatCompassPrice(priceCents: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: COMPASS_PRICING.currency,
-  }).format(priceCents / 100)
+  return formatOremeaPrice(priceCents, COMPASS_PRICING.currency);
 }
