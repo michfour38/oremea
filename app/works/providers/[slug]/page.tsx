@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { cache } from "react";
 
 import { WorksPageHeader } from "@/components/works/works-brand";
 import { prisma } from "@/lib/prisma";
@@ -17,8 +16,8 @@ const DEFAULT_VISIBILITY = {
   show_capacity: false,
 };
 
-const getProvider = cache(async (slug: string) =>
-  prisma.works_providers.findUnique({
+async function getProvider(slug: string) {
+  return prisma.works_providers.findUnique({
     where: { slug },
     include: {
       public_settings: true,
@@ -26,8 +25,8 @@ const getProvider = cache(async (slug: string) =>
       markets: { where: { active: true }, include: { market: true } },
       reviews: { where: { status: "PUBLISHED" }, orderBy: { created_at: "desc" }, take: 30 },
     },
-  }),
-);
+  });
+}
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const provider = await getProvider(params.slug);
