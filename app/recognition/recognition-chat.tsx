@@ -18,6 +18,7 @@ export default function RecognitionChat({
 }) {
   const [messages, setMessages] = useState(initialMessages);
   const [draft, setDraft] = useState("");
+  const [pendingMessageId, setPendingMessageId] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -35,6 +36,9 @@ export default function RecognitionChat({
     const content = draft.trim();
     if (!content || isSending) return;
 
+    const clientMessageId = pendingMessageId ?? crypto.randomUUID();
+    if (!pendingMessageId) setPendingMessageId(clientMessageId);
+
     setIsSending(true);
     setError("");
 
@@ -42,7 +46,7 @@ export default function RecognitionChat({
       const response = await fetch("/api/recognition/conversation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, clientMessageId }),
       });
       const data = await response.json();
 
@@ -56,6 +60,7 @@ export default function RecognitionChat({
         data.messages.assistant as RecognitionChatMessage,
       ]);
       setDraft("");
+      setPendingMessageId(null);
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -172,6 +177,7 @@ export default function RecognitionChat({
                 value={draft}
                 onChange={(event) => {
                   setDraft(event.target.value);
+                  if (pendingMessageId) setPendingMessageId(null);
                   if (error) setError("");
                 }}
                 onKeyDown={(event) => {
@@ -196,7 +202,7 @@ export default function RecognitionChat({
                   disabled={isSending || draft.trim().length === 0}
                   className="rounded-full border border-[#b39558] bg-[#b39558] px-5 py-2 text-sm font-medium text-black transition hover:bg-[#c9aa69] disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900 disabled:text-zinc-600"
                 >
-                  {isSending ? "Reading" : "Send"}
+                  {isSending ? "Reading" : pendingMessageId ? "Retry" : "Send"}
                 </button>
               </div>
             </div>
