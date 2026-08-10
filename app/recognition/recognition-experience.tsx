@@ -30,6 +30,7 @@ type RecognitionDraft = {
   answers?: Record<string, string>;
   hasUsedRefineOnce?: boolean;
   lastSessionId?: string;
+  recognitionOutput?: string;
 };
 
 export default function RecognitionExperience() {
@@ -70,6 +71,7 @@ export default function RecognitionExperience() {
       if (draft.answers) setAnswers(draft.answers);
       if (draft.hasUsedRefineOnce) setHasUsedRefineOnce(true);
       if (draft.lastSessionId) setLastSessionId(draft.lastSessionId);
+      if (draft.recognitionOutput) setRecognitionOutput(draft.recognitionOutput);
       if (
         typeof draft.panelIndex === "number" &&
         draft.firstName &&
@@ -83,6 +85,11 @@ export default function RecognitionExperience() {
   }, []);
 
   useEffect(() => {
+    if (hasUsedRefineOnce && recognitionOutput) {
+      window.localStorage.removeItem(DRAFT_KEY);
+      return;
+    }
+
     window.localStorage.setItem(
       DRAFT_KEY,
       JSON.stringify({
@@ -93,6 +100,7 @@ export default function RecognitionExperience() {
         answers,
         hasUsedRefineOnce,
         lastSessionId,
+        recognitionOutput,
       } satisfies RecognitionDraft),
     );
   }, [
@@ -103,6 +111,7 @@ export default function RecognitionExperience() {
     answers,
     hasUsedRefineOnce,
     lastSessionId,
+    recognitionOutput,
   ]);
 
   useEffect(() => {
@@ -333,7 +342,6 @@ export default function RecognitionExperience() {
       }
 
       setRecognitionOutput(generateData.output.output);
-      window.localStorage.removeItem(DRAFT_KEY);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Something went wrong. Please try again.",
