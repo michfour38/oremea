@@ -6,17 +6,68 @@ export type GenerateAIParams = {
   task: string
   prompt: string
   maxTokens?: number
+  system?: string
+  cacheSystem?: boolean
+  outputSchema?: Record<string, unknown>
+}
+
+export type AIUsage = {
+  inputTokens: number
+  outputTokens: number
+  cacheCreationInputTokens: number
+  cacheReadInputTokens: number
+}
+
+export type GenerateAIResult = {
+  text: string
+  model: string
+  usage: AIUsage
 }
 
 const PARTICIPANT_EVIDENCE_TASKS = new Set([
   "recognition_synthesis",
 ])
 
-export async function generateAI({
+function readUsage(value: unknown): AIUsage {
+  if (!value || typeof value !== "object") {
+    return {
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheCreationInputTokens: 0,
+      cacheReadInputTokens: 0,
+    }
+  }
+
+  const usage = value as {
+    input_tokens?: unknown
+    output_tokens?: unknown
+    cache_creation_input_tokens?: unknown
+    cache_read_input_tokens?: unknown
+  }
+  const readNumber = (candidate: unknown) =>
+    typeof candidate === "number" && Number.isFinite(candidate) ? candidate : 0
+
+  return {
+    inputTokens: readNumber(usage.input_tokens),
+    outputTokens: readNumber(usage.output_tokens),
+    cacheCreationInputTokens: readNumber(usage.cache_creation_input_tokens),
+    cacheReadInputTokens: readNumber(usage.cache_read_input_tokens),
+  }
+}
+
+export async function generateAI(params: GenerateAIParams): Promise<string | null> {
+  const result = await generateAIWithUsage(params)
+  return result?.text ?? null
+}
+
+export async function generateAIWithUsage({
   task,
   prompt,
   maxTokens = 1400,
-}: GenerateAIParams): Promise<string | null> {
+  system,
+  cacheSystem = false,
+  outputSchema,
+}: GenerateAIParams): Promise<GenerateAIResult | null> {
   const effectivePrompt = PARTICIPANT_EVIDENCE_TASKS.has(task)
     ? `${OREMEA_EVIDENCE_BOUNDARY}\n\n${prompt}`
     : prompt
@@ -34,6 +85,9 @@ export async function generateAI({
       model,
       prompt: effectivePrompt,
       maxTokens,
+      system,
+      cacheSystem,
+      outputSchema,
     })
 
     if (result) {
@@ -53,15 +107,33 @@ async function callAnthropicModel({
   model,
   prompt,
   maxTokens,
+  system,
+  cacheSystem,
+  outputSchema,
   allowTokenRetry = true,
 }: {
   task: string
   model: string
   prompt: string
   maxTokens: number
+  system?: string
+  cacheSystem: boolean
+  outputSchema?: Record<string, unknown>
   allowTokenRetry?: boolean
-}): Promise<string | null> {
+}): Promise<GenerateAIResult | null> {
   try {
+    const systemBlocks = system
+      ? [
+          {
+            type: "text",
+            text: system,
+            ...(cacheSystem
+              ? { cache_control: { type: "ephemeral" } }
+              : {}),
+          },
+        ]
+      : undefined
+
     const res = await fetch(
       "https://api.anthropic.com/v1/messages",
       {
@@ -75,6 +147,17 @@ async function callAnthropicModel({
         body: JSON.stringify({
           model,
           max_tokens: maxTokens,
+          ...(systemBlocks ? { system: systemBlocks } : {}),
+          ...(outputSchema
+            ? {
+                output_config: {
+                  format: {
+                    type: "json_schema",
+                    schema: outputSchema,
+                  },
+                },
+              }
+            : {}),
           messages: [
             {
               role: "user",
@@ -98,6 +181,9 @@ async function callAnthropicModel({
           model,
           prompt,
           maxTokens: Math.min(maxTokens * 2, 4000),
+          system,
+          cacheSystem,
+          outputSchema,
           allowTokenRetry: false,
         })
       }
@@ -142,7 +228,11 @@ async function callAnthropicModel({
       return null
     }
 
-    return text
+    return {
+      text,
+      model,
+      usage: readUsage(data?.usage),
+    }
   } catch (error) {
     console.error(
       `AI request failed for task "${task}" using "${model}":`,

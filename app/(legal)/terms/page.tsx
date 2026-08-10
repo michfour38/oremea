@@ -38,7 +38,7 @@ const sections: readonly LegalSection[] = [
   {
     title: "5. Oremea services",
     paragraphs: [
-      "Recognition, Resonance and Compass provide structured reflection, guided questions and related digital experiences. Mirror and other AI-supported features generate material in response to information supplied through the platform.",
+      "Recognition provides an ongoing private recursive accountability conversation grounded in the participant's own words. Resonance provides contained seven-day reflection, while Compass provides structured direction, Map and movement tools. Mirror and other AI-supported features generate material in response to information supplied through the platform.",
       "WORKS provides business discovery, matching, lead-generation, introduction and referral services for customers, manufacturers, suppliers and independent business-service providers.",
       "Product descriptions, included features, access periods and prices are presented on the relevant product, plan or checkout page.",
     ],
@@ -186,7 +186,7 @@ export default function TermsPage() {
       activePath="/terms"
       title="Terms of Service"
       summary="The terms governing Oremea's reflective products, AI-supported features, accounts, payments and WORKS business services."
-      updated="9 August 2026"
+      updated="10 August 2026"
       sections={sections}
       references={[
         {

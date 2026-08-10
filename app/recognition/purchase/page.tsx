@@ -1,11 +1,20 @@
+import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
+import { getRecognitionConversationAccess } from "@/src/lib/recognition/recognition-conversation-access";
 import {
   RECOGNITION_PRICING,
   formatRecognitionPrice,
 } from "@/src/lib/recognition/recognition-pricing";
 
 export const dynamic = "force-dynamic";
+
+type Props = {
+  searchParams?: {
+    access?: string;
+  };
+};
 
 function CheckoutAction({
   href,
@@ -32,10 +41,27 @@ function CheckoutAction({
   );
 }
 
-export default function RecognitionPurchasePage() {
-  const processCheckout =
-    process.env.RECOGNITION_PROCESS_CHECKOUT_URL?.trim() || null;
-  const price = formatRecognitionPrice(RECOGNITION_PRICING.launchPriceCents);
+export default async function RecognitionPurchasePage({ searchParams }: Props) {
+  const user = await currentUser();
+  if (user) {
+    const emails = user.emailAddresses
+      .map((item) => item.emailAddress.trim().toLowerCase())
+      .filter(Boolean);
+    const access = await getRecognitionConversationAccess({
+      userId: user.id,
+      emails,
+    });
+
+    if (access.active) {
+      redirect("https://recognition.oremea.com/begin");
+    }
+  }
+
+  const subscriptionCheckout =
+    process.env.RECOGNITION_SUBSCRIPTION_CHECKOUT_URL?.trim() || null;
+  const launchPrice = formatRecognitionPrice(RECOGNITION_PRICING.launchPriceCents);
+  const regularPrice = formatRecognitionPrice(RECOGNITION_PRICING.regularPriceCents);
+  const accessRequired = searchParams?.access === "required";
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-zinc-950 text-white">
@@ -55,43 +81,73 @@ export default function RecognitionPurchasePage() {
             Recognition
           </p>
           <h1 className="mt-4 font-serif text-4xl font-light tracking-tight md:text-6xl">
-            Begin one complete process
+            An accountability partner for staying in contact with your own words
           </h1>
           <p className="mt-6 text-base leading-8 text-zinc-300">
-            Recognition begins with what already has your attention and reflects
-            what your own words make visible.
+            Bring whatever has your attention. Recognition stays with what you
+            actually say, notices distinctions and recurrence, and can bring your
+            own earlier words back when they matter.
           </p>
         </header>
 
+        {accessRequired ? (
+          <div className="mt-8 rounded-2xl border border-[#7b6338] bg-[#17130c] px-5 py-4 text-sm leading-7 text-[#e4d3ae]">
+            No active Recognition access was found for an email on this signed-in
+            account. Use the same email at checkout, or sign in with the account
+            that already has Recognition.
+          </div>
+        ) : null}
+
         <div className="mt-10">
           <section className="rounded-3xl border border-[#c8a96a]/35 bg-black/45 p-6 md:p-8">
-            <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="flex flex-wrap items-end justify-between gap-5">
               <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
-                  One-time purchase
+                <p className="text-xs uppercase tracking-[0.22em] text-[#c8a96a]">
+                  Launch offer
                 </p>
                 <h2 className="mt-2 font-serif text-2xl text-zinc-100">
-                  One Recognition process
+                  Ongoing Recognition
                 </h2>
               </div>
-              <p className="text-3xl text-[#f1dfb4]">{price}</p>
+              <div className="text-right">
+                <p className="text-sm text-zinc-500 line-through">
+                  {regularPrice}/month
+                </p>
+                <p className="mt-1 text-3xl text-[#f1dfb4]">
+                  {launchPrice}<span className="ml-1 text-sm text-zinc-500">/month</span>
+                </p>
+              </div>
             </div>
 
             <p className="mt-5 text-sm leading-7 text-zinc-300">
-              Includes the complete answer-responsive Recognition sequence, your
-              generated reflection, one included second pass, and the completed
-              process saved in your Recognition Archive.
+              There is no fixed question sequence and no required destination.
+              Recognition is one continuing private conversation: return whenever
+              something needs to be seen clearly, and the conversation can bring
+              forward your own earlier evidence without treating old AI output as
+              truth.
             </p>
             <p className="mt-4 text-sm leading-7 text-zinc-400">
-              Begin with the same email address you use at checkout. Each successful
-              purchase opens one new Recognition process.
+              Your full private conversation remains available to you. You can
+              inspect or remove carried-forward memory, clear remembered excerpts,
+              or delete the ongoing conversation and start fresh without affecting
+              your access.
+            </p>
+            <p className="mt-4 text-sm leading-7 text-zinc-400">
+              Subscribe with an email on the Oremea account you will use for
+              Recognition. Active membership keeps the ongoing conversation available.
             </p>
 
-            <div className="mt-7">
+            <div className="mt-7 flex flex-wrap items-center gap-4">
               <CheckoutAction
-                href={processCheckout}
-                label={`Begin one Recognition process · ${price}`}
+                href={subscriptionCheckout}
+                label={`Open Recognition · ${launchPrice}/month`}
               />
+              <Link
+                href="/sign-in?redirect_url=%2Fbegin"
+                className="text-sm text-zinc-400 underline underline-offset-4 transition hover:text-[#f1dfb4]"
+              >
+                Already have access? Sign in
+              </Link>
             </div>
           </section>
         </div>

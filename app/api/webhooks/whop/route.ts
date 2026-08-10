@@ -1,8 +1,11 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-import { grantCompassAccess } from "@/src/lib/compass/compass-access";
-import { grantRecognitionCredit } from "@/src/lib/recognition/recognition-access";
+import {
+  grantCompassAccess,
+  setCompassMembershipAccess,
+} from "@/src/lib/compass/compass-access";
+import { setRecognitionMembershipAccess } from "@/src/lib/recognition/recognition-conversation-access";
 import { getResonanceWeekForWhopProduct } from "@/src/lib/resonance/resonance-commerce";
 import { createPurchasedResonanceRun } from "@/src/lib/resonance/resonance-week-run";
 import { verifyWhopWebhook } from "@/src/lib/whop/verify-webhook";
@@ -16,6 +19,22 @@ type WhopPaymentSucceededEvent = {
     id?: unknown;
     paid_at?: unknown;
     created_at?: unknown;
+    product?: {
+      id?: unknown;
+    } | null;
+    user?: {
+      email?: unknown;
+    } | null;
+  } | null;
+};
+
+type WhopMembershipEvent = {
+  type?: unknown;
+  timestamp?: unknown;
+  data?: {
+    id?: unknown;
+    updated_at?: unknown;
+    renewal_period_end?: unknown;
     product?: {
       id?: unknown;
     } | null;
@@ -49,6 +68,49 @@ function readPayment(event: WhopPaymentSucceededEvent) {
   return { paymentId, productId, email, paidAt };
 }
 
+function readMembership(event: WhopMembershipEvent) {
+  const membership = event.data;
+  const membershipId =
+    typeof membership?.id === "string" ? membership.id.trim() : "";
+  const productId =
+    typeof membership?.product?.id === "string"
+      ? membership.product.id.trim()
+      : "";
+  const email =
+    typeof membership?.user?.email === "string"
+      ? membership.user.email.trim().toLowerCase()
+      : "";
+  const eventAtValue =
+    typeof membership?.updated_at === "string"
+      ? membership.updated_at
+      : typeof event.timestamp === "string"
+        ? event.timestamp
+        : "";
+  const eventAt = new Date(eventAtValue);
+  const renewalPeriodEnd =
+    typeof membership?.renewal_period_end === "string"
+      ? new Date(membership.renewal_period_end)
+      : null;
+
+  if (
+    !membershipId ||
+    !productId ||
+    !email ||
+    Number.isNaN(eventAt.getTime()) ||
+    (renewalPeriodEnd && Number.isNaN(renewalPeriodEnd.getTime()))
+  ) {
+    return null;
+  }
+
+  return {
+    membershipId,
+    productId,
+    email,
+    eventAt,
+    renewalPeriodEnd,
+  };
+}
+
 async function findExactlyOneOremeaUser(email: string) {
   const matchingUsers = await clerkClient.users.getUserList({
     emailAddress: [email],
@@ -76,11 +138,85 @@ export async function POST(request: Request) {
     );
   }
 
-  let event: WhopPaymentSucceededEvent;
+  let event: WhopPaymentSucceededEvent & WhopMembershipEvent;
   try {
-    event = JSON.parse(body) as WhopPaymentSucceededEvent;
+    event = JSON.parse(body) as WhopPaymentSucceededEvent & WhopMembershipEvent;
   } catch {
     return NextResponse.json({ error: "Invalid webhook body." }, { status: 400 });
+  }
+
+  if (
+    event.type === "membership.activated" ||
+    event.type === "membership.deactivated"
+  ) {
+    const membership = readMembership(event);
+    if (!membership) {
+      return NextResponse.json(
+        { error: "Membership is missing its ID, product, email, or event time." },
+        { status: 422 },
+      );
+    }
+
+    const recognitionMembershipProductId =
+      process.env.WHOP_RECOGNITION_SUBSCRIPTION_PRODUCT_ID?.trim();
+    if (
+      recognitionMembershipProductId &&
+      membership.productId === recognitionMembershipProductId
+    ) {
+      const entitlement = await setRecognitionMembershipAccess({
+        email: membership.email,
+        membershipId: membership.membershipId,
+        active: event.type === "membership.activated",
+        eventAt: membership.eventAt,
+        renewalPeriodEnd: membership.renewalPeriodEnd,
+      });
+
+      return NextResponse.json({
+        received: true,
+        fulfilled: true,
+        product: "recognition",
+        access: "membership",
+        active: entitlement?.status === "active",
+        expiresAt: entitlement?.expires_at?.toISOString() ?? null,
+      });
+    }
+
+    const compassMembershipProductId =
+      process.env.WHOP_COMPASS_SUBSCRIPTION_PRODUCT_ID?.trim();
+    if (
+      compassMembershipProductId &&
+      membership.productId === compassMembershipProductId
+    ) {
+      const user = await findExactlyOneOremeaUser(membership.email);
+      if (!user) {
+        console.error(
+          `Compass membership ${membership.membershipId} could not be matched to one Oremea account for ${membership.email}.`,
+        );
+        return NextResponse.json(
+          { error: "Compass member account could not be matched." },
+          { status: 422 },
+        );
+      }
+
+      const entitlement = await setCompassMembershipAccess({
+        userId: user.id,
+        membershipId: membership.membershipId,
+        active: event.type === "membership.activated",
+        eventAt: membership.eventAt,
+        renewalPeriodEnd: membership.renewalPeriodEnd,
+      });
+
+      return NextResponse.json({
+        received: true,
+        fulfilled: true,
+        product: "compass",
+        access: "membership",
+        active: entitlement?.status === "active",
+        expiresAt: entitlement?.expires_at?.toISOString() ?? null,
+      });
+    }
+
+    return NextResponse.json({ received: true, fulfilled: false });
   }
 
   if (event.type !== "payment.succeeded") {
@@ -93,22 +229,6 @@ export async function POST(request: Request) {
       { error: "Payment is missing its ID, product, email, or payment time." },
       { status: 422 },
     );
-  }
-
-  const recognitionProductId = process.env.WHOP_RECOGNITION_PRODUCT_ID?.trim();
-  if (recognitionProductId && payment.productId === recognitionProductId) {
-    const credit = await grantRecognitionCredit({
-      email: payment.email,
-      paymentId: payment.paymentId,
-      paidAt: payment.paidAt,
-    });
-
-    return NextResponse.json({
-      received: true,
-      fulfilled: true,
-      product: "recognition",
-      availableProcesses: credit.availableProcesses,
-    });
   }
 
   const resonanceWeek = getResonanceWeekForWhopProduct(payment.productId);
@@ -136,7 +256,7 @@ export async function POST(request: Request) {
       received: true,
       fulfilled: true,
       product: "resonance",
-      weekNumber: run.weekNumber,
+      weekNumber: resonanceWeek,
       runNumber: run.runNumber,
       runId: run.id,
     });
@@ -165,6 +285,7 @@ export async function POST(request: Request) {
       received: true,
       fulfilled: true,
       product: "compass",
+      access: "30_day_pass",
       expiresAt: entitlement.expires_at?.toISOString() ?? null,
     });
   }

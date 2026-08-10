@@ -37,13 +37,13 @@ const products = [
     href: "https://recognition.oremea.com",
     active: true,
     short:
-      "A private reflective entry point that helps you see what is already present in your own words.",
+      "An ongoing private conversation that keeps you accountable to your own words without deciding where you should go.",
     action: "Enter Recognition",
     full: [
-      "Recognition begins with what already has your attention.",
-      "You respond to a carefully sequenced set of prompts in your own words, creating enough material for the system to reflect the pattern taking shape.",
-      "The result gives you a clearer view of what is present now: the thread, tension, desire, contradiction, or movement asking to be seen.",
-      "Recognition is designed as a focused entry point. It gives awareness somewhere concrete to begin.",
+      "Recognition begins wherever your attention is now.",
+      "There is no fixed question sequence. Each reply follows what you actually said, while earlier participant-written evidence can return when it materially clarifies recurrence, correction, contrast, responsibility, or a distinction you are trying to hold.",
+      "Recognition can question an absolute, place two of your own statements beside one another, separate observation from interpretation, and keep your participation visible without absorbing someone else's responsibility for you.",
+      "Recognition does not turn clarity into an action plan. The conversation can end with one thing simply becoming visible.",
     ],
   },
   {
@@ -67,11 +67,12 @@ const products = [
     href: "/compass/access",
     active: true,
     short:
-      "Turn self-awareness into one executable next step. Clarity. Direction. Execution.",
+      "Turn clarity into direction, keep what matters visible on your Map, and choose the next movement you can actually make.",
     action: "Enter Compass",
     full: [
       "The Compass is for the moment after awareness, when you know something matters but still do not know what to do next.",
       "It helps you move from scattered goals into one clear priority, then takes you deeper into why it matters.",
+      "Your Map keeps what the conversation surfaces visible, while Today lets you add and tick off the goals you choose for yourself.",
       "Compass does not rush you into fantasy intensity. It helps you find embodied momentum: the smallest honest next step you can actually take.",
       "Through layered reflection and discussion, Compass helps reveal what interrupts movement, where resistance lives, and what kind of action your nervous system can realistically hold.",
       "Confidence in the self to follow through is built through kept agreements. Compass helps you begin there.",
@@ -156,7 +157,7 @@ export default function Home() {
                         className="mt-4"
                         regularPrice={RECOGNITION_REGULAR_PRICE}
                         launchPrice={RECOGNITION_LAUNCH_PRICE}
-                        unit="per complete process"
+                        unit="/ month"
                       />
                     ) : null}
 
@@ -174,7 +175,7 @@ export default function Home() {
                         className="mt-4"
                         regularPrice={COMPASS_STANDARD_PRICE}
                         launchPrice={COMPASS_LAUNCH_PRICE}
-                        unit="per 30 days"
+                        unit="30-day pass or monthly"
                       />
                     ) : null}
                   </div>

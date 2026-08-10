@@ -24,7 +24,7 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
         <div className="grid gap-14 md:grid-cols-[0.95fr_1.05fr]">
           <div>
             <p className="mb-5 text-xs uppercase tracking-[0.28em] text-[#b79a63]">
-              Focused Entry Point
+              Ongoing Recognition
             </p>
 
             <h2 className="text-4xl font-light leading-tight text-zinc-100">
@@ -32,7 +32,7 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
             </h2>
 
             <p className="mt-6 text-lg leading-8 text-zinc-400">
-              See what is already present.
+              See yourself clearly while you are speaking.
             </p>
           </div>
 
@@ -41,28 +41,30 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
               <div className="space-y-8">
                 <div className="rounded-3xl border border-white/10 bg-zinc-950/80 p-8">
                   <p className="font-serif text-2xl leading-relaxed text-zinc-100 md:text-3xl">
-                    Like putting down everything that has been occupying your
-                    attention and finally seeing the thread through it.
+                    Like talking to someone who remembers what you actually said,
+                    without deciding what it means for you.
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
-                    Like noticing that several things can be true at once.
+                    Like hearing two of your own statements placed beside one another
+                    when they do not yet sit cleanly together.
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
-                    Like seeing what matters become clearer in your own words.
+                    Like having “always”, “never”, “no choice”, and “everything”
+                    examined closely enough to become specific.
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
-                    Like having your own words reflected back while meaning and
-                    next movement remain yours.
+                    Like being held accountable to your own words while interpretation,
+                    authority, responsibility, and next movement remain yours.
                   </p>
 
                   <ProductLaunchPrice
                     className="mt-10"
                     regularPrice={RECOGNITION_REGULAR_PRICE}
                     launchPrice={RECOGNITION_LAUNCH_PRICE}
-                    unit="per complete process"
+                    unit="/ month"
                   />
 
                   <div className="mt-4 flex flex-wrap gap-4">
@@ -70,7 +72,7 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
                       href="https://recognition.oremea.com"
                       className="rounded-full border border-[#b79a63]/25 bg-[#b79a63]/[0.05] px-5 py-2 text-sm text-[#b79a63] transition hover:border-[#b79a63]/55 hover:bg-[#b79a63]/10"
                     >
-                      Begin Recognition
+                      Enter Recognition
                     </Link>
                   </div>
                 </div>
@@ -83,10 +85,10 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
                   </p>
 
                   <p className="text-base leading-8 text-zinc-300">
-                    Recognition is a focused private reflection that helps make
-                    the structure already present in your own account visible
-                    while preserving your authority over what that structure
-                    means.
+                    Recognition is one continuing private conversation. It follows
+                    the participant’s newest words while preserving earlier
+                    participant-written evidence for recurrence, correction,
+                    contrast, responsibility, and accountability over time.
                   </p>
                 </div>
 
@@ -96,28 +98,29 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
                   </p>
 
                   <ul className="grid gap-3 text-base leading-7 text-zinc-400 md:grid-cols-2">
-                    <li>• guided reflection sequence</li>
-                    <li>• cross-answer recognition</li>
-                    <li>• recurring subjects and relationships</li>
-                    <li>• participant-stated importance and clarity</li>
-                    <li>• tensions that preserve multiple truths</li>
-                    <li>• synthesis grounded in your own words</li>
-                    <li>• one opportunity to refine the reflection</li>
+                    <li>• fully recursive conversation</li>
+                    <li>• longitudinal participant-word memory</li>
+                    <li>• contradiction and distinction checks</li>
+                    <li>• observation vs interpretation separation</li>
+                    <li>• responsibility and participation clarity</li>
+                    <li>• corrections with current authority</li>
+                    <li>• participant-controlled memory</li>
+                    <li>• preserved private conversation archive</li>
                   </ul>
                 </div>
 
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-6">
                   <p className="text-sm leading-7 text-zinc-400">
-                    Recognition creates a clear first view of what is already
-                    present. Resonance then gives that seeing somewhere to
-                    deepen over time.
+                    Recognition helps something become visible. Resonance is a
+                    separate seven-day container for staying with a chosen relational
+                    question. Compass is a separate product for direction and action.
                   </p>
                 </div>
 
                 <ProductLaunchPrice
                   regularPrice={RECOGNITION_REGULAR_PRICE}
                   launchPrice={RECOGNITION_LAUNCH_PRICE}
-                  unit="per complete process"
+                  unit="/ month"
                 />
 
                 <div className="flex flex-wrap gap-4 pt-2">
@@ -125,7 +128,7 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
                     href="https://recognition.oremea.com"
                     className="rounded-full border border-[#b79a63]/25 bg-[#b79a63]/[0.05] px-5 py-2 text-sm text-[#b79a63] transition hover:border-[#b79a63]/55 hover:bg-[#b79a63]/10"
                   >
-                    Begin Recognition
+                    Enter Recognition
                   </Link>
                 </div>
               </div>
