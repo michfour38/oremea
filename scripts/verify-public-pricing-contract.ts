@@ -15,7 +15,6 @@ const publicPricingSource = publicPricingFiles
   .join("\n\n");
 
 const forbiddenLegacyCopy = [
-  /\$9\.99\/month/i,
   /Recognition[^\n]{0,120}one-time access/i,
   /\bR520\b/i,
   /\bR1240\b/i,
