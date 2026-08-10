@@ -118,9 +118,27 @@ export async function setRecognitionMembershipAccess({
     const existingEventAt = existingReference?.eventAt
       ? Date.parse(existingReference.eventAt)
       : Number.NEGATIVE_INFINITY;
+    const incomingEventAt = eventAt.getTime();
 
-    if (existingEventAt > eventAt.getTime()) {
+    if (existingEventAt > incomingEventAt) {
       return existing;
+    }
+
+    if (existingEventAt === incomingEventAt && existing) {
+      const existingIsActive =
+        existing.status === "active" && !existing.revoked_at;
+
+      if (existingIsActive === active) {
+        return existing;
+      }
+
+      // Whop does not guarantee webhook order. If activation and deactivation
+      // share the same event time, fail closed: deactivation wins.
+      if (!active) {
+        // continue into the inactive update below
+      } else {
+        return existing;
+      }
     }
 
     return transaction.oremea_entitlements.upsert({
