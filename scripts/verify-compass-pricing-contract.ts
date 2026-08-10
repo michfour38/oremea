@@ -18,8 +18,14 @@ assert(
   "Compass access days must reference the central pricing registry.",
 )
 assert(
-  COMPASS_PRICING.autoRenews === OREMEA_PRICING.compass.autoRenews,
-  "Compass renewal behavior must reference the central pricing registry.",
+  COMPASS_PRICING.billingInterval === OREMEA_PRICING.compass.billingInterval,
+  "Compass monthly billing interval must reference the central pricing registry.",
+)
+assert(
+  COMPASS_PRICING.accessOptions.length === 2 &&
+    COMPASS_PRICING.accessOptions.includes("30_day_pass") &&
+    COMPASS_PRICING.accessOptions.includes("monthly_subscription"),
+  "Compass must expose both the 30-day pass and monthly subscription options.",
 )
 
 console.log("Compass pricing contract checks passed.")
