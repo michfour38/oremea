@@ -27,67 +27,20 @@ export default async function RecognitionArchivePage({ searchParams }: Props) {
   const user = await currentUser();
 
   if (!user) {
-    redirect("/sign-in?redirect_url=%2Farchive");
+    redirect("/sign-in?redirect_url=%2Frecognition%2Farchive");
   }
 
-  const emails = user.emailAddresses
-    .map((item) => item.emailAddress.trim().toLowerCase())
-    .filter(Boolean);
   const before = Number(searchParams?.before ?? "0");
   const beforeTurn = Number.isInteger(before) && before > 0 ? before : null;
 
-  const [thread, lead] = await Promise.all([
-    prisma.recognition_threads.findUnique({
-      where: { user_id: user.id },
-      select: {
-        id: true,
-        message_count: true,
-        memory_snapshot: true,
-        created_at: true,
-      },
-    }),
-    emails.length > 0
-      ? prisma.entry_leads.findFirst({
-          where: {
-            email: {
-              in: emails,
-            },
-          },
-          select: {
-            entry_mirror_sessions: {
-              orderBy: {
-                created_at: "desc",
-              },
-              select: {
-                id: true,
-                created_at: true,
-                completed_at: true,
-                entry_mirror_responses: {
-                  orderBy: {
-                    response_order: "asc",
-                  },
-                  select: {
-                    id: true,
-                    question_text: true,
-                    response: true,
-                  },
-                },
-                entry_mirror_outputs: {
-                  orderBy: {
-                    created_at: "asc",
-                  },
-                  select: {
-                    id: true,
-                    output: true,
-                    created_at: true,
-                  },
-                },
-              },
-            },
-          },
-        })
-      : null,
-  ]);
+  const thread = await prisma.recognition_threads.findUnique({
+    where: { user_id: user.id },
+    select: {
+      id: true,
+      message_count: true,
+      memory_snapshot: true,
+    },
+  });
 
   const conversationRows = thread
     ? await prisma.recognition_messages.findMany({
@@ -111,10 +64,6 @@ export default async function RecognitionArchivePage({ searchParams }: Props) {
   const oldestTurn = conversation[0]?.turn_index ?? null;
   const hasEarlier = Boolean(oldestTurn && oldestTurn > 1);
   const memory = readRecognitionMemory(thread?.memory_snapshot);
-  const legacySessions =
-    lead?.entry_mirror_sessions.filter(
-      (session) => session.entry_mirror_outputs.length > 0,
-    ) ?? [];
 
   return (
     <main className="min-h-screen bg-[#090909] text-white">
@@ -154,10 +103,9 @@ export default async function RecognitionArchivePage({ searchParams }: Props) {
             The conversation you can return to
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-8 text-zinc-300">
-            Your own words and Recognition’s replies remain together over time.
-            You also control which exact excerpts Recognition may carry forward as
-            long-term memory. Earlier one-process Recognitions are preserved
-            separately below.
+            Your words and Recognition&apos;s replies remain together over time.
+            This is the record Recognition can return to with you. You choose
+            which exact excerpts may also be carried forward as long-term memory.
           </p>
         </header>
 
@@ -165,7 +113,7 @@ export default async function RecognitionArchivePage({ searchParams }: Props) {
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.22em] text-[#d8b15f]">
-                Ongoing Recognition
+                Recognition
               </p>
               <h2 className="mt-2 font-serif text-3xl text-zinc-100">
                 Conversation history
@@ -181,7 +129,7 @@ export default async function RecognitionArchivePage({ searchParams }: Props) {
           {conversation.length === 0 ? (
             <div className="mt-6 rounded-[2rem] border border-zinc-700 bg-[#11100D] p-6">
               <p className="text-base leading-7 text-zinc-300">
-                Your ongoing Recognition conversation has not started yet.
+                Your Recognition conversation has not started yet.
               </p>
             </div>
           ) : (
@@ -232,69 +180,6 @@ export default async function RecognitionArchivePage({ searchParams }: Props) {
 
         <RecognitionMemoryControls initialAnchors={memory.anchors} />
         <RecognitionThreadControls hasConversation={Boolean(thread?.message_count)} />
-
-        {legacySessions.length > 0 ? (
-          <details className="mt-16 rounded-[2rem] border border-[#3A3224] bg-[#11100D] p-6 md:p-8">
-            <summary className="cursor-pointer list-none">
-              <p className="text-xs uppercase tracking-[0.22em] text-[#d8b15f]">
-                Earlier Recognition format
-              </p>
-              <h2 className="mt-2 font-serif text-2xl text-zinc-100">
-                Past completed Recognitions · {legacySessions.length}
-              </h2>
-              <p className="mt-3 text-sm leading-7 text-zinc-400">
-                These are preserved exactly as they were created before Recognition
-                became one ongoing conversation.
-              </p>
-            </summary>
-
-            <div className="mt-8 space-y-8 border-t border-zinc-800 pt-8">
-              {legacySessions.map((session) => (
-                <article
-                  key={session.id}
-                  className="rounded-3xl border border-zinc-800 bg-black/20 p-5 md:p-7"
-                >
-                  <p className="text-xs uppercase tracking-[0.2em] text-[#d8b15f]">
-                    {formatDate(session.completed_at ?? session.created_at)}
-                  </p>
-
-                  <div className="mt-6 space-y-8">
-                    {session.entry_mirror_outputs.map((output, index) => (
-                      <section key={output.id}>
-                        <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
-                          {index === 0
-                            ? "Your Recognition"
-                            : `Recognition · Pass ${index + 1}`}
-                        </p>
-                        <div className="mt-3 whitespace-pre-wrap font-serif text-xl leading-relaxed text-zinc-100">
-                          {output.output}
-                        </div>
-                      </section>
-                    ))}
-                  </div>
-
-                  <details className="mt-7 border-t border-zinc-800 pt-5">
-                    <summary className="cursor-pointer text-sm text-[#E7C98B]">
-                      Review the answers that shaped this Recognition
-                    </summary>
-                    <div className="mt-5 space-y-5">
-                      {session.entry_mirror_responses.map((response) => (
-                        <section key={response.id}>
-                          <p className="text-sm leading-7 text-zinc-400">
-                            {response.question_text}
-                          </p>
-                          <p className="mt-2 whitespace-pre-wrap text-base leading-7 text-zinc-200">
-                            {response.response}
-                          </p>
-                        </section>
-                      ))}
-                    </div>
-                  </details>
-                </article>
-              ))}
-            </div>
-          </details>
-        ) : null}
       </section>
     </main>
   );
