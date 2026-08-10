@@ -27,7 +27,7 @@
     "test:compass": "npm run test:compass-descent && npm run test:compass-resolution && npm run test:compass-pricing && npm run test:compass-access && npm run test:compass-archive && npm run test:whop-webhook",
     "test:recognition-pricing": "tsx scripts/verify-recognition-pricing-contract.ts",
     "test:recognition-questions": "tsx scripts/verify-recognition-question-contract.ts",
-    "test:recognition-conversation": "tsx scripts/verify-recognition-conversation-contract.ts",
+    "test:recognition-conversation": "tsx scripts/verify-recognition-conversation-contract.ts && tsx scripts/verify-recognition-ai-envelope-contract.ts",
     "test:commerce-routing": "tsx scripts/verify-commerce-routing-contract.ts",
     "test:public-pricing": "tsx scripts/verify-public-pricing-contract.ts",
     "test:launch": "npm run test:recognition-pricing && npm run test:recognition-questions && npm run test:recognition-conversation && npm run test:commerce-routing && npm run test:public-pricing && npm run test:compass"
