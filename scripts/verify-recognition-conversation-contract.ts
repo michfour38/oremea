@@ -139,7 +139,7 @@ assert.match(
   "Conversation prompts must preserve participant turn provenance.",
 );
 assert.match(
-  prompt,
+  RECOGNITION_CONVERSATION_STANDARD,
   /Long-term memory contains exact participant quotes only/i,
   "Longitudinal memory must remain evidence-indexed.",
 );
@@ -225,6 +225,53 @@ assert.match(
   /memory_snapshot/,
   "Recognition must persist bounded longitudinal evidence memory.",
 );
+assert.match(
+  apiSource,
+  /cacheReadInputTokens/,
+  "Recognition must persist cache usage so real serving cost can be measured.",
+);
+assert.match(
+  apiSource,
+  /inputTokens/,
+  "Recognition must persist model input usage per generated reply.",
+);
+assert.match(
+  apiSource,
+  /outputTokens/,
+  "Recognition must persist model output usage per generated reply.",
+);
+
+const gatewaySource = readFileSync("src/lib/ai/ai-gateway.ts", "utf8");
+assert.match(
+  gatewaySource,
+  /generateAIWithUsage/,
+  "The shared AI gateway must expose usage without changing legacy text-only callers.",
+);
+assert.match(
+  gatewaySource,
+  /cache_control/,
+  "Recognition's stable system policy must be eligible for prompt caching.",
+);
+assert.match(
+  gatewaySource,
+  /cache_read_input_tokens/,
+  "The AI gateway must report prompt-cache reads.",
+);
+
+const engineSource = readFileSync(
+  "src/lib/recognition/recognition-conversation.ts",
+  "utf8",
+);
+assert.match(
+  engineSource,
+  /cacheSystem: true/,
+  "Recognition must cache its stable Mirror/evidence/conversation policy prefix.",
+);
+assert.match(
+  engineSource,
+  /more than one participant-facing question/,
+  "Recognition must enforce the one-question boundary after model generation too.",
+);
 
 const memoryApiSource = readFileSync("app/api/recognition/memory/route.ts", "utf8");
 assert.match(
@@ -237,6 +284,43 @@ assert.match(
   archiveSource,
   /RecognitionMemoryControls/,
   "Recognition Archive must expose participant control over carried-forward memory.",
+);
+
+const accessSource = readFileSync(
+  "src/lib/recognition/recognition-conversation-access.ts",
+  "utf8",
+);
+assert.match(
+  accessSource,
+  /"founding" \| "membership"/,
+  "Existing one-time buyers and future recurring members must remain distinct access sources.",
+);
+assert.match(
+  accessSource,
+  /deactivation wins/,
+  "Equal-time membership webhook conflicts must fail closed.",
+);
+assert.match(
+  accessSource,
+  /recognition_membership/,
+  "Recurring Recognition access must use a separate entitlement key from founding purchases.",
+);
+
+const webhookSource = readFileSync("app/api/webhooks/whop/route.ts", "utf8");
+assert.match(
+  webhookSource,
+  /membership\.activated/,
+  "Recognition must support Whop membership activation events.",
+);
+assert.match(
+  webhookSource,
+  /membership\.deactivated/,
+  "Recognition must support Whop membership deactivation events.",
+);
+assert.match(
+  webhookSource,
+  /WHOP_RECOGNITION_SUBSCRIPTION_PRODUCT_ID/,
+  "Recurring Recognition fulfillment must remain isolated behind its own Whop product ID.",
 );
 
 console.log("Recognition conversation contract checks passed.");
