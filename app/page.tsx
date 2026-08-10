@@ -67,11 +67,12 @@ const products = [
     href: "/compass/access",
     active: true,
     short:
-      "Turn self-awareness into one executable next step. Clarity. Direction. Execution.",
+      "Turn clarity into direction, keep what matters visible on your Map, and choose the next movement you can actually make.",
     action: "Enter Compass",
     full: [
       "The Compass is for the moment after awareness, when you know something matters but still do not know what to do next.",
       "It helps you move from scattered goals into one clear priority, then takes you deeper into why it matters.",
+      "Your Map keeps what the conversation surfaces visible, while Today lets you add and tick off the goals you choose for yourself.",
       "Compass does not rush you into fantasy intensity. It helps you find embodied momentum: the smallest honest next step you can actually take.",
       "Through layered reflection and discussion, Compass helps reveal what interrupts movement, where resistance lives, and what kind of action your nervous system can realistically hold.",
       "Confidence in the self to follow through is built through kept agreements. Compass helps you begin there.",
@@ -174,7 +175,7 @@ export default function Home() {
                         className="mt-4"
                         regularPrice={COMPASS_STANDARD_PRICE}
                         launchPrice={COMPASS_LAUNCH_PRICE}
-                        unit="per 30 days"
+                        unit="30-day pass or monthly"
                       />
                     ) : null}
                   </div>
