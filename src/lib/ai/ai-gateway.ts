@@ -97,7 +97,7 @@ async function callAnthropicModel({
         return callAnthropicModel({
           task,
           model,
-          prompt: effectivePrompt,
+          prompt,
           maxTokens: Math.min(maxTokens * 2, 4000),
           allowTokenRetry: false,
         })
