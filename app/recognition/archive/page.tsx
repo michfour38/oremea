@@ -3,6 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
+import { readRecognitionMemory } from "@/src/lib/recognition/recognition-conversation";
+import RecognitionMemoryControls from "./recognition-memory-controls";
 
 function formatDate(value: Date | string) {
   return new Date(value).toLocaleDateString("en-ZA", {
@@ -39,6 +41,7 @@ export default async function RecognitionArchivePage({ searchParams }: Props) {
       select: {
         id: true,
         message_count: true,
+        memory_snapshot: true,
         created_at: true,
       },
     }),
@@ -106,6 +109,7 @@ export default async function RecognitionArchivePage({ searchParams }: Props) {
   const conversation = conversationRows.reverse();
   const oldestTurn = conversation[0]?.turn_index ?? null;
   const hasEarlier = Boolean(oldestTurn && oldestTurn > 1);
+  const memory = readRecognitionMemory(thread?.memory_snapshot);
   const legacySessions =
     lead?.entry_mirror_sessions.filter(
       (session) => session.entry_mirror_outputs.length > 0,
@@ -150,7 +154,9 @@ export default async function RecognitionArchivePage({ searchParams }: Props) {
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-8 text-zinc-300">
             Your own words and Recognition’s replies remain together over time.
-            Earlier one-process Recognitions are preserved separately below.
+            You also control which exact excerpts Recognition may carry forward as
+            long-term memory. Earlier one-process Recognitions are preserved
+            separately below.
           </p>
         </header>
 
@@ -222,6 +228,8 @@ export default async function RecognitionArchivePage({ searchParams }: Props) {
             </div>
           )}
         </section>
+
+        <RecognitionMemoryControls initialAnchors={memory.anchors} />
 
         {legacySessions.length > 0 ? (
           <details className="mt-16 rounded-[2rem] border border-[#3A3224] bg-[#11100D] p-6 md:p-8">
