@@ -1,0 +1,48 @@
+name: Read Recognition migration state
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/read-recognition-migration-state.yml
+
+permissions:
+  contents: read
+
+jobs:
+  read-state:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Wait for exact Oremea release and read migration state
+        env:
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          endpoint="https://app.oremea.com/api/internal/recognition-migration-status?sha=${RELEASE_SHA}"
+          response_file="migration-state.json"
+
+          for attempt in $(seq 1 60); do
+            status=$(curl \
+              --silent \
+              --show-error \
+              --output "${response_file}" \
+              --write-out "%{http_code}" \
+              --connect-timeout 15 \
+              --max-time 25 \
+              "${endpoint}" || true)
+
+            if [ "${status}" = "200" ] && jq -e '.ok == true' "${response_file}" >/dev/null 2>&1; then
+              echo "Recognition migration state:"
+              jq . "${response_file}"
+              exit 0
+            fi
+
+            sleep 10
+          done
+
+          echo "Could not read the exact deployed migration state."
+          cat "${response_file}" 2>/dev/null || true
+          exit 1
