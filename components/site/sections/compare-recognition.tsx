@@ -1,11 +1,13 @@
 import Link from "next/link";
 import type { CompareMode } from "@/app/compare/page";
 import { ProductLaunchPrice } from "@/components/site/product-launch-price";
+import { OREMEA_PRODUCT_REGISTRY } from "@/src/lib/oremea/product-registry";
 import {
   RECOGNITION_PRICING,
   formatRecognitionPrice,
 } from "@/src/lib/recognition/recognition-pricing";
 
+const RECOGNITION_PRODUCT = OREMEA_PRODUCT_REGISTRY.recognition;
 const RECOGNITION_LAUNCH_PRICE = formatRecognitionPrice(
   RECOGNITION_PRICING.launchPriceCents,
 );
@@ -28,7 +30,7 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
             </p>
 
             <h2 className="text-4xl font-light leading-tight text-zinc-100">
-              Recognition
+              {RECOGNITION_PRODUCT.name}
             </h2>
 
             <p className="mt-6 text-lg leading-8 text-zinc-400">
@@ -62,12 +64,12 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
                     className="mt-10"
                     regularPrice={RECOGNITION_REGULAR_PRICE}
                     launchPrice={RECOGNITION_LAUNCH_PRICE}
-                    unit="per complete process"
+                    unit={RECOGNITION_PRODUCT.access.unit}
                   />
 
                   <div className="mt-4 flex flex-wrap gap-4">
                     <Link
-                      href="https://recognition.oremea.com"
+                      href={RECOGNITION_PRODUCT.entryUrl}
                       className="rounded-full border border-[#b79a63]/25 bg-[#b79a63]/[0.05] px-5 py-2 text-sm text-[#b79a63] transition hover:border-[#b79a63]/55 hover:bg-[#b79a63]/10"
                     >
                       Begin Recognition
@@ -117,12 +119,12 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
                 <ProductLaunchPrice
                   regularPrice={RECOGNITION_REGULAR_PRICE}
                   launchPrice={RECOGNITION_LAUNCH_PRICE}
-                  unit="per complete process"
+                  unit={RECOGNITION_PRODUCT.access.unit}
                 />
 
                 <div className="flex flex-wrap gap-4 pt-2">
                   <Link
-                    href="https://recognition.oremea.com"
+                    href={RECOGNITION_PRODUCT.entryUrl}
                     className="rounded-full border border-[#b79a63]/25 bg-[#b79a63]/[0.05] px-5 py-2 text-sm text-[#b79a63] transition hover:border-[#b79a63]/55 hover:bg-[#b79a63]/10"
                   >
                     Begin Recognition
