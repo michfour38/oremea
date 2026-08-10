@@ -22,6 +22,7 @@ jobs:
         run: |
           set -euo pipefail
 
+          echo "Waiting for Oremea to serve exact release ${RELEASE_SHA} before touching migration history."
           endpoint="https://app.oremea.com/api/recognition/migration-status-once?sha=${RELEASE_SHA}"
           response_file="migration-resolve.json"
 
