@@ -10,7 +10,6 @@ export type GenerateAIParams = {
 
 const PARTICIPANT_EVIDENCE_TASKS = new Set([
   "recognition_synthesis",
-  "recognition_conversation",
 ])
 
 export async function generateAI({
