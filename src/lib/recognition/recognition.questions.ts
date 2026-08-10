@@ -72,7 +72,7 @@ export const RECOGNITION_QUESTIONS: RecognitionQuestion[] = [
   },
 ];
 
-const UNCERTAINTY_ONLY = /^(?:i\s*(?:do not|don't|dont)\s*know|idk|not\s+sure|unsure|everything|nothing|no\s+idea|dunno|i\s+guess)\b/i;
+const UNCERTAINTY_ONLY = /^(?:i\s*(?:do not|don't|dont)\s*know|i\s*(?:am|'m)\s+not\s+sure|idk|not\s+sure|unsure|everything|nothing|no\s+idea|dunno|i\s+guess)\b/i;
 
 function latestResponse(answersSoFar: RecognitionAnswerContext[]) {
   for (let index = answersSoFar.length - 1; index >= 0; index -= 1) {
