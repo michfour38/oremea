@@ -194,7 +194,7 @@ assert.match(
 assert.match(
   pageSource,
   /getRecognitionConversationAccess/,
-  "Recognition account access must remain purchase-gated.",
+  "Recognition account access must remain membership-gated.",
 );
 
 const purchaseSource = readFileSync("app/recognition/purchase/page.tsx", "utf8");
@@ -206,12 +206,12 @@ assert.match(
 assert.match(
   purchaseSource,
   /RECOGNITION_SUBSCRIPTION_CHECKOUT_URL/,
-  "New Recognition buyers must be routed only to the recurring checkout.",
+  "Recognition buyers must be routed only to the recurring checkout.",
 );
 assert.doesNotMatch(
   purchaseSource,
-  /RECOGNITION_PROCESS_CHECKOUT_URL/,
-  "The legacy founding checkout must never be exposed by the current purchase page.",
+  /RECOGNITION_PROCESS_CHECKOUT_URL|\$9\.99|founding/i,
+  "The obsolete one-time Recognition offer must not appear on the purchase page.",
 );
 assert.doesNotMatch(
   purchaseSource,
@@ -287,7 +287,7 @@ const gatewaySource = readFileSync("src/lib/ai/ai-gateway.ts", "utf8");
 assert.match(
   gatewaySource,
   /generateAIWithUsage/,
-  "The shared AI gateway must expose usage without changing legacy text-only callers.",
+  "The shared AI gateway must expose usage without changing existing text-only callers.",
 );
 assert.match(
   gatewaySource,
@@ -334,8 +334,13 @@ const accessSource = readFileSync(
 );
 assert.match(
   accessSource,
-  /"founding" \| "membership"/,
-  "Existing one-time buyers and future recurring members must remain distinct access sources.",
+  /"owner" \| "membership" \| null/,
+  "Recognition access must consist only of owner override or active membership.",
+);
+assert.doesNotMatch(
+  accessSource,
+  /founding|FOUNDING_USER_PREFIX|RECOGNITION_PRODUCT_KEY/i,
+  "Recognition conversation access must not contain obsolete one-time purchase compatibility.",
 );
 assert.match(
   accessSource,
@@ -345,7 +350,7 @@ assert.match(
 assert.match(
   accessSource,
   /recognition_membership/,
-  "Recurring Recognition access must use a separate entitlement key from founding purchases.",
+  "Recurring Recognition access must use its own entitlement key.",
 );
 
 const webhookSource = readFileSync("app/api/webhooks/whop/route.ts", "utf8");
@@ -363,6 +368,18 @@ assert.match(
   webhookSource,
   /WHOP_RECOGNITION_SUBSCRIPTION_PRODUCT_ID/,
   "Recurring Recognition fulfillment must remain isolated behind its own Whop product ID.",
+);
+assert.doesNotMatch(
+  webhookSource,
+  /WHOP_RECOGNITION_PRODUCT_ID|grantRecognitionCredit|access:\s*"founding"/,
+  "Whop must not retain the obsolete one-time Recognition fulfillment path.",
+);
+
+const envSource = readFileSync(".env.example", "utf8");
+assert.doesNotMatch(
+  envSource,
+  /RECOGNITION_PROCESS_CHECKOUT_URL|WHOP_RECOGNITION_PRODUCT_ID|founding/i,
+  "Recognition environment configuration must contain only the current subscription product.",
 );
 
 console.log("Recognition conversation contract checks passed.");
