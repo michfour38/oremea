@@ -45,9 +45,9 @@ export function ExploreEcosystem() {
             </h2>
           </div>
           <p className="max-w-md text-sm leading-7 text-zinc-500 md:text-right">
-            Each product stands on its own. Recognition sees with you. Resonance
-            gives a relational question time. Compass helps turn clarity into
-            deliberate movement.
+            Each product stands on its own. Recognition stays available as an
+            ongoing conversation. Resonance gives a relational question time.
+            Compass helps turn clarity into deliberate movement.
           </p>
         </div>
 
