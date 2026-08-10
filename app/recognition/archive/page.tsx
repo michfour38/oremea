@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { readRecognitionMemory } from "@/src/lib/recognition/recognition-conversation";
 import RecognitionMemoryControls from "./recognition-memory-controls";
+import RecognitionThreadControls from "./recognition-thread-controls";
 
 function formatDate(value: Date | string) {
   return new Date(value).toLocaleDateString("en-ZA", {
@@ -230,6 +231,7 @@ export default async function RecognitionArchivePage({ searchParams }: Props) {
         </section>
 
         <RecognitionMemoryControls initialAnchors={memory.anchors} />
+        <RecognitionThreadControls hasConversation={Boolean(thread?.message_count)} />
 
         {legacySessions.length > 0 ? (
           <details className="mt-16 rounded-[2rem] border border-[#3A3224] bg-[#11100D] p-6 md:p-8">
