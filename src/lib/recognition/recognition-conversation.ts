@@ -1,4 +1,4 @@
-import { generateAI } from "@/src/lib/ai/ai-gateway";
+import { generateAIWithUsage } from "@/src/lib/ai/ai-gateway";
 import { OREMEA_EVIDENCE_BOUNDARY } from "@/src/lib/oremea/evidence-boundary";
 import { MIRROR_AUTHORING_STANDARD } from "@/src/lib/oremea/mirror-authoring";
 import {
@@ -135,6 +135,12 @@ Use these only to understand the level of precision and firmness. Never copy the
 - Another person caused a consequence. Recognition preserves that attribution before examining where the participant actually enters the situation; visibility does not transfer responsibility.
 - The participant corrects an earlier account. Recognition treats the correction as current rather than defending its previous reading.
 `.trim();
+
+export const RECOGNITION_SYSTEM_PROMPT = [
+  MIRROR_AUTHORING_STANDARD,
+  OREMEA_EVIDENCE_BOUNDARY,
+  RECOGNITION_CONVERSATION_STANDARD,
+].join("\n\n");
 
 type RawModelResponse = {
   reply?: unknown;
@@ -319,14 +325,7 @@ export function buildRecognitionConversationPrompt({
       : "None relevant enough to carry into this turn.";
 
   return `
-You are Recognition by Oremea.
 ${firstName ? `Participant first name: ${firstName}` : ""}
-
-${MIRROR_AUTHORING_STANDARD}
-
-${OREMEA_EVIDENCE_BOUNDARY}
-
-${RECOGNITION_CONVERSATION_STANDARD}
 
 SELECTED LONG-TERM PARTICIPANT EVIDENCE:
 ${memoryText}
@@ -363,8 +362,10 @@ export async function generateRecognitionConversationReply({
   recentMessages: RecognitionConversationMessage[];
   memory: RecognitionConversationMemory;
 }) {
-  const raw = await generateAI({
+  const result = await generateAIWithUsage({
     task: "recognition_conversation",
+    system: RECOGNITION_SYSTEM_PROMPT,
+    cacheSystem: true,
     prompt: buildRecognitionConversationPrompt({
       firstName,
       recentMessages,
@@ -373,13 +374,13 @@ export async function generateRecognitionConversationReply({
     maxTokens: 850,
   });
 
-  if (!raw) {
+  if (!result?.text) {
     throw new Error("Recognition could not respond without leaving the participant's evidence.");
   }
 
   let parsed: RawModelResponse;
   try {
-    parsed = JSON.parse(stripJsonFence(raw)) as RawModelResponse;
+    parsed = JSON.parse(stripJsonFence(result.text)) as RawModelResponse;
   } catch {
     throw new Error("Recognition returned an unreadable conversation response.");
   }
@@ -388,6 +389,9 @@ export async function generateRecognitionConversationReply({
   if (!reply) throw new Error("Recognition returned no participant-facing reply.");
   if (wordCount(reply) > MAX_REPLY_WORDS + 30) {
     throw new Error("Recognition exceeded the conversational response boundary.");
+  }
+  if ((reply.match(/\?/g) ?? []).length > 1) {
+    throw new Error("Recognition asked more than one participant-facing question.");
   }
 
   const participantMessages = recentMessages.filter(
@@ -402,5 +406,7 @@ export async function generateRecognitionConversationReply({
   return {
     reply,
     memory: nextMemory,
+    model: result.model,
+    usage: result.usage,
   };
 }
