@@ -10,8 +10,9 @@ export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
 const execFileAsync = promisify(execFile)
-const DEADLINE = Date.parse("2026-08-10T17:30:00Z")
+const DEADLINE = Date.parse("2026-08-10T18:30:00Z")
 const MIGRATION = "20260810132000_add_recognition_conversation"
+const PRISMA_SCHEMA = "prisma"
 
 type MigrationRow = {
   started_at: Date
@@ -85,10 +86,28 @@ async function schemaIsComplete() {
   )
 }
 
+async function runPrisma(args: string[]) {
+  const executable = path.join(
+    process.cwd(),
+    "node_modules",
+    ".bin",
+    process.platform === "win32" ? "prisma.cmd" : "prisma",
+  )
+
+  await execFileAsync(executable, args, {
+    cwd: process.cwd(),
+    env: process.env,
+    timeout: 60_000,
+    maxBuffer: 1024 * 1024,
+  })
+}
+
 export async function POST(request: Request) {
   if (!isAllowed(request)) {
     return NextResponse.json({ ok: false }, { status: 404 })
   }
+
+  let stage = "precondition"
 
   try {
     const [schemaComplete, before] = await Promise.all([
@@ -108,6 +127,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           ok: false,
+          stage,
           error: "Recognition migration state did not match the verified repair precondition.",
           schemaComplete,
           unresolvedCount: unresolved.length,
@@ -118,36 +138,16 @@ export async function POST(request: Request) {
       )
     }
 
-    const prismaCli = path.join(process.cwd(), "node_modules", ".bin", "prisma")
+    stage = "resolve"
+    await runPrisma([
+      "migrate",
+      "resolve",
+      "--applied",
+      MIGRATION,
+      `--schema=${PRISMA_SCHEMA}`,
+    ])
 
-    await execFileAsync(
-      prismaCli,
-      [
-        "migrate",
-        "resolve",
-        "--applied",
-        MIGRATION,
-        "--schema=prisma/schema.prisma",
-      ],
-      {
-        cwd: process.cwd(),
-        env: process.env,
-        timeout: 60_000,
-        maxBuffer: 1024 * 1024,
-      },
-    )
-
-    await execFileAsync(
-      prismaCli,
-      ["migrate", "status", "--schema=prisma/schema.prisma"],
-      {
-        cwd: process.cwd(),
-        env: process.env,
-        timeout: 60_000,
-        maxBuffer: 1024 * 1024,
-      },
-    )
-
+    stage = "verify-history"
     const after = await readMigrationRows()
     const unresolvedAfter = after.filter(
       (row) => !row.finished_at && !row.rolled_back_at,
@@ -158,6 +158,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           ok: false,
+          stage,
           error: "Prisma did not leave the Recognition migration history resolved.",
           applied: appliedAfter,
           unresolvedCount: unresolvedAfter.length,
@@ -166,17 +167,29 @@ export async function POST(request: Request) {
       )
     }
 
+    stage = "status"
+    await runPrisma([
+      "migrate",
+      "status",
+      `--schema=${PRISMA_SCHEMA}`,
+    ])
+
     return NextResponse.json({
       ok: true,
+      stage: "complete",
       migration: MIGRATION,
       schemaComplete: true,
       applied: true,
       unresolvedCount: 0,
     })
   } catch (error) {
-    console.error("Recognition migration resolve failed:", error)
+    console.error(`Recognition migration repair failed at ${stage}:`, error)
     return NextResponse.json(
-      { ok: false, error: "Recognition migration could not be resolved." },
+      {
+        ok: false,
+        stage,
+        error: "Recognition migration could not be resolved.",
+      },
       { status: 500 },
     )
   }
