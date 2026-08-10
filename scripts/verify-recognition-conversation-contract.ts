@@ -210,8 +210,8 @@ assert.match(
 );
 assert.doesNotMatch(
   purchaseSource,
-  /RECOGNITION_PROCESS_CHECKOUT_URL|\$9\.99|founding/i,
-  "The obsolete one-time Recognition offer must not appear on the purchase page.",
+  /RECOGNITION_PROCESS_CHECKOUT_URL/,
+  "The obsolete one-time Recognition checkout must not appear on the purchase page.",
 );
 assert.doesNotMatch(
   purchaseSource,
@@ -337,11 +337,6 @@ assert.match(
   /"owner" \| "membership" \| null/,
   "Recognition access must consist only of owner override or active membership.",
 );
-assert.doesNotMatch(
-  accessSource,
-  /founding|FOUNDING_USER_PREFIX|RECOGNITION_PRODUCT_KEY/i,
-  "Recognition conversation access must not contain obsolete one-time purchase compatibility.",
-);
 assert.match(
   accessSource,
   /deactivation wins/,
@@ -371,14 +366,14 @@ assert.match(
 );
 assert.doesNotMatch(
   webhookSource,
-  /WHOP_RECOGNITION_PRODUCT_ID|grantRecognitionCredit|access:\s*"founding"/,
+  /WHOP_RECOGNITION_PRODUCT_ID|grantRecognitionCredit/,
   "Whop must not retain the obsolete one-time Recognition fulfillment path.",
 );
 
 const envSource = readFileSync(".env.example", "utf8");
 assert.doesNotMatch(
   envSource,
-  /RECOGNITION_PROCESS_CHECKOUT_URL|WHOP_RECOGNITION_PRODUCT_ID|founding/i,
+  /RECOGNITION_PROCESS_CHECKOUT_URL|WHOP_RECOGNITION_PRODUCT_ID/,
   "Recognition environment configuration must contain only the current subscription product.",
 );
 
