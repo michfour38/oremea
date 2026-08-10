@@ -44,10 +44,16 @@ async function applySchema() {
       "role" TEXT NOT NULL,
       "content" TEXT NOT NULL,
       "turn_index" INTEGER NOT NULL,
+      "client_message_id" TEXT,
       "evidence_snapshot" JSONB NOT NULL DEFAULT '{}',
       "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       CONSTRAINT "recognition_messages_pkey" PRIMARY KEY ("id")
     )
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    ALTER TABLE "recognition_messages"
+    ADD COLUMN IF NOT EXISTS "client_message_id" TEXT
   `);
 
   await prisma.$executeRawUnsafe(`
@@ -65,6 +71,10 @@ async function applySchema() {
   await prisma.$executeRawUnsafe(`
     CREATE UNIQUE INDEX IF NOT EXISTS "recognition_messages_thread_id_turn_index_key"
       ON "recognition_messages"("thread_id", "turn_index")
+  `);
+  await prisma.$executeRawUnsafe(`
+    CREATE UNIQUE INDEX IF NOT EXISTS "recognition_messages_thread_id_client_message_id_key"
+      ON "recognition_messages"("thread_id", "client_message_id")
   `);
   await prisma.$executeRawUnsafe(`
     CREATE INDEX IF NOT EXISTS "recognition_messages_thread_id_created_at_idx"
@@ -100,6 +110,7 @@ async function verifySchema() {
       messages: string | null;
       userIndex: string | null;
       turnIndex: string | null;
+      clientMessageIndex: string | null;
       foreignKey: string | null;
     }>
   >`
@@ -108,6 +119,7 @@ async function verifySchema() {
       to_regclass('public.recognition_messages')::text AS "messages",
       to_regclass('public.recognition_threads_user_id_key')::text AS "userIndex",
       to_regclass('public.recognition_messages_thread_id_turn_index_key')::text AS "turnIndex",
+      to_regclass('public.recognition_messages_thread_id_client_message_id_key')::text AS "clientMessageIndex",
       (
         SELECT conname
         FROM pg_constraint
@@ -123,6 +135,7 @@ async function verifySchema() {
         result?.messages &&
         result?.userIndex &&
         result?.turnIndex &&
+        result?.clientMessageIndex &&
         result?.foreignKey,
     ),
     result,
