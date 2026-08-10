@@ -5,6 +5,7 @@ import {
   recognitionMemoryQuoteIsBounded,
   selectRecognitionMemoryForPrompt,
 } from "./recognition-context";
+import { RECOGNITION_OUTPUT_SCHEMA } from "./recognition-output-schema";
 
 export type RecognitionConversationRole = "user" | "assistant";
 
@@ -343,13 +344,7 @@ Allowed kinds: statement, value, choice, clarity, uncertainty, responsibility, b
 Do not remember generated Recognition wording.
 Do not manufacture a summary and store it as participant evidence.
 
-Return JSON only in exactly this shape:
-{
-  "reply": "Recognition's participant-facing reply",
-  "remember": [
-    {"quote":"exact participant quote","turnIndex":1,"kind":"statement"}
-  ]
-}
+Return the requested structured response envelope. Keep `remember` empty when no exact participant excerpt deserves longitudinal carry-forward.
 `.trim();
 }
 
@@ -366,12 +361,13 @@ export async function generateRecognitionConversationReply({
     task: "recognition_conversation",
     system: RECOGNITION_SYSTEM_PROMPT,
     cacheSystem: true,
+    outputSchema: RECOGNITION_OUTPUT_SCHEMA,
     prompt: buildRecognitionConversationPrompt({
       firstName,
       recentMessages,
       memory,
     }),
-    maxTokens: 850,
+    maxTokens: 550,
   });
 
   if (!result?.text) {
