@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import { prisma } from "@/lib/prisma";
 import {
-  RecognitionType,
-  getRecognitionQuestions,
-} from "../../../../src/lib/recognition/recognition.service";
+  RecognitionCreditUnavailableError,
+  withRecognitionCredit,
+} from "@/src/lib/recognition/recognition-access";
+import {
+  RECOGNITION_QUESTIONS,
+  getRecognitionQuestionText,
+  type RecognitionAnswerContext,
+} from "@/src/lib/recognition/recognition.questions";
+import type { RecognitionType } from "@/src/lib/recognition/recognition.service";
 
 type CleanAnswer = {
   questionKey: string;
@@ -28,66 +35,49 @@ function serializeSession(session: {
   };
 }
 
+function cleanAnswers(value: unknown): CleanAnswer[] {
+  const rawAnswers = Array.isArray(value) ? value : [];
+  const context: RecognitionAnswerContext[] = [];
+  const cleaned: CleanAnswer[] = [];
+
+  for (const [index, question] of RECOGNITION_QUESTIONS.entries()) {
+    const raw = rawAnswers.find((candidate: unknown) => {
+      if (!candidate || typeof candidate !== "object") return false;
+      return (candidate as { questionKey?: unknown }).questionKey === question.key;
+    }) as { response?: unknown } | undefined;
+
+    const response = typeof raw?.response === "string" ? raw.response.trim() : "";
+    if (!response) continue;
+
+    cleaned.push({
+      questionKey: question.key,
+      questionText: getRecognitionQuestionText(question.key, context),
+      response,
+      responseOrder: index + 1,
+    });
+    context.push({ questionKey: question.key, response });
+  }
+
+  return cleaned;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-
     const firstName =
       typeof body?.firstName === "string" ? body.firstName.trim() : "";
-
     const email =
       typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
-
     const refineSessionId =
-      typeof body?.refineSessionId === "string"
-        ? body.refineSessionId.trim()
-        : "";
-
+      typeof body?.refineSessionId === "string" ? body.refineSessionId.trim() : "";
     const entryType: RecognitionType = "neutral";
     const source =
       typeof body?.source === "string" ? body.source.trim() : "direct";
-
-    const answers = Array.isArray(body?.answers) ? body.answers : [];
+    const cleanedAnswers = cleanAnswers(body?.answers);
 
     if (!email || !email.includes("@")) {
-      return NextResponse.json(
-        { error: "Valid email is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Valid email is required" }, { status: 400 });
     }
-
-    const questions = getRecognitionQuestions(entryType);
-
-    const cleanedAnswers: CleanAnswer[] = answers
-      .map((item: unknown) => {
-        if (!item || typeof item !== "object") return null;
-
-        const value = item as {
-          questionKey?: unknown;
-          response?: unknown;
-        };
-
-        const questionKey =
-          typeof value.questionKey === "string" ? value.questionKey.trim() : "";
-
-        const response =
-          typeof value.response === "string" ? value.response.trim() : "";
-
-        if (!questionKey || !response) return null;
-
-        const question = questions.find((candidate) => candidate.key === questionKey);
-        if (!question) return null;
-
-        return {
-          questionKey,
-          questionText: question.text,
-          response,
-          responseOrder:
-            questions.findIndex((candidate) => candidate.key === questionKey) + 1,
-        };
-      })
-      .filter((item: CleanAnswer | null): item is CleanAnswer => Boolean(item));
-
     if (cleanedAnswers.length < 3) {
       return NextResponse.json(
         { error: "At least 3 completed answers are required" },
@@ -112,24 +102,15 @@ export async function POST(req: NextRequest) {
         last_seen_panel_key: "recognition",
         last_seen_panel_at: new Date(),
       },
-      select: {
-        id: true,
-        email: true,
-        first_name: true,
-      },
+      select: { id: true, email: true, first_name: true },
     });
 
     if (refineSessionId) {
       const existingSession = await prisma.entry_mirror_sessions.findFirst({
-        where: {
-          id: refineSessionId,
-          lead_id: lead.id,
-        },
+        where: { id: refineSessionId, lead_id: lead.id },
         select: {
           id: true,
-          entry_mirror_outputs: {
-            select: { id: true },
-          },
+          entry_mirror_outputs: { select: { id: true } },
         },
       });
 
@@ -172,37 +153,45 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const session = await prisma.entry_mirror_sessions.create({
-      data: {
-        lead_id: lead.id,
-        entry_type: entryType,
-        status: "responses_captured",
-        entry_mirror_responses: {
-          create: cleanedAnswers.map((answer) => ({
-            question_key: answer.questionKey,
-            question_text: answer.questionText,
-            response: answer.response,
-            response_order: answer.responseOrder,
-          })),
-        },
-      },
-      select: {
-        id: true,
-        lead_id: true,
-        entry_type: true,
-        status: true,
-        created_at: true,
-      },
-    });
+    const { result: session, paymentId } = await withRecognitionCredit(
+      email,
+      (transaction) =>
+        transaction.entry_mirror_sessions.create({
+          data: {
+            lead_id: lead.id,
+            entry_type: entryType,
+            status: "responses_captured",
+            entry_mirror_responses: {
+              create: cleanedAnswers.map((answer) => ({
+                question_key: answer.questionKey,
+                question_text: answer.questionText,
+                response: answer.response,
+                response_order: answer.responseOrder,
+              })),
+            },
+          },
+          select: {
+            id: true,
+            lead_id: true,
+            entry_type: true,
+            status: true,
+            created_at: true,
+          },
+        }),
+    );
 
     return NextResponse.json({
       lead,
       session: serializeSession(session),
       refinement: false,
+      purchaseReference: paymentId,
     });
   } catch (error) {
-    console.error("Recognition session route failed:", error);
+    if (error instanceof RecognitionCreditUnavailableError) {
+      return NextResponse.json({ error: error.message }, { status: 402 });
+    }
 
+    console.error("Recognition session route failed:", error);
     return NextResponse.json(
       { error: "Recognition session route failed" },
       { status: 500 },
