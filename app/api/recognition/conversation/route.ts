@@ -9,8 +9,9 @@ import {
   type RecognitionConversationMessage,
 } from "@/src/lib/recognition/recognition-conversation";
 import { getRecognitionConversationAccess } from "@/src/lib/recognition/recognition-conversation-access";
+import { trimRecognitionRecentContext } from "@/src/lib/recognition/recognition-context";
 
-const RECENT_MESSAGE_LIMIT = 30;
+const RECENT_MESSAGE_FETCH_LIMIT = 40;
 const MAX_MESSAGE_LENGTH = 8000;
 
 class RecognitionConversationStaleError extends Error {
@@ -93,7 +94,7 @@ export async function POST(request: Request) {
     const recentRows = await prisma.recognition_messages.findMany({
       where: { thread_id: thread.id },
       orderBy: { turn_index: "desc" },
-      take: RECENT_MESSAGE_LIMIT,
+      take: RECENT_MESSAGE_FETCH_LIMIT,
       select: {
         role: true,
         content: true,
@@ -120,9 +121,10 @@ export async function POST(request: Request) {
       turnIndex: userTurnIndex,
     });
 
+    const promptMessages = trimRecognitionRecentContext(recentMessages);
     const generated = await generateRecognitionConversationReply({
       firstName: user.firstName,
-      recentMessages,
+      recentMessages: promptMessages,
       memory: readRecognitionMemory(thread.memory_snapshot),
     });
 
@@ -160,6 +162,7 @@ export async function POST(request: Request) {
             evidence_snapshot: {
               memoryVersion: generated.memory.version,
               anchorCount: generated.memory.anchors.length,
+              promptMessageCount: promptMessages.length,
             },
             created_at: now,
           },
