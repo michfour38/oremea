@@ -10,6 +10,7 @@ export type GenerateAIParams = {
 
 const PARTICIPANT_EVIDENCE_TASKS = new Set([
   "recognition_synthesis",
+  "recognition_conversation",
 ])
 
 export async function generateAI({
@@ -96,7 +97,7 @@ async function callAnthropicModel({
         return callAnthropicModel({
           task,
           model,
-          prompt,
+          prompt: effectivePrompt,
           maxTokens: Math.min(maxTokens * 2, 4000),
           allowTokenRetry: false,
         })
