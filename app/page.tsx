@@ -37,13 +37,13 @@ const products = [
     href: "https://recognition.oremea.com",
     active: true,
     short:
-      "A private reflective entry point that helps you see what is already present in your own words.",
+      "An ongoing private conversation that keeps you accountable to your own words without deciding where you should go.",
     action: "Enter Recognition",
     full: [
-      "Recognition begins with what already has your attention.",
-      "You respond to a carefully sequenced set of prompts in your own words, creating enough material for the system to reflect the pattern taking shape.",
-      "The result gives you a clearer view of what is present now: the thread, tension, desire, contradiction, or movement asking to be seen.",
-      "Recognition is designed as a focused entry point. It gives awareness somewhere concrete to begin.",
+      "Recognition begins wherever your attention is now.",
+      "There is no fixed question sequence. Each reply follows what you actually said, while earlier participant-written evidence can return when it materially clarifies recurrence, correction, contrast, responsibility, or a distinction you are trying to hold.",
+      "Recognition can question an absolute, place two of your own statements beside one another, separate observation from interpretation, and keep your participation visible without absorbing someone else's responsibility for you.",
+      "Recognition does not turn clarity into an action plan. The conversation can end with one thing simply becoming visible.",
     ],
   },
   {
@@ -156,7 +156,7 @@ export default function Home() {
                         className="mt-4"
                         regularPrice={RECOGNITION_REGULAR_PRICE}
                         launchPrice={RECOGNITION_LAUNCH_PRICE}
-                        unit="per complete process"
+                        unit="one-time access"
                       />
                     ) : null}
 
