@@ -240,6 +240,38 @@ assert.match(
   /outputTokens/,
   "Recognition must persist model output usage per generated reply.",
 );
+assert.match(
+  apiSource,
+  /readSavedMessagePair/,
+  "Recognition retries must replay an already-saved pair instead of generating again.",
+);
+assert.match(
+  apiSource,
+  /client_message_id: clientMessageId/,
+  "Participant sends must persist their idempotency key.",
+);
+
+const chatSource = readFileSync("app/recognition/recognition-chat.tsx", "utf8");
+assert.match(
+  chatSource,
+  /crypto\.randomUUID\(\)/,
+  "Each new Recognition send must receive a browser-generated idempotency key.",
+);
+assert.match(
+  chatSource,
+  /pendingMessageId/,
+  "A failed Recognition send must retain its send ID for a safe retry.",
+);
+
+const schemaSource = readFileSync(
+  "prisma/schema/recognition-conversation.prisma",
+  "utf8",
+);
+assert.match(
+  schemaSource,
+  /@@unique\(\[thread_id, client_message_id\]\)/,
+  "Recognition retry idempotency must be enforced by the database too.",
+);
 
 const gatewaySource = readFileSync("src/lib/ai/ai-gateway.ts", "utf8");
 assert.match(
@@ -321,6 +353,16 @@ assert.match(
   webhookSource,
   /WHOP_RECOGNITION_SUBSCRIPTION_PRODUCT_ID/,
   "Recurring Recognition fulfillment must remain isolated behind its own Whop product ID.",
+);
+
+const releaseSource = readFileSync(
+  "app/api/recognition/release-schema-once/route.ts",
+  "utf8",
+);
+assert.match(
+  releaseSource,
+  /recognition_messages_thread_id_client_message_id_key/,
+  "The production schema release must verify the retry idempotency index.",
 );
 
 console.log("Recognition conversation contract checks passed.");
