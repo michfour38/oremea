@@ -3,10 +3,11 @@ import Link from "next/link";
 const products = [
   {
     name: "Recognition",
-    category: "See what is present",
+    category: "See yourself clearly",
     description:
-      "A focused private reflection that gives the thread already present in your own words enough shape to become visible.",
-    bestFor: "A clear first view of what has your attention now.",
+      "An ongoing private recursive conversation that keeps you accountable to your own words while meaning and direction remain yours.",
+    bestFor:
+      "Anything that needs accurate witness, distinction, recurrence, or accountability without being pushed toward action.",
     href: "https://recognition.oremea.com",
     action: "Enter Recognition",
   },
@@ -40,12 +41,13 @@ export function ExploreEcosystem() {
               Available now
             </p>
             <h2 className="mt-4 text-3xl font-light leading-tight text-zinc-100 md:text-5xl">
-              Choose the kind of movement you need.
+              Choose the kind of participation you need.
             </h2>
           </div>
           <p className="max-w-md text-sm leading-7 text-zinc-500 md:text-right">
-            Each product stands on its own. Recognition, Resonance, and Compass
-            can also form a progression from seeing to sustained action.
+            Each product stands on its own. Recognition sees with you. Resonance
+            gives a relational question time. Compass helps turn clarity into
+            deliberate movement.
           </p>
         </div>
 
