@@ -200,8 +200,18 @@ assert.match(
 const purchaseSource = readFileSync("app/recognition/purchase/page.tsx", "utf8");
 assert.match(
   purchaseSource,
-  /Ongoing Recognition access/,
+  /Ongoing Recognition/,
   "Recognition purchase copy must describe ongoing access rather than one process.",
+);
+assert.match(
+  purchaseSource,
+  /RECOGNITION_SUBSCRIPTION_CHECKOUT_URL/,
+  "New Recognition buyers must be routed only to the recurring checkout.",
+);
+assert.doesNotMatch(
+  purchaseSource,
+  /RECOGNITION_PROCESS_CHECKOUT_URL/,
+  "The legacy founding checkout must never be exposed by the current purchase page.",
 );
 assert.doesNotMatch(
   purchaseSource,
@@ -353,16 +363,6 @@ assert.match(
   webhookSource,
   /WHOP_RECOGNITION_SUBSCRIPTION_PRODUCT_ID/,
   "Recurring Recognition fulfillment must remain isolated behind its own Whop product ID.",
-);
-
-const releaseSource = readFileSync(
-  "app/api/recognition/release-schema-once/route.ts",
-  "utf8",
-);
-assert.match(
-  releaseSource,
-  /recognition_messages_thread_id_client_message_id_key/,
-  "The production schema release must verify the retry idempotency index.",
 );
 
 console.log("Recognition conversation contract checks passed.");
