@@ -16,7 +16,7 @@ const sections: readonly LegalSection[] = [
     items: [
       "Account and identity information, including name, email address, authentication identifiers and contact details.",
       "Purchase, entitlement, billing-status and transaction-reference information. Complete payment-card details are handled by the processor identified at checkout rather than intentionally stored by Oremea.",
-      "Reflective content, answers, questions, generated Mirrors, progress, archives, preferences and feedback supplied through Recognition, Resonance, Compass and related features.",
+      "Private reflective content, including Recognition conversation messages and participant-controlled remembered excerpts, Resonance responses and Mirrors, Compass discussion, Map and participant-created goals, archives, preferences and feedback.",
       "WORKS customer requirements, briefs, searches, messages, contact details, provider profiles, capabilities, capacity, locations, credentials, claims, reviews and response records.",
       "Technical and usage information, including device, browser, IP address, session, security, error, diagnostic and interaction data reasonably required to operate and protect the platform.",
       "Support, consent, communication, complaint, legal and compliance records.",
@@ -25,7 +25,7 @@ const sections: readonly LegalSection[] = [
   {
     title: "3. Sensitive and third-party information",
     paragraphs: [
-      "Reflective responses may contain private, sensitive or special personal information because users choose what to write. Oremea processes that material to supply the requested reflective experience and applies the same private-by-default principle to it.",
+      "Reflective responses and conversations may contain private, sensitive or special personal information because users choose what to write. Oremea processes that material to supply the requested reflective experience and applies the same private-by-default principle to it.",
       "Users should share another person's personal or special personal information only where they have authority, a lawful basis and a genuine need to do so. Access to a person's story does not create permission to publish, distribute or repurpose it.",
     ],
   },
@@ -40,7 +40,7 @@ const sections: readonly LegalSection[] = [
     title: "5. Purposes and lawful processing",
     items: [
       "Create and secure accounts, authenticate users and maintain access.",
-      "Deliver purchased or requested products, generate reflective outputs and preserve progress and archives.",
+      "Deliver purchased or requested products, generate requested reflective responses, preserve ongoing conversations and archives where the product provides them, and maintain participant-selected memory or progress controls.",
       "Receive WORKS requirements, create provider records, identify possible matches, route enquiries and facilitate requested introductions.",
       "Process payment confirmations, subscriptions, cancellations, refunds and support requests.",
       "Communicate about accounts, security, purchases, requested opportunities, service changes and consented marketing.",
@@ -54,7 +54,8 @@ const sections: readonly LegalSection[] = [
   {
     title: "6. AI processing",
     paragraphs: [
-      "Oremea uses AI service providers to process selected user inputs and generate questions, summaries, Mirrors and other requested outputs. The information sent is limited to what is reasonably required for the feature being used.",
+      "Oremea uses AI service providers to process selected user inputs and generate questions, reflections, summaries, distinctions and other requested responses. The information sent is limited to what is reasonably required for the feature being used.",
+      "In Recognition, recent conversation context and relevant participant-written excerpts may be supplied to the AI so the conversation can remain continuous over time. Long-term remembered excerpts are drawn from the participant's own words and are made available for the participant to inspect and remove.",
       "AI-supported outputs may be stored with the account so the user can continue or review the work. Oremea uses contractual, technical and organisational measures appropriate to the service and does not treat AI output as independently verified fact.",
     ],
   },
@@ -91,6 +92,7 @@ const sections: readonly LegalSection[] = [
     title: "11. Retention and deletion",
     paragraphs: [
       "Oremea keeps information for as long as reasonably required to supply the service, maintain the user's requested record, meet legal and tax obligations, resolve disputes, prevent fraud and enforce agreements.",
+      "Where a product provides direct controls, the user may remove product-held memory or delete the applicable private conversation without cancelling the underlying account or requiring deletion of transaction, legal, security or billing records that must be retained separately.",
       "Retention periods vary by record type. Information is deleted, de-identified or securely archived when its purpose and applicable retention duties have ended. Backup copies may remain for a limited cycle before deletion.",
       "A deletion request may be limited where Oremea must retain a transaction, legal, security or dispute record or where another lawful ground applies.",
     ],
@@ -155,7 +157,7 @@ export default function PrivacyPage() {
       activePath="/privacy"
       title="Privacy & POPIA Policy"
       summary="How personal information, private reflections and WORKS business data move through Oremea—and the choices and rights attached to them."
-      updated="9 August 2026"
+      updated="10 August 2026"
       sections={sections}
       references={[
         {
