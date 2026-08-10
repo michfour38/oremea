@@ -18,6 +18,7 @@ CREATE TABLE "recognition_messages" (
     "role" TEXT NOT NULL,
     "content" TEXT NOT NULL,
     "turn_index" INTEGER NOT NULL,
+    "client_message_id" TEXT,
     "evidence_snapshot" JSONB NOT NULL DEFAULT '{}',
     "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -28,6 +29,7 @@ CREATE UNIQUE INDEX "recognition_threads_user_id_key" ON "recognition_threads"("
 CREATE INDEX "recognition_threads_status_idx" ON "recognition_threads"("status");
 CREATE INDEX "recognition_threads_last_message_at_idx" ON "recognition_threads"("last_message_at");
 CREATE UNIQUE INDEX "recognition_messages_thread_id_turn_index_key" ON "recognition_messages"("thread_id", "turn_index");
+CREATE UNIQUE INDEX "recognition_messages_thread_id_client_message_id_key" ON "recognition_messages"("thread_id", "client_message_id");
 CREATE INDEX "recognition_messages_thread_id_created_at_idx" ON "recognition_messages"("thread_id", "created_at");
 CREATE INDEX "recognition_messages_role_idx" ON "recognition_messages"("role");
 
