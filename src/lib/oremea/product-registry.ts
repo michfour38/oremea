@@ -14,7 +14,7 @@ type OremeaProduct = {
   key: OremeaProductKey;
   name: string;
   availability: OremeaProductAvailability;
-  entryUrl: string;
+  entryHref: string;
   pricing: OremeaProductPricing;
   access: {
     unit: string;
@@ -27,7 +27,7 @@ type OremeaProduct = {
 /**
  * Canonical commercial truth for Oremea products.
  *
- * Product names, availability, entry URLs, pricing, purchase type, and access
+ * Product names, availability, entry routes, pricing, purchase type, and access
  * rules must be read from this registry rather than duplicated in UI code.
  */
 export const OREMEA_PRODUCT_REGISTRY = {
@@ -35,7 +35,7 @@ export const OREMEA_PRODUCT_REGISTRY = {
     key: "recognition",
     name: "Recognition",
     availability: "live",
-    entryUrl: "https://recognition.oremea.com",
+    entryHref: "https://recognition.oremea.com",
     pricing: {
       currency: "USD",
       launchPriceCents: 999,
@@ -52,7 +52,7 @@ export const OREMEA_PRODUCT_REGISTRY = {
     key: "resonance",
     name: "Resonance",
     availability: "live",
-    entryUrl: "https://resonance.oremea.com",
+    entryHref: "/resonance",
     pricing: {
       currency: "USD",
       launchPriceCents: 1999,
@@ -69,7 +69,7 @@ export const OREMEA_PRODUCT_REGISTRY = {
     key: "compass",
     name: "Compass",
     availability: "live",
-    entryUrl: "https://compass.oremea.com",
+    entryHref: "/compass/access",
     pricing: {
       currency: "USD",
       launchPriceCents: 1999,
