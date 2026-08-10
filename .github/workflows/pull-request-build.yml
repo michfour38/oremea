@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      - works-production
   workflow_dispatch:
 
 permissions:
