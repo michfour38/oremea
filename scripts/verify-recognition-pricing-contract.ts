@@ -7,18 +7,23 @@ import {
 
 assert.equal(
   formatRecognitionPrice(RECOGNITION_PRICING.launchPriceCents),
-  "$6.99",
-  "Recognition launch price must remain $6.99",
+  "$9.99",
+  "Recognition price must remain $9.99",
 );
 assert.equal(
   formatRecognitionPrice(RECOGNITION_PRICING.regularPriceCents),
   "$9.99",
-  "Recognition regular price must remain $9.99",
+  "Recognition canonical price must remain $9.99",
 );
 assert.equal(
   RECOGNITION_PRICING.purchaseType,
   "one_time",
   "Recognition must remain a one-time purchase",
+);
+assert.equal(
+  RECOGNITION_PRICING.includedRefinements,
+  1,
+  "Recognition must include exactly one second pass",
 );
 
 console.log("Recognition pricing contract checks passed.");
