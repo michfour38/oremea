@@ -13,6 +13,7 @@ import { trimRecognitionRecentContext } from "@/src/lib/recognition/recognition-
 
 const RECENT_MESSAGE_FETCH_LIMIT = 40;
 const MAX_MESSAGE_LENGTH = 8000;
+const CLIENT_MESSAGE_ID = /^[a-zA-Z0-9_-]{12,100}$/;
 
 class RecognitionConversationStaleError extends Error {
   constructor() {
@@ -26,6 +27,63 @@ function userEmails(user: Awaited<ReturnType<typeof currentUser>>) {
   return user.emailAddresses
     .map((item) => item.emailAddress.trim().toLowerCase())
     .filter(Boolean);
+}
+
+async function readSavedMessagePair({
+  threadId,
+  clientMessageId,
+}: {
+  threadId: string;
+  clientMessageId: string;
+}) {
+  const userMessage = await prisma.recognition_messages.findUnique({
+    where: {
+      thread_id_client_message_id: {
+        thread_id: threadId,
+        client_message_id: clientMessageId,
+      },
+    },
+    select: {
+      role: true,
+      content: true,
+      turn_index: true,
+      created_at: true,
+    },
+  });
+
+  if (!userMessage || userMessage.role !== "user") return null;
+
+  const assistantMessage = await prisma.recognition_messages.findUnique({
+    where: {
+      thread_id_turn_index: {
+        thread_id: threadId,
+        turn_index: userMessage.turn_index + 1,
+      },
+    },
+    select: {
+      role: true,
+      content: true,
+      turn_index: true,
+      created_at: true,
+    },
+  });
+
+  if (!assistantMessage || assistantMessage.role !== "assistant") return null;
+
+  return {
+    user: {
+      role: "user" as const,
+      content: userMessage.content,
+      turnIndex: userMessage.turn_index,
+      createdAt: userMessage.created_at.toISOString(),
+    },
+    assistant: {
+      role: "assistant" as const,
+      content: assistantMessage.content,
+      turnIndex: assistantMessage.turn_index,
+      createdAt: assistantMessage.created_at.toISOString(),
+    },
+  };
 }
 
 export async function POST(request: Request) {
@@ -56,6 +114,11 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const content = typeof body?.content === "string" ? body.content.trim() : "";
+    const clientMessageId =
+      typeof body?.clientMessageId === "string"
+        ? body.clientMessageId.trim()
+        : "";
+
     if (!content) {
       return NextResponse.json(
         { ok: false, error: "Write something for Recognition to stay with." },
@@ -68,6 +131,12 @@ export async function POST(request: Request) {
           ok: false,
           error: `Keep each message under ${MAX_MESSAGE_LENGTH.toLocaleString()} characters so Recognition can stay precise.`,
         },
+        { status: 400 },
+      );
+    }
+    if (!CLIENT_MESSAGE_ID.test(clientMessageId)) {
+      return NextResponse.json(
+        { ok: false, error: "This Recognition send could not be identified safely." },
         { status: 400 },
       );
     }
@@ -90,6 +159,28 @@ export async function POST(request: Request) {
         memory_snapshot: true,
       },
     });
+
+    const savedRetry = await readSavedMessagePair({
+      threadId: thread.id,
+      clientMessageId,
+    });
+    if (savedRetry) {
+      if (savedRetry.user.content !== content) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "This send ID was already used for different Recognition text.",
+          },
+          { status: 409 },
+        );
+      }
+
+      return NextResponse.json({
+        ok: true,
+        replayed: true,
+        messages: savedRetry,
+      });
+    }
 
     const recentRows = await prisma.recognition_messages.findMany({
       where: { thread_id: thread.id },
@@ -135,6 +226,59 @@ export async function POST(request: Request) {
       const lockKey = `recognition-thread:${user.id}`;
       await transaction.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
 
+      const existingRetry = await transaction.recognition_messages.findUnique({
+        where: {
+          thread_id_client_message_id: {
+            thread_id: thread.id,
+            client_message_id: clientMessageId,
+          },
+        },
+        select: {
+          content: true,
+          turn_index: true,
+          created_at: true,
+        },
+      });
+
+      if (existingRetry) {
+        if (existingRetry.content !== content) {
+          throw new RecognitionConversationStaleError();
+        }
+
+        const existingAssistant = await transaction.recognition_messages.findUnique({
+          where: {
+            thread_id_turn_index: {
+              thread_id: thread.id,
+              turn_index: existingRetry.turn_index + 1,
+            },
+          },
+          select: {
+            content: true,
+            turn_index: true,
+            created_at: true,
+          },
+        });
+
+        if (!existingAssistant) {
+          throw new RecognitionConversationStaleError();
+        }
+
+        return {
+          user: {
+            role: "user" as const,
+            content: existingRetry.content,
+            turnIndex: existingRetry.turn_index,
+            createdAt: existingRetry.created_at.toISOString(),
+          },
+          assistant: {
+            role: "assistant" as const,
+            content: existingAssistant.content,
+            turnIndex: existingAssistant.turn_index,
+            createdAt: existingAssistant.created_at.toISOString(),
+          },
+        };
+      }
+
       const currentThread = await transaction.recognition_threads.findUnique({
         where: { id: thread.id },
         select: { message_count: true },
@@ -151,6 +295,7 @@ export async function POST(request: Request) {
             role: "user",
             content,
             turn_index: userTurnIndex,
+            client_message_id: clientMessageId,
             evidence_snapshot: {},
             created_at: now,
           },
@@ -159,6 +304,7 @@ export async function POST(request: Request) {
             role: "assistant",
             content: generated.reply,
             turn_index: assistantTurnIndex,
+            client_message_id: null,
             evidence_snapshot: {
               memoryVersion: generated.memory.version,
               anchorCount: generated.memory.anchors.length,
@@ -200,7 +346,7 @@ export async function POST(request: Request) {
       };
     });
 
-    return NextResponse.json({ ok: true, messages: saved });
+    return NextResponse.json({ ok: true, replayed: false, messages: saved });
   } catch (error) {
     console.error("POST /api/recognition/conversation failed:", error);
 
