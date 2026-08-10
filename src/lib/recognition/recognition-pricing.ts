@@ -1,14 +1,15 @@
+import {
+  OREMEA_PRICING,
+  formatProductPrice,
+} from "@/src/lib/oremea/pricing";
+
+const recognition = OREMEA_PRICING.recognition;
+
 export const RECOGNITION_PRICING = {
-  currency: "USD",
-  launchPriceCents: 1499,
-  regularPriceCents: 1999,
-  billingInterval: "month",
-  purchaseType: "subscription",
+  ...recognition,
+  regularPriceCents: recognition.standardPriceCents,
 } as const;
 
 export function formatRecognitionPrice(priceCents: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: RECOGNITION_PRICING.currency,
-  }).format(priceCents / 100);
+  return formatProductPrice("recognition", priceCents);
 }
