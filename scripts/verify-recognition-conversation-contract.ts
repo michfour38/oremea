@@ -25,7 +25,7 @@ assert.match(
 );
 assert.match(
   RECOGNITION_CONVERSATION_STANDARD,
-  /newest message first/i,
+  /newest .*message first/i,
   "Current participant material must retain foreground authority.",
 );
 assert.match(
@@ -68,6 +68,23 @@ assert.equal(
   memory.anchors[0]?.quote,
   "I have no choice here",
   "Recognition memory must preserve participant wording rather than a generated summary.",
+);
+
+const punctuationChanged = mergeRecognitionMemory({
+  existing: EMPTY_RECOGNITION_MEMORY,
+  participantMessages,
+  remember: [
+    {
+      quote: "I have no choice here",
+      turnIndex: 8,
+      kind: "statement",
+    },
+  ],
+});
+assert.equal(
+  punctuationChanged.anchors.length,
+  0,
+  "Recognition memory must reject a quote attached to the wrong participant turn.",
 );
 
 const prompt = buildRecognitionConversationPrompt({
