@@ -5,7 +5,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   RECOGNITION_QUESTIONS,
   getRecognitionQuestionText,
-  type RecognitionAnswerContext,
   type RecognitionQuestion,
 } from "@/src/lib/recognition/recognition.questions";
 
@@ -22,6 +21,16 @@ type Panel =
   | { type: "capture" }
   | { type: "question"; question: RecognitionQuestion }
   | { type: "generate" };
+
+type RecognitionDraft = {
+  firstName?: string;
+  email?: string;
+  creatorRef?: string;
+  panelIndex?: number;
+  answers?: Record<string, string>;
+  hasUsedRefineOnce?: boolean;
+  lastSessionId?: string;
+};
 
 export default function RecognitionExperience() {
   const [creatorRef, setCreatorRef] = useState("");
@@ -54,17 +63,13 @@ export default function RecognitionExperience() {
     if (!saved) return;
 
     try {
-      const draft = JSON.parse(saved) as {
-        firstName?: string;
-        email?: string;
-        creatorRef?: string;
-        panelIndex?: number;
-        answers?: Record<string, string>;
-      };
+      const draft = JSON.parse(saved) as RecognitionDraft;
       if (draft.firstName) setFirstName(draft.firstName);
       if (draft.email) setEmail(draft.email);
       if (draft.creatorRef) setCreatorRef(draft.creatorRef);
       if (draft.answers) setAnswers(draft.answers);
+      if (draft.hasUsedRefineOnce) setHasUsedRefineOnce(true);
+      if (draft.lastSessionId) setLastSessionId(draft.lastSessionId);
       if (
         typeof draft.panelIndex === "number" &&
         draft.firstName &&
@@ -80,9 +85,25 @@ export default function RecognitionExperience() {
   useEffect(() => {
     window.localStorage.setItem(
       DRAFT_KEY,
-      JSON.stringify({ firstName, email, creatorRef, panelIndex, answers }),
+      JSON.stringify({
+        firstName,
+        email,
+        creatorRef,
+        panelIndex,
+        answers,
+        hasUsedRefineOnce,
+        lastSessionId,
+      } satisfies RecognitionDraft),
     );
-  }, [firstName, email, creatorRef, panelIndex, answers]);
+  }, [
+    firstName,
+    email,
+    creatorRef,
+    panelIndex,
+    answers,
+    hasUsedRefineOnce,
+    lastSessionId,
+  ]);
 
   useEffect(() => {
     if (!isGenerating) return;
@@ -141,13 +162,6 @@ export default function RecognitionExperience() {
           (question) => question.key === currentPanel.question.key,
         )
       : -1;
-
-  const answeredContext: RecognitionAnswerContext[] = RECOGNITION_QUESTIONS.map(
-    (question) => ({
-      questionKey: question.key,
-      response: answers[question.key]?.trim() ?? "",
-    }),
-  ).filter((item) => item.response.length > 0);
 
   const previousAnswers =
     currentQuestionIndex > 0
@@ -221,7 +235,9 @@ export default function RecognitionExperience() {
           body: JSON.stringify({ email }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data?.error || "Could not verify Recognition access");
+        if (!res.ok) {
+          throw new Error(data?.error || "Could not verify Recognition access");
+        }
         if (!data?.availableProcesses || data.availableProcesses < 1) {
           setError(
             "No unused Recognition process was found for this email. Use the same email you used at checkout.",
@@ -229,7 +245,9 @@ export default function RecognitionExperience() {
           return;
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Could not verify Recognition access");
+        setError(
+          err instanceof Error ? err.message : "Could not verify Recognition access",
+        );
         return;
       }
     }
@@ -317,7 +335,9 @@ export default function RecognitionExperience() {
       setRecognitionOutput(generateData.output.output);
       window.localStorage.removeItem(DRAFT_KEY);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setError(
+        err instanceof Error ? err.message : "Something went wrong. Please try again.",
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -327,30 +347,46 @@ export default function RecognitionExperience() {
     return (
       <main className="min-h-screen bg-[#0A0A0A] px-6 py-10 text-[#EAEAEA]">
         <section className="mx-auto max-w-3xl">
-          <p className="mb-12 text-center text-xs tracking-[0.45em] text-[#BFBFBF]">OREMEA</p>
-          <h1 className="mb-8 font-serif text-3xl leading-tight md:text-5xl">Your Recognition</h1>
+          <p className="mb-12 text-center text-xs tracking-[0.45em] text-[#BFBFBF]">
+            OREMEA
+          </p>
+          <h1 className="mb-8 font-serif text-3xl leading-tight md:text-5xl">
+            Your Recognition
+          </h1>
           <div className="whitespace-pre-wrap rounded-3xl border border-[#4A3D25] bg-[#11100D] p-6 font-serif text-xl leading-relaxed text-[#E2D8C5] md:p-10 md:text-2xl">
             {recognitionOutput}
           </div>
 
           {!hasUsedRefineOnce ? (
             <div className="mt-10 rounded-3xl border border-[#4A3D25] bg-[#14110B] p-6 md:p-8">
-              <p className="font-serif text-2xl md:text-3xl">You’ve now seen your Recognition</p>
-              <p className="mt-5 font-serif text-xl leading-relaxed text-[#D8D0C0] md:text-2xl">
-                Your purchase includes one opportunity to answer again with more depth and see what becomes clearer.
+              <p className="font-serif text-2xl md:text-3xl">
+                You’ve now seen your Recognition
               </p>
-              <button type="button" onClick={refineOnce} className="mt-8 rounded-full border border-[#D6B97A] bg-[#C6A96B] px-8 py-4 font-serif text-lg text-[#0A0A0A] transition hover:bg-[#D6B97A]">
+              <p className="mt-5 font-serif text-xl leading-relaxed text-[#D8D0C0] md:text-2xl">
+                Your purchase includes one opportunity to answer again with more
+                depth and see what becomes clearer.
+              </p>
+              <button
+                type="button"
+                onClick={refineOnce}
+                className="mt-8 rounded-full border border-[#D6B97A] bg-[#C6A96B] px-8 py-4 font-serif text-lg text-[#0A0A0A] transition hover:bg-[#D6B97A]"
+              >
                 Answer once more
               </button>
             </div>
           ) : null}
 
           <div className="mt-10 rounded-3xl border border-[#4A3D25] bg-[#14110B] p-6 md:p-8">
-            <p className="font-serif text-2xl md:text-3xl">Something has become more visible</p>
+            <p className="font-serif text-2xl md:text-3xl">
+              Something has become more visible
+            </p>
             <p className="mt-5 font-serif text-xl leading-relaxed text-[#D8D0C0] md:text-2xl">
               Resonance gives you somewhere to stay with what Recognition revealed.
             </p>
-            <a href="https://resonance.oremea.com" className="mt-8 inline-block rounded-full border border-[#C6A96B]/70 px-6 py-3 font-serif text-lg text-[#C6A96B] transition hover:border-[#D6B97A] hover:text-[#D6B97A]">
+            <a
+              href="https://resonance.oremea.com"
+              className="mt-8 inline-block rounded-full border border-[#C6A96B]/70 px-6 py-3 font-serif text-lg text-[#C6A96B] transition hover:border-[#D6B97A] hover:text-[#D6B97A]"
+            >
               Continue to Resonance
             </a>
           </div>
@@ -364,57 +400,120 @@ export default function RecognitionExperience() {
   return (
     <main className="min-h-screen bg-[#0A0A0A] px-6 py-8 text-[#EAEAEA]">
       <section className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-3xl flex-col justify-center">
-        <div className="mb-8 text-center"><p className="text-xs tracking-[0.45em] text-[#BFBFBF]">OREMEA</p></div>
-        <div className="mb-8 h-px bg-[#2A2418]"><div className="h-px bg-[#C6A96B]" style={{ width: `${progress}%` }} /></div>
+        <div className="mb-8 text-center">
+          <p className="text-xs tracking-[0.45em] text-[#BFBFBF]">OREMEA</p>
+        </div>
+        <div className="mb-8 h-px bg-[#2A2418]">
+          <div className="h-px bg-[#C6A96B]" style={{ width: `${progress}%` }} />
+        </div>
 
         {currentPanel.type === "capture" ? (
           <div className="rounded-3xl border border-[#4A3D25] bg-[#11100D] p-6 md:p-10">
-            <h1 className="mb-8 font-serif text-3xl leading-tight md:text-5xl">Begin privately</h1>
+            <h1 className="mb-8 font-serif text-3xl leading-tight md:text-5xl">
+              Begin privately
+            </h1>
             <p className="mb-6 font-serif text-lg leading-relaxed text-[#D8D0C0]">
               Use the same email you used when purchasing this Recognition process.
             </p>
             <div className="grid gap-4 md:grid-cols-2">
-              <input value={firstName} onChange={(event) => setFirstName(event.target.value)} placeholder="First name" className="rounded-2xl border border-[#5C4A2B] bg-[#0A0A0A] px-5 py-4 font-serif text-lg outline-none placeholder:text-[#9A9285] focus:border-[#D6B97A]" />
-              <input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Purchase email" type="email" className="rounded-2xl border border-[#5C4A2B] bg-[#0A0A0A] px-5 py-4 font-serif text-lg outline-none placeholder:text-[#9A9285] focus:border-[#D6B97A]" />
+              <input
+                value={firstName}
+                onChange={(event) => setFirstName(event.target.value)}
+                placeholder="First name"
+                className="rounded-2xl border border-[#5C4A2B] bg-[#0A0A0A] px-5 py-4 font-serif text-lg outline-none placeholder:text-[#9A9285] focus:border-[#D6B97A]"
+              />
+              <input
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="Purchase email"
+                type="email"
+                className="rounded-2xl border border-[#5C4A2B] bg-[#0A0A0A] px-5 py-4 font-serif text-lg outline-none placeholder:text-[#9A9285] focus:border-[#D6B97A]"
+              />
             </div>
           </div>
         ) : currentPanel.type === "statement" ? (
           <div className="rounded-3xl border border-[#4A3D25] bg-[#11100D] p-6 md:p-10">
-            <h1 className="whitespace-pre-wrap font-serif text-4xl leading-[1.05] md:text-6xl">{currentPanel.title}</h1>
-            {currentPanel.body ? <p className="mt-10 whitespace-pre-wrap font-serif text-xl leading-relaxed text-[#D8D0C0] md:text-2xl">{currentPanel.body}</p> : null}
+            <h1 className="whitespace-pre-wrap font-serif text-4xl leading-[1.05] md:text-6xl">
+              {currentPanel.title}
+            </h1>
+            {currentPanel.body ? (
+              <p className="mt-10 whitespace-pre-wrap font-serif text-xl leading-relaxed text-[#D8D0C0] md:text-2xl">
+                {currentPanel.body}
+              </p>
+            ) : null}
           </div>
         ) : currentPanel.type === "question" ? (
           <div className="rounded-3xl border border-[#4A3D25] bg-[#11100D] p-6 md:p-10">
             {previousAnswers.length > 0 ? (
               <div className="mb-10 border-b border-[#4A3D25] pb-10">
-                <p className="mb-6 text-xs tracking-[0.25em] text-[#B6A477]">WHAT YOU’VE SAID SO FAR</p>
+                <p className="mb-6 text-xs tracking-[0.25em] text-[#B6A477]">
+                  WHAT YOU’VE SAID SO FAR
+                </p>
                 <div className="space-y-6">
                   {previousAnswers.map(({ question, questionText, answer }) => (
                     <div key={question.key}>
-                      <p className="font-serif text-base leading-relaxed text-[#B6A477] md:text-lg">{questionText}</p>
-                      <p className="mt-2 whitespace-pre-wrap font-serif text-lg leading-relaxed text-[#E2D8C5] md:text-xl">{answer}</p>
+                      <p className="font-serif text-base leading-relaxed text-[#B6A477] md:text-lg">
+                        {questionText}
+                      </p>
+                      <p className="mt-2 whitespace-pre-wrap font-serif text-lg leading-relaxed text-[#E2D8C5] md:text-xl">
+                        {answer}
+                      </p>
                     </div>
                   ))}
                 </div>
               </div>
             ) : null}
-            <p className="mb-8 text-xs tracking-[0.25em] text-[#D6B97A]">REFLECTION</p>
-            <h1 className="font-serif text-3xl leading-tight text-[#F3F0EA] md:text-5xl">{currentQuestionText}</h1>
-            {currentPanel.question.support ? <p className="mb-8 mt-5 font-serif text-lg leading-relaxed text-[#C9B98F] md:text-xl">{currentPanel.question.support}</p> : <div className="mb-8" />}
-            <textarea ref={answerRef} value={answers[currentPanel.question.key] ?? ""} onChange={(event) => updateAnswer(currentPanel.question.key, event.target.value)} rows={7} placeholder="Write honestly  This is private" className="w-full resize-none rounded-2xl border border-[#8E7140] bg-[#0C0B08] px-5 py-4 font-serif text-xl leading-relaxed text-[#F3F0EA] outline-none placeholder:text-[#B9B0A2] focus:border-[#D6B97A] md:text-2xl" />
-            {questionError ? <p className="mt-4 font-serif text-lg text-red-300">{error}</p> : null}
+            <p className="mb-8 text-xs tracking-[0.25em] text-[#D6B97A]">
+              REFLECTION
+            </p>
+            <h1 className="font-serif text-3xl leading-tight text-[#F3F0EA] md:text-5xl">
+              {currentQuestionText}
+            </h1>
+            {currentPanel.question.support ? (
+              <p className="mb-8 mt-5 font-serif text-lg leading-relaxed text-[#C9B98F] md:text-xl">
+                {currentPanel.question.support}
+              </p>
+            ) : (
+              <div className="mb-8" />
+            )}
+            <textarea
+              ref={answerRef}
+              value={answers[currentPanel.question.key] ?? ""}
+              onChange={(event) =>
+                updateAnswer(currentPanel.question.key, event.target.value)
+              }
+              rows={7}
+              placeholder="Write honestly  This is private"
+              className="w-full resize-none rounded-2xl border border-[#8E7140] bg-[#0C0B08] px-5 py-4 font-serif text-xl leading-relaxed text-[#F3F0EA] outline-none placeholder:text-[#B9B0A2] focus:border-[#D6B97A] md:text-2xl"
+            />
+            {questionError ? (
+              <p className="mt-4 font-serif text-lg text-red-300">{error}</p>
+            ) : null}
           </div>
         ) : (
           <div className="rounded-3xl border border-[#4A3D25] bg-[#11100D] p-6 md:p-10">
-            <h1 className="font-serif text-4xl leading-tight md:text-6xl">Generate Your Recognition</h1>
-            <p className="mt-8 font-serif text-xl leading-relaxed text-[#D8D0C0] md:text-2xl">Your reflection is generated from your actual answers, not a category, quiz result, or generic summary.</p>
+            <h1 className="font-serif text-4xl leading-tight md:text-6xl">
+              Generate Your Recognition
+            </h1>
+            <p className="mt-8 font-serif text-xl leading-relaxed text-[#D8D0C0] md:text-2xl">
+              Your reflection is generated from your actual answers, not a category,
+              quiz result, or generic summary.
+            </p>
             {isGenerating ? (
               <div className="mt-10 rounded-3xl border border-[#4A3D25] bg-[#0A0A0A] p-6">
                 <p className="font-serif text-2xl">{LOADING_LINES[loadingIndex]}</p>
-                <p className="mt-4 font-serif text-lg leading-relaxed text-[#D8D0C0]">This is being generated from your actual answers</p>
+                <p className="mt-4 font-serif text-lg leading-relaxed text-[#D8D0C0]">
+                  This is being generated from your actual answers
+                </p>
               </div>
             ) : (
-              <button type="button" onClick={submitAndGenerate} className="mt-10 rounded-full border border-[#D6B97A] bg-[#C6A96B] px-8 py-4 font-serif text-lg text-[#0A0A0A] transition hover:bg-[#D6B97A]">Generate my Recognition</button>
+              <button
+                type="button"
+                onClick={submitAndGenerate}
+                className="mt-10 rounded-full border border-[#D6B97A] bg-[#C6A96B] px-8 py-4 font-serif text-lg text-[#0A0A0A] transition hover:bg-[#D6B97A]"
+              >
+                Generate my Recognition
+              </button>
             )}
           </div>
         )}
@@ -422,8 +521,14 @@ export default function RecognitionExperience() {
         {error && currentPanel.type !== "question" ? (
           <div className="mt-6">
             <p className="font-serif text-lg text-red-300">{error}</p>
-            {currentPanel.type === "capture" && error.includes("No unused Recognition") ? (
-              <a href="https://recognition.oremea.com" className="mt-4 inline-block text-sm text-[#C6A96B] underline underline-offset-4">Purchase another Recognition process</a>
+            {currentPanel.type === "capture" &&
+            error.includes("No unused Recognition") ? (
+              <a
+                href="https://recognition.oremea.com"
+                className="mt-4 inline-block text-sm text-[#C6A96B] underline underline-offset-4"
+              >
+                Purchase another Recognition process
+              </a>
             ) : null}
           </div>
         ) : null}
@@ -431,13 +536,35 @@ export default function RecognitionExperience() {
         {currentPanel.type !== "generate" ? (
           <div className="mt-8 flex items-center justify-between gap-4">
             {panelIndex >= 3 ? (
-              <button type="button" disabled={usedBackPanels.includes(panelIndex) || isGenerating} onClick={previousPanel} className="rounded-full border border-[#4A3D25] px-6 py-3 font-serif text-base text-[#D8D0C0] disabled:opacity-30">Back</button>
-            ) : <div />}
-            <button type="button" onClick={nextPanel} disabled={isGenerating} className={`rounded-full border px-8 py-3 font-serif text-base transition ${canContinue ? "border-[#D6B97A] bg-[#C6A96B] text-[#0A0A0A] hover:bg-[#D6B97A]" : "border-[#6D552D] bg-[#1A140A] text-[#B59A60]"}`}>Continue</button>
+              <button
+                type="button"
+                disabled={usedBackPanels.includes(panelIndex) || isGenerating}
+                onClick={previousPanel}
+                className="rounded-full border border-[#4A3D25] px-6 py-3 font-serif text-base text-[#D8D0C0] disabled:opacity-30"
+              >
+                Back
+              </button>
+            ) : (
+              <div />
+            )}
+            <button
+              type="button"
+              onClick={nextPanel}
+              disabled={isGenerating}
+              className={`rounded-full border px-8 py-3 font-serif text-base transition ${
+                canContinue
+                  ? "border-[#D6B97A] bg-[#C6A96B] text-[#0A0A0A] hover:bg-[#D6B97A]"
+                  : "border-[#6D552D] bg-[#1A140A] text-[#B59A60]"
+              }`}
+            >
+              Continue
+            </button>
           </div>
         ) : null}
 
-        {currentPanel.type === "generate" && error ? <p className="mt-6 font-serif text-lg text-red-300">{error}</p> : null}
+        {currentPanel.type === "generate" && error ? (
+          <p className="mt-6 font-serif text-lg text-red-300">{error}</p>
+        ) : null}
       </section>
     </main>
   );
