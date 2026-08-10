@@ -1,0 +1,99 @@
+name: Apply Recognition conversation schema
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - prisma/migrations/20260810132000_add_recognition_conversation/migration.sql
+      - prisma/schema/recognition-conversation.prisma
+      - app/api/recognition/release-schema-once/route.ts
+      - .github/workflows/recognition-conversation-schema.yml
+
+permissions:
+  contents: read
+
+jobs:
+  apply-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Wait for Railway, apply Recognition schema, and verify
+        env:
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          set -uo pipefail
+
+          endpoint="https://app.oremea.com/api/recognition/release-schema-once"
+          response_file="recognition-schema-release.json"
+
+          call_release() {
+            local url="$1"
+            rm -f "${response_file}"
+            curl \
+              --silent \
+              --show-error \
+              --request POST \
+              --output "${response_file}" \
+              --write-out "%{http_code}" \
+              --connect-timeout 15 \
+              --max-time 28 \
+              --header "X-Oremea-Release-Sha: ${RELEASE_SHA}" \
+              "${url}" || true
+          }
+
+          ready=false
+          for attempt in $(seq 1 60); do
+            echo "Waiting for exact Railway release: ${attempt}/60"
+            status=$(call_release "${endpoint}?phase=ready")
+
+            if [ "${status}" = "200" ] && \
+              jq -e '.ok == true and .phase == "ready"' "${response_file}" >/dev/null 2>&1; then
+              ready=true
+              break
+            fi
+
+            sleep 15
+          done
+
+          if [ "${ready}" != "true" ]; then
+            echo "The exact Railway deployment did not expose the Recognition release endpoint in time."
+            cat "${response_file}" 2>/dev/null || true
+            exit 1
+          fi
+
+          echo "Applying Recognition conversation schema"
+          status=$(call_release "${endpoint}?phase=apply")
+          if [ "${status}" != "200" ] || \
+            ! jq -e '.ok == true and .phase == "apply"' "${response_file}" >/dev/null 2>&1; then
+            echo "Recognition conversation schema could not be applied."
+            cat "${response_file}" 2>/dev/null || true
+            exit 1
+          fi
+
+          echo "Verifying Recognition conversation schema"
+          status=$(call_release "${endpoint}?phase=verify")
+          if [ "${status}" != "200" ] || \
+            ! jq -e '
+              .ok == true and
+              .phase == "verify" and
+              .threads == "recognition_threads" and
+              .messages == "recognition_messages" and
+              .userIndex == "recognition_threads_user_id_key" and
+              .turnIndex == "recognition_messages_thread_id_turn_index_key" and
+              .foreignKey == "recognition_messages_thread_id_fkey"
+            ' "${response_file}" >/dev/null 2>&1; then
+            echo "Recognition production schema verification failed."
+            cat "${response_file}" 2>/dev/null || true
+            exit 1
+          fi
+
+          echo "Recognition production schema verified."
+
+          status=$(call_release "${endpoint}?phase=close")
+          if [ "${status}" != "200" ] || \
+            ! jq -e '.ok == true and .phase == "closed"' "${response_file}" >/dev/null 2>&1; then
+            echo "The temporary Recognition release endpoint did not close cleanly."
+            cat "${response_file}" 2>/dev/null || true
+            exit 1
+          fi
