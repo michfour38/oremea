@@ -1,14 +1,18 @@
+import {
+  OREMEA_PRODUCT_REGISTRY,
+  formatOremeaPrice,
+} from "@/src/lib/oremea/product-registry";
+
+const RECOGNITION_PRODUCT = OREMEA_PRODUCT_REGISTRY.recognition;
+
 export const RECOGNITION_PRICING = {
-  currency: "USD",
-  launchPriceCents: 999,
-  regularPriceCents: 999,
-  purchaseType: "one_time",
-  includedRefinements: 1,
+  currency: RECOGNITION_PRODUCT.pricing.currency,
+  launchPriceCents: RECOGNITION_PRODUCT.pricing.launchPriceCents,
+  regularPriceCents: RECOGNITION_PRODUCT.pricing.regularPriceCents,
+  purchaseType: RECOGNITION_PRODUCT.pricing.purchaseType,
+  includedRefinements: RECOGNITION_PRODUCT.access.includedRefinements,
 } as const;
 
 export function formatRecognitionPrice(priceCents: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: RECOGNITION_PRICING.currency,
-  }).format(priceCents / 100);
+  return formatOremeaPrice(priceCents, RECOGNITION_PRICING.currency);
 }
