@@ -14,7 +14,7 @@ type OremeaProduct = {
   key: OremeaProductKey;
   name: string;
   availability: OremeaProductAvailability;
-  entryHref: string;
+  entryUrl: string;
   pricing: OremeaProductPricing;
   access: {
     unit: string;
@@ -35,7 +35,7 @@ export const OREMEA_PRODUCT_REGISTRY = {
     key: "recognition",
     name: "Recognition",
     availability: "live",
-    entryHref: "https://recognition.oremea.com",
+    entryUrl: "https://recognition.oremea.com",
     pricing: {
       currency: "USD",
       launchPriceCents: 999,
@@ -52,7 +52,7 @@ export const OREMEA_PRODUCT_REGISTRY = {
     key: "resonance",
     name: "Resonance",
     availability: "live",
-    entryHref: "/resonance",
+    entryUrl: "/resonance",
     pricing: {
       currency: "USD",
       launchPriceCents: 1999,
@@ -69,7 +69,7 @@ export const OREMEA_PRODUCT_REGISTRY = {
     key: "compass",
     name: "Compass",
     availability: "live",
-    entryHref: "/compass/access",
+    entryUrl: "/compass/access",
     pricing: {
       currency: "USD",
       launchPriceCents: 1999,
