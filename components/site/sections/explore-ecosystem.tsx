@@ -1,34 +1,38 @@
 import Link from "next/link";
+import { OREMEA_PRODUCT_REGISTRY } from "@/src/lib/oremea/product-registry";
 
 const products = [
   {
-    name: "Recognition",
+    product: OREMEA_PRODUCT_REGISTRY.recognition,
     category: "See what is present",
     description:
       "A focused private reflection that gives the thread already present in your own words enough shape to become visible.",
     bestFor: "A clear first view of what has your attention now.",
-    href: "https://recognition.oremea.com",
     action: "Enter Recognition",
   },
   {
-    name: "Resonance",
+    product: OREMEA_PRODUCT_REGISTRY.resonance,
     category: "Stay with what emerges",
     description:
       "A private seven-day room with daily reflections, Daily Mirrors, and a Closing Mirror that reads across the full visit.",
     bestFor: "Relational awareness and patterns that need time to deepen.",
-    href: "/resonance",
     action: "Enter Resonance",
   },
   {
-    name: "Compass",
+    product: OREMEA_PRODUCT_REGISTRY.compass,
     category: "Turn clarity into movement",
     description:
       "A structured process that narrows competing priorities into one honest, executable next step you can realistically sustain.",
     bestFor: "Direction, decisions, and movement after awareness.",
-    href: "https://compass.oremea.com",
     action: "Enter Compass",
   },
 ] as const;
+
+function availabilityLabel(availability: "live" | "coming_soon" | "unavailable") {
+  if (availability === "live") return "Available";
+  if (availability === "coming_soon") return "Coming soon";
+  return "Unavailable";
+}
 
 export function ExploreEcosystem() {
   return (
@@ -50,17 +54,17 @@ export function ExploreEcosystem() {
         </div>
 
         <div className="mt-10 grid gap-4 md:grid-cols-2">
-          {products.map((product, index) => (
+          {products.map(({ product, category, description, bestFor, action }, index) => (
             <article
-              key={product.name}
+              key={product.key}
               className="group flex min-h-full flex-col rounded-3xl border border-white/10 bg-zinc-950/80 p-6 transition hover:border-[#b79a63]/35 md:p-8"
             >
               <div className="flex items-center justify-between gap-4">
                 <p className="text-[11px] uppercase tracking-[0.22em] text-[#b79a63]">
-                  {product.category}
+                  {category}
                 </p>
                 <span className="rounded-full border border-[#b79a63]/20 bg-[#b79a63]/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-[#b79a63]">
-                  Available
+                  {availabilityLabel(product.availability)}
                 </span>
               </div>
 
@@ -74,19 +78,19 @@ export function ExploreEcosystem() {
               </div>
 
               <p className="mt-5 text-base leading-8 text-zinc-400">
-                {product.description}
+                {description}
               </p>
 
               <p className="mt-6 border-l border-[#b79a63]/30 pl-4 text-sm leading-7 text-zinc-500">
-                {product.bestFor}
+                {bestFor}
               </p>
 
               <div className="mt-auto pt-8">
                 <Link
-                  href={product.href}
+                  href={product.entryUrl}
                   className="inline-flex rounded-full border border-[#b79a63]/30 bg-[#b79a63]/[0.04] px-4 py-2.5 text-sm text-[#b79a63] transition group-hover:border-[#b79a63]/55 group-hover:bg-[#b79a63]/[0.08]"
                 >
-                  {product.action} →
+                  {action} →
                 </Link>
               </div>
             </article>
