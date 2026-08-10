@@ -139,6 +139,7 @@ export function readRecognitionMemory(value: unknown): RecognitionConversationMe
       const value = item as RawRememberItem;
       if (
         typeof value.quote !== "string" ||
+        typeof value.turnIndex !== "number" ||
         !Number.isInteger(value.turnIndex) ||
         typeof value.kind !== "string" ||
         !MEMORY_KINDS.has(value.kind as RecognitionMemoryKind)
@@ -148,7 +149,7 @@ export function readRecognitionMemory(value: unknown): RecognitionConversationMe
 
       return {
         quote: value.quote.trim(),
-        turnIndex: Number(value.turnIndex),
+        turnIndex: value.turnIndex,
         kind: value.kind as RecognitionMemoryKind,
       };
     })
@@ -184,21 +185,19 @@ function findExactParticipantQuote(
   participantMessages: RecognitionConversationMessage[],
   requestedTurnIndex: number,
 ) {
-  const normalizedQuote = normalizeQuote(quote);
-  if (!normalizedQuote) return null;
+  const exactQuote = quote.trim();
+  if (!exactQuote) return null;
 
   const candidates = participantMessages.filter(
     (message) =>
-      message.role === "user" &&
-      (message.turnIndex === requestedTurnIndex || requestedTurnIndex <= 0),
+      message.role === "user" && message.turnIndex === requestedTurnIndex,
   );
 
   for (const message of candidates) {
-    const normalizedMessage = normalizeQuote(message.content);
-    if (!normalizedMessage.includes(normalizedQuote)) continue;
+    if (!message.content.includes(exactQuote)) continue;
 
     return {
-      quote: quote.trim(),
+      quote: exactQuote,
       turnIndex: message.turnIndex,
     };
   }
@@ -223,6 +222,7 @@ export function mergeRecognitionMemory({
       const item = raw as RawRememberItem;
       if (
         typeof item.quote !== "string" ||
+        typeof item.turnIndex !== "number" ||
         !Number.isInteger(item.turnIndex) ||
         typeof item.kind !== "string" ||
         !MEMORY_KINDS.has(item.kind as RecognitionMemoryKind)
@@ -233,7 +233,7 @@ export function mergeRecognitionMemory({
       const exact = findExactParticipantQuote(
         item.quote,
         participantMessages,
-        Number(item.turnIndex),
+        item.turnIndex,
       );
       if (!exact) continue;
 
@@ -308,7 +308,7 @@ Write Recognition's next reply to the newest PARTICIPANT message.
 
 MEMORY CAPTURE
 Return at most ${MAX_REMEMBER_PER_TURN} memory items, and only when the newest participant message contains exact wording genuinely useful for future continuity or accountability.
-Each memory quote must be copied exactly from a PARTICIPANT message in the recent conversation.
+Each memory quote must be copied character-for-character from a PARTICIPANT message in the recent conversation.
 Use the participant message's turn number exactly.
 Allowed kinds: statement, value, choice, clarity, uncertainty, responsibility, boundary, commitment, correction.
 Do not remember generated Recognition wording.
