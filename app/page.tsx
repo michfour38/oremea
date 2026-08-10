@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { ProductLaunchPrice } from "@/components/site/product-launch-price";
 import { SiteShell } from "@/components/site/site-shell";
+import { OREMEA_PRODUCT_REGISTRY } from "@/src/lib/oremea/product-registry";
 import {
   RESONANCE_LAUNCH_PRICE,
   RESONANCE_REGULAR_PRICE,
@@ -17,6 +18,10 @@ import {
   RECOGNITION_PRICING,
   formatRecognitionPrice,
 } from "@/src/lib/recognition/recognition-pricing";
+
+const RECOGNITION_PRODUCT = OREMEA_PRODUCT_REGISTRY.recognition;
+const RESONANCE_PRODUCT = OREMEA_PRODUCT_REGISTRY.resonance;
+const COMPASS_PRODUCT = OREMEA_PRODUCT_REGISTRY.compass;
 
 const COMPASS_LAUNCH_PRICE = formatCompassPrice(
   COMPASS_PRICING.launchPriceCents,
@@ -33,9 +38,10 @@ const RECOGNITION_REGULAR_PRICE = formatRecognitionPrice(
 
 const products = [
   {
-    name: "Recognition",
-    href: "https://recognition.oremea.com",
-    active: true,
+    key: RECOGNITION_PRODUCT.key,
+    name: RECOGNITION_PRODUCT.name,
+    href: RECOGNITION_PRODUCT.entryUrl,
+    active: RECOGNITION_PRODUCT.availability === "live",
     short:
       "A private reflective entry point that helps you see what is already present in your own words.",
     action: "Enter Recognition",
@@ -47,9 +53,10 @@ const products = [
     ],
   },
   {
-    name: "Resonance",
-    href: "/resonance",
-    active: true,
+    key: RESONANCE_PRODUCT.key,
+    name: RESONANCE_PRODUCT.name,
+    href: RESONANCE_PRODUCT.entryUrl,
+    active: RESONANCE_PRODUCT.availability === "live",
     short:
       "A private seven-day reflection experience that helps you stay with what becomes visible.",
     action: "Enter Resonance",
@@ -63,14 +70,15 @@ const products = [
     ],
   },
   {
-    name: "The Compass",
-    href: "/compass/access",
-    active: true,
+    key: COMPASS_PRODUCT.key,
+    name: COMPASS_PRODUCT.name,
+    href: COMPASS_PRODUCT.entryUrl,
+    active: COMPASS_PRODUCT.availability === "live",
     short:
       "Turn self-awareness into one executable next step. Clarity. Direction. Execution.",
     action: "Enter Compass",
     full: [
-      "The Compass is for the moment after awareness, when you know something matters but still do not know what to do next.",
+      "Compass is for the moment after awareness, when you know something matters but still do not know what to do next.",
       "It helps you move from scattered goals into one clear priority, then takes you deeper into why it matters.",
       "Compass does not rush you into fantasy intensity. It helps you find embodied momentum: the smallest honest next step you can actually take.",
       "Through layered reflection and discussion, Compass helps reveal what interrupts movement, where resistance lives, and what kind of action your nervous system can realistically hold.",
@@ -80,7 +88,7 @@ const products = [
 ];
 
 function ProductName({ name }: { name: string }) {
-  if (name === "Resonance") {
+  if (name === RESONANCE_PRODUCT.name) {
     return (
       <span className="font-serif">
         Reso<span className="italic text-[#c8a96a]">nance</span>
@@ -88,12 +96,10 @@ function ProductName({ name }: { name: string }) {
     );
   }
 
-  if (name === "The Compass") {
+  if (name === COMPASS_PRODUCT.name) {
     return (
       <span className="inline-flex items-baseline font-serif text-[#c8a96a]">
-        <span className="text-[1.08em] leading-none">T</span>
-        <span className="text-[0.82em] tracking-[0.00em] leading-none">HE</span>
-        <span className="ml-[0.18em] text-[1.08em] leading-none">C</span>
+        <span className="text-[1.08em] leading-none">C</span>
         <span className="text-[0.82em] tracking-[0.00em] leading-none">OMPASS</span>
       </span>
     );
@@ -130,11 +136,11 @@ export default function Home() {
 
         <div className="mt-12 flex flex-col gap-4">
           {products.map((product) => {
-            const isOpen = open === product.name;
+            const isOpen = open === product.key;
 
             return (
               <div
-                key={product.name}
+                key={product.key}
                 className={`rounded-[2rem] border p-6 transition ${
                   product.active
                     ? "border-[#c8a96a]/35 bg-[#15120c]"
@@ -151,37 +157,37 @@ export default function Home() {
                       {product.short}
                     </p>
 
-                    {product.name === "Recognition" ? (
+                    {product.key === "recognition" ? (
                       <ProductLaunchPrice
                         className="mt-4"
                         regularPrice={RECOGNITION_REGULAR_PRICE}
                         launchPrice={RECOGNITION_LAUNCH_PRICE}
-                        unit="per complete process"
+                        unit={RECOGNITION_PRODUCT.access.unit}
                       />
                     ) : null}
 
-                    {product.name === "Resonance" ? (
+                    {product.key === "resonance" ? (
                       <ProductLaunchPrice
                         className="mt-4"
                         regularPrice={RESONANCE_REGULAR_PRICE}
                         launchPrice={RESONANCE_LAUNCH_PRICE}
-                        unit="per seven-day room"
+                        unit={RESONANCE_PRODUCT.access.unit}
                       />
                     ) : null}
 
-                    {product.name === "The Compass" ? (
+                    {product.key === "compass" ? (
                       <ProductLaunchPrice
                         className="mt-4"
                         regularPrice={COMPASS_STANDARD_PRICE}
                         launchPrice={COMPASS_LAUNCH_PRICE}
-                        unit="per 30 days"
+                        unit={COMPASS_PRODUCT.access.unit}
                       />
                     ) : null}
                   </div>
 
                   <button
                     type="button"
-                    onClick={() => setOpen(isOpen ? null : product.name)}
+                    onClick={() => setOpen(isOpen ? null : product.key)}
                     className="shrink-0 text-sm text-[#c8a96a] transition hover:text-[#f1dfb4]"
                   >
                     {isOpen ? "Collapse" : "Expand"}
