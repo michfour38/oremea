@@ -1,7 +1,10 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-import { grantCompassAccess } from "@/src/lib/compass/compass-access";
+import {
+  grantCompassAccess,
+  setCompassMembershipAccess,
+} from "@/src/lib/compass/compass-access";
 import { setRecognitionMembershipAccess } from "@/src/lib/recognition/recognition-conversation-access";
 import { getResonanceWeekForWhopProduct } from "@/src/lib/resonance/resonance-commerce";
 import { createPurchasedResonanceRun } from "@/src/lib/resonance/resonance-week-run";
@@ -157,28 +160,63 @@ export async function POST(request: Request) {
     const recognitionMembershipProductId =
       process.env.WHOP_RECOGNITION_SUBSCRIPTION_PRODUCT_ID?.trim();
     if (
-      !recognitionMembershipProductId ||
-      membership.productId !== recognitionMembershipProductId
+      recognitionMembershipProductId &&
+      membership.productId === recognitionMembershipProductId
     ) {
-      return NextResponse.json({ received: true, fulfilled: false });
+      const entitlement = await setRecognitionMembershipAccess({
+        email: membership.email,
+        membershipId: membership.membershipId,
+        active: event.type === "membership.activated",
+        eventAt: membership.eventAt,
+        renewalPeriodEnd: membership.renewalPeriodEnd,
+      });
+
+      return NextResponse.json({
+        received: true,
+        fulfilled: true,
+        product: "recognition",
+        access: "membership",
+        active: entitlement?.status === "active",
+        expiresAt: entitlement?.expires_at?.toISOString() ?? null,
+      });
     }
 
-    const entitlement = await setRecognitionMembershipAccess({
-      email: membership.email,
-      membershipId: membership.membershipId,
-      active: event.type === "membership.activated",
-      eventAt: membership.eventAt,
-      renewalPeriodEnd: membership.renewalPeriodEnd,
-    });
+    const compassMembershipProductId =
+      process.env.WHOP_COMPASS_SUBSCRIPTION_PRODUCT_ID?.trim();
+    if (
+      compassMembershipProductId &&
+      membership.productId === compassMembershipProductId
+    ) {
+      const user = await findExactlyOneOremeaUser(membership.email);
+      if (!user) {
+        console.error(
+          `Compass membership ${membership.membershipId} could not be matched to one Oremea account for ${membership.email}.`,
+        );
+        return NextResponse.json(
+          { error: "Compass member account could not be matched." },
+          { status: 422 },
+        );
+      }
 
-    return NextResponse.json({
-      received: true,
-      fulfilled: true,
-      product: "recognition",
-      access: "membership",
-      active: entitlement?.status === "active",
-      expiresAt: entitlement?.expires_at?.toISOString() ?? null,
-    });
+      const entitlement = await setCompassMembershipAccess({
+        userId: user.id,
+        membershipId: membership.membershipId,
+        active: event.type === "membership.activated",
+        eventAt: membership.eventAt,
+        renewalPeriodEnd: membership.renewalPeriodEnd,
+      });
+
+      return NextResponse.json({
+        received: true,
+        fulfilled: true,
+        product: "compass",
+        access: "membership",
+        active: entitlement?.status === "active",
+        expiresAt: entitlement?.expires_at?.toISOString() ?? null,
+      });
+    }
+
+    return NextResponse.json({ received: true, fulfilled: false });
   }
 
   if (event.type !== "payment.succeeded") {
@@ -247,6 +285,7 @@ export async function POST(request: Request) {
       received: true,
       fulfilled: true,
       product: "compass",
+      access: "30_day_pass",
       expiresAt: entitlement.expires_at?.toISOString() ?? null,
     });
   }
