@@ -344,7 +344,7 @@ Allowed kinds: statement, value, choice, clarity, uncertainty, responsibility, b
 Do not remember generated Recognition wording.
 Do not manufacture a summary and store it as participant evidence.
 
-Return the requested structured response envelope. Keep `remember` empty when no exact participant excerpt deserves longitudinal carry-forward.
+Return the requested structured response envelope. Keep the remember array empty when no exact participant excerpt deserves longitudinal carry-forward.
 `.trim();
 }
 
