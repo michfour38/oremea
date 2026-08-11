@@ -9,7 +9,7 @@ export const OREMEA_PRICING = {
   resonance: {
     currency: "USD",
     launchPriceCents: 1999,
-    standardPriceCents: 2999,
+    standardPriceCents: 2499,
     accessDays: 7,
     purchaseType: "one_time",
     autoRenews: false,
@@ -17,7 +17,7 @@ export const OREMEA_PRICING = {
   compass: {
     currency: "USD",
     launchPriceCents: 1999,
-    standardPriceCents: 2999,
+    standardPriceCents: 2499,
     accessDays: 30,
     accessOptions: ["30_day_pass", "monthly_subscription"],
     billingInterval: "month",
