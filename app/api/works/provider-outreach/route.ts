@@ -6,6 +6,7 @@ import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 import { buildProviderBrief } from "@/lib/works/outreach/build-provider-brief";
 import { getRouteSummary } from "@/lib/works/routes/get-route-summary";
+import { ownsWorksAnonymousSearch } from "@/lib/works/searches/anonymous-search-ownership";
 
 function stringValue(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -313,6 +314,30 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const searchSession = await prisma.works_search_sessions.findUnique({
+      where: { id: searchSessionId },
+      select: {
+        brief_id: true,
+        browser_session_id: true,
+        market: { select: { slug: true } },
+      },
+    });
+
+    if (
+      !searchSession ||
+      searchSession.brief_id !== briefId ||
+      !ownsWorksAnonymousSearch({
+        request: req,
+        marketSlug: searchSession.market.slug,
+        expectedBrowserSessionId: searchSession.browser_session_id,
+      })
+    ) {
+      return NextResponse.json(
+        { error: "This WORKS search is not available to this browser." },
+        { status: 403 }
+      );
+    }
+
     const procurement = await prisma.works_procurement_requests.findFirst({
       where: {
         brief_id: briefId,
@@ -415,6 +440,29 @@ export async function POST(req: NextRequest) {
       }
 
       try {
+        const existingOutreach = await prisma.works_provider_outreach.findUnique({
+          where: {
+            procurement_request_id_provider_id: {
+              procurement_request_id: procurement.id,
+              provider_id: providerId,
+            },
+          },
+          select: { status: true },
+        });
+
+        if (
+          existingOutreach &&
+          ["SENT", "RESPONDED", "DECLINED"].includes(existingOutreach.status)
+        ) {
+          results.push({
+            providerId,
+            providerName: provider.name,
+            status: "SKIPPED",
+            error: "This provider has already been contacted for this brief.",
+          });
+          continue;
+        }
+
         const snapshot = await buildProviderBrief(briefId, providerId);
         const questions = providerQuestionsFor(
           provider.name,
