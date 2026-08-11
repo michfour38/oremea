@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { ownsWorksAnonymousSearch } from "@/lib/works/searches/anonymous-search-ownership";
 
 function stringValue(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -13,21 +14,40 @@ function answerObject(value: unknown): Prisma.InputJsonObject | undefined {
   return value as Prisma.InputJsonObject;
 }
 
+async function ownedSession(req: NextRequest, sessionId: string) {
+  const session = await prisma.works_search_sessions.findUnique({
+    where: { id: sessionId },
+    select: {
+      id: true,
+      answers: true,
+      current_step: true,
+      status: true,
+      brief_id: true,
+      browser_session_id: true,
+      market: { select: { slug: true } },
+    },
+  });
+
+  if (
+    !session ||
+    !ownsWorksAnonymousSearch({
+      request: req,
+      marketSlug: session.market.slug,
+      expectedBrowserSessionId: session.browser_session_id,
+    })
+  ) {
+    return null;
+  }
+
+  return session;
+}
+
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: { sessionId: string } }
 ) {
   try {
-    const session = await prisma.works_search_sessions.findUnique({
-      where: { id: params.sessionId },
-      select: {
-        id: true,
-        answers: true,
-        current_step: true,
-        status: true,
-        brief_id: true,
-      },
-    });
+    const session = await ownedSession(req, params.sessionId);
 
     if (!session) {
       return NextResponse.json({ error: "Search session not found." }, { status: 404 });
@@ -54,6 +74,11 @@ export async function PATCH(
   { params }: { params: { sessionId: string } }
 ) {
   try {
+    const existing = await ownedSession(req, params.sessionId);
+    if (!existing) {
+      return NextResponse.json({ error: "Search session not found." }, { status: 404 });
+    }
+
     const body = await req.json();
     const answers = answerObject(body?.answers);
     const currentStep = body?.currentStep === null
@@ -61,7 +86,7 @@ export async function PATCH(
       : stringValue(body?.currentStep) || undefined;
 
     const session = await prisma.works_search_sessions.update({
-      where: { id: params.sessionId },
+      where: { id: existing.id },
       data: {
         ...(answers !== undefined ? { answers } : {}),
         ...(currentStep !== undefined ? { current_step: currentStep } : {}),
