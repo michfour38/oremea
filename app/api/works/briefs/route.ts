@@ -11,6 +11,7 @@ import {
 } from "@/lib/works/briefs/create-product-brief";
 import { normalizeQuantityRange } from "@/lib/works/briefs/quantity";
 import { recalculateProductBrief } from "@/lib/works/briefs/recalculate-product-brief";
+import { ownsWorksAnonymousSearch } from "@/lib/works/searches/anonymous-search-ownership";
 
 const STRING_ARRAY_LIMIT = 20;
 
@@ -66,13 +67,24 @@ export async function POST(req: NextRequest) {
     if (searchSessionId) {
       const searchSession = await prisma.works_search_sessions.findUnique({
         where: { id: searchSessionId },
-        select: { market: { select: { slug: true } } },
+        select: {
+          browser_session_id: true,
+          market: { select: { slug: true } },
+        },
       });
 
-      if (!searchSession || searchSession.market.slug !== marketSlug) {
+      if (
+        !searchSession ||
+        searchSession.market.slug !== marketSlug ||
+        !ownsWorksAnonymousSearch({
+          request: req,
+          marketSlug: searchSession.market.slug,
+          expectedBrowserSessionId: searchSession.browser_session_id,
+        })
+      ) {
         return NextResponse.json(
-          { error: "This WORKS search does not belong to the selected market." },
-          { status: 400 }
+          { error: "This WORKS search is not available to this browser." },
+          { status: 404 }
         );
       }
     }
