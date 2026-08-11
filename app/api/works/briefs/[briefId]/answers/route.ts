@@ -4,8 +4,10 @@ import {
 } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
+import { prisma } from "@/lib/prisma";
 import { recalculateProductBrief } from "@/lib/works/briefs/recalculate-product-brief";
 import { upsertBriefRequirement } from "@/lib/works/briefs/upsert-brief-requirement";
+import { ownsWorksAnonymousSearch } from "@/lib/works/searches/anonymous-search-ownership";
 
 type FieldConfig = {
   requirementType: string;
@@ -68,6 +70,28 @@ export async function POST(
   { params }: { params: { briefId: string } }
 ) {
   try {
+    const session = await prisma.works_search_sessions.findUnique({
+      where: { brief_id: params.briefId },
+      select: {
+        browser_session_id: true,
+        market: { select: { slug: true } },
+      },
+    });
+
+    if (
+      !session ||
+      !ownsWorksAnonymousSearch({
+        request: req,
+        marketSlug: session.market.slug,
+        expectedBrowserSessionId: session.browser_session_id,
+      })
+    ) {
+      return NextResponse.json(
+        { error: "This WORKS brief is not available to this browser." },
+        { status: 404 }
+      );
+    }
+
     const body = await req.json();
     const field = typeof body?.field === "string" ? body.field.trim() : "";
     const config = FOUNDER_FIELDS[field];
