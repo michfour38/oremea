@@ -63,14 +63,14 @@ const products = [
     ],
   },
   {
-    name: "The Compass",
+    name: "Compass",
     href: "/compass/access",
     active: true,
     short:
       "Turn clarity into direction, keep what matters visible on your Map, and choose the next movement you can actually make.",
     action: "Enter Compass",
     full: [
-      "The Compass is for the moment after awareness, when you know something matters but still do not know what to do next.",
+      "Compass is for the moment after awareness, when you know something matters but still do not know what to do next.",
       "It helps you move from scattered goals into one clear priority, then takes you deeper into why it matters.",
       "Your Map keeps what the conversation surfaces visible, while Today lets you add and tick off the goals you choose for yourself.",
       "Compass does not rush you into fantasy intensity. It helps you find embodied momentum: the smallest honest next step you can actually take.",
@@ -81,6 +81,10 @@ const products = [
 ];
 
 function ProductName({ name }: { name: string }) {
+  if (name === "Recognition") {
+    return <span className="font-serif text-[#c8a96a]">Recognition</span>;
+  }
+
   if (name === "Resonance") {
     return (
       <span className="font-serif">
@@ -89,13 +93,10 @@ function ProductName({ name }: { name: string }) {
     );
   }
 
-  if (name === "The Compass") {
+  if (name === "Compass") {
     return (
-      <span className="inline-flex items-baseline font-serif text-[#c8a96a]">
-        <span className="text-[1.08em] leading-none">T</span>
-        <span className="text-[0.82em] tracking-[0.00em] leading-none">HE</span>
-        <span className="ml-[0.18em] text-[1.08em] leading-none">C</span>
-        <span className="text-[0.82em] tracking-[0.00em] leading-none">OMPASS</span>
+      <span className="font-serif uppercase tracking-[0.12em] text-[#c8a96a]">
+        Compass
       </span>
     );
   }
@@ -132,13 +133,26 @@ export default function Home() {
         <div className="mt-12 flex flex-col gap-4">
           {products.map((product) => {
             const isOpen = open === product.name;
+            const toggleCard = () => setOpen(isOpen ? null : product.name);
 
             return (
               <div
                 key={product.name}
-                className={`rounded-[2rem] border p-6 transition ${
+                role="button"
+                tabIndex={0}
+                aria-expanded={isOpen}
+                aria-label={`${isOpen ? "Collapse" : "Expand"} ${product.name}`}
+                onClick={toggleCard}
+                onKeyDown={(event) => {
+                  if (event.target !== event.currentTarget) return;
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    toggleCard();
+                  }
+                }}
+                className={`cursor-pointer rounded-[2rem] border p-6 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c8a96a]/70 ${
                   product.active
-                    ? "border-[#c8a96a]/35 bg-[#15120c]"
+                    ? "border-[#c8a96a]/35 bg-[#15120c] hover:border-[#c8a96a]/55"
                     : "border-white/10 bg-white/[0.03]"
                 }`}
               >
@@ -170,7 +184,7 @@ export default function Home() {
                       />
                     ) : null}
 
-                    {product.name === "The Compass" ? (
+                    {product.name === "Compass" ? (
                       <ProductLaunchPrice
                         className="mt-4"
                         regularPrice={COMPASS_STANDARD_PRICE}
@@ -180,13 +194,9 @@ export default function Home() {
                     ) : null}
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setOpen(isOpen ? null : product.name)}
-                    className="shrink-0 text-sm text-[#c8a96a] transition hover:text-[#f1dfb4]"
-                  >
+                  <span className="shrink-0 text-sm text-[#c8a96a] transition group-hover:text-[#f1dfb4]">
                     {isOpen ? "Collapse" : "Expand"}
-                  </button>
+                  </span>
                 </div>
 
                 {isOpen ? (
@@ -198,6 +208,8 @@ export default function Home() {
                     {product.active && product.href ? (
                       <Link
                         href={product.href}
+                        onClick={(event) => event.stopPropagation()}
+                        onKeyDown={(event) => event.stopPropagation()}
                         className="inline-block pt-2 text-sm text-[#c8a96a] transition hover:text-[#f1dfb4]"
                       >
                         {product.action} →
