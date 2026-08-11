@@ -2,8 +2,17 @@
 
 import { useState } from "react";
 
-export function ProviderResponseForm({ token }: { token: string }) {
+export function ProviderResponseForm({
+  token,
+  questions = [],
+  preview = false,
+}: {
+  token?: string;
+  questions?: string[];
+  preview?: boolean;
+}) {
   const [decision, setDecision] = useState("");
+  const [questionAnswers, setQuestionAnswers] = useState<Record<string, string>>({});
   const [moqValue, setMoqValue] = useState("");
   const [moqUnit, setMoqUnit] = useState("UNITS");
   const [leadTime, setLeadTime] = useState("");
@@ -12,9 +21,12 @@ export function ProviderResponseForm({ token }: { token: string }) {
   const [certificationNotes, setCertificationNotes] = useState("");
   const [providerNotes, setProviderNotes] = useState("");
   const [status, setStatus] = useState<"IDLE" | "SAVING" | "SAVED">("IDLE");
+  const [savedMessage, setSavedMessage] = useState("");
   const [error, setError] = useState("");
 
   async function submit() {
+    if (preview || !token) return;
+
     try {
       setStatus("SAVING");
       setError("");
@@ -23,6 +35,7 @@ export function ProviderResponseForm({ token }: { token: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           decision,
+          questionAnswers,
           moqValue,
           moqUnit,
           leadTime,
@@ -34,6 +47,11 @@ export function ProviderResponseForm({ token }: { token: string }) {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error ?? "WORKS could not save this response.");
+      setSavedMessage(
+        typeof data?.message === "string"
+          ? data.message
+          : "Thank you. Your response has been recorded for the WORKS customer."
+      );
       setStatus("SAVED");
     } catch (err) {
       setStatus("IDLE");
@@ -44,7 +62,7 @@ export function ProviderResponseForm({ token }: { token: string }) {
   if (status === "SAVED") {
     return (
       <div className="mt-8 rounded-3xl border border-black/10 bg-white p-6 text-sm leading-6">
-        Thank you. Your response has been added to this production brief and is now visible to the WORKS customer.
+        {savedMessage}
       </div>
     );
   }
@@ -60,6 +78,36 @@ export function ProviderResponseForm({ token }: { token: string }) {
         <button type="button" onClick={() => setDecision("POSSIBLE")} className={optionClass("POSSIBLE")}>Possibly — I need more information</button>
         <button type="button" onClick={() => setDecision("OUTSIDE_CAPABILITY")} className={optionClass("OUTSIDE_CAPABILITY")}>Outside our capability</button>
       </div>
+
+      {questions.length > 0 ? (
+        <section className="mt-7 rounded-2xl border border-black/10 bg-[#f8f6f0] p-5">
+          <p className="text-xs font-medium uppercase tracking-[0.15em] text-[#8b6a31]">
+            Questions to confirm
+          </p>
+          <p className="mt-2 text-sm leading-6 text-black/55">
+            These are the questions included in the customer&apos;s email. Answer what you can; anything left open remains visible as still needing confirmation.
+          </p>
+          <div className="mt-5 space-y-5">
+            {questions.map((question, index) => (
+              <label key={`${index}-${question}`} className="block text-sm leading-6">
+                <span className="font-medium text-[#1f1c17]">{question}</span>
+                <textarea
+                  rows={3}
+                  value={questionAnswers[question] ?? ""}
+                  onChange={(event) =>
+                    setQuestionAnswers((current) => ({
+                      ...current,
+                      [question]: event.target.value,
+                    }))
+                  }
+                  placeholder="Your answer"
+                  className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 leading-6"
+                />
+              </label>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {decision && decision !== "OUTSIDE_CAPABILITY" ? (
         <div className="mt-7 grid gap-4 md:grid-cols-2">
@@ -91,8 +139,17 @@ export function ProviderResponseForm({ token }: { token: string }) {
       ) : null}
 
       {error ? <p className="mt-4 text-sm text-red-700">{error}</p> : null}
-      <button type="button" disabled={!decision || status === "SAVING"} onClick={submit} className="mt-6 rounded-full bg-[#1f1c17] px-6 py-3 text-sm font-medium text-white disabled:opacity-40">
-        {status === "SAVING" ? "Saving response…" : "Send response →"}
+      <button
+        type="button"
+        disabled={!decision || status === "SAVING" || preview}
+        onClick={submit}
+        className="mt-6 rounded-full bg-[#1f1c17] px-6 py-3 text-sm font-medium text-white disabled:opacity-40"
+      >
+        {preview
+          ? "Preview only · response will not send"
+          : status === "SAVING"
+            ? "Saving response…"
+            : "Send response →"}
       </button>
     </div>
   );

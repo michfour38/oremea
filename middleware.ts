@@ -5,6 +5,9 @@ const RECOGNITION_HOST = "recognition.oremea.com";
 const COMPASS_HOST = "compass.oremea.com";
 const RESONANCE_HOST = "resonance.oremea.com";
 const APP_HOST = "app.oremea.com";
+const WORKS_HOST = (process.env.WORKS_HOST || "works.oremea.com")
+  .trim()
+  .toLowerCase();
 const OREMEA_PUBLIC_HOSTS = new Set(["oremea.com", "www.oremea.com"]);
 
 function getHostname(req: NextRequest) {
@@ -12,6 +15,28 @@ function getHostname(req: NextRequest) {
     req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
 
   return rawHost.split(",")[0].trim().split(":")[0].toLowerCase();
+}
+
+function worksDomainResponse(req: NextRequest) {
+  if (getHostname(req) !== WORKS_HOST) return null;
+
+  const { pathname } = req.nextUrl;
+
+  // WORKS APIs already live at /api/works and keep that stable path.
+  if (pathname.startsWith("/api/works")) {
+    return NextResponse.next();
+  }
+
+  // Existing /works links remain valid, but the dedicated host exposes clean paths.
+  if (pathname === "/works" || pathname.startsWith("/works/")) {
+    const cleanUrl = req.nextUrl.clone();
+    cleanUrl.pathname = pathname.slice("/works".length) || "/";
+    return NextResponse.redirect(cleanUrl, 308);
+  }
+
+  const internalUrl = req.nextUrl.clone();
+  internalUrl.pathname = pathname === "/" ? "/works/za" : `/works${pathname}`;
+  return NextResponse.rewrite(internalUrl);
 }
 
 function rewriteRecognitionPath(req: NextRequest, pathname: string) {
@@ -328,6 +353,9 @@ export default clerkMiddleware((auth, req) => {
   if (isCompassProtectedPath(req)) {
     auth().protect();
   }
+
+  const worksResponse = worksDomainResponse(req);
+  if (worksResponse) return worksResponse;
 
   const host = getHostname(req);
   const { pathname } = req.nextUrl;

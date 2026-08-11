@@ -244,6 +244,37 @@ function bodyTextToHtml(bodyText: string) {
   return escapeHtml(bodyText).replaceAll("\n", "<br>");
 }
 
+function questionsFromDraft(bodyText: string) {
+  const lines = bodyText.replaceAll("\r\n", "\n").split("\n");
+  const headingIndex = lines.findIndex(
+    (line) => line.trim().toLowerCase() === "questions to confirm"
+  );
+  if (headingIndex < 0) return [];
+
+  const questions: string[] = [];
+  for (let index = headingIndex + 1; index < lines.length; index += 1) {
+    const line = lines[index].trim();
+    if (!line) {
+      if (questions.length) break;
+      continue;
+    }
+    if (!line.startsWith("-")) break;
+    const question = line.replace(/^-\s*/, "").trim();
+    if (question && !questions.includes(question)) questions.push(question);
+  }
+  return questions;
+}
+
+function providerResponseUrl(token: string) {
+  const dedicatedUrl = process.env.WORKS_PUBLIC_URL?.trim().replace(/\/$/, "");
+  if (dedicatedUrl) return `${dedicatedUrl}/respond/${token}`;
+
+  const appUrl = (
+    process.env.NEXT_PUBLIC_APP_URL || "https://app.oremea.com"
+  ).replace(/\/$/, "");
+  return `${appUrl}/works/respond/${token}`;
+}
+
 type DraftValue = {
   subject: string;
   bodyText: string;
@@ -355,9 +386,6 @@ export async function POST(req: NextRequest) {
     }
 
     const resend = new Resend(apiKey);
-    const appUrl = (
-      process.env.NEXT_PUBLIC_APP_URL || "https://app.oremea.com"
-    ).replace(/\/$/, "");
     const results: Array<{
       providerId: string;
       providerName: string;
@@ -405,15 +433,16 @@ export async function POST(req: NextRequest) {
           }),
         };
         const draft = drafts.get(providerId) ?? fallbackDraft;
+        const sentQuestions = questionsFromDraft(draft.bodyText);
         const token = randomBytes(32).toString("hex");
         const tokenHash = hashToken(token);
-        const responseUrl = `${appUrl}/works/respond/${token}`;
+        const responseUrl = providerResponseUrl(token);
         const relevantSteps = snapshot.relevantSteps;
         const briefSnapshot = JSON.parse(
           JSON.stringify({
             ...snapshot,
             emailDraft: draft,
-            questions,
+            questions: sentQuestions,
           })
         ) as Prisma.InputJsonValue;
 
