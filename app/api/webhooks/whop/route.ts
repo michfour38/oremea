@@ -5,6 +5,7 @@ import {
   grantCompassAccess,
   setCompassMembershipAccess,
 } from "@/src/lib/compass/compass-access";
+import { getCompassWhopAccessForPlan } from "@/src/lib/compass/compass-commerce";
 import { setRecognitionMembershipAccess } from "@/src/lib/recognition/recognition-conversation-access";
 import { getResonanceWeekForWhopProduct } from "@/src/lib/resonance/resonance-commerce";
 import { createPurchasedResonanceRun } from "@/src/lib/resonance/resonance-week-run";
@@ -19,6 +20,9 @@ type WhopPaymentSucceededEvent = {
     id?: unknown;
     paid_at?: unknown;
     created_at?: unknown;
+    plan?: {
+      id?: unknown;
+    } | null;
     product?: {
       id?: unknown;
     } | null;
@@ -35,6 +39,9 @@ type WhopMembershipEvent = {
     id?: unknown;
     updated_at?: unknown;
     renewal_period_end?: unknown;
+    plan?: {
+      id?: unknown;
+    } | null;
     product?: {
       id?: unknown;
     } | null;
@@ -49,6 +56,7 @@ function readPayment(event: WhopPaymentSucceededEvent) {
   const paymentId = typeof payment?.id === "string" ? payment.id.trim() : "";
   const productId =
     typeof payment?.product?.id === "string" ? payment.product.id.trim() : "";
+  const planId = typeof payment?.plan?.id === "string" ? payment.plan.id.trim() : "";
   const email =
     typeof payment?.user?.email === "string"
       ? payment.user.email.trim().toLowerCase()
@@ -65,7 +73,7 @@ function readPayment(event: WhopPaymentSucceededEvent) {
     return null;
   }
 
-  return { paymentId, productId, email, paidAt };
+  return { paymentId, productId, planId, email, paidAt };
 }
 
 function readMembership(event: WhopMembershipEvent) {
@@ -76,6 +84,8 @@ function readMembership(event: WhopMembershipEvent) {
     typeof membership?.product?.id === "string"
       ? membership.product.id.trim()
       : "";
+  const planId =
+    typeof membership?.plan?.id === "string" ? membership.plan.id.trim() : "";
   const email =
     typeof membership?.user?.email === "string"
       ? membership.user.email.trim().toLowerCase()
@@ -105,6 +115,7 @@ function readMembership(event: WhopMembershipEvent) {
   return {
     membershipId,
     productId,
+    planId,
     email,
     eventAt,
     renewalPeriodEnd,
@@ -181,12 +192,11 @@ export async function POST(request: Request) {
       });
     }
 
-    const compassMembershipProductId =
-      process.env.WHOP_COMPASS_SUBSCRIPTION_PRODUCT_ID?.trim();
-    if (
-      compassMembershipProductId &&
-      membership.productId === compassMembershipProductId
-    ) {
+    const compassAccess = getCompassWhopAccessForPlan(
+      membership.productId,
+      membership.planId,
+    );
+    if (compassAccess === "monthly_subscription") {
       const user = await findExactlyOneOremeaUser(membership.email);
       if (!user) {
         console.error(
@@ -262,8 +272,11 @@ export async function POST(request: Request) {
     });
   }
 
-  const compassProductId = process.env.WHOP_COMPASS_PRODUCT_ID?.trim();
-  if (compassProductId && payment.productId === compassProductId) {
+  const compassAccess = getCompassWhopAccessForPlan(
+    payment.productId,
+    payment.planId,
+  );
+  if (compassAccess === "30_day_pass") {
     const user = await findExactlyOneOremeaUser(payment.email);
     if (!user) {
       console.error(
