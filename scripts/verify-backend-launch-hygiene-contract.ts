@@ -2,8 +2,28 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 
 const middleware = readFileSync("middleware.ts", "utf8");
-const searchSessionRoute = readFileSync(
+const searchSessionCreateRoute = readFileSync(
   "app/api/works/search-sessions/route.ts",
+  "utf8"
+);
+const searchSessionRoute = readFileSync(
+  "app/api/works/search-sessions/[sessionId]/route.ts",
+  "utf8"
+);
+const briefCreateRoute = readFileSync(
+  "app/api/works/briefs/route.ts",
+  "utf8"
+);
+const briefRoute = readFileSync(
+  "app/api/works/briefs/[briefId]/route.ts",
+  "utf8"
+);
+const briefAnswersRoute = readFileSync(
+  "app/api/works/briefs/[briefId]/answers/route.ts",
+  "utf8"
+);
+const procurementRoute = readFileSync(
+  "app/api/works/procurement-requests/route.ts",
   "utf8"
 );
 const outreachRoute = readFileSync(
@@ -35,12 +55,12 @@ assert.doesNotMatch(
 );
 
 assert.match(
-  searchSessionRoute,
+  searchSessionCreateRoute,
   /normalizeWorksBrowserSessionId/,
   "Anonymous WORKS searches must reject malformed browser-session identifiers."
 );
 assert.match(
-  searchSessionRoute,
+  searchSessionCreateRoute,
   /setWorksBrowserSessionCookie/,
   "Anonymous WORKS search creation must bind ownership to a server-set cookie."
 );
@@ -60,11 +80,21 @@ assert.match(
   "The anonymous WORKS ownership cookie must be Secure in production."
 );
 
-assert.match(
-  outreachRoute,
-  /ownsWorksAnonymousSearch/,
-  "Provider outreach must verify anonymous search ownership before external side effects."
-);
+for (const [name, source] of [
+  ["search restore/update", searchSessionRoute],
+  ["brief creation", briefCreateRoute],
+  ["brief restore", briefRoute],
+  ["founder answers", briefAnswersRoute],
+  ["sourcing contact data", procurementRoute],
+  ["provider outreach", outreachRoute],
+] as const) {
+  assert.match(
+    source,
+    /ownsWorksAnonymousSearch/,
+    `WORKS ${name} must verify anonymous browser ownership.`
+  );
+}
+
 assert.match(
   outreachRoute,
   /searchSession\.brief_id !== briefId/,
