@@ -6,6 +6,10 @@ import {
   formatCompassPrice,
 } from "@/src/lib/compass/compass-pricing";
 import { getCompassAccessState } from "@/src/lib/compass/compass-access";
+import {
+  isCompassPassFulfillmentConfigured,
+  isCompassSubscriptionFulfillmentConfigured,
+} from "@/src/lib/compass/compass-commerce";
 
 export const dynamic = "force-dynamic";
 
@@ -40,12 +44,9 @@ export default async function CompassAccessPage() {
   const compassPassCheckout = process.env.COMPASS_CHECKOUT_URL?.trim() || null;
   const compassSubscriptionCheckout =
     process.env.COMPASS_SUBSCRIPTION_CHECKOUT_URL?.trim() || null;
-  const passFulfillmentConfigured = Boolean(
-    process.env.WHOP_COMPASS_PRODUCT_ID?.trim(),
-  );
-  const subscriptionFulfillmentConfigured = Boolean(
-    process.env.WHOP_COMPASS_SUBSCRIPTION_PRODUCT_ID?.trim(),
-  );
+  const passFulfillmentConfigured = isCompassPassFulfillmentConfigured();
+  const subscriptionFulfillmentConfigured =
+    isCompassSubscriptionFulfillmentConfigured();
   const passCheckoutHref = !userId
     ? "/sign-in?redirect_url=%2F"
     : passFulfillmentConfigured
@@ -112,7 +113,7 @@ export default async function CompassAccessPage() {
               </p>
               <Link
                 href="/begin"
-                className="mt-7 inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/10"
+                className="mt-7 inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#f1dfb4]"
               >
                 Continue Compass
               </Link>
