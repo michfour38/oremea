@@ -44,13 +44,18 @@ assert.match(
 );
 assert.match(
   deploy,
-  /"deploy"[\s\S]*`--schema=\$\{SCHEMA_PATH\}`/,
+  /"deploy"[\s\S]*`--schema=\$\{MIGRATION_SCHEMA_PATH\}`/,
   "The wrapper must continue with normal Prisma migrate deploy after reconciliation.",
 );
 assert.match(
   deploy,
-  /const SCHEMA_PATH = "prisma"/,
-  "Production migrations must point at the complete multi-file Prisma schema directory.",
+  /const MIGRATION_SCHEMA_PATH = "prisma\/schema\.prisma"/,
+  "Production migrate resolve/deploy must use prisma/schema.prisma so Prisma can locate prisma/migrations.",
+);
+assert.doesNotMatch(
+  deploy,
+  /const MIGRATION_SCHEMA_PATH = "prisma"/,
+  "Production migrate resolve/deploy must not pass the multi-file schema directory to Prisma Migrate.",
 );
 assert.doesNotMatch(
   deploy,
