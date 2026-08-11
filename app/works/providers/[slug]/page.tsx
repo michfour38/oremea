@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { WorksPageHeader } from "@/components/works/works-brand";
 import { prisma } from "@/lib/prisma";
+
+const WORKS_ORIGIN = "https://works.oremea.com";
 
 const DEFAULT_VISIBILITY = {
   show_legal_name: false,
@@ -13,9 +16,9 @@ const DEFAULT_VISIBILITY = {
   show_capacity: false,
 };
 
-export default async function WorksProviderPublicProfile({ params }: { params: { slug: string } }) {
-  const provider = await prisma.works_providers.findUnique({
-    where: { slug: params.slug },
+async function getProvider(slug: string) {
+  return prisma.works_providers.findUnique({
+    where: { slug },
     include: {
       public_settings: true,
       commercial_profile: true,
@@ -23,16 +26,77 @@ export default async function WorksProviderPublicProfile({ params }: { params: {
       reviews: { where: { status: "PUBLISHED" }, orderBy: { created_at: "desc" }, take: 30 },
     },
   });
+}
 
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const provider = await getProvider(params.slug);
+  if (!provider || provider.profile_status === "ARCHIVED") return {};
+
+  const visibility = provider.public_settings ?? DEFAULT_VISIBILITY;
+  const canonical = `${WORKS_ORIGIN}/works/providers/${provider.slug}`;
+  const description = visibility.show_description && provider.description
+    ? provider.description.slice(0, 155)
+    : `${provider.name} is listed on WORKS, where buyers find South African manufacturers, suppliers and specialist production providers.`;
+
+  return {
+    title: `${provider.name} | WORKS provider`,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      title: `${provider.name} | WORKS`,
+      description,
+      url: canonical,
+      type: "website",
+    },
+  };
+}
+
+export default async function WorksProviderPublicProfile({ params }: { params: { slug: string } }) {
+  const provider = await getProvider(params.slug);
   if (!provider || provider.profile_status === "ARCHIVED") notFound();
 
   const visibility = provider.public_settings ?? DEFAULT_VISIBILITY;
   const reviews = provider.reviews;
   const average = reviews.length ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : null;
+  const canonical = `${WORKS_ORIGIN}/works/providers/${provider.slug}`;
+
+  const structuredData: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: provider.name,
+    url: canonical,
+  };
+
+  if (visibility.show_legal_name && provider.legal_name) structuredData.legalName = provider.legal_name;
+  if (visibility.show_description && provider.description) structuredData.description = provider.description;
+  if (visibility.show_website && provider.website) structuredData.sameAs = [provider.website];
+  if (visibility.show_email && provider.email) structuredData.email = provider.email;
+  if (visibility.show_phone && provider.phone) structuredData.telephone = provider.phone;
+  if (average) {
+    structuredData.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: Number(average.toFixed(1)),
+      reviewCount: reviews.length,
+      bestRating: 5,
+      worstRating: 1,
+    };
+  }
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl px-5 py-10 md:px-8 md:py-14">
-      <WorksPageHeader context="Public business profile" />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+
+      <WorksPageHeader
+        context="Public business profile"
+        action={
+          <a href="/works/za" className="rounded-full bg-[#1f1c17] px-5 py-2.5 text-sm text-white">
+            Start my brief →
+          </a>
+        }
+      />
 
       <section className="py-10 md:py-14">
         <div className="flex flex-wrap items-start justify-between gap-6">
@@ -53,6 +117,11 @@ export default async function WorksProviderPublicProfile({ params }: { params: {
         </div>
 
         {visibility.show_location && provider.markets.length ? <div className="mt-8 flex flex-wrap gap-2">{provider.markets.map((entry) => <span key={entry.id} className="rounded-full border border-black/10 bg-white/70 px-4 py-2 text-xs text-black/50">{entry.locality ?? entry.administrative_area ?? entry.market.name}</span>)}</div> : null}
+
+        <div className="mt-8 rounded-2xl border border-black/10 bg-[#f3eee4] p-5 text-sm leading-7 text-black/55">
+          WORKS matches businesses against the requirements in a buyer&apos;s brief. Start with what you need made so the route can distinguish confirmed fits, possible fits and details that still need checking.
+          <a href="/works/za" className="ml-2 font-medium text-[#1f1c17] underline underline-offset-4">Build my route →</a>
+        </div>
       </section>
 
       <section className="border-t border-black/10 py-10">
@@ -66,6 +135,12 @@ export default async function WorksProviderPublicProfile({ params }: { params: {
           const company = review.public_identity && review.reviewer_company ? ` · ${review.reviewer_company}` : "";
           return <article key={review.id} className="rounded-3xl border border-black/10 bg-white/70 p-6"><p className="text-sm">{"★".repeat(review.rating)}<span className="text-black/15">{"★".repeat(5 - review.rating)}</span></p><p className="mt-4 text-sm leading-7 text-black/65">{review.body}</p><p className="mt-4 text-xs text-black/40">{reviewer}{company}{review.verified_brief ? " · Verified WORKS brief" : ""}</p>{review.provider_response ? <div className="mt-5 border-t border-black/8 pt-4"><p className="text-xs font-medium uppercase tracking-[0.14em] text-black/35">Response from {provider.name}</p><p className="mt-2 text-sm leading-6 text-black/55">{review.provider_response}</p></div> : null}</article>;
         })}</div> : <div className="mt-7 rounded-3xl border border-black/10 bg-white/60 p-6 text-sm leading-6 text-black/45">No published reviews yet. Reviews from genuine WORKS interactions will appear here.</div>}
+      </section>
+
+      <section className="border-t border-black/10 py-10 text-center">
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Ready to source?</p>
+        <h2 className="mx-auto mt-3 max-w-2xl font-serif text-3xl leading-tight md:text-4xl">Describe the product. Let WORKS build the route.</h2>
+        <a href="/works/za" className="mt-6 inline-flex rounded-full bg-[#1f1c17] px-6 py-3 text-sm font-medium text-white">Start my brief →</a>
       </section>
     </main>
   );
