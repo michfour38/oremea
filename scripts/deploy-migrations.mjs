@@ -4,7 +4,9 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 const RECOGNITION_MIGRATION = "20260810132000_add_recognition_conversation";
-const SCHEMA_PATH = "prisma";
+// Prisma generate uses the multi-file schema directory, but migrate resolve/deploy
+// must be anchored to the main schema file so Prisma locates prisma/migrations.
+const MIGRATION_SCHEMA_PATH = "prisma/schema.prisma";
 
 function fail(message) {
   console.error(`[migration-deploy] ${message}`);
@@ -93,7 +95,7 @@ async function reconcileKnownRecognitionMigration() {
     "resolve",
     "--applied",
     RECOGNITION_MIGRATION,
-    `--schema=${SCHEMA_PATH}`,
+    `--schema=${MIGRATION_SCHEMA_PATH}`,
   ]);
 
   const after = await prisma.$queryRawUnsafe(`
@@ -123,7 +125,7 @@ async function main() {
     await prisma.$disconnect();
 
     console.log("[migration-deploy] Running normal Prisma production migrations.");
-    runPrisma(["migrate", "deploy", `--schema=${SCHEMA_PATH}`]);
+    runPrisma(["migrate", "deploy", `--schema=${MIGRATION_SCHEMA_PATH}`]);
   } catch (error) {
     await prisma.$disconnect().catch(() => undefined);
     fail(error instanceof Error ? error.message : "Migration deployment failed.");
