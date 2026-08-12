@@ -1,8 +1,8 @@
 export const OREMEA_PRICING = {
   recognition: {
     currency: "USD",
-    launchPriceCents: 1499,
-    standardPriceCents: 1874,
+    launchPriceCents: 1999,
+    standardPriceCents: 1999,
     billingInterval: "month",
     purchaseType: "subscription",
   },
