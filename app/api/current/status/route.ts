@@ -1,11 +1,14 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
+import { prisma } from "@/lib/prisma";
 import {
   getCurrentAccessState,
   getCurrentLaunchState,
   getOremeaMemberState,
+  getRecognitionCurrentQualificationTurns,
   listPendingCurrentInvitations,
+  qualifyForCurrent,
 } from "@/src/lib/current/current-access";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +18,26 @@ function userEmails(user: Awaited<ReturnType<typeof currentUser>>) {
   return user.emailAddresses
     .map((item) => item.emailAddress.trim().toLowerCase())
     .filter(Boolean);
+}
+
+async function qualifyRecognitionParticipation(userId: string) {
+  const thread = await prisma.recognition_threads.findUnique({
+    where: { user_id: userId },
+    select: { id: true, status: true, message_count: true },
+  });
+
+  if (!thread || thread.status !== "active") return;
+
+  const completedUserTurns = Math.floor(thread.message_count / 2);
+  const requiredTurns = getRecognitionCurrentQualificationTurns();
+  if (completedUserTurns < requiredTurns) return;
+
+  await qualifyForCurrent({
+    userId,
+    sourceProduct: "recognition",
+    sourceInstanceId: thread.id,
+    triggerKey: `recognition_${requiredTurns}_completed_exchanges`,
+  });
 }
 
 export async function GET() {
@@ -33,6 +56,11 @@ export async function GET() {
     if (!memberState.member) {
       return NextResponse.json({ member: false });
     }
+
+    // Recognition is recursive rather than a fixed-length course now. Meaningful
+    // participation is measured by completed user↔Recognition exchanges, and only
+    // an active thread can qualify. The qualification itself remains idempotent.
+    await qualifyRecognitionParticipation(userId);
 
     const [launch, access, pendingInvitations] = await Promise.all([
       getCurrentLaunchState(),
