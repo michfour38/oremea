@@ -6,6 +6,11 @@ import {
   setCompassMembershipAccess,
 } from "@/src/lib/compass/compass-access";
 import { getCompassWhopAccessForPlan } from "@/src/lib/compass/compass-commerce";
+import {
+  getCurrentLaunchState,
+  listPendingCurrentInvitations,
+  setCurrentMembershipAccess,
+} from "@/src/lib/current/current-access";
 import { setRecognitionMembershipAccess } from "@/src/lib/recognition/recognition-conversation-access";
 import { getResonanceWeekForWhopProduct } from "@/src/lib/resonance/resonance-commerce";
 import { createPurchasedResonanceRun } from "@/src/lib/resonance/resonance-week-run";
@@ -186,6 +191,53 @@ export async function POST(request: Request) {
         received: true,
         fulfilled: true,
         product: "recognition",
+        access: "membership",
+        active: entitlement?.status === "active",
+        expiresAt: entitlement?.expires_at?.toISOString() ?? null,
+      });
+    }
+
+    const currentProductId = process.env.WHOP_CURRENT_PRODUCT_ID?.trim();
+    if (currentProductId && membership.productId === currentProductId) {
+      const user = await findExactlyOneOremeaUser(membership.email);
+      if (!user) {
+        console.error(
+          `Current membership ${membership.membershipId} could not be matched to one Oremea account for ${membership.email}.`,
+        );
+        return NextResponse.json(
+          { error: "Current member account could not be matched." },
+          { status: 422 },
+        );
+      }
+
+      if (event.type === "membership.activated") {
+        const [launch, invitations] = await Promise.all([
+          getCurrentLaunchState(),
+          listPendingCurrentInvitations(user.id),
+        ]);
+        if (!launch.launched || invitations.length === 0) {
+          console.error(
+            `Current membership ${membership.membershipId} attempted activation without a live invitation for ${membership.email}.`,
+          );
+          return NextResponse.json(
+            { error: "The Current membership is not eligible for activation." },
+            { status: 422 },
+          );
+        }
+      }
+
+      const entitlement = await setCurrentMembershipAccess({
+        userId: user.id,
+        membershipId: membership.membershipId,
+        active: event.type === "membership.activated",
+        eventAt: membership.eventAt,
+        renewalPeriodEnd: membership.renewalPeriodEnd,
+      });
+
+      return NextResponse.json({
+        received: true,
+        fulfilled: true,
+        product: "current",
         access: "membership",
         active: entitlement?.status === "active",
         expiresAt: entitlement?.expires_at?.toISOString() ?? null,
