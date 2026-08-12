@@ -22,6 +22,14 @@ export const OREMEA_PRICING = {
     accessOptions: ["30_day_pass", "monthly_subscription"],
     billingInterval: "month",
   },
+  current: {
+    currency: "USD",
+    launchPriceCents: 2999,
+    standardPriceCents: 2999,
+    billingInterval: "month",
+    purchaseType: "subscription",
+    invitationOnly: true,
+  },
 } as const;
 
 export type OremeaPricedProduct = keyof typeof OREMEA_PRICING;
