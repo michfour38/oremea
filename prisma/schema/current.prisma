@@ -1,16 +1,35 @@
-model current_invitations {
-  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id            String
+model current_launch_state {
+  id          String   @id
+  launched_at DateTime? @db.Timestamptz(6)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @updatedAt @db.Timestamptz(6)
+}
+
+model current_qualifications {
+  user_id            String   @id
   source_product     String
   source_instance_id String
   trigger_key        String
-  status             String    @default("pending")
+  qualified_at       DateTime @default(now()) @db.Timestamptz(6)
+  invited_at         DateTime? @db.Timestamptz(6)
+
+  @@index([qualified_at])
+  @@index([invited_at])
+}
+
+model current_invitations {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id             String
+  source_product      String
+  source_instance_id  String
+  trigger_key         String
+  status              String    @default("pending")
   checkout_started_at DateTime? @db.Timestamptz(6)
-  accepted_at        DateTime? @db.Timestamptz(6)
-  declined_at        DateTime? @db.Timestamptz(6)
-  resolved_at        DateTime? @db.Timestamptz(6)
-  created_at         DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime  @updatedAt @db.Timestamptz(6)
+  accepted_at         DateTime? @db.Timestamptz(6)
+  declined_at         DateTime? @db.Timestamptz(6)
+  resolved_at         DateTime? @db.Timestamptz(6)
+  created_at          DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime  @updatedAt @db.Timestamptz(6)
 
   @@unique([user_id, source_product, source_instance_id])
   @@index([user_id, status])
