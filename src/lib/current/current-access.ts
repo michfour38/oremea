@@ -1,6 +1,11 @@
+import type { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 
 const RECOGNITION_MEMBERSHIP_USER_PREFIX = "recognition-membership-email:";
+const CURRENT_LAUNCH_STATE_ID = "the_current";
+const DEFAULT_CURRENT_LAUNCH_THRESHOLD = 50;
+const DEFAULT_RECOGNITION_QUALIFY_AFTER_USER_TURNS = 7;
 
 export const CURRENT_MEMBERSHIP_PRODUCT_KEY = "current_membership";
 export const CURRENT_INVITATION_STATUS = {
@@ -8,6 +13,25 @@ export const CURRENT_INVITATION_STATUS = {
   accepted: "accepted",
   declined: "declined",
 } as const;
+
+function positiveInteger(value: string | undefined, fallback: number) {
+  const parsed = Number.parseInt(value?.trim() || "", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+export function getCurrentLaunchThreshold() {
+  return positiveInteger(
+    process.env.CURRENT_LAUNCH_THRESHOLD,
+    DEFAULT_CURRENT_LAUNCH_THRESHOLD,
+  );
+}
+
+export function getRecognitionCurrentQualificationTurns() {
+  return positiveInteger(
+    process.env.CURRENT_RECOGNITION_QUALIFY_AFTER_USER_TURNS,
+    DEFAULT_RECOGNITION_QUALIFY_AFTER_USER_TURNS,
+  );
+}
 
 function normalizeEmail(value: string) {
   return value.trim().toLowerCase();
@@ -20,6 +44,56 @@ function recognitionMembershipUserId(email: string) {
 function validDateOrNull(value?: Date | null) {
   if (!value || Number.isNaN(value.getTime())) return null;
   return value;
+}
+
+function normalizedQualificationInput({
+  userId,
+  sourceProduct,
+  sourceInstanceId,
+  triggerKey,
+}: {
+  userId: string;
+  sourceProduct: string;
+  sourceInstanceId: string;
+  triggerKey: string;
+}) {
+  const normalized = {
+    userId: userId.trim(),
+    sourceProduct: sourceProduct.trim().toLowerCase(),
+    sourceInstanceId: sourceInstanceId.trim(),
+    triggerKey: triggerKey.trim(),
+  };
+
+  if (
+    !normalized.userId ||
+    !normalized.sourceProduct ||
+    !normalized.sourceInstanceId ||
+    !normalized.triggerKey
+  ) {
+    throw new Error(
+      "The Current qualification requires a user, product, instance and trigger.",
+    );
+  }
+
+  return normalized;
+}
+
+async function getCurrentLaunchStateWithClient(
+  client: Prisma.TransactionClient | typeof prisma,
+) {
+  const state = await client.current_launch_state.findUnique({
+    where: { id: CURRENT_LAUNCH_STATE_ID },
+    select: { launched_at: true },
+  });
+
+  return {
+    launched: Boolean(state?.launched_at),
+    launchedAt: state?.launched_at ?? null,
+  };
+}
+
+export async function getCurrentLaunchState() {
+  return getCurrentLaunchStateWithClient(prisma);
 }
 
 export async function getOremeaMemberState({
@@ -112,6 +186,9 @@ export async function getCurrentAccessState(
 }
 
 export async function listPendingCurrentInvitations(userId: string) {
+  const launch = await getCurrentLaunchState();
+  if (!launch.launched) return [];
+
   return prisma.current_invitations.findMany({
     where: {
       user_id: userId,
@@ -129,53 +206,141 @@ export async function listPendingCurrentInvitations(userId: string) {
   });
 }
 
-export async function createCurrentInvitation({
-  userId,
-  sourceProduct,
-  sourceInstanceId,
-  triggerKey,
-}: {
+async function createInvitationInTransaction(
+  transaction: Prisma.TransactionClient,
+  qualification: {
+    user_id: string;
+    source_product: string;
+    source_instance_id: string;
+    trigger_key: string;
+  },
+) {
+  return transaction.current_invitations.upsert({
+    where: {
+      user_id_source_product_source_instance_id: {
+        user_id: qualification.user_id,
+        source_product: qualification.source_product,
+        source_instance_id: qualification.source_instance_id,
+      },
+    },
+    create: {
+      user_id: qualification.user_id,
+      source_product: qualification.source_product,
+      source_instance_id: qualification.source_instance_id,
+      trigger_key: qualification.trigger_key,
+      status: CURRENT_INVITATION_STATUS.pending,
+    },
+    update: {},
+  });
+}
+
+export async function qualifyForCurrent(input: {
   userId: string;
   sourceProduct: string;
   sourceInstanceId: string;
   triggerKey: string;
 }) {
-  const product = sourceProduct.trim().toLowerCase();
-  const instanceId = sourceInstanceId.trim();
-  const trigger = triggerKey.trim();
+  const normalized = normalizedQualificationInput(input);
 
-  if (!userId.trim() || !product || !instanceId || !trigger) {
-    throw new Error("The Current invitation requires a user, product, instance and trigger.");
+  if ((await getCurrentAccessState(normalized.userId)).active) {
+    return { qualified: true, invited: false, launched: true, alreadyActive: true };
   }
 
-  if ((await getCurrentAccessState(userId)).active) {
+  const now = new Date();
+
+  return prisma.$transaction(async (transaction) => {
+    await transaction.$queryRaw`SELECT pg_advisory_xact_lock(hashtext('current-launch-gate'))`;
+
+    const qualification = await transaction.current_qualifications.upsert({
+      where: { user_id: normalized.userId },
+      create: {
+        user_id: normalized.userId,
+        source_product: normalized.sourceProduct,
+        source_instance_id: normalized.sourceInstanceId,
+        trigger_key: normalized.triggerKey,
+        qualified_at: now,
+      },
+      update: {},
+    });
+
+    let launch = await transaction.current_launch_state.upsert({
+      where: { id: CURRENT_LAUNCH_STATE_ID },
+      create: { id: CURRENT_LAUNCH_STATE_ID },
+      update: {},
+      select: { launched_at: true },
+    });
+
+    if (!launch.launched_at) {
+      const qualifiedCount = await transaction.current_qualifications.count();
+      if (qualifiedCount < getCurrentLaunchThreshold()) {
+        return {
+          qualified: true,
+          invited: false,
+          launched: false,
+          alreadyActive: false,
+        };
+      }
+
+      launch = await transaction.current_launch_state.update({
+        where: { id: CURRENT_LAUNCH_STATE_ID },
+        data: { launched_at: now },
+        select: { launched_at: true },
+      });
+    }
+
+    const waiting = await transaction.current_qualifications.findMany({
+      where: { invited_at: null },
+      select: {
+        user_id: true,
+        source_product: true,
+        source_instance_id: true,
+        trigger_key: true,
+      },
+    });
+
+    for (const waitingQualification of waiting) {
+      await createInvitationInTransaction(transaction, waitingQualification);
+    }
+
+    if (waiting.length > 0) {
+      await transaction.current_qualifications.updateMany({
+        where: { user_id: { in: waiting.map((item) => item.user_id) } },
+        data: { invited_at: now },
+      });
+    }
+
+    return {
+      qualified: true,
+      invited: waiting.some((item) => item.user_id === normalized.userId),
+      launched: Boolean(launch.launched_at),
+      alreadyActive: false,
+    };
+  });
+}
+
+export async function createCurrentInvitation(input: {
+  userId: string;
+  sourceProduct: string;
+  sourceInstanceId: string;
+  triggerKey: string;
+}) {
+  const normalized = normalizedQualificationInput(input);
+  const launch = await getCurrentLaunchState();
+  if (!launch.launched) return null;
+
+  if ((await getCurrentAccessState(normalized.userId)).active) {
     return null;
   }
 
   return prisma.$transaction(async (transaction) => {
-    const lockKey = `current-invite:${userId}:${product}:${instanceId}`;
+    const lockKey = `current-invite:${normalized.userId}:${normalized.sourceProduct}:${normalized.sourceInstanceId}`;
     await transaction.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
 
-    const existing = await transaction.current_invitations.findUnique({
-      where: {
-        user_id_source_product_source_instance_id: {
-          user_id: userId,
-          source_product: product,
-          source_instance_id: instanceId,
-        },
-      },
-    });
-
-    if (existing) return existing;
-
-    return transaction.current_invitations.create({
-      data: {
-        user_id: userId,
-        source_product: product,
-        source_instance_id: instanceId,
-        trigger_key: trigger,
-        status: CURRENT_INVITATION_STATUS.pending,
-      },
+    return createInvitationInTransaction(transaction, {
+      user_id: normalized.userId,
+      source_product: normalized.sourceProduct,
+      source_instance_id: normalized.sourceInstanceId,
+      trigger_key: normalized.triggerKey,
     });
   });
 }
@@ -216,6 +381,11 @@ export async function startCurrentCheckout({
   userId: string;
   invitationId: string;
 }) {
+  const launch = await getCurrentLaunchState();
+  if (!launch.launched) {
+    throw new Error("The Current is still forming and checkout is locked.");
+  }
+
   const invitation = await prisma.current_invitations.findFirst({
     where: {
       id: invitationId,
@@ -241,6 +411,18 @@ export async function startCurrentCheckout({
   // is abandoned or fails, the invitation remains available until the member
   // explicitly declines it or a verified Current membership activates.
   return { checkoutUrl };
+}
+
+function sourceReferenceEventAt(value: string | null) {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(value) as { eventAt?: unknown };
+    if (typeof parsed.eventAt !== "string") return null;
+    const date = new Date(parsed.eventAt);
+    return Number.isNaN(date.getTime()) ? null : date;
+  } catch {
+    return null;
+  }
 }
 
 export async function setCurrentMembershipAccess({
@@ -274,6 +456,27 @@ export async function setCurrentMembershipAccess({
   return prisma.$transaction(async (transaction) => {
     const lockKey = `current-membership:${userId}`;
     await transaction.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
+
+    const existing = await transaction.oremea_entitlements.findUnique({
+      where: {
+        user_id_product_key: {
+          user_id: userId,
+          product_key: CURRENT_MEMBERSHIP_PRODUCT_KEY,
+        },
+      },
+      select: { source_reference: true },
+    });
+    const previousEventAt = sourceReferenceEventAt(existing?.source_reference ?? null);
+    if (previousEventAt && previousEventAt.getTime() > eventAt.getTime()) {
+      return transaction.oremea_entitlements.findUnique({
+        where: {
+          user_id_product_key: {
+            user_id: userId,
+            product_key: CURRENT_MEMBERSHIP_PRODUCT_KEY,
+          },
+        },
+      });
+    }
 
     const entitlement = await transaction.oremea_entitlements.upsert({
       where: {
