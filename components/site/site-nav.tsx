@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 
+import { CurrentBell } from "./current-bell";
+
 function NavItem({
   href,
   label,
@@ -52,6 +54,8 @@ export function SiteNav() {
         </div>
 
         <div className="flex items-center gap-3">
+          <CurrentBell signedIn={Boolean(isSignedIn)} />
+
           <Link
             href={isSignedIn ? "/profile" : "/sign-in"}
             className="rounded-full border border-[#b79a63]/30 bg-[#b79a63]/[0.04] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[#b79a63] transition hover:border-[#b79a63]/60 hover:bg-[#b79a63]/10"
