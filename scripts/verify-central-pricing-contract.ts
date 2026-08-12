@@ -9,11 +9,12 @@ const pricingAdapters = [
   "src/lib/recognition/recognition-pricing.ts",
   "src/lib/resonance/resonance-pricing.ts",
   "src/lib/compass/compass-pricing.ts",
+  "src/lib/current/current-pricing.ts",
 ];
 
 assert.deepEqual(
   Object.keys(OREMEA_PRICING).sort(),
-  ["compass", "recognition", "resonance"],
+  ["compass", "current", "recognition", "resonance"],
   "Every currently priced Oremea product must live in the central pricing registry",
 );
 
