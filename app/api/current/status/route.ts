@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import {
   getCurrentAccessState,
+  getCurrentLaunchState,
   getOremeaMemberState,
   listPendingCurrentInvitations,
 } from "@/src/lib/current/current-access";
@@ -33,18 +34,21 @@ export async function GET() {
       return NextResponse.json({ member: false });
     }
 
-    const [access, pendingInvitations] = await Promise.all([
+    const [launch, access, pendingInvitations] = await Promise.all([
+      getCurrentLaunchState(),
       getCurrentAccessState(userId),
       listPendingCurrentInvitations(userId),
     ]);
 
     return NextResponse.json({
       member: true,
+      launched: launch.launched,
       current: {
         active: access.active,
         expiresAt: access.expiresAt?.toISOString() ?? null,
         accessUrl: access.accessUrl,
-        checkoutAvailable: Boolean(process.env.CURRENT_CHECKOUT_URL?.trim()),
+        checkoutAvailable:
+          launch.launched && Boolean(process.env.CURRENT_CHECKOUT_URL?.trim()),
       },
       pendingInvitations: pendingInvitations.map((invitation) => ({
         id: invitation.id,
