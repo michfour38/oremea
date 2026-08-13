@@ -21,6 +21,7 @@
     "test:central-pricing": "tsx scripts/verify-central-pricing-contract.ts",
     "test:production-migrations": "tsx scripts/verify-production-migration-contract.ts",
     "test:backend-hygiene": "tsx scripts/verify-backend-launch-hygiene-contract.ts",
+    "test:superseded-boundary": "tsx scripts/verify-superseded-boundary.ts",
     "test:works-payfast": "tsx scripts/verify-works-payfast-contract.ts",
     "test:compass-descent": "tsx scripts/verify-compass-descent-contract.ts",
     "test:compass-resolution": "tsx scripts/verify-compass-resolution-contract.ts",
@@ -35,7 +36,7 @@
     "test:commerce-routing": "tsx scripts/verify-commerce-routing-contract.ts",
     "test:public-pricing": "tsx scripts/verify-public-pricing-contract.ts",
     "test:current": "tsx scripts/verify-current-invitation-contract.ts",
-    "test:launch": "npm run test:central-pricing && npm run test:production-migrations && npm run test:backend-hygiene && npm run test:works-payfast && npm run test:recognition-pricing && npm run test:recognition-conversation && npm run test:commerce-routing && npm run test:public-pricing && npm run test:compass && npm run test:current"
+    "test:launch": "npm run test:central-pricing && npm run test:production-migrations && npm run test:backend-hygiene && npm run test:superseded-boundary && npm run test:works-payfast && npm run test:recognition-pricing && npm run test:recognition-conversation && npm run test:commerce-routing && npm run test:public-pricing && npm run test:compass && npm run test:current"
   },
   "prisma": {
     "schema": "./prisma",
