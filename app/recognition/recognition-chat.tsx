@@ -6,8 +6,16 @@ export type RecognitionChatMessage = {
   role: "user" | "assistant";
   content: string;
   turnIndex: number;
+  clientMessageId?: string | null;
   createdAt: string;
 };
+
+type StoredRecognitionComposer = {
+  draft: string;
+  clientMessageId: string | null;
+};
+
+const COMPOSER_STORAGE_KEY = "oremea:recognition:composer:v1";
 
 function RecognitionDots({ compact = false }: { compact?: boolean }) {
   return (
@@ -31,6 +39,53 @@ function RecognitionDots({ compact = false }: { compact?: boolean }) {
   );
 }
 
+function readStoredComposer(): StoredRecognitionComposer | null {
+  try {
+    const raw = window.localStorage.getItem(COMPOSER_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<StoredRecognitionComposer>;
+    if (typeof parsed.draft !== "string") return null;
+    return {
+      draft: parsed.draft,
+      clientMessageId:
+        typeof parsed.clientMessageId === "string"
+          ? parsed.clientMessageId
+          : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function storeComposer(draft: string, clientMessageId: string | null) {
+  try {
+    window.localStorage.setItem(
+      COMPOSER_STORAGE_KEY,
+      JSON.stringify({ draft, clientMessageId }),
+    );
+  } catch {
+    // Local draft protection is best-effort; the database remains authoritative.
+  }
+}
+
+function clearStoredComposer() {
+  try {
+    window.localStorage.removeItem(COMPOSER_STORAGE_KEY);
+  } catch {
+    // Ignore storage restrictions in privacy-hardened browsers.
+  }
+}
+
+function mergeMessages(
+  current: RecognitionChatMessage[],
+  incoming: RecognitionChatMessage[],
+) {
+  const byTurn = new Map<number, RecognitionChatMessage>();
+  for (const message of current) byTurn.set(message.turnIndex, message);
+  for (const message of incoming) byTurn.set(message.turnIndex, message);
+  return [...byTurn.values()].sort((a, b) => a.turnIndex - b.turnIndex);
+}
+
 export default function RecognitionChat({
   firstName,
   initialMessages,
@@ -41,25 +96,88 @@ export default function RecognitionChat({
   const [messages, setMessages] = useState(initialMessages);
   const [draft, setDraft] = useState("");
   const [pendingMessageId, setPendingMessageId] = useState<string | null>(null);
+  const [composerHydrated, setComposerHydrated] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const lastMessage = messages.at(-1) ?? null;
+  const savedTurnAwaitingReply =
+    lastMessage?.role === "user" && lastMessage.clientMessageId
+      ? lastMessage
+      : null;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, isSending]);
 
   useEffect(() => {
-    inputRef.current?.focus();
+    const stored = readStoredComposer();
+    if (stored?.clientMessageId) {
+      const matchingSavedTurn = initialMessages.find(
+        (message) => message.clientMessageId === stored.clientMessageId,
+      );
+      if (matchingSavedTurn) {
+        clearStoredComposer();
+      } else if (!savedTurnAwaitingReply) {
+        setDraft(stored.draft);
+        setPendingMessageId(stored.clientMessageId);
+      }
+    } else if (stored?.draft && !savedTurnAwaitingReply) {
+      setDraft(stored.draft);
+    }
+
+    setComposerHydrated(true);
+    window.requestAnimationFrame(() => inputRef.current?.focus());
+    // Initial server state is intentionally read once; later message changes are local.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function sendMessage() {
-    const content = draft.trim();
+  useEffect(() => {
+    if (!composerHydrated || savedTurnAwaitingReply) return;
+    if (draft) {
+      storeComposer(draft, pendingMessageId);
+    } else if (!pendingMessageId) {
+      clearStoredComposer();
+    }
+  }, [composerHydrated, draft, pendingMessageId, savedTurnAwaitingReply]);
+
+  useEffect(() => {
+    const textarea = inputRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 224)}px`;
+  }, [draft, savedTurnAwaitingReply]);
+
+  function restoreDifferentStoredComposer(completedClientMessageId: string) {
+    const stored = readStoredComposer();
+    if (
+      stored?.draft &&
+      stored.clientMessageId !== completedClientMessageId
+    ) {
+      setDraft(stored.draft);
+      setPendingMessageId(stored.clientMessageId);
+      return;
+    }
+    clearStoredComposer();
+    setDraft("");
+    setPendingMessageId(null);
+  }
+
+  async function sendMessage(savedTurn?: RecognitionChatMessage) {
+    const content = savedTurn ? savedTurn.content : draft.trim();
     if (!content || isSending) return;
 
-    const clientMessageId = pendingMessageId ?? crypto.randomUUID();
-    if (!pendingMessageId) setPendingMessageId(clientMessageId);
+    const clientMessageId = savedTurn?.clientMessageId
+      ?? pendingMessageId
+      ?? crypto.randomUUID();
+    if (!clientMessageId) return;
+
+    if (!savedTurn) {
+      setPendingMessageId(clientMessageId);
+      storeComposer(draft, clientMessageId);
+    }
 
     setIsSending(true);
     setError("");
@@ -73,16 +191,31 @@ export default function RecognitionChat({
       const data = await response.json();
 
       if (!response.ok || !data?.messages?.user || !data?.messages?.assistant) {
+        if (data?.saved && data?.message) {
+          setMessages((current) =>
+            mergeMessages(current, [data.message as RecognitionChatMessage]),
+          );
+          setDraft("");
+          setPendingMessageId(null);
+          clearStoredComposer();
+        }
         throw new Error(data?.error || "Recognition could not respond just now.");
       }
 
-      setMessages((current) => [
-        ...current,
-        data.messages.user as RecognitionChatMessage,
-        data.messages.assistant as RecognitionChatMessage,
-      ]);
-      setDraft("");
-      setPendingMessageId(null);
+      setMessages((current) =>
+        mergeMessages(current, [
+          data.messages.user as RecognitionChatMessage,
+          data.messages.assistant as RecognitionChatMessage,
+        ]),
+      );
+
+      if (savedTurn) {
+        restoreDifferentStoredComposer(clientMessageId);
+      } else {
+        setDraft("");
+        setPendingMessageId(null);
+        clearStoredComposer();
+      }
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -193,48 +326,79 @@ export default function RecognitionChat({
               </div>
             ) : null}
 
-            <div className="overflow-hidden rounded-[1.75rem] border border-[#4f4229] bg-[#11100d] p-2 shadow-[0_-10px_40px_rgba(0,0,0,0.25)] focus-within:border-[#9f8148]">
-              <textarea
-                ref={inputRef}
-                value={draft}
-                onChange={(event) => {
-                  setDraft(event.target.value);
-                  if (pendingMessageId) setPendingMessageId(null);
-                  if (error) setError("");
-                }}
-                rows={3}
-                maxLength={8000}
-                disabled={isSending}
-                placeholder="Say what is here…"
-                style={{ backgroundColor: "transparent" }}
-                className="max-h-56 min-h-[84px] w-full appearance-none resize-none rounded-[1.35rem] border-0 bg-transparent px-4 py-3 font-serif text-lg leading-8 text-zinc-100 outline-none placeholder:text-zinc-600 disabled:opacity-60 md:text-xl"
-              />
-              <div className="flex items-center justify-end px-3 pb-2 pt-1">
+            {savedTurnAwaitingReply ? (
+              <div className="flex flex-col gap-3 rounded-[1.75rem] border border-[#4f4229] bg-[#11100d] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm leading-6 text-zinc-400">
+                  Your words are saved. Recognition can continue from exactly here.
+                </p>
                 <button
                   type="button"
-                  onClick={() => void sendMessage()}
-                  disabled={isSending || draft.trim().length === 0}
-                  aria-label={
-                    isSending
-                      ? "Recognition is responding"
-                      : pendingMessageId
-                        ? "Retry"
-                        : "Send"
-                  }
-                  className="min-w-[74px] rounded-full border border-[#b39558] bg-[#b39558] px-5 py-2 text-sm font-medium text-black transition hover:bg-[#c9aa69] disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900 disabled:text-zinc-600"
+                  onClick={() => void sendMessage(savedTurnAwaitingReply)}
+                  disabled={isSending}
+                  className="shrink-0 rounded-full border border-[#b39558] bg-[#b39558] px-5 py-2 text-sm font-medium text-black transition hover:bg-[#c9aa69] disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900 disabled:text-zinc-600"
                 >
                   {isSending ? (
-                    <span className="flex justify-center">
+                    <span className="flex min-w-[92px] justify-center">
                       <RecognitionDots compact />
                     </span>
-                  ) : pendingMessageId ? (
-                    "Retry"
                   ) : (
-                    "Send"
+                    "Continue reflection"
                   )}
                 </button>
               </div>
-            </div>
+            ) : (
+              <div className="overflow-hidden rounded-[1.75rem] border border-[#4f4229] bg-[#11100d] p-2 shadow-[0_-10px_40px_rgba(0,0,0,0.25)] focus-within:border-[#9f8148]">
+                <textarea
+                  ref={inputRef}
+                  value={draft}
+                  onChange={(event) => {
+                    setDraft(event.target.value);
+                    if (pendingMessageId) setPendingMessageId(null);
+                    if (error) setError("");
+                  }}
+                  onKeyDown={(event) => {
+                    if (
+                      event.key === "Enter" &&
+                      (event.metaKey || event.ctrlKey)
+                    ) {
+                      event.preventDefault();
+                      void sendMessage();
+                    }
+                  }}
+                  rows={3}
+                  maxLength={8000}
+                  disabled={isSending}
+                  placeholder="Say what is here…"
+                  style={{ backgroundColor: "transparent" }}
+                  className="max-h-56 min-h-[84px] w-full appearance-none resize-none rounded-[1.35rem] border-0 bg-transparent px-4 py-3 font-serif text-lg leading-8 text-zinc-100 outline-none placeholder:text-zinc-600 disabled:opacity-60 md:text-xl"
+                />
+                <div className="flex items-center justify-end px-3 pb-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => void sendMessage()}
+                    disabled={isSending || draft.trim().length === 0}
+                    aria-label={
+                      isSending
+                        ? "Recognition is responding"
+                        : pendingMessageId
+                          ? "Retry reflection"
+                          : "Reflect"
+                    }
+                    className="min-w-[82px] rounded-full border border-[#b39558] bg-[#b39558] px-5 py-2 text-sm font-medium text-black transition hover:bg-[#c9aa69] disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900 disabled:text-zinc-600"
+                  >
+                    {isSending ? (
+                      <span className="flex justify-center">
+                        <RecognitionDots compact />
+                      </span>
+                    ) : pendingMessageId ? (
+                      "Retry"
+                    ) : (
+                      "Reflect"
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
 
             <p className="mt-3 text-center text-[11px] leading-5 text-zinc-600">
               Recognition can challenge a distinction in your own words. It does
