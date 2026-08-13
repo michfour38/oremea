@@ -9,6 +9,28 @@ export type RecognitionChatMessage = {
   createdAt: string;
 };
 
+function RecognitionDots({ compact = false }: { compact?: boolean }) {
+  return (
+    <span
+      className="inline-flex items-center gap-1.5"
+      role="status"
+      aria-label="Recognition is responding"
+    >
+      {[0, 1, 2].map((index) => (
+        <span
+          key={index}
+          aria-hidden="true"
+          className={`${compact ? "h-1.5 w-1.5" : "h-2 w-2"} animate-bounce rounded-full bg-current`}
+          style={{
+            animationDelay: `${index * 120}ms`,
+            animationDuration: "700ms",
+          }}
+        />
+      ))}
+    </span>
+  );
+}
+
 export default function RecognitionChat({
   firstName,
   initialMessages,
@@ -153,8 +175,8 @@ export default function RecognitionChat({
                   <p className="mb-2 text-[11px] uppercase tracking-[0.2em] text-[#9d8659]">
                     Recognition
                   </p>
-                  <div className="border-l border-[#6f5a31] pl-5 font-serif text-lg leading-8 text-zinc-500 md:pl-7">
-                    Staying with what you wrote…
+                  <div className="border-l border-[#6f5a31] py-1 pl-5 text-zinc-500 md:pl-7">
+                    <RecognitionDots />
                   </div>
                 </article>
               ) : null}
@@ -171,7 +193,7 @@ export default function RecognitionChat({
               </div>
             ) : null}
 
-            <div className="rounded-[1.75rem] border border-[#4f4229] bg-[#11100d] p-2 shadow-[0_-10px_40px_rgba(0,0,0,0.25)] focus-within:border-[#9f8148]">
+            <div className="overflow-hidden rounded-[1.75rem] border border-[#4f4229] bg-[#11100d] p-2 shadow-[0_-10px_40px_rgba(0,0,0,0.25)] focus-within:border-[#9f8148]">
               <textarea
                 ref={inputRef}
                 value={draft}
@@ -180,29 +202,36 @@ export default function RecognitionChat({
                   if (pendingMessageId) setPendingMessageId(null);
                   if (error) setError("");
                 }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    void sendMessage();
-                  }
-                }}
                 rows={3}
                 maxLength={8000}
                 disabled={isSending}
                 placeholder="Say what is here…"
-                className="max-h-56 min-h-[84px] w-full resize-none bg-transparent px-4 py-3 font-serif text-lg leading-8 text-zinc-100 outline-none placeholder:text-zinc-600 disabled:opacity-60 md:text-xl"
+                style={{ backgroundColor: "transparent" }}
+                className="max-h-56 min-h-[84px] w-full appearance-none resize-none rounded-[1.35rem] border-0 bg-transparent px-4 py-3 font-serif text-lg leading-8 text-zinc-100 outline-none placeholder:text-zinc-600 disabled:opacity-60 md:text-xl"
               />
-              <div className="flex items-center justify-between gap-4 px-3 pb-2">
-                <p className="text-xs text-zinc-600">
-                  Enter to send · Shift + Enter for a new line
-                </p>
+              <div className="flex items-center justify-end px-3 pb-2 pt-1">
                 <button
                   type="button"
                   onClick={() => void sendMessage()}
                   disabled={isSending || draft.trim().length === 0}
-                  className="rounded-full border border-[#b39558] bg-[#b39558] px-5 py-2 text-sm font-medium text-black transition hover:bg-[#c9aa69] disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900 disabled:text-zinc-600"
+                  aria-label={
+                    isSending
+                      ? "Recognition is responding"
+                      : pendingMessageId
+                        ? "Retry"
+                        : "Send"
+                  }
+                  className="min-w-[74px] rounded-full border border-[#b39558] bg-[#b39558] px-5 py-2 text-sm font-medium text-black transition hover:bg-[#c9aa69] disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900 disabled:text-zinc-600"
                 >
-                  {isSending ? "Reading" : pendingMessageId ? "Retry" : "Send"}
+                  {isSending ? (
+                    <span className="flex justify-center">
+                      <RecognitionDots compact />
+                    </span>
+                  ) : pendingMessageId ? (
+                    "Retry"
+                  ) : (
+                    "Send"
+                  )}
                 </button>
               </div>
             </div>
