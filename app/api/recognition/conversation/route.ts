@@ -22,6 +22,20 @@ class RecognitionConversationStaleError extends Error {
   }
 }
 
+class RecognitionMessageIdConflictError extends Error {
+  constructor() {
+    super("This send ID was already used for different Recognition text.");
+    this.name = "RecognitionMessageIdConflictError";
+  }
+}
+
+class RecognitionPendingTurnError extends Error {
+  constructor() {
+    super("Recognition already has saved words waiting for a reply.");
+    this.name = "RecognitionPendingTurnError";
+  }
+}
+
 function userEmails(user: Awaited<ReturnType<typeof currentUser>>) {
   if (!user) return [];
   return user.emailAddresses
@@ -47,6 +61,7 @@ async function readSavedMessagePair({
       role: true,
       content: true,
       turn_index: true,
+      client_message_id: true,
       created_at: true,
     },
   });
@@ -75,6 +90,7 @@ async function readSavedMessagePair({
       role: "user" as const,
       content: userMessage.content,
       turnIndex: userMessage.turn_index,
+      clientMessageId: userMessage.client_message_id,
       createdAt: userMessage.created_at.toISOString(),
     },
     assistant: {
@@ -87,6 +103,8 @@ async function readSavedMessagePair({
 }
 
 export async function POST(request: Request) {
+  let participantTurnWasSaved = false;
+
   try {
     const user = await currentUser();
     if (!user) {
@@ -153,11 +171,7 @@ export async function POST(request: Request) {
         primary_email: primaryEmail ?? undefined,
         status: "active",
       },
-      select: {
-        id: true,
-        message_count: true,
-        memory_snapshot: true,
-      },
+      select: { id: true },
     });
 
     const savedRetry = await readSavedMessagePair({
@@ -182,6 +196,164 @@ export async function POST(request: Request) {
       });
     }
 
+    const prepared = await prisma.$transaction(async (transaction) => {
+      const lockKey = `recognition-thread:${user.id}`;
+      await transaction.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
+
+      const currentThread = await transaction.recognition_threads.findUnique({
+        where: { id: thread.id },
+        select: {
+          message_count: true,
+          memory_snapshot: true,
+        },
+      });
+      if (!currentThread) throw new RecognitionConversationStaleError();
+
+      const existingUser = await transaction.recognition_messages.findUnique({
+        where: {
+          thread_id_client_message_id: {
+            thread_id: thread.id,
+            client_message_id: clientMessageId,
+          },
+        },
+        select: {
+          role: true,
+          content: true,
+          turn_index: true,
+          client_message_id: true,
+          created_at: true,
+        },
+      });
+
+      if (existingUser) {
+        if (existingUser.role !== "user" || existingUser.content !== content) {
+          throw new RecognitionMessageIdConflictError();
+        }
+
+        const existingAssistant = await transaction.recognition_messages.findUnique({
+          where: {
+            thread_id_turn_index: {
+              thread_id: thread.id,
+              turn_index: existingUser.turn_index + 1,
+            },
+          },
+          select: {
+            role: true,
+            content: true,
+            turn_index: true,
+            created_at: true,
+          },
+        });
+
+        if (existingAssistant?.role === "assistant") {
+          return {
+            completed: {
+              user: {
+                role: "user" as const,
+                content: existingUser.content,
+                turnIndex: existingUser.turn_index,
+                clientMessageId: existingUser.client_message_id,
+                createdAt: existingUser.created_at.toISOString(),
+              },
+              assistant: {
+                role: "assistant" as const,
+                content: existingAssistant.content,
+                turnIndex: existingAssistant.turn_index,
+                createdAt: existingAssistant.created_at.toISOString(),
+              },
+            },
+            userTurnIndex: existingUser.turn_index,
+            memorySnapshot: currentThread.memory_snapshot,
+          };
+        }
+
+        if (currentThread.message_count !== existingUser.turn_index) {
+          throw new RecognitionConversationStaleError();
+        }
+
+        return {
+          completed: null,
+          user: {
+            role: "user" as const,
+            content: existingUser.content,
+            turnIndex: existingUser.turn_index,
+            clientMessageId: existingUser.client_message_id,
+            createdAt: existingUser.created_at.toISOString(),
+          },
+          userTurnIndex: existingUser.turn_index,
+          memorySnapshot: currentThread.memory_snapshot,
+        };
+      }
+
+      if (currentThread.message_count > 0) {
+        const lastMessage = await transaction.recognition_messages.findUnique({
+          where: {
+            thread_id_turn_index: {
+              thread_id: thread.id,
+              turn_index: currentThread.message_count,
+            },
+          },
+          select: { role: true },
+        });
+        if (lastMessage?.role === "user") {
+          throw new RecognitionPendingTurnError();
+        }
+      }
+
+      const now = new Date();
+      const userTurnIndex = currentThread.message_count + 1;
+      const userMessage = await transaction.recognition_messages.create({
+        data: {
+          thread_id: thread.id,
+          role: "user",
+          content,
+          turn_index: userTurnIndex,
+          client_message_id: clientMessageId,
+          evidence_snapshot: {},
+          created_at: now,
+        },
+        select: {
+          content: true,
+          turn_index: true,
+          client_message_id: true,
+          created_at: true,
+        },
+      });
+
+      await transaction.recognition_threads.update({
+        where: { id: thread.id },
+        data: {
+          message_count: userTurnIndex,
+          last_message_at: now,
+          primary_email: primaryEmail ?? undefined,
+          status: "active",
+        },
+      });
+
+      return {
+        completed: null,
+        user: {
+          role: "user" as const,
+          content: userMessage.content,
+          turnIndex: userMessage.turn_index,
+          clientMessageId: userMessage.client_message_id,
+          createdAt: userMessage.created_at.toISOString(),
+        },
+        userTurnIndex,
+        memorySnapshot: currentThread.memory_snapshot,
+      };
+    });
+
+    if (prepared.completed) {
+      return NextResponse.json({
+        ok: true,
+        replayed: true,
+        messages: prepared.completed,
+      });
+    }
+
+    participantTurnWasSaved = true;
+
     const recentRows = await prisma.recognition_messages.findMany({
       where: { thread_id: thread.id },
       orderBy: { turn_index: "desc" },
@@ -205,71 +377,36 @@ export async function POST(request: Request) {
         turnIndex: message.turn_index,
       }));
 
-    const userTurnIndex = thread.message_count + 1;
-    recentMessages.push({
-      role: "user",
-      content,
-      turnIndex: userTurnIndex,
-    });
-
     const promptMessages = trimRecognitionRecentContext(recentMessages);
     const generated = await generateRecognitionConversationReply({
       firstName: user.firstName,
       recentMessages: promptMessages,
-      memory: readRecognitionMemory(thread.memory_snapshot),
+      memory: readRecognitionMemory(prepared.memorySnapshot),
     });
 
-    const now = new Date();
-    const assistantTurnIndex = userTurnIndex + 1;
-
+    const assistantTurnIndex = prepared.userTurnIndex + 1;
     const saved = await prisma.$transaction(async (transaction) => {
       const lockKey = `recognition-thread:${user.id}`;
       await transaction.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
 
-      const existingRetry = await transaction.recognition_messages.findUnique({
+      const existingAssistant = await transaction.recognition_messages.findUnique({
         where: {
-          thread_id_client_message_id: {
+          thread_id_turn_index: {
             thread_id: thread.id,
-            client_message_id: clientMessageId,
+            turn_index: assistantTurnIndex,
           },
         },
         select: {
+          role: true,
           content: true,
           turn_index: true,
           created_at: true,
         },
       });
 
-      if (existingRetry) {
-        if (existingRetry.content !== content) {
-          throw new RecognitionConversationStaleError();
-        }
-
-        const existingAssistant = await transaction.recognition_messages.findUnique({
-          where: {
-            thread_id_turn_index: {
-              thread_id: thread.id,
-              turn_index: existingRetry.turn_index + 1,
-            },
-          },
-          select: {
-            content: true,
-            turn_index: true,
-            created_at: true,
-          },
-        });
-
-        if (!existingAssistant) {
-          throw new RecognitionConversationStaleError();
-        }
-
+      if (existingAssistant?.role === "assistant") {
         return {
-          user: {
-            role: "user" as const,
-            content: existingRetry.content,
-            turnIndex: existingRetry.turn_index,
-            createdAt: existingRetry.created_at.toISOString(),
-          },
+          user: prepared.user,
           assistant: {
             role: "assistant" as const,
             content: existingAssistant.content,
@@ -283,41 +420,35 @@ export async function POST(request: Request) {
         where: { id: thread.id },
         select: { message_count: true },
       });
-
-      if (!currentThread || currentThread.message_count !== thread.message_count) {
+      if (!currentThread || currentThread.message_count !== prepared.userTurnIndex) {
         throw new RecognitionConversationStaleError();
       }
 
-      await transaction.recognition_messages.createMany({
-        data: [
-          {
-            thread_id: thread.id,
-            role: "user",
-            content,
-            turn_index: userTurnIndex,
-            client_message_id: clientMessageId,
-            evidence_snapshot: {},
-            created_at: now,
+      const now = new Date();
+      const assistantMessage = await transaction.recognition_messages.create({
+        data: {
+          thread_id: thread.id,
+          role: "assistant",
+          content: generated.reply,
+          turn_index: assistantTurnIndex,
+          client_message_id: null,
+          evidence_snapshot: {
+            memoryVersion: generated.memory.version,
+            anchorCount: generated.memory.anchors.length,
+            promptMessageCount: promptMessages.length,
+            model: generated.model,
+            inputTokens: generated.usage.inputTokens,
+            outputTokens: generated.usage.outputTokens,
+            cacheCreationInputTokens: generated.usage.cacheCreationInputTokens,
+            cacheReadInputTokens: generated.usage.cacheReadInputTokens,
           },
-          {
-            thread_id: thread.id,
-            role: "assistant",
-            content: generated.reply,
-            turn_index: assistantTurnIndex,
-            client_message_id: null,
-            evidence_snapshot: {
-              memoryVersion: generated.memory.version,
-              anchorCount: generated.memory.anchors.length,
-              promptMessageCount: promptMessages.length,
-              model: generated.model,
-              inputTokens: generated.usage.inputTokens,
-              outputTokens: generated.usage.outputTokens,
-              cacheCreationInputTokens: generated.usage.cacheCreationInputTokens,
-              cacheReadInputTokens: generated.usage.cacheReadInputTokens,
-            },
-            created_at: now,
-          },
-        ],
+          created_at: now,
+        },
+        select: {
+          content: true,
+          turn_index: true,
+          created_at: true,
+        },
       });
 
       await transaction.recognition_threads.update({
@@ -331,17 +462,12 @@ export async function POST(request: Request) {
       });
 
       return {
-        user: {
-          role: "user" as const,
-          content,
-          turnIndex: userTurnIndex,
-          createdAt: now.toISOString(),
-        },
+        user: prepared.user,
         assistant: {
           role: "assistant" as const,
-          content: generated.reply,
-          turnIndex: assistantTurnIndex,
-          createdAt: now.toISOString(),
+          content: assistantMessage.content,
+          turnIndex: assistantMessage.turn_index,
+          createdAt: assistantMessage.created_at.toISOString(),
         },
       };
     });
@@ -350,14 +476,34 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("POST /api/recognition/conversation failed:", error);
 
-    const isStale = error instanceof RecognitionConversationStaleError;
+    if (error instanceof RecognitionMessageIdConflictError) {
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: 409 },
+      );
+    }
 
+    if (error instanceof RecognitionPendingTurnError) {
+      return NextResponse.json(
+        {
+          ok: false,
+          saved: true,
+          error: "Your previous words are saved and still waiting for Recognition. Refresh to continue from them.",
+        },
+        { status: 409 },
+      );
+    }
+
+    const isStale = error instanceof RecognitionConversationStaleError;
     return NextResponse.json(
       {
         ok: false,
+        saved: participantTurnWasSaved,
         error: isStale
-          ? "Recognition changed in another tab. Refresh before sending this message again."
-          : "Recognition could not answer accurately enough just now. Your words are still here; try again.",
+          ? "Recognition changed in another tab. Refresh before continuing."
+          : participantTurnWasSaved
+            ? "Your words are saved. Recognition could not complete the reply just now; retry when you are ready."
+            : "Recognition could not respond just now. Your draft is still here; try again.",
       },
       { status: isStale ? 409 : 503 },
     );
