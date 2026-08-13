@@ -49,6 +49,7 @@ export default async function RecognitionPage() {
       role: true,
       content: true,
       turn_index: true,
+      client_message_id: true,
       created_at: true,
     },
   });
@@ -63,6 +64,7 @@ export default async function RecognitionPage() {
       role: message.role,
       content: message.content,
       turnIndex: message.turn_index,
+      clientMessageId: message.client_message_id,
       createdAt: message.created_at.toISOString(),
     }));
 
