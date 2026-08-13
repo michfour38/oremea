@@ -17,7 +17,7 @@ type StoredRecognitionComposer = {
 
 const COMPOSER_STORAGE_KEY = "oremea:recognition:composer:v1";
 
-function RecognitionDots({ compact = false }: { compact?: boolean }) {
+function RecognitionDots() {
   return (
     <span
       className="inline-flex items-center gap-1.5"
@@ -28,7 +28,7 @@ function RecognitionDots({ compact = false }: { compact?: boolean }) {
         <span
           key={index}
           aria-hidden="true"
-          className={`${compact ? "h-1.5 w-1.5" : "h-2 w-2"} animate-bounce rounded-full bg-current`}
+          className="h-2 w-2 animate-bounce rounded-full bg-current"
           style={{
             animationDelay: `${index * 120}ms`,
             animationDuration: "700ms",
@@ -169,9 +169,8 @@ export default function RecognitionChat({
     const content = savedTurn ? savedTurn.content : draft.trim();
     if (!content || isSending) return;
 
-    const clientMessageId = savedTurn?.clientMessageId
-      ?? pendingMessageId
-      ?? crypto.randomUUID();
+    const clientMessageId =
+      savedTurn?.clientMessageId ?? pendingMessageId ?? crypto.randomUUID();
     if (!clientMessageId) return;
 
     if (!savedTurn) {
@@ -263,7 +262,9 @@ export default function RecognitionChat({
                 Begin where you are
               </p>
               <h1 className="mt-5 font-serif text-4xl leading-tight text-zinc-100 md:text-6xl">
-                {firstName ? `${firstName}, what has your attention?` : "What has your attention?"}
+                {firstName
+                  ? `${firstName}, what has your attention?`
+                  : "What has your attention?"}
               </h1>
               <p className="mt-7 max-w-xl font-serif text-xl leading-9 text-zinc-400">
                 Bring what is here. Recognition stays with what you actually say,
@@ -335,15 +336,14 @@ export default function RecognitionChat({
                   type="button"
                   onClick={() => void sendMessage(savedTurnAwaitingReply)}
                   disabled={isSending}
+                  aria-label={
+                    isSending
+                      ? "Recognition is responding"
+                      : "Continue reflection"
+                  }
                   className="shrink-0 rounded-full border border-[#b39558] bg-[#b39558] px-5 py-2 text-sm font-medium text-black transition hover:bg-[#c9aa69] disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900 disabled:text-zinc-600"
                 >
-                  {isSending ? (
-                    <span className="flex min-w-[92px] justify-center">
-                      <RecognitionDots compact />
-                    </span>
-                  ) : (
-                    "Continue reflection"
-                  )}
+                  Continue reflection
                 </button>
               </div>
             ) : (
@@ -386,15 +386,7 @@ export default function RecognitionChat({
                     }
                     className="min-w-[82px] rounded-full border border-[#b39558] bg-[#b39558] px-5 py-2 text-sm font-medium text-black transition hover:bg-[#c9aa69] disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900 disabled:text-zinc-600"
                   >
-                    {isSending ? (
-                      <span className="flex justify-center">
-                        <RecognitionDots compact />
-                      </span>
-                    ) : pendingMessageId ? (
-                      "Retry"
-                    ) : (
-                      "Reflect"
-                    )}
+                    {isSending ? "Reflect" : pendingMessageId ? "Retry" : "Reflect"}
                   </button>
                 </div>
               </div>
