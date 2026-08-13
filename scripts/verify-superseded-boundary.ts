@@ -80,8 +80,13 @@ assert.doesNotMatch(
 );
 assert.match(
   chatSource,
-  />\s*Reflect\s*</,
-  "The active Recognition composer must use Reflect as its primary action.",
+  /isSending\s*\?\s*"Reflect"\s*:\s*pendingMessageId\s*\?\s*"Retry"\s*:\s*"Reflect"/,
+  "The active Recognition composer must keep Reflect as its primary action while preserving Retry only for a failed send.",
+);
+assert.doesNotMatch(
+  chatSource,
+  /:\s*"Send"|>\s*Send\s*</,
+  "The superseded Send primary action must not return to the active Recognition composer.",
 );
 assert.equal(
   (chatSource.match(/<RecognitionDots\s*\/>/g) ?? []).length,
