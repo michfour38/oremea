@@ -196,6 +196,11 @@ assert.match(
   /getRecognitionConversationAccess/,
   "Recognition account access must remain membership-gated.",
 );
+assert.match(
+  pageSource,
+  /client_message_id: true/,
+  "Recognition reloads must hydrate the saved participant send ID so an interrupted reply can continue safely.",
+);
 
 const purchaseSource = readFileSync("app/recognition/purchase/page.tsx", "utf8");
 assert.match(
@@ -260,6 +265,23 @@ assert.match(
   /client_message_id: clientMessageId/,
   "Participant sends must persist their idempotency key.",
 );
+const participantWriteIndex = apiSource.indexOf(
+  "const userMessage = await transaction.recognition_messages.create",
+);
+const generationIndex = apiSource.indexOf(
+  "const generated = await generateRecognitionConversationReply",
+);
+assert.ok(
+  participantWriteIndex >= 0 &&
+    generationIndex >= 0 &&
+    participantWriteIndex < generationIndex,
+  "Recognition must save the participant turn before waiting for the model, so refresh cannot erase submitted words.",
+);
+assert.match(
+  apiSource,
+  /savedParticipantTurn = prepared\.user/,
+  "A failed model reply must report the participant turn that was already saved.",
+);
 
 const chatSource = readFileSync("app/recognition/recognition-chat.tsx", "utf8");
 assert.match(
@@ -271,6 +293,26 @@ assert.match(
   chatSource,
   /pendingMessageId/,
   "A failed Recognition send must retain its send ID for a safe retry.",
+);
+assert.match(
+  chatSource,
+  /oremea:recognition:composer:v1/,
+  "Recognition must keep an unsent or in-flight composer locally across refresh.",
+);
+assert.match(
+  chatSource,
+  /storeComposer\(draft, clientMessageId\)/,
+  "Recognition must synchronously protect the draft and send ID before the network request starts.",
+);
+assert.match(
+  chatSource,
+  /Continue reflection/,
+  "A saved participant turn without a reply must be recoverable without retyping it.",
+);
+assert.match(
+  chatSource,
+  /event\.key === "Enter"[\s\S]*event\.metaKey \|\| event\.ctrlKey/,
+  "Plain Enter must remain available for natural line breaks; only an explicit keyboard chord may submit.",
 );
 
 const schemaSource = readFileSync(
