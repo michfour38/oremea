@@ -15,6 +15,14 @@ const RECENT_MESSAGE_FETCH_LIMIT = 40;
 const MAX_MESSAGE_LENGTH = 8000;
 const CLIENT_MESSAGE_ID = /^[a-zA-Z0-9_-]{12,100}$/;
 
+type SavedParticipantTurn = {
+  role: "user";
+  content: string;
+  turnIndex: number;
+  clientMessageId: string | null;
+  createdAt: string;
+};
+
 class RecognitionConversationStaleError extends Error {
   constructor() {
     super("Recognition changed while this reply was being prepared.");
@@ -103,7 +111,7 @@ async function readSavedMessagePair({
 }
 
 export async function POST(request: Request) {
-  let participantTurnWasSaved = false;
+  let savedParticipantTurn: SavedParticipantTurn | null = null;
 
   try {
     const user = await currentUser();
@@ -352,7 +360,7 @@ export async function POST(request: Request) {
       });
     }
 
-    participantTurnWasSaved = true;
+    savedParticipantTurn = prepared.user;
 
     const recentRows = await prisma.recognition_messages.findMany({
       where: { thread_id: thread.id },
@@ -487,8 +495,8 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           ok: false,
-          saved: true,
-          error: "Your previous words are saved and still waiting for Recognition. Refresh to continue from them.",
+          saved: false,
+          error: "Your previous words are already saved. Refresh to continue from them.",
         },
         { status: 409 },
       );
@@ -498,11 +506,12 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        saved: participantTurnWasSaved,
+        saved: Boolean(savedParticipantTurn),
+        message: savedParticipantTurn,
         error: isStale
           ? "Recognition changed in another tab. Refresh before continuing."
-          : participantTurnWasSaved
-            ? "Your words are saved. Recognition could not complete the reply just now; retry when you are ready."
+          : savedParticipantTurn
+            ? "Your words are saved. Recognition could not complete the reply just now; continue when you are ready."
             : "Recognition could not respond just now. Your draft is still here; try again.",
       },
       { status: isStale ? 409 : 503 },
