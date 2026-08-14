@@ -1,4 +1,6 @@
-import { auth } from "@clerk/nextjs/server";
+import { createHash } from "node:crypto";
+
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { WorksProviderClaimStatus, WorksProviderMembershipRole } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -7,6 +9,9 @@ import { prisma } from "@/lib/prisma";
 const PUBLIC_EMAIL_DOMAINS = new Set([
   "gmail.com", "googlemail.com", "outlook.com", "hotmail.com", "live.com", "yahoo.com", "icloud.com", "me.com", "proton.me", "protonmail.com",
 ]);
+
+const QA_PROVIDER_SLUG = "works-qa-supplier";
+const QA_OWNER_EMAIL_SHA256 = "e6bf94b0d4ca6c13869839abd79620a552ef4660e9997ce1ef389e968e12cc50";
 
 function emailDomain(email: string) {
   return email.split("@")[1]?.toLowerCase() ?? "";
@@ -26,6 +31,21 @@ function sameOrganizationDomain(emailHost: string, siteHost: string) {
   const cleanEmail = emailHost.replace(/^www\./, "");
   const cleanSite = siteHost.replace(/^www\./, "");
   return cleanEmail === cleanSite || cleanEmail.endsWith(`.${cleanSite}`) || cleanSite.endsWith(`.${cleanEmail}`);
+}
+
+function emailSha256(email: string) {
+  return createHash("sha256").update(email.trim().toLowerCase()).digest("hex");
+}
+
+async function signedInPrimaryEmail() {
+  const user = await currentUser();
+  if (!user) return null;
+
+  const primary = user.emailAddresses.find(
+    (address) => address.id === user.primaryEmailAddressId,
+  );
+
+  return (primary ?? user.emailAddresses[0])?.emailAddress?.trim().toLowerCase() ?? null;
 }
 
 export async function GET(request: NextRequest) {
@@ -97,15 +117,13 @@ export async function POST(request: NextRequest) {
   const note = typeof body?.note === "string" && body.note.trim() ? body.note.trim() : null;
 
   if (!providerId) return NextResponse.json({ error: "Choose the business you are claiming." }, { status: 400 });
-  if (!/^\S+@\S+\.\S+$/.test(businessEmail)) {
-    return NextResponse.json({ error: "Add a valid business email address." }, { status: 400 });
-  }
 
   const provider = await prisma.works_providers.findFirst({
     where: { id: providerId, profile_status: { not: "ARCHIVED" } },
     select: {
       id: true,
       name: true,
+      slug: true,
       website: true,
       memberships: { where: { active: true }, select: { id: true }, take: 1 },
     },
@@ -126,45 +144,99 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "This business is already managed on WORKS. Ask the business owner or manager to add you." }, { status: 409 });
   }
 
-  const emailHost = emailDomain(businessEmail);
-  if (!emailHost || PUBLIC_EMAIL_DOMAINS.has(emailHost)) {
-    return NextResponse.json({ error: "Use an email address on the business's own domain so WORKS can verify the connection." }, { status: 400 });
+  const isQaProvider = provider.slug === QA_PROVIDER_SLUG;
+  let verifiedBusinessEmail = businessEmail;
+
+  if (isQaProvider) {
+    const accountEmail = await signedInPrimaryEmail();
+    if (!accountEmail || emailSha256(accountEmail) !== QA_OWNER_EMAIL_SHA256) {
+      return NextResponse.json(
+        { error: "This QA supplier profile is reserved for the Oremea owner test account." },
+        { status: 403 },
+      );
+    }
+    verifiedBusinessEmail = accountEmail;
+  } else {
+    if (!/^\S+@\S+\.\S+$/.test(businessEmail)) {
+      return NextResponse.json({ error: "Add a valid business email address." }, { status: 400 });
+    }
+
+    const emailHost = emailDomain(businessEmail);
+    if (!emailHost || PUBLIC_EMAIL_DOMAINS.has(emailHost)) {
+      return NextResponse.json({ error: "Use an email address on the business's own domain so WORKS can verify the connection." }, { status: 400 });
+    }
+
+    const siteHost = websiteDomain(provider.website);
+    if (siteHost && !sameOrganizationDomain(emailHost, siteHost)) {
+      return NextResponse.json({
+        error: `Use an email address connected to ${provider.name}'s business domain. A different-domain claim cannot be approved through this doorway.`,
+      }, { status: 400 });
+    }
+
+    // A missing website removes the strongest automatic signal, so require useful evidence
+    // and leave the request pending for manual verification. No membership is created here.
+    if (!siteHost && (!note || note.length < 12)) {
+      return NextResponse.json({
+        error: "WORKS does not yet have a business domain for this provider. Add a short note explaining your role so the claim can be manually verified.",
+      }, { status: 400 });
+    }
   }
 
-  const siteHost = websiteDomain(provider.website);
-  if (siteHost && !sameOrganizationDomain(emailHost, siteHost)) {
-    return NextResponse.json({
-      error: `Use an email address connected to ${provider.name}'s business domain. A different-domain claim cannot be approved through this doorway.`,
-    }, { status: 400 });
-  }
-
-  // A missing website removes the strongest automatic signal, so require useful evidence
-  // and leave the request pending for manual verification. No membership is created here.
-  if (!siteHost && (!note || note.length < 12)) {
-    return NextResponse.json({
-      error: "WORKS does not yet have a business domain for this provider. Add a short note explaining your role so the claim can be manually verified.",
-    }, { status: 400 });
-  }
+  const claimStatus = isQaProvider
+    ? WorksProviderClaimStatus.APPROVED
+    : WorksProviderClaimStatus.PENDING;
 
   const claim = await prisma.works_provider_claims.upsert({
     where: { provider_id_clerk_user_id: { provider_id: providerId, clerk_user_id: userId } },
     create: {
       provider_id: providerId,
       clerk_user_id: userId,
-      business_email: businessEmail,
+      business_email: verifiedBusinessEmail,
       requested_role: WorksProviderMembershipRole.OWNER,
       note,
-      status: WorksProviderClaimStatus.PENDING,
+      status: claimStatus,
+      reviewed_at: isQaProvider ? new Date() : null,
     },
     update: {
-      business_email: businessEmail,
+      business_email: verifiedBusinessEmail,
       note,
       requested_role: WorksProviderMembershipRole.OWNER,
-      status: WorksProviderClaimStatus.PENDING,
-      reviewed_at: null,
+      status: claimStatus,
+      reviewed_at: isQaProvider ? new Date() : null,
     },
     select: { id: true, status: true, created_at: true },
   });
+
+  if (isQaProvider) {
+    await prisma.works_provider_memberships.upsert({
+      where: {
+        provider_id_clerk_user_id: {
+          provider_id: providerId,
+          clerk_user_id: userId,
+        },
+      },
+      create: {
+        provider_id: providerId,
+        clerk_user_id: userId,
+        role: WorksProviderMembershipRole.OWNER,
+        active: true,
+      },
+      update: {
+        role: WorksProviderMembershipRole.OWNER,
+        active: true,
+      },
+    });
+
+    await prisma.works_providers.update({
+      where: { id: providerId },
+      data: { profile_status: "ACTIVE" },
+    });
+
+    return NextResponse.json({
+      claim,
+      message: `QA claim approved for ${provider.name}. Your test account now has owner access so the supplier workspace can be audited end to end.`,
+    });
+  }
 
   await prisma.works_providers.updateMany({
     where: { id: providerId, profile_status: "RESEARCHED" },
