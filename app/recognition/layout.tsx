@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./recognition-theme.css";
 import "./recognition-reading.css";
 import RecognitionInputFocus from "./recognition-input-focus";
+import RecognitionShellControls from "./recognition-shell-controls";
 
 export const metadata: Metadata = {
   title: "Recognition | Oremea",
@@ -21,6 +22,7 @@ export default function RecognitionLayout({
       style={{ caretColor: "#C8A96A" }}
     >
       <RecognitionInputFocus />
+      <RecognitionShellControls />
       {children}
     </div>
   );
