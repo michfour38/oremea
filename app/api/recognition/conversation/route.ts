@@ -206,7 +206,7 @@ export async function POST(request: Request) {
 
     const prepared = await prisma.$transaction(async (transaction) => {
       const lockKey = `recognition-thread:${user.id}`;
-      await transaction.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
+      await transaction.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
 
       const currentThread = await transaction.recognition_threads.findUnique({
         where: { id: thread.id },
@@ -395,7 +395,7 @@ export async function POST(request: Request) {
     const assistantTurnIndex = prepared.userTurnIndex + 1;
     const saved = await prisma.$transaction(async (transaction) => {
       const lockKey = `recognition-thread:${user.id}`;
-      await transaction.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
+      await transaction.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
 
       const existingAssistant = await transaction.recognition_messages.findUnique({
         where: {
