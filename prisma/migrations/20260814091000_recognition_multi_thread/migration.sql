@@ -1,6 +1,9 @@
 ALTER TABLE "recognition_threads"
 ADD COLUMN "archived_at" TIMESTAMPTZ(6);
 
+ALTER TABLE "recognition_threads"
+DROP CONSTRAINT IF EXISTS "recognition_threads_user_id_key";
+
 DROP INDEX IF EXISTS "recognition_threads_user_id_key";
 
 CREATE INDEX "recognition_threads_user_id_idx"
