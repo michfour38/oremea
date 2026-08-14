@@ -1,3 +1,5 @@
+import type { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 
 function threadLockKey(userId: string) {
@@ -91,6 +93,17 @@ export async function startNewRecognitionThread({
     const lockKey = threadLockKey(userId);
     await transaction.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
 
+    const current = await transaction.recognition_threads.findFirst({
+      where: {
+        user_id: userId,
+        status: "active",
+      },
+      orderBy: [{ last_message_at: "desc" }, { created_at: "desc" }],
+      select: {
+        memory_snapshot: true,
+      },
+    });
+
     const now = new Date();
     await transaction.recognition_threads.updateMany({
       where: {
@@ -108,6 +121,7 @@ export async function startNewRecognitionThread({
         user_id: userId,
         primary_email: primaryEmail,
         status: "active",
+        memory_snapshot: (current?.memory_snapshot ?? {}) as Prisma.InputJsonValue,
       },
       select: {
         id: true,
