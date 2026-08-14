@@ -2,6 +2,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import MemberNav from "@/app/(member)/member-nav";
 import { prisma } from "@/lib/prisma";
 import { readRecognitionMemory } from "@/src/lib/recognition/recognition-conversation";
 import RecognitionMemoryControls from "./recognition-memory-controls";
@@ -103,25 +104,7 @@ export default async function RecognitionArchivePage({ searchParams }: Props) {
 
   return (
     <main className="min-h-screen bg-[#090909] text-white">
-      <nav className="border-b border-white/5 bg-black/50 px-6 py-4">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-6 text-sm">
-          <Link
-            href="https://www.oremea.com"
-            className="uppercase tracking-[0.28em] text-[#C8A96A]/90 transition hover:text-[#f1dfb4]"
-          >
-            Oremea
-          </Link>
-          <div className="flex items-center gap-5">
-            <Link
-              href="https://recognition.oremea.com/begin"
-              className="text-zinc-400 transition hover:text-[#f1dfb4]"
-            >
-              Recognition
-            </Link>
-            <span className="text-[#E7C98B]">Archive</span>
-          </div>
-        </div>
-      </nav>
+      <MemberNav />
 
       <section className="mx-auto max-w-4xl px-5 py-12">
         <Link
@@ -177,10 +160,13 @@ export default async function RecognitionArchivePage({ searchParams }: Props) {
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <p className="text-xs uppercase tracking-[0.18em] text-[#b79a63]">
-                        {thread.status === "active" ? "Current chat" : formatDate(thread.created_at)}
+                        {thread.status === "active"
+                          ? "Current chat"
+                          : formatDate(thread.created_at)}
                       </p>
                       <p className="text-xs text-zinc-600">
-                        {thread.message_count} saved message{thread.message_count === 1 ? "" : "s"}
+                        {thread.message_count} saved message
+                        {thread.message_count === 1 ? "" : "s"}
                       </p>
                     </div>
                     <p className="mt-2 text-sm leading-6 text-zinc-300">
@@ -199,14 +185,20 @@ export default async function RecognitionArchivePage({ searchParams }: Props) {
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
                   <p className="text-xs uppercase tracking-[0.22em] text-[#d8b15f]">
-                    {selectedThread.status === "active" ? "Current chat" : "Archived chat"}
+                    {selectedThread.status === "active"
+                      ? "Current chat"
+                      : "Archived chat"}
                   </p>
                   <h2 className="mt-2 font-serif text-3xl text-zinc-100">
-                    {formatDate(selectedThread.messages[0]?.created_at ?? selectedThread.created_at)}
+                    {formatDate(
+                      selectedThread.messages[0]?.created_at ??
+                        selectedThread.created_at,
+                    )}
                   </h2>
                 </div>
                 <p className="text-sm text-zinc-500">
-                  {selectedThread.message_count} saved message{selectedThread.message_count === 1 ? "" : "s"}
+                  {selectedThread.message_count} saved message
+                  {selectedThread.message_count === 1 ? "" : "s"}
                 </p>
               </div>
 
@@ -245,7 +237,8 @@ export default async function RecognitionArchivePage({ searchParams }: Props) {
                             : "text-[#9d8659]"
                         }`}
                       >
-                        {message.role === "user" ? "You" : "Recognition"} · {formatDate(message.created_at)}
+                        {message.role === "user" ? "You" : "Recognition"} ·{" "}
+                        {formatDate(message.created_at)}
                       </p>
                       <div
                         className={
