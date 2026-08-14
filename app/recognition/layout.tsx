@@ -9,6 +9,10 @@ export const metadata: Metadata = {
   title: "Recognition | Oremea",
   description:
     "An ongoing private recursive accountability conversation that helps you see yourself clearly and stay accountable to your own words without directing your next move.",
+  icons: {
+    icon: [{ url: "/icons/recognition.svg", type: "image/svg+xml" }],
+    shortcut: "/icons/recognition.svg",
+  },
 };
 
 export default function RecognitionLayout({
