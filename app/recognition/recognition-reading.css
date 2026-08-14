@@ -25,38 +25,3 @@
 .recognition-theme.recognition-theme h3 + p:not(.text-xs) {
   color: var(--recognition-zinc) !important;
 }
-
-/*
-  Recognition should open close to the header, not make the participant cross
-  a large empty field before reaching the first prompt. The second selector is
-  specific to the empty-chat introduction; live conversation spacing stays intact.
-*/
-.recognition-theme.recognition-theme main > section > div.flex-1 {
-  padding-top: 1.5rem !important;
-  padding-bottom: 2rem !important;
-}
-
-.recognition-theme.recognition-theme
-  main
-  > section
-  > div.flex-1
-  > div.mx-auto.max-w-2xl {
-  padding-top: 1.5rem !important;
-  padding-bottom: 2.5rem !important;
-}
-
-@media (min-width: 768px) {
-  .recognition-theme.recognition-theme main > section > div.flex-1 {
-    padding-top: 2rem !important;
-    padding-bottom: 2.5rem !important;
-  }
-
-  .recognition-theme.recognition-theme
-    main
-    > section
-    > div.flex-1
-    > div.mx-auto.max-w-2xl {
-    padding-top: 2.5rem !important;
-    padding-bottom: 3rem !important;
-  }
-}
