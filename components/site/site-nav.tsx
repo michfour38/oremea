@@ -15,7 +15,7 @@ function NavItem({
   label: string;
   pathname: string;
 }) {
-  const isActive = pathname === href;
+  const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
   if (isActive) {
     return <span className="cursor-default text-[#b79a63]/70">{label}</span>;
@@ -47,6 +47,7 @@ export function SiteNav() {
 
           <nav className="hidden items-center gap-6 text-[11px] uppercase tracking-[0.18em] text-zinc-300 md:flex">
             <NavItem href="/explore" label="Explore" pathname={pathname} />
+            <NavItem href="/works" label="WORKS" pathname={pathname} />
             <NavItem href="/reviews" label="Reviews" pathname={pathname} />
             <NavItem href="/compare" label="Compare" pathname={pathname} />
             <NavItem href="/contact" label="Contact" pathname={pathname} />

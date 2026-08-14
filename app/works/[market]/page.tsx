@@ -16,7 +16,7 @@ export function generateMetadata({ params }: { params: { market: string } }): Me
 
   const canonical = `${WORKS_ORIGIN}/works/${market.slug}`;
   return {
-    title: `Find manufacturers and production providers in ${market.localName} | WORKS`,
+    title: "WORKS | Oremea",
     description: `Describe what you want to make. WORKS builds a production route and finds ${market.localName} manufacturers, suppliers and specialist providers that fit the brief.`,
     alternates: { canonical },
     openGraph: {
