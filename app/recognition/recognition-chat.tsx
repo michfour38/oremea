@@ -98,6 +98,7 @@ export default function RecognitionChat({
   const [pendingMessageId, setPendingMessageId] = useState<string | null>(null);
   const [composerHydrated, setComposerHydrated] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isStartingNewChat, setIsStartingNewChat] = useState(false);
   const [error, setError] = useState("");
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -165,9 +166,43 @@ export default function RecognitionChat({
     setPendingMessageId(null);
   }
 
+  async function startNewChat() {
+    if (isSending || isStartingNewChat) return;
+
+    if (messages.length > 0) {
+      const confirmed = window.confirm(
+        "Begin a new chat? This conversation will stay in your Archive.",
+      );
+      if (!confirmed) return;
+    }
+
+    setIsStartingNewChat(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/recognition/thread", {
+        method: "POST",
+      });
+      const data = await response.json();
+      if (!response.ok || !data?.ok) {
+        throw new Error(data?.error || "Recognition could not begin a new chat just now.");
+      }
+
+      clearStoredComposer();
+      window.location.assign("https://recognition.oremea.com/begin");
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Recognition could not begin a new chat just now.",
+      );
+      setIsStartingNewChat(false);
+    }
+  }
+
   async function sendMessage(savedTurn?: RecognitionChatMessage) {
     const content = savedTurn ? savedTurn.content : draft.trim();
-    if (!content || isSending) return;
+    if (!content || isSending || isStartingNewChat) return;
 
     const clientMessageId =
       savedTurn?.clientMessageId ?? pendingMessageId ?? crypto.randomUUID();
@@ -237,7 +272,17 @@ export default function RecognitionChat({
               Private · ongoing · accountable to your words
             </p>
           </div>
-          <nav className="flex items-center gap-5 text-sm">
+          <nav className="flex items-center gap-4 text-sm sm:gap-5">
+            {messages.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => void startNewChat()}
+                disabled={isSending || isStartingNewChat}
+                className="text-zinc-400 transition hover:text-[#e7c98b] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {isStartingNewChat ? "Starting…" : "New chat"}
+              </button>
+            ) : null}
             <a
               href="https://recognition.oremea.com/archive"
               className="text-zinc-400 transition hover:text-[#e7c98b]"
@@ -335,7 +380,7 @@ export default function RecognitionChat({
                 <button
                   type="button"
                   onClick={() => void sendMessage(savedTurnAwaitingReply)}
-                  disabled={isSending}
+                  disabled={isSending || isStartingNewChat}
                   aria-label={
                     isSending
                       ? "Recognition is responding"
@@ -367,7 +412,7 @@ export default function RecognitionChat({
                   }}
                   rows={3}
                   maxLength={8000}
-                  disabled={isSending}
+                  disabled={isSending || isStartingNewChat}
                   placeholder="Say what is here…"
                   style={{ backgroundColor: "transparent" }}
                   className="max-h-56 min-h-[84px] w-full appearance-none resize-none rounded-[1.35rem] border-0 bg-transparent px-4 py-3 font-serif text-lg leading-8 text-zinc-100 outline-none placeholder:text-zinc-600 disabled:opacity-60 md:text-xl"
@@ -376,7 +421,7 @@ export default function RecognitionChat({
                   <button
                     type="button"
                     onClick={() => void sendMessage()}
-                    disabled={isSending || draft.trim().length === 0}
+                    disabled={isSending || isStartingNewChat || draft.trim().length === 0}
                     aria-label={
                       isSending
                         ? "Recognition is responding"
