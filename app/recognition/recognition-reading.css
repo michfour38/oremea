@@ -25,13 +25,3 @@
 .recognition-theme.recognition-theme h3 + p:not(.text-xs) {
   color: var(--recognition-zinc) !important;
 }
-
-/*
-  The base Recognition theme intentionally suppresses legacy inline photographic
-  backgrounds. The current product watermark is the one explicit exception: it
-  stays fixed behind the conversation and remains quiet enough to read through.
-*/
-.recognition-theme.recognition-theme [style*="recognition-logo.webp"] {
-  background-image: url('/images/recognition-logo.webp') !important;
-  opacity: 0.11 !important;
-}
