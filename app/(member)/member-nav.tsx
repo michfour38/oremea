@@ -38,7 +38,6 @@ function ProductLink({
 
 export default function MemberNav() {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null)
-  const [hasActiveMap, setHasActiveMap] = useState(false)
   const [hasCompassAccess, setHasCompassAccess] = useState(false)
 
   const pathname = usePathname()
@@ -51,56 +50,25 @@ export default function MemberNav() {
   useEffect(() => {
     let cancelled = false
 
-    async function refreshMapAvailability() {
+    async function refreshCompassAccess() {
       try {
-        const [accessResponse, mapResponse] = await Promise.all([
-          fetch("/api/compass/access", { cache: "no-store" }),
-          fetch("/api/compass/ending", {
-            method: "GET",
-            cache: "no-store",
-          }),
-        ])
+        const response = await fetch("/api/compass/access", {
+          cache: "no-store",
+        })
+        const data = await response.json().catch(() => null)
 
-        const accessData = await accessResponse.json().catch(() => null)
-        const activeAccess = Boolean(accessResponse.ok && accessData?.active)
-
-        if (!cancelled) setHasCompassAccess(activeAccess)
-
-        if (!activeAccess || !mapResponse.ok) {
-          if (!cancelled) setHasActiveMap(false)
-          return
-        }
-
-        const data = await mapResponse.json()
-        const items = Array.isArray(data?.state?.mapItems)
-          ? data.state.mapItems
-          : []
-        const hasActive = items.some(
-          (item: { status?: string }) =>
-            item?.status === "active" || item?.status === "waiting",
-        )
-
-        if (!cancelled) setHasActiveMap(hasActive)
-      } catch {
         if (!cancelled) {
-          setHasCompassAccess(false)
-          setHasActiveMap(false)
+          setHasCompassAccess(Boolean(response.ok && data?.active))
         }
+      } catch {
+        if (!cancelled) setHasCompassAccess(false)
       }
     }
 
-    void refreshMapAvailability()
-    window.addEventListener(
-      "compass-map-changed",
-      refreshMapAvailability,
-    )
+    void refreshCompassAccess()
 
     return () => {
       cancelled = true
-      window.removeEventListener(
-        "compass-map-changed",
-        refreshMapAvailability,
-      )
     }
   }, [pathname, searchParams])
 
@@ -135,14 +103,6 @@ export default function MemberNav() {
                 href="https://compass.oremea.com/begin"
                 activePath="/compass"
                 label="Compass"
-                pathname={pathname}
-              />
-            ) : null}
-            {hasCompassAccess && hasActiveMap ? (
-              <ProductLink
-                href="https://compass.oremea.com/map"
-                activePath="/compass/map"
-                label="Map"
                 pathname={pathname}
               />
             ) : null}
