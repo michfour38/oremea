@@ -7,6 +7,10 @@ import "./compass-legibility.css";
 
 export const metadata: Metadata = {
   title: "Compass | Oremea",
+  icons: {
+    icon: [{ url: "/icons/compass.svg", type: "image/svg+xml" }],
+    shortcut: "/icons/compass.svg",
+  },
 };
 
 export default function CompassLayout({ children }: { children: ReactNode }) {

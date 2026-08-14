@@ -7,6 +7,10 @@ export const metadata: Metadata = {
   title: "WORKS | Oremea",
   description:
     "Describe what you want to make. WORKS builds a production route and finds manufacturers, suppliers and specialist providers that fit the brief.",
+  icons: {
+    icon: [{ url: "/icons/works.svg", type: "image/svg+xml" }],
+    shortcut: "/icons/works.svg",
+  },
 };
 
 export default function WorksLayout({ children }: { children: ReactNode }) {
