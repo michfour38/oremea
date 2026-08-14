@@ -10,6 +10,7 @@ import {
 } from "@/src/lib/recognition/recognition-conversation";
 import { getRecognitionConversationAccess } from "@/src/lib/recognition/recognition-conversation-access";
 import { trimRecognitionRecentContext } from "@/src/lib/recognition/recognition-context";
+import { getOrCreateActiveRecognitionThread } from "@/src/lib/recognition/recognition-thread";
 
 const RECENT_MESSAGE_FETCH_LIMIT = 40;
 const MAX_MESSAGE_LENGTH = 8000;
@@ -168,18 +169,9 @@ export async function POST(request: Request) {
     }
 
     const primaryEmail = access.matchedEmail || emails[0] || null;
-    const thread = await prisma.recognition_threads.upsert({
-      where: { user_id: user.id },
-      create: {
-        user_id: user.id,
-        primary_email: primaryEmail,
-        status: "active",
-      },
-      update: {
-        primary_email: primaryEmail ?? undefined,
-        status: "active",
-      },
-      select: { id: true },
+    const thread = await getOrCreateActiveRecognitionThread({
+      userId: user.id,
+      primaryEmail,
     });
 
     const savedRetry = await readSavedMessagePair({
@@ -213,9 +205,12 @@ export async function POST(request: Request) {
         select: {
           message_count: true,
           memory_snapshot: true,
+          status: true,
         },
       });
-      if (!currentThread) throw new RecognitionConversationStaleError();
+      if (!currentThread || currentThread.status !== "active") {
+        throw new RecognitionConversationStaleError();
+      }
 
       const existingUser = await transaction.recognition_messages.findUnique({
         where: {
@@ -426,9 +421,13 @@ export async function POST(request: Request) {
 
       const currentThread = await transaction.recognition_threads.findUnique({
         where: { id: thread.id },
-        select: { message_count: true },
+        select: { message_count: true, status: true },
       });
-      if (!currentThread || currentThread.message_count !== prepared.userTurnIndex) {
+      if (
+        !currentThread ||
+        currentThread.status !== "active" ||
+        currentThread.message_count !== prepared.userTurnIndex
+      ) {
         throw new RecognitionConversationStaleError();
       }
 

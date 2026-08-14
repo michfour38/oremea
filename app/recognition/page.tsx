@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { getRecognitionConversationAccess } from "@/src/lib/recognition/recognition-conversation-access";
+import { getOrCreateActiveRecognitionThread } from "@/src/lib/recognition/recognition-thread";
 import RecognitionChat, { type RecognitionChatMessage } from "./recognition-chat";
 
 export const dynamic = "force-dynamic";
@@ -27,18 +28,9 @@ export default async function RecognitionPage() {
   }
 
   const primaryEmail = access.matchedEmail || emails[0] || null;
-  const thread = await prisma.recognition_threads.upsert({
-    where: { user_id: user.id },
-    create: {
-      user_id: user.id,
-      primary_email: primaryEmail,
-      status: "active",
-    },
-    update: {
-      primary_email: primaryEmail ?? undefined,
-      status: "active",
-    },
-    select: { id: true },
+  const thread = await getOrCreateActiveRecognitionThread({
+    userId: user.id,
+    primaryEmail,
   });
 
   const rows = await prisma.recognition_messages.findMany({

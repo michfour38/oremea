@@ -7,6 +7,7 @@ import {
   EMPTY_RECOGNITION_MEMORY,
   readRecognitionMemory,
 } from "@/src/lib/recognition/recognition-conversation";
+import { getActiveRecognitionThread } from "@/src/lib/recognition/recognition-thread";
 
 export async function DELETE(request: Request) {
   try {
@@ -15,13 +16,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ ok: false }, { status: 401 });
     }
 
-    const thread = await prisma.recognition_threads.findUnique({
-      where: { user_id: user.id },
-      select: {
-        id: true,
-        memory_snapshot: true,
-      },
-    });
+    const thread = await getActiveRecognitionThread(user.id);
 
     if (!thread) {
       return NextResponse.json({ ok: true, anchors: [] });

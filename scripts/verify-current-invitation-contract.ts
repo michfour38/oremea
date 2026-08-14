@@ -4,6 +4,10 @@ import { readFileSync } from "node:fs";
 const schema = readFileSync("prisma/schema/current.prisma", "utf8");
 const service = readFileSync("src/lib/current/current-access.ts", "utf8");
 const statusRoute = readFileSync("app/api/current/status/route.ts", "utf8");
+const recognitionThread = readFileSync(
+  "src/lib/recognition/recognition-thread.ts",
+  "utf8",
+);
 const invitationRoute = readFileSync(
   "app/api/current/invitations/[id]/route.ts",
   "utf8",
@@ -37,7 +41,16 @@ assert.match(
   /status: CURRENT_INVITATION_STATUS\.accepted[\s\S]*accepted_at: eventAt[\s\S]*resolved_at: eventAt/,
 );
 
-assert.match(statusRoute, /thread\.status !== "active"/);
+assert.match(
+  statusRoute,
+  /getActiveRecognitionThread\(userId\)/,
+  "The Current must qualify Recognition participation only from the active chat helper.",
+);
+assert.match(
+  recognitionThread,
+  /getActiveRecognitionThread[\s\S]*status:\s*"active"/,
+  "The shared Recognition helper must itself enforce active-thread selection.",
+);
 assert.match(statusRoute, /Math\.floor\(thread\.message_count \/ 2\)/);
 assert.match(statusRoute, /qualifyForCurrent/);
 assert.doesNotMatch(

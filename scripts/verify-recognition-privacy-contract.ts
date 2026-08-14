@@ -13,6 +13,10 @@ const threadRouteSource = readFileSync(
   "app/api/recognition/thread/route.ts",
   "utf8",
 );
+const threadLifecycleSource = readFileSync(
+  "src/lib/recognition/recognition-thread.ts",
+  "utf8",
+);
 const archiveSource = readFileSync("app/recognition/archive/page.tsx", "utf8");
 const threadControlsSource = readFileSync(
   "app/recognition/archive/recognition-thread-controls.tsx",
@@ -22,7 +26,17 @@ const threadControlsSource = readFileSync(
 assert.match(
   schemaSource,
   /onDelete: Cascade/,
-  "Deleting a Recognition thread must delete its ongoing conversation messages.",
+  "Deleting a Recognition thread must delete only the messages belonging to that selected thread.",
+);
+assert.match(
+  schemaSource,
+  /archived_at/,
+  "Recognition must preserve a durable archived state for closed chats.",
+);
+assert.doesNotMatch(
+  schemaSource,
+  /user_id\s+String\s+@unique/,
+  "Recognition must allow more than one preserved conversation per participant.",
 );
 assert.match(
   memoryRouteSource,
@@ -32,7 +46,22 @@ assert.match(
 assert.match(
   threadRouteSource,
   /currentUser/,
-  "Ongoing Recognition conversation deletion must remain account-bound.",
+  "Recognition thread changes must remain account-bound.",
+);
+assert.match(
+  threadRouteSource,
+  /startNewRecognitionThread/,
+  "New chat must use the preserved thread lifecycle rather than deleting history.",
+);
+assert.match(
+  threadLifecycleSource,
+  /status:\s*"archived"/,
+  "Beginning a new Recognition chat must archive the current chat.",
+);
+assert.match(
+  threadLifecycleSource,
+  /recognition_threads\.create/,
+  "Beginning a new Recognition chat must create a separate active thread.",
 );
 assert.match(
   threadRouteSource,
@@ -41,18 +70,33 @@ assert.match(
 );
 assert.match(
   threadRouteSource,
+  /id:\s*threadId[\s\S]*user_id:\s*user\.id/,
+  "Deleting a Recognition chat must verify that the selected thread belongs to the signed-in participant.",
+);
+assert.doesNotMatch(
+  threadRouteSource,
   /recognition_threads\.deleteMany/,
-  "Starting fresh must delete the participant's current ongoing thread rather than merely hiding it.",
+  "Deleting one Recognition chat must never wipe every thread for the participant.",
 );
 assert.doesNotMatch(
   threadRouteSource,
   /oremea_entitlements/,
-  "Deleting the ongoing conversation must not revoke Recognition purchase or membership access.",
+  "Deleting a conversation must not revoke Recognition purchase or membership access.",
+);
+assert.match(
+  archiveSource,
+  /threads\.map/,
+  "Recognition Archive must expose separate preserved chats rather than one overwritten transcript.",
+);
+assert.match(
+  archiveSource,
+  /Starting a new chat does not overwrite the old one/,
+  "Recognition Archive must explain that old chats remain intact.",
 );
 assert.match(
   archiveSource,
   /RecognitionThreadControls/,
-  "Recognition Archive must expose a participant-controlled start-fresh path.",
+  "Recognition Archive must expose participant-controlled deletion for the selected chat.",
 );
 assert.match(
   threadControlsSource,
@@ -61,8 +105,8 @@ assert.match(
 );
 assert.match(
   threadControlsSource,
-  /Earlier completed Recognition processes remain/,
-  "Deleting the ongoing thread must clearly distinguish it from preserved legacy Recognition history.",
+  /Other chats in[\s\S]*Archive stay exactly where they are/,
+  "Deleting one chat must clearly distinguish it from the participant's other preserved conversations.",
 );
 
 console.log("Recognition privacy contract checks passed.");

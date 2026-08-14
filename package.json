@@ -32,7 +32,7 @@
     "test:whop-webhook": "tsx scripts/verify-whop-webhook-contract.ts",
     "test:compass": "npm run test:compass-descent && npm run test:compass-resolution && npm run test:compass-pricing && npm run test:compass-access && npm run test:compass-archive && npm run test:compass-daily-goals && npm run test:whop-webhook",
     "test:recognition-pricing": "tsx scripts/verify-recognition-pricing-contract.ts",
-    "test:recognition-conversation": "tsx scripts/verify-recognition-conversation-contract.ts && tsx scripts/verify-recognition-ai-envelope-contract.ts && tsx scripts/verify-recognition-privacy-contract.ts && tsx scripts/verify-recognition-product-identity-contract.ts",
+    "test:recognition-conversation": "tsx scripts/verify-recognition-conversation-contract.ts && tsx scripts/verify-recognition-ai-envelope-contract.ts && tsx scripts/verify-recognition-privacy-contract.ts && tsx scripts/verify-recognition-natural-question-contract.ts && tsx scripts/verify-recognition-product-identity-contract.ts",
     "test:commerce-routing": "tsx scripts/verify-commerce-routing-contract.ts",
     "test:public-pricing": "tsx scripts/verify-public-pricing-contract.ts",
     "test:current": "tsx scripts/verify-current-invitation-contract.ts",

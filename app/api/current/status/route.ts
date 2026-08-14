@@ -1,7 +1,6 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-import { prisma } from "@/lib/prisma";
 import {
   getCurrentAccessState,
   getCurrentLaunchState,
@@ -10,6 +9,7 @@ import {
   listPendingCurrentInvitations,
   qualifyForCurrent,
 } from "@/src/lib/current/current-access";
+import { getActiveRecognitionThread } from "@/src/lib/recognition/recognition-thread";
 
 export const dynamic = "force-dynamic";
 
@@ -21,12 +21,9 @@ function userEmails(user: Awaited<ReturnType<typeof currentUser>>) {
 }
 
 async function qualifyRecognitionParticipation(userId: string) {
-  const thread = await prisma.recognition_threads.findUnique({
-    where: { user_id: userId },
-    select: { id: true, status: true, message_count: true },
-  });
+  const thread = await getActiveRecognitionThread(userId);
 
-  if (!thread || thread.status !== "active") return;
+  if (!thread) return;
 
   const completedUserTurns = Math.floor(thread.message_count / 2);
   const requiredTurns = getRecognitionCurrentQualificationTurns();
@@ -59,7 +56,7 @@ export async function GET() {
 
     // Recognition is recursive rather than a fixed-length course now. Meaningful
     // participation is measured by completed user↔Recognition exchanges, and only
-    // an active thread can qualify. The qualification itself remains idempotent.
+    // the active chat can qualify. The qualification itself remains idempotent.
     await qualifyRecognitionParticipation(userId);
 
     const [launch, access, pendingInvitations] = await Promise.all([

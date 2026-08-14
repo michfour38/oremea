@@ -42,6 +42,36 @@ assert.match(
 );
 assert.match(
   RECOGNITION_CONVERSATION_STANDARD,
+  /when the newest message contains several genuinely different live threads/i,
+  "Recognition must orient when one message contains several plausible threads.",
+);
+assert.match(
+  RECOGNITION_CONVERSATION_STANDARD,
+  /brief aside, afterthought, correction, or single phrase may be the live thread/i,
+  "Recognition must not discard a small phrase merely because the participant wrote more about other things.",
+);
+assert.match(
+  RECOGNITION_CONVERSATION_STANDARD,
+  /do not arbitrarily choose one merely because it came first, took more words, sounds more dramatic/i,
+  "Recognition must not rank participant material by order, length, or drama.",
+);
+assert.match(
+  RECOGNITION_CONVERSATION_STANDARD,
+  /if two or more threads remain plausibly central, orient before digging/i,
+  "Recognition must ask which thread matters when the participant's own writing does not resolve it.",
+);
+assert.match(
+  RECOGNITION_CONVERSATION_STANDARD,
+  /do not prove comprehension by restating or inventorying/i,
+  "Recognition must not perform comprehension by reciting the participant's message back to them.",
+);
+assert.match(
+  RECOGNITION_CONVERSATION_STANDARD,
+  /reuse at most one short phrase or detail/i,
+  "Recognition should carry only the smallest participant detail needed to open the live distinction.",
+);
+assert.match(
+  RECOGNITION_CONVERSATION_STANDARD,
   /SAFETY OVERRIDE/,
   "Immediate safety must outrank ordinary recursive accountability.",
 );
@@ -308,6 +338,11 @@ assert.match(
   chatSource,
   /Continue reflection/,
   "A saved participant turn without a reply must be recoverable without retyping it.",
+);
+assert.match(
+  chatSource,
+  /bottomRef\.current\?\.scrollIntoView/,
+  "Recognition must land at the newest exchange instead of making a returning participant scroll through the thread.",
 );
 assert.match(
   chatSource,
