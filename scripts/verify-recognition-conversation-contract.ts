@@ -42,6 +42,16 @@ assert.match(
 );
 assert.match(
   RECOGNITION_CONVERSATION_STANDARD,
+  /do not prove comprehension by restating or inventorying/i,
+  "Recognition must not perform comprehension by reciting the participant's message back to them.",
+);
+assert.match(
+  RECOGNITION_CONVERSATION_STANDARD,
+  /reuse at most one short phrase or detail/i,
+  "Recognition should carry only the smallest participant detail needed to open the live distinction.",
+);
+assert.match(
+  RECOGNITION_CONVERSATION_STANDARD,
   /SAFETY OVERRIDE/,
   "Immediate safety must outrank ordinary recursive accountability.",
 );
@@ -308,6 +318,11 @@ assert.match(
   chatSource,
   /Continue reflection/,
   "A saved participant turn without a reply must be recoverable without retyping it.",
+);
+assert.match(
+  chatSource,
+  /bottomRef\.current\?\.scrollIntoView/,
+  "Recognition must land at the newest exchange instead of making a returning participant scroll through the thread.",
 );
 assert.match(
   chatSource,
