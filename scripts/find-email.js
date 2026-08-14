@@ -1,70 +1,95 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const { Prisma, PrismaClient } = require("@prisma/client");
 
-const email = "michelle.potgieter@gmail.com";
+const prisma = new PrismaClient();
+const email = (process.argv[2] || process.env.FIND_EMAIL || "").trim();
+
+if (!email) {
+  console.error("Usage: node scripts/find-email.js <email>");
+  console.error("   or: FIND_EMAIL=<email> node scripts/find-email.js");
+  process.exit(1);
+}
+
+function delegateName(modelName) {
+  return modelName.charAt(0).toLowerCase() + modelName.slice(1);
+}
 
 async function main() {
   console.log("Searching for:", email);
 
   const results = [];
+  const skipped = [];
 
-  try {
-    const entryLeads = await prisma.entry_leads.findMany({
-      where: { email },
-    });
-    if (entryLeads.length) {
-      results.push({ table: "entry_leads", data: entryLeads });
+  for (const model of Prisma.dmmf.datamodel.models) {
+    const stringFields = model.fields.filter(
+      (field) =>
+        field.kind === "scalar" &&
+        field.type === "String" &&
+        !field.isList
+    );
+
+    if (stringFields.length === 0) continue;
+
+    const delegate = prisma[delegateName(model.name)];
+    if (!delegate || typeof delegate.findMany !== "function") continue;
+
+    try {
+      const rows = await delegate.findMany({
+        where: {
+          OR: stringFields.map((field) => ({ [field.name]: email })),
+        },
+        take: 5,
+      });
+
+      if (rows.length === 0) continue;
+
+      const columns = [
+        ...new Set(
+          rows.flatMap((row) =>
+            stringFields
+              .filter((field) => row[field.name] === email)
+              .map((field) => field.name)
+          )
+        ),
+      ];
+
+      results.push({
+        model: model.name,
+        columns,
+        data: rows,
+      });
+    } catch (error) {
+      skipped.push({
+        model: model.name,
+        reason: error instanceof Error ? error.message : String(error),
+      });
     }
-  } catch {}
-
-  try {
-    const profiles = await prisma.profiles.findMany({
-      where: { email },
-    });
-    if (profiles.length) {
-      results.push({ table: "profiles", data: profiles });
-    }
-  } catch {}
-
-  try {
-    const anyTextMatch = await prisma.$queryRawUnsafe(`
-      SELECT table_name, column_name
-      FROM information_schema.columns
-      WHERE table_schema = 'public'
-      AND data_type IN ('text','character varying')
-    `);
-
-    for (const col of anyTextMatch) {
-      try {
-        const rows = await prisma.$queryRawUnsafe(
-          `SELECT * FROM "${col.table_name}" WHERE "${col.column_name}" = $1 LIMIT 5`,
-          email
-        );
-
-        if (rows.length > 0) {
-          results.push({
-            table: col.table_name,
-            column: col.column_name,
-            data: rows,
-          });
-        }
-      } catch {}
-    }
-  } catch {}
-
-  if (results.length === 0) {
-    console.log("❌ Email not found anywhere");
-  } else {
-    console.log("✅ FOUND:");
-    results.forEach((r) => {
-      console.log("\n---");
-      console.log("Table:", r.table);
-      if (r.column) console.log("Column:", r.column);
-      console.log(r.data);
-    });
   }
 
-  await prisma.$disconnect();
+  if (results.length === 0) {
+    console.log("❌ Email not found in any Prisma-managed string field");
+  } else {
+    console.log("✅ FOUND:");
+    for (const result of results) {
+      console.log("\n---");
+      console.log("Model:", result.model);
+      console.log("Columns:", result.columns.join(", ") || "unknown");
+      console.log(result.data);
+    }
+  }
+
+  if (skipped.length > 0) {
+    console.warn(`\n⚠️ Skipped ${skipped.length} model(s) because their lookup failed:`);
+    for (const item of skipped) {
+      console.warn(`- ${item.model}: ${item.reason}`);
+    }
+  }
 }
 
-main().catch(console.error);
+main()
+  .catch((error) => {
+    console.error("Email search failed:", error);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

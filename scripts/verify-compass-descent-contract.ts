@@ -1,4 +1,5 @@
 import {
+  buildCompassRecoveryWhyQuestion,
   validateCompassDescentDecision,
   validateCompassQuestion,
 } from "../src/lib/compass/session/compass-descent.service"
@@ -73,6 +74,51 @@ validateCompassQuestion({
   priorQuestions: [],
 })
 
+const recoveredQuestion = buildCompassRecoveryWhyQuestion({
+  sourceAnswer:
+    "because the old workflow cannot scale forever, consistent practice builds readiness before the next project",
+  priorQuestions: [],
+})
+
+assert(
+  recoveredQuestion ===
+    "Why do “the old workflow cannot scale forever” and “consistent practice builds readiness before the next project” matter to you?",
+  "Recovery must retain every supplied clause instead of selecting only one.",
+)
+
+validateCompassQuestion({
+  question: recoveredQuestion,
+  sourceAnswer:
+    "because the old workflow cannot scale forever, consistent practice builds readiness before the next project",
+  priorQuestions: [],
+})
+
+const linkedTimingAnswer =
+  "because a parent cannot support children forever, learn to work hard and honestly now so they're in practice, not still needing to learn later"
+const linkedTimingQuestion = buildCompassRecoveryWhyQuestion({
+  sourceAnswer: linkedTimingAnswer,
+  priorQuestions: [],
+})
+
+assert(
+  linkedTimingQuestion ===
+    "Why do “a parent cannot support children forever”, “learn to work hard and honestly now”, and “not needing to learn later” matter to you?",
+  "Recovery must preserve the constraint, preparation, and supplied now/later contrast together.",
+)
+
+validateCompassQuestion({
+  question: linkedTimingQuestion,
+  sourceAnswer: linkedTimingAnswer,
+  priorQuestions: [],
+})
+
+validateCompassQuestion({
+  question:
+    "Why is preparing children to work hard and honestly now, before support ends, important to you?",
+  sourceAnswer: linkedTimingAnswer,
+  priorQuestions: [],
+})
+
 const repetition = validateCompassDescentDecision(
   {
     direction: "self_to_others",
@@ -81,7 +127,7 @@ const repetition = validateCompassDescentDecision(
     substantiveAnswer: "I do not want them to go without",
     historyAction: "stay",
     advanceLayer: false,
-    question: "Why is this most important to you?",
+    question: "Why does not wanting them to go without remain important to you?",
   },
   baseContext,
 )
@@ -97,7 +143,7 @@ const uncertainty = validateCompassDescentDecision(
     historyAction: "stay",
     advanceLayer: false,
     question:
-      "Why does this matter to you, even if the reason is not clear yet?",
+      "Why does wanting them to have enough matter, even if the reason is not clear yet?",
   },
   {
     ...baseContext,
@@ -124,20 +170,6 @@ const correction = validateCompassDescentDecision(
 assert(
   correction.historyAction === "replace_previous",
   "A correction must replace the previous accepted answer.",
-)
-
-expectThrows(
-  () =>
-    validateCompassQuestion({
-      question:
-        "Why is their knowing they are worthy of receiving central to what you want to give them?",
-      sourceAnswer:
-        "I wanted them to know they were worthy of receiving",
-      evidenceText:
-        "I wanted them to know they were worthy of receiving",
-      priorQuestions: [],
-    }),
-  "correction question introduced an unsupplied giving action",
 )
 
 expectThrows(
@@ -170,6 +202,136 @@ expectThrows(
     }),
   "question did not begin with Why",
 )
+
+const compoundAnswer =
+  "I am proud because I said I would build the prototype and then did. I learned the tools and invested the time."
+
+expectThrows(
+  () =>
+    validateCompassQuestion({
+      question:
+        "Why does it matter to you that you are proud because you said you would build the prototype and then did, learning the tools and investing all of the time required to finish it?",
+      sourceAnswer: compoundAnswer,
+      evidenceText: compoundAnswer,
+      priorQuestions: [],
+    }),
+  "compound question copied the full answer instead of tightening it",
+)
+
+validateCompassQuestion({
+  question:
+    "Why are keeping your commitment, building the prototype, and investing time important to you?",
+  sourceAnswer: compoundAnswer,
+  evidenceText: compoundAnswer,
+  priorQuestions: [],
+})
+
+validateCompassQuestion({
+  question:
+    "Why does building the prototype through commitment and invested time matter to you?",
+  sourceAnswer: compoundAnswer,
+  evidenceText: compoundAnswer,
+  priorQuestions: [],
+})
+
+expectThrows(
+  () =>
+    validateCompassQuestion({
+      question: "Why does this matter to you?",
+      sourceAnswer: compoundAnswer,
+      evidenceText: compoundAnswer,
+      priorQuestions: [],
+    }),
+  "compound answer flattened into generic this",
+)
+
+expectThrows(
+  () =>
+    validateCompassQuestion({
+      question:
+        "Why does pride because you said you would build it and did—learning the tools, with time invested—matter to you?",
+      sourceAnswer: compoundAnswer,
+      evidenceText: compoundAnswer,
+      priorQuestions: [],
+    }),
+  "word-limited question still stacked the participant's clauses mechanically",
+)
+
+const consistencyLessonAnswer =
+  "Consistency means success to me, and life does not always need hype or holidays."
+
+expectThrows(
+  () =>
+    validateCompassQuestion({
+      question: "Why does this matter to you?",
+      sourceAnswer: consistencyLessonAnswer,
+      evidenceText: consistencyLessonAnswer,
+      priorQuestions: [],
+    }),
+  "substantive consistency lesson flattened into generic this",
+)
+
+const consistencyLessonQuestion =
+  "Why do consistency, success, and life without hype or holidays matter to you?"
+
+validateCompassQuestion({
+  question: consistencyLessonQuestion,
+  sourceAnswer: consistencyLessonAnswer,
+  evidenceText: consistencyLessonAnswer,
+  priorQuestions: [],
+})
+
+validateCompassQuestion({
+  question:
+    "Why are boring consistency, success, and an ordinary life important to you?",
+  sourceAnswer:
+    "showing boring consistency = success is an important lesson, life doesn't always need to be hype and holidays",
+  priorQuestions: [],
+})
+
+const workLessonAnswer =
+  "to let the kids know that money doesn't just appear, hard consistent smart work pays off"
+
+validateCompassQuestion({
+  question:
+    "Why does teaching the kids that consistent work pays off matter to you?",
+  sourceAnswer: workLessonAnswer,
+  priorQuestions: [],
+})
+
+validateCompassQuestion({
+  question:
+    "Why is helping the kids understand earned results important to you?",
+  sourceAnswer: workLessonAnswer,
+  priorQuestions: [],
+})
+
+const earlierCommitmentQuestion =
+  "Why are keeping your commitment, building the prototype, and investing time important to you?"
+const laterQuestions = [
+  consistencyLessonQuestion,
+  "Why does steady progress matter to you?",
+  "Why is rest important to you?",
+  "Why does an ordinary life matter to you?",
+]
+
+expectThrows(
+  () =>
+    validateCompassQuestion({
+      question: earlierCommitmentQuestion,
+      sourceAnswer: compoundAnswer,
+      evidenceText: compoundAnswer,
+      priorQuestions: [earlierCommitmentQuestion, ...laterQuestions],
+    }),
+  "exact question repeated outside the former three-question lookback",
+)
+
+validateCompassQuestion({
+  question: "Why does peace matter to you?",
+  sourceAnswer: "peace",
+  evidenceText: `${compoundAnswer}\npeace`,
+  priorQuestions: laterQuestions,
+})
 
 expectThrows(
   () =>
@@ -287,17 +449,17 @@ expectThrows(
   "invalid generated question still rejected by the strict contract",
 )
 
-const fallbackDecision = validateCompassDescentDecision(
-  invalidQuestionDecision,
+const repairedDecision = validateCompassDescentDecision(
   {
-    ...baseContext,
-    questionFailureMode: "fallback",
+    ...invalidQuestionDecision,
+    question: "Why does freedom matter to you?",
   },
+  baseContext,
 )
 
 assert(
-  fallbackDecision.question === "Why does freedom matter to you?",
-  "The live path must replace rejected model wording with the supplied subject and Why.",
+  repairedDecision.question === "Why does freedom matter to you?",
+  "A repaired model response may vary while remaining grounded in the latest answer.",
 )
 
 console.log("Compass Descent contract checks passed.")

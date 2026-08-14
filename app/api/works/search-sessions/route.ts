@@ -2,6 +2,10 @@ import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import {
+  normalizeWorksBrowserSessionId,
+  setWorksBrowserSessionCookie,
+} from "@/lib/works/searches/anonymous-search-ownership";
 
 function stringValue(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -16,12 +20,19 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const marketSlug = stringValue(body?.marketSlug).toLowerCase();
-    const browserSessionId = stringValue(body?.browserSessionId) || undefined;
+    const browserSessionId = normalizeWorksBrowserSessionId(body?.browserSessionId);
     const currentStep = stringValue(body?.currentStep) || undefined;
     const answers = answerObject(body?.answers);
 
     if (!marketSlug) {
       return NextResponse.json({ error: "Market is required." }, { status: 400 });
+    }
+
+    if (!browserSessionId) {
+      return NextResponse.json(
+        { error: "This browser could not establish a safe WORKS search session." },
+        { status: 400 }
+      );
     }
 
     const market = await prisma.works_markets.findUnique({
@@ -43,7 +54,16 @@ export async function POST(req: NextRequest) {
       select: { id: true, status: true },
     });
 
-    return NextResponse.json({ sessionId: session.id, status: session.status });
+    const response = NextResponse.json({
+      sessionId: session.id,
+      status: session.status,
+    });
+    setWorksBrowserSessionCookie({
+      response,
+      marketSlug,
+      browserSessionId,
+    });
+    return response;
   } catch (error) {
     console.error("WORKS search session creation failed:", error);
     return NextResponse.json(

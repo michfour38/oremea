@@ -33,9 +33,18 @@ const VALUE_WORDS = [
   "movement",
 ]
 
-const DESCENT_QUESTION_KEY = "oremea-compass-descent-question-v11"
+const DESCENT_QUESTION_KEY = "oremea-compass-descent-question-v20"
 const DESCENT_ATTEMPTS_KEY = "oremea-compass-descent-attempts-v3"
 const LEGACY_DESCENT_QUESTION_KEYS = [
+  "oremea-compass-descent-question-v19",
+  "oremea-compass-descent-question-v18",
+  "oremea-compass-descent-question-v17",
+  "oremea-compass-descent-question-v16",
+  "oremea-compass-descent-question-v15",
+  "oremea-compass-descent-question-v14",
+  "oremea-compass-descent-question-v13",
+  "oremea-compass-descent-question-v12",
+  "oremea-compass-descent-question-v11",
   "oremea-compass-descent-question-v10",
   "oremea-compass-descent-question-v9",
   "oremea-compass-descent-question-v8",
@@ -91,7 +100,12 @@ export function rememberAdaptiveRecursiveQuestion({
   sourceAnswer: string
   question: string
 }) {
-  if (typeof window === "undefined" || !isUsableQuestion(question)) return
+  if (
+    typeof window === "undefined" ||
+    !isUsableQuestion(question, sourceAnswer)
+  ) {
+    return
+  }
 
   clearLegacyQuestionCache()
   window.sessionStorage.setItem(
@@ -128,7 +142,7 @@ export function getRememberedAdaptiveRecursiveQuestion({
       stored.layer === layer &&
       stored.sourceAnswer === normalizeSource(sourceAnswer) &&
       typeof stored.question === "string" &&
-      isUsableQuestion(stored.question)
+      isUsableQuestion(stored.question, sourceAnswer)
     ) {
       return stored.question.trim()
     }
@@ -261,10 +275,23 @@ function isStoredAttempt(value: unknown): value is CompassDescentAttempt {
   )
 }
 
-function isUsableQuestion(question: string): boolean {
+function isUsableQuestion(question: string, sourceAnswer: string): boolean {
   const normalized = question.trim().toLowerCase()
   if (!normalized.endsWith("?")) return false
+  if ((normalized.match(/\?/g) ?? []).length !== 1) return false
   if (!/^why\b/.test(normalized)) return false
+  if (normalized.split(/\s+/).filter(Boolean).length > 28) return false
+
+  const questionUsesPresentTime =
+    /\b(right now|now|today|currently|at present|in this moment|here)\b/i.test(
+      normalized,
+    )
+  const sourceSuppliesPresentTime =
+    /\b(right now|now|today|currently|at present|in this moment|here)\b/i.test(
+      sourceAnswer,
+    )
+
+  if (questionUsesPresentTime && !sourceSuppliesPresentTime) return false
 
   return ![
     "make possible",

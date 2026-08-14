@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { completeRunPrompt } from "@/src/lib/resonance/complete-run-prompt";
 import {
-  getRunContinuedDays,
+  getRunActiveDay,
   getRunGuidance,
   getRunMirror,
   getRunPromptCompletions,
@@ -17,16 +17,6 @@ import {
   getActiveResonanceRun,
 } from "@/src/lib/resonance/resonance-week-run";
 
-async function getCurrentActiveDay(runId: string) {
-  const completedDays = await getRunContinuedDays(runId);
-
-  for (let dayNumber = 1; dayNumber <= 7; dayNumber += 1) {
-    if (!completedDays.has(dayNumber)) return dayNumber;
-  }
-
-  return null;
-}
-
 async function assertActiveDay(
   userId: string,
   weekNumber: number,
@@ -35,12 +25,12 @@ async function assertActiveDay(
   const activeRun = await getActiveResonanceRun(userId);
 
   if (!activeRun || activeRun.weekNumber !== weekNumber) {
-    throw new Error("This Resonance week is not active.");
+    throw new Error("This Resonance room is no longer the active visit.");
   }
 
-  const currentDay = await getCurrentActiveDay(activeRun.id);
+  const currentDay = await getRunActiveDay(activeRun.id, weekNumber);
   if (currentDay !== dayNumber) {
-    throw new Error("This Resonance day is not currently active.");
+    throw new Error("This Resonance day is no longer the active day.");
   }
 
   return activeRun;
@@ -117,6 +107,21 @@ async function continueRunDay(params: {
   `;
 }
 
+function promptSaveMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+
+  const safeMessages = new Set([
+    "This Resonance room is no longer the active visit.",
+    "This Resonance day is no longer the active day.",
+    "This Resonance reflection is not available.",
+    "The 10-minute edit window has closed.",
+  ]);
+
+  if (safeMessages.has(message)) return message;
+
+  return "Your reflection reached Resonance, but the save record could not be written. Refresh the page and submit it again.";
+}
+
 export async function submitPromptAction(formData: FormData) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
@@ -124,43 +129,58 @@ export async function submitPromptAction(formData: FormData) {
   const promptId = String(formData.get("promptId") ?? "");
   const response = String(formData.get("response") ?? "").trim();
 
-  if (!promptId || !response) return;
+  if (!promptId || !response) {
+    return { ok: false, error: "Write a reflection before continuing." };
+  }
 
-  const prompt = await prisma.day_prompts.findUnique({
-    where: { id: promptId },
-    select: {
-      is_published: true,
-      resonance_days: {
-        select: {
-          day_number: true,
-          resonance_weeks: {
-            select: {
-              week_number: true,
-              is_published: true,
+  try {
+    const prompt = await prisma.day_prompts.findUnique({
+      where: { id: promptId },
+      select: {
+        is_published: true,
+        resonance_days: {
+          select: {
+            day_number: true,
+            resonance_weeks: {
+              select: {
+                week_number: true,
+                is_published: true,
+              },
             },
           },
         },
       },
-    },
-  });
+    });
 
-  if (!prompt?.is_published || !prompt.resonance_days.resonance_weeks.is_published) {
-    throw new Error("This Resonance reflection is not available.");
+    if (
+      !prompt?.is_published ||
+      !prompt.resonance_days.resonance_weeks.is_published
+    ) {
+      throw new Error("This Resonance reflection is not available.");
+    }
+
+    const weekNumber = prompt.resonance_days.resonance_weeks.week_number;
+    const dayNumber = prompt.resonance_days.day_number;
+    const activeRun = await assertActiveDay(userId, weekNumber, dayNumber);
+
+    await completeRunPrompt({
+      promptId,
+      userId,
+      runId: activeRun.id,
+      response,
+    });
+
+    revalidatePath("/resonance");
+    return { ok: true };
+  } catch (error) {
+    console.error("Resonance reflection save failed on server:", {
+      userId,
+      promptId,
+      error,
+    });
+
+    return { ok: false, error: promptSaveMessage(error) };
   }
-
-  const weekNumber = prompt.resonance_days.resonance_weeks.week_number;
-  const dayNumber = prompt.resonance_days.day_number;
-  const activeRun = await assertActiveDay(userId, weekNumber, dayNumber);
-
-  await completeRunPrompt({
-    promptId,
-    userId,
-    runId: activeRun.id,
-    response,
-  });
-
-  revalidatePath("/resonance");
-  redirect("/resonance");
 }
 
 export async function continueResonanceDayAction(formData: FormData) {
@@ -207,7 +227,7 @@ export async function completeResonanceWeekAction(formData: FormData) {
   assertGuidanceAnswered(guidance);
 
   if (!mirror || mirror.tier !== "full") {
-    throw new Error("Open the weekly Mirror before completing the week.");
+    throw new Error("Open the closing Mirror before completing this visit.");
   }
 
   await continueRunDay({

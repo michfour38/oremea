@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { ownsWorksAnonymousSearch } from "@/lib/works/searches/anonymous-search-ownership";
 
 function stringValue(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -11,6 +12,36 @@ function emailValue(value: unknown) {
   return email.includes("@") ? email : "";
 }
 
+async function ownedSession(
+  req: NextRequest,
+  searchSessionId: string,
+  briefId: string
+) {
+  const session = await prisma.works_search_sessions.findUnique({
+    where: { id: searchSessionId },
+    select: {
+      id: true,
+      brief_id: true,
+      browser_session_id: true,
+      market: { select: { slug: true } },
+    },
+  });
+
+  if (
+    !session ||
+    session.brief_id !== briefId ||
+    !ownsWorksAnonymousSearch({
+      request: req,
+      marketSlug: session.market.slug,
+      expectedBrowserSessionId: session.browser_session_id,
+    })
+  ) {
+    return null;
+  }
+
+  return session;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const searchSessionId = stringValue(req.nextUrl.searchParams.get("searchSessionId"));
@@ -18,6 +49,10 @@ export async function GET(req: NextRequest) {
 
     if (!searchSessionId || !briefId) {
       return NextResponse.json({ contact: null });
+    }
+
+    if (!(await ownedSession(req, searchSessionId, briefId))) {
+      return NextResponse.json({ contact: null }, { status: 404 });
     }
 
     const request = await prisma.works_procurement_requests.findFirst({
@@ -73,15 +108,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const session = await prisma.works_search_sessions.findUnique({
-      where: { id: searchSessionId },
-      select: { id: true, brief_id: true },
-    });
+    const session = await ownedSession(req, searchSessionId, briefId);
 
-    if (!session || session.brief_id !== briefId) {
+    if (!session) {
       return NextResponse.json(
-        { error: "This search and production brief do not match." },
-        { status: 400 }
+        { error: "This search and production brief are not available to this browser." },
+        { status: 404 }
       );
     }
 
@@ -109,7 +141,7 @@ export async function POST(req: NextRequest) {
       });
 
       await tx.works_search_sessions.update({
-        where: { id: searchSessionId },
+        where: { id: session.id },
         data: { status: "SOURCING_REQUESTED" },
       });
 

@@ -1,0 +1,27 @@
+.recognition-theme.recognition-theme h1,
+.recognition-theme.recognition-theme h2,
+.recognition-theme.recognition-theme h3,
+.recognition-theme.recognition-theme p:not(.text-xs):not(.text-red-300) {
+  color: var(--recognition-zinc) !important;
+}
+
+/*
+  Gold is structural, never conversational.
+  These tiny tracked labels tell the participant where they are without
+  pre-ranking the words they are about to read.
+*/
+.recognition-theme.recognition-theme p.text-xs[class*="tracking"] {
+  color: var(--recognition-gold) !important;
+}
+
+/*
+  Conversation content stays one colour even when older markup still carries
+  a warm/gold Tailwind utility. The doubled root selector deliberately outranks
+  the legacy theme selectors; size, spacing and placement provide hierarchy.
+*/
+.recognition-theme.recognition-theme [class*="border-b"] p:not(.text-xs),
+.recognition-theme.recognition-theme h1 + p:not(.text-xs),
+.recognition-theme.recognition-theme h2 + p:not(.text-xs),
+.recognition-theme.recognition-theme h3 + p:not(.text-xs) {
+  color: var(--recognition-zinc) !important;
+}

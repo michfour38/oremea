@@ -34,26 +34,52 @@ type LocalEndingQuestion = {
   content: string;
 };
 
-type FinalizationStage = "idle" | "execution" | "confirm";
+type FinalizationStage =
+  | "idle"
+  | "resolution"
+  | "execution"
+  | "confirm"
+  | "saved";
 
-function MapThinkingIndicator() {
+function ThinkingDots() {
   const delays = ["0ms", "180ms", "360ms"];
 
+  return (
+    <span className="inline-flex h-7 items-center gap-2" aria-hidden="true">
+      {delays.map((delay) => (
+        <span
+          key={delay}
+          className="h-3 w-3 animate-bounce rounded-full bg-[#d8b15f] motion-reduce:animate-pulse"
+          style={{ animationDelay: delay, animationDuration: "900ms" }}
+        />
+      ))}
+    </span>
+  );
+}
+
+function MapThinkingIndicator() {
   return (
     <div
       className="flex items-center rounded-2xl border border-zinc-800 p-5 text-sm text-zinc-300"
       aria-live="polite"
     >
       <span>Holding the pieces together</span>
-      <span className="ml-2 inline-flex items-center gap-1" aria-hidden="true">
-        {delays.map((delay) => (
-          <span
-            key={delay}
-            className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#d8b15f]"
-            style={{ animationDelay: delay }}
-          />
-        ))}
+      <span className="ml-3">
+        <ThinkingDots />
       </span>
+    </div>
+  );
+}
+
+function DiscussionThinkingIndicator() {
+  return (
+    <div
+      className="flex min-h-10 items-center"
+      role="status"
+      aria-live="polite"
+      aria-label="Compass is working"
+    >
+      <ThinkingDots />
     </div>
   );
 }
@@ -81,6 +107,7 @@ export function CompassDiscussionFlow({
   >([]);
   const [finalizationStage, setFinalizationStage] =
     useState<FinalizationStage>("idle");
+  const [resolutionDraft, setResolutionDraft] = useState("");
   const [finalDraft, setFinalDraft] = useState("");
   const [finishingDiscussion, setFinishingDiscussion] = useState(false);
   const [finishDiscussionError, setFinishDiscussionError] = useState("");
@@ -133,6 +160,16 @@ export function CompassDiscussionFlow({
     if (!latest || latest.content === "...") return;
     void loadEnding();
   }, [discussionMessages]);
+
+  useEffect(() => {
+    const storedResolution = endingState?.resolutionCandidate?.trim();
+    if (storedResolution && endingState?.resolutionConfirmed) {
+      setResolutionDraft(storedResolution);
+    }
+  }, [
+    endingState?.resolutionCandidate,
+    endingState?.resolutionConfirmed,
+  ]);
 
   useEffect(() => {
     function handleMapReordered(event: Event) {
@@ -215,6 +252,7 @@ export function CompassDiscussionFlow({
       setEndingError("");
       setEndingState(data?.state ?? null);
       setBoundaryMessage(data?.boundaryMessage ?? null);
+      window.dispatchEvent(new Event("compass-map-changed"));
       return data?.state ?? null;
     } catch {
       setEndingError("Compass could not update the Map yet.");
@@ -244,6 +282,8 @@ export function CompassDiscussionFlow({
   }
 
   async function openMap() {
+    if (endingBusy) return;
+
     setView("map");
 
     const needsRefresh =
@@ -256,8 +296,8 @@ export function CompassDiscussionFlow({
     }
   }
 
-  async function makeWorkable() {
-    const state = await runEndingAction("make_workable");
+  async function prepareResolution() {
+    const state = await runEndingAction("prepare_resolution");
 
     if (!state) return;
 
@@ -266,12 +306,54 @@ export function CompassDiscussionFlow({
       return;
     }
 
-    if (state.currentMovementId) {
-      setView("map");
+    if (state.resolutionCandidate) {
+      setResolutionDraft(state.resolutionCandidate);
+      setFinalizationStage("resolution");
       return;
     }
 
     appendEndingQuestion(state);
+    setView("discussion");
+  }
+
+  async function confirmResolution() {
+    const resolutionText = resolutionDraft.trim();
+    if (!resolutionText || endingBusy) return;
+
+    const confirmedState = await runEndingAction("confirm_resolution", {
+      resolutionText,
+    });
+    if (!confirmedState?.resolutionConfirmed) return;
+
+    setResolutionDraft(resolutionText);
+
+    const movementState = await runEndingAction("make_workable");
+    if (!movementState) return;
+
+    const movement = movementState.movements.find(
+      (item) => item.id === movementState.currentMovementId,
+    );
+
+    if (!movement) {
+      appendEndingQuestion(movementState);
+      setFinalizationStage("idle");
+      setView("discussion");
+      return;
+    }
+
+    setFinalDraft(movement.instruction);
+    setFinalizationStage("execution");
+  }
+
+  function continueResolutionDiscussion(question: string) {
+    setLocalEndingQuestions((current) => [
+      ...current,
+      {
+        afterMessageCount: discussionMessages.length,
+        content: question,
+      },
+    ]);
+    setFinalizationStage("idle");
     setView("discussion");
   }
 
@@ -330,7 +412,7 @@ export function CompassDiscussionFlow({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          phase: "complete",
+          phase: "discussion",
           discussionMessages,
         }),
       });
@@ -342,7 +424,7 @@ export function CompassDiscussionFlow({
         return;
       }
 
-      window.location.assign("/compass");
+      window.location.assign("https://www.oremea.com");
     } catch {
       setFinishDiscussionError(
         "Compass could not finish this discussion yet.",
@@ -377,7 +459,7 @@ export function CompassDiscussionFlow({
         return;
       }
 
-      window.location.href = "https://www.oremea.com";
+      setFinalizationStage("saved");
     } catch {
       setEndingError("Compass could not close this run yet.");
     } finally {
@@ -411,9 +493,70 @@ export function CompassDiscussionFlow({
       !endingBusy,
   );
 
+  if (finalizationStage === "resolution") {
+    return (
+      <CompassCard
+        title="What has been resolved?"
+        description="Compass is reflecting the conclusion it heard. Correct the wording until it says what you have actually decided, accepted, released, deferred, or deliberately left open."
+      >
+        <textarea
+          value={resolutionDraft}
+          onChange={(event) => setResolutionDraft(event.target.value)}
+          rows={7}
+          className="compass-textarea"
+        />
+
+        <button
+          type="button"
+          onClick={() => void confirmResolution()}
+          disabled={!resolutionDraft.trim() || endingBusy}
+          className="primary-button disabled:cursor-wait disabled:opacity-60"
+        >
+          {endingBusy ? "Saving resolution..." : "Yes, this is the resolution"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            continueResolutionDiscussion("What is missing from that resolution?")
+          }
+          disabled={endingBusy}
+          className="secondary-button disabled:opacity-60"
+        >
+          Something is missing
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            continueResolutionDiscussion("What would state the resolution accurately?")
+          }
+          disabled={endingBusy}
+          className="secondary-button disabled:opacity-60"
+        >
+          That isn&apos;t what I mean
+        </button>
+
+        <button
+          type="button"
+          onClick={() => continueResolutionDiscussion("What still needs resolving?")}
+          disabled={endingBusy}
+          className="secondary-button disabled:opacity-60"
+        >
+          Continue the discussion
+        </button>
+
+        {endingError ? (
+          <p className="text-sm leading-6 text-amber-200/80">{endingError}</p>
+        ) : null}
+      </CompassCard>
+    );
+  }
+
   if (finalizationStage === "execution") {
     return (
       <CompassExecutionCheck
+        resolutionText={resolutionDraft}
         executionFeeling={finalDraft}
         onExecutionFeelingChange={setFinalDraft}
         onFinalize={confirmFinalDraft}
@@ -424,9 +567,18 @@ export function CompassDiscussionFlow({
   if (finalizationStage === "confirm") {
     return (
       <CompassCard
-        title="Your next movement"
-        description="One real movement you can carry from here."
+        title="Choose this movement?"
+        description="The resolution is agreed. Confirm the exact movement that follows from it."
       >
+        <div className="rounded-[1.5rem] border border-zinc-800 bg-[#121212] p-5">
+          <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
+            Resolved
+          </p>
+          <p className="mt-3 whitespace-pre-line text-sm leading-7 text-zinc-300">
+            {resolutionDraft}
+          </p>
+        </div>
+
         <div className="rounded-[1.5rem] border border-[#3A3224] bg-[#17130D] p-5 text-sm leading-relaxed whitespace-pre-line text-zinc-300">
           {finalDraft}
         </div>
@@ -437,7 +589,7 @@ export function CompassDiscussionFlow({
           disabled={endingBusy}
           className="primary-button disabled:cursor-wait disabled:opacity-60"
         >
-          {endingBusy ? "Closing Compass..." : "Complete Compass"}
+          {endingBusy ? "Saving movement..." : "Choose and save this movement"}
         </button>
 
         <button
@@ -456,6 +608,41 @@ export function CompassDiscussionFlow({
     );
   }
 
+  if (finalizationStage === "saved") {
+    return (
+      <CompassCard
+        title="Compass is complete"
+        description="The resolution and chosen movement are saved."
+      >
+        <section className="rounded-[1.5rem] border border-zinc-800 bg-[#121212] p-5">
+          <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
+            Resolution saved
+          </p>
+          <p className="mt-3 whitespace-pre-line text-sm leading-7 text-zinc-300">
+            {resolutionDraft}
+          </p>
+        </section>
+
+        <section className="rounded-[1.5rem] border border-[#3A3224] bg-[#17130D] p-5">
+          <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
+            Movement saved
+          </p>
+          <p className="mt-3 whitespace-pre-line text-sm leading-7 text-zinc-300">
+            {finalDraft}
+          </p>
+        </section>
+
+        <button
+          type="button"
+          onClick={() => window.location.assign("https://www.oremea.com")}
+          className="primary-button"
+        >
+          Return to Oremea
+        </button>
+      </CompassCard>
+    );
+  }
+
   return (
     <CompassCard
       title={view === "discussion" ? "Discussion" : "Map"}
@@ -465,27 +652,38 @@ export function CompassDiscussionFlow({
           : "Compass is holding the goals, dependencies, decisions, and other things already asking for your attention. You only need to carry the movement in front of you."
       }
     >
-      {activeMapItems.length > 0 ? (
+      <div
+        role="tablist"
+        aria-label="Compass workspace"
+        className="grid grid-cols-2 rounded-full border border-zinc-800 bg-[#101010] p-1"
+      >
         <button
           type="button"
-          onClick={() => window.location.assign("/compass/map")}
-          className="w-full rounded-[1.5rem] border border-[#3A3224] bg-[#17130D] p-5 text-left transition hover:border-[#d8b15f]"
+          role="tab"
+          aria-selected={view === "discussion"}
+          onClick={() => setView("discussion")}
+          className={`rounded-full px-4 py-2 text-sm transition ${
+            view === "discussion"
+              ? "bg-[#21190F] text-[#E7C98B]"
+              : "text-zinc-500 hover:text-zinc-300"
+          }`}
         >
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
-                What&apos;s asking for attention
-              </p>
-              <p className="mt-2 text-sm leading-6 text-zinc-400">
-                Open the Map to order, complete, edit, or archive what is active.
-              </p>
-            </div>
-            <span className="shrink-0 text-sm text-[#E7C98B]">
-              {activeMapItems.length}
-            </span>
-          </div>
+          Discussion
         </button>
-      ) : null}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === "map"}
+          onClick={() => void openMap()}
+          className={`rounded-full px-4 py-2 text-sm transition ${
+            view === "map"
+              ? "bg-[#21190F] text-[#E7C98B]"
+              : "text-zinc-500 hover:text-zinc-300"
+          }`}
+        >
+          Map{activeMapItems.length > 0 ? ` · ${activeMapItems.length}` : ""}
+        </button>
+      </div>
 
       {boundaryMessage ? (
         <div className="rounded-[1.4rem] border border-[#6B4035] bg-[#1A1110] p-5 text-sm leading-relaxed text-zinc-200">
@@ -506,13 +704,17 @@ export function CompassDiscussionFlow({
                     : "bg-[#121212] text-zinc-100"
                 }`}
               >
-                <p
-                  className={`whitespace-pre-line ${
-                    message.role === "compass" ? BODY_TEXT : "text-zinc-100"
-                  }`}
-                >
-                  {message.content}
-                </p>
+                {message.role === "compass" && message.content === "..." ? (
+                  <DiscussionThinkingIndicator />
+                ) : (
+                  <p
+                    className={`whitespace-pre-line ${
+                      message.role === "compass" ? BODY_TEXT : "text-zinc-100"
+                    }`}
+                  >
+                    {message.content}
+                  </p>
+                )}
               </div>
             ))}
           </div>
@@ -537,7 +739,9 @@ export function CompassDiscussionFlow({
                 disabled={finishingDiscussion}
                 className="secondary-button disabled:cursor-wait disabled:opacity-60"
               >
-                {finishingDiscussion ? "Finishing..." : "Finish discussion"}
+                {finishingDiscussion
+                  ? "Saving discussion..."
+                  : "Pause, save, and return to Oremea"}
               </button>
 
               {finishDiscussionError ? (
@@ -549,10 +753,10 @@ export function CompassDiscussionFlow({
               {canMakeWorkable ? (
                 <button
                   type="button"
-                  onClick={() => void makeWorkable()}
+                  onClick={() => void prepareResolution()}
                   className="secondary-button"
                 >
-                  Make this workable
+                  Reach a resolution
                 </button>
               ) : null}
             </>
@@ -593,11 +797,17 @@ export function CompassDiscussionFlow({
 
               <button
                 type="button"
-                onClick={() => beginFinalization(currentMovement.instruction)}
+                onClick={() =>
+                  endingState?.resolutionConfirmed
+                    ? beginFinalization(currentMovement.instruction)
+                    : void prepareResolution()
+                }
                 disabled={endingBusy}
                 className="primary-button disabled:cursor-wait disabled:opacity-60"
               >
-                Use this as my next movement
+                {endingState?.resolutionConfirmed
+                  ? "Use this as my next movement"
+                  : "Reach a resolution first"}
               </button>
               <button
                 type="button"
@@ -635,10 +845,10 @@ export function CompassDiscussionFlow({
           ) : canMakeWorkable ? (
             <button
               type="button"
-              onClick={() => void makeWorkable()}
+              onClick={() => void prepareResolution()}
               className="primary-button"
             >
-              Make this workable
+              Reach a resolution
             </button>
           ) : null}
 
@@ -748,19 +958,39 @@ export function CompassDiscussionFlow({
 }
 
 export function CompassExecutionCheck({
+  resolutionText,
   executionFeeling,
   onExecutionFeelingChange,
   onFinalize,
 }: {
+  resolutionText?: string | null;
   executionFeeling: string;
   onExecutionFeelingChange: (value: string) => void;
   onFinalize: () => void;
 }) {
   return (
     <CompassCard
-      title="Will this actually happen?"
-      description="Before Compass closes, make the action small enough, clear enough, and honest enough to complete."
+      title={
+        resolutionText
+          ? "What movement follows from this resolution?"
+          : "Will this actually happen?"
+      }
+      description={
+        resolutionText
+          ? "Make the movement clear enough to recognise when it is complete."
+          : "Before Compass closes, make the action small enough, clear enough, and honest enough to complete."
+      }
     >
+      {resolutionText ? (
+        <div className="rounded-[1.5rem] border border-zinc-800 bg-[#121212] p-5">
+          <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
+            Confirmed resolution
+          </p>
+          <p className="mt-3 whitespace-pre-line text-sm leading-7 text-zinc-300">
+            {resolutionText}
+          </p>
+        </div>
+      ) : null}
       <textarea
         value={executionFeeling}
         onChange={(event) => onExecutionFeelingChange(event.target.value)}
@@ -770,7 +1000,7 @@ export function CompassExecutionCheck({
       />
 
       <button onClick={onFinalize} className="primary-button">
-        Finalize commitment
+        Review this movement
       </button>
     </CompassCard>
   );
@@ -787,8 +1017,11 @@ export function CompassComplete({
   resonanceReflection: string | null;
   resonanceCtaHref: string | null;
   resonanceCtaLabel: string | null;
-  onComplete: () => void | Promise<void>;
+  onComplete: () => boolean | Promise<boolean>;
 }) {
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
   return (
     <CompassCard
       title="Your next movement"
@@ -800,13 +1033,30 @@ export function CompassComplete({
 
       <button
         onClick={async () => {
-          await onComplete();
-          window.location.href = "https://www.oremea.com";
+          if (saving) return;
+          setSaving(true);
+          setSaveError("");
+
+          const saved = await onComplete();
+          if (saved) {
+            window.location.href = "https://www.oremea.com";
+            return;
+          }
+
+          setSaveError(
+            "Compass needs a confirmed resolution and movement before it can close.",
+          );
+          setSaving(false);
         }}
-        className="primary-button"
+        disabled={saving}
+        className="primary-button disabled:cursor-wait disabled:opacity-60"
       >
-        Complete Compass
+        {saving ? "Saving Compass..." : "Complete Compass"}
       </button>
+
+      {saveError ? (
+        <p className="text-sm leading-6 text-amber-200/80">{saveError}</p>
+      ) : null}
 
       {resonanceReflection && (
         <div className="rounded-[1.5rem] border border-zinc-800 bg-[#121212] p-5">

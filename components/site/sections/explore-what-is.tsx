@@ -1,37 +1,31 @@
 export function ExploreWhatIs() {
   return (
     <section className="border-b border-white/5">
-      <div className="mx-auto grid max-w-6xl gap-14 px-5 py-24 md:grid-cols-2">
+      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 md:grid-cols-2 md:py-20">
         <div>
-          <p className="mb-5 text-xs uppercase tracking-[0.28em] text-amber-200/70">
+          <p className="text-xs uppercase tracking-[0.28em] text-[#b79a63]">
             What Oremea Is
           </p>
 
-          <h2 className="text-3xl font-light leading-tight text-zinc-100 md:text-5xl">
-            A structured ecosystem for awareness, alignment, and
-            intentional connection.
+          <h2 className="mt-4 text-3xl font-light leading-tight text-zinc-100 md:text-5xl">
+            A house of practical, self-led products.
           </h2>
         </div>
 
-        <div className="space-y-8 text-base leading-8 text-zinc-300">
+        <div className="space-y-5 text-base leading-8 text-zinc-400">
           <p>
-            Oremea is a structured self-awareness and relational
-            intelligence ecosystem designed to help individuals and
-            groups better understand patterns, communication,
-            direction, and intentional connection.
+            Oremea helps people recognise patterns, remain with what becomes
+            visible, and turn clarity into action.
           </p>
 
           <p>
-            The platform combines guided reflective systems,
-            execution frameworks, communication-awareness tools,
-            and expanded recognition tools supported by AI-assisted
-            synthesis.
+            Its products use carefully sequenced prompts and synthesis grounded
+            in the participant&apos;s own words.
           </p>
 
           <p>
-            Oremea is designed around self-led participation,
-            reflective clarity, and structured recognition rather
-            than dependency-driven engagement systems.
+            Every experience is designed around clear purpose, user authority,
+            and an honest next movement.
           </p>
         </div>
       </div>

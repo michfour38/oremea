@@ -15,6 +15,7 @@ import {
   getCompassBoundaryMessage,
   type CompassScopeCategory,
 } from "@/src/lib/compass/scope-boundary"
+import { getCompassAccessState } from "@/src/lib/compass/compass-access"
 
 export const dynamic = "force-dynamic"
 
@@ -26,13 +27,20 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    if (!(await getCompassAccessState(userId)).active) {
+      return NextResponse.json({ error: "Compass access has ended." }, { status: 403 })
+    }
+
     const session = await getSession(userId)
 
     if (!session) {
       return NextResponse.json({ state: null })
     }
 
-    const state = readState(session.detected_patterns, session.selected_area)
+    const state = applySessionResolution(
+      readState(session.detected_patterns, session.selected_area),
+      session,
+    )
 
     return NextResponse.json({
       state,
@@ -53,6 +61,10 @@ export async function POST(request: Request) {
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    if (!(await getCompassAccessState(userId)).active) {
+      return NextResponse.json({ error: "Compass access has ended." }, { status: 403 })
     }
 
     const body = await request.json()
@@ -79,31 +91,83 @@ export async function POST(request: Request) {
         )
       : session.discussion_messages
 
-    let state = readState(session.detected_patterns, session.selected_area)
+    let state = applySessionResolution(
+      readState(session.detected_patterns, session.selected_area),
+      session,
+    )
 
-    if (action === "make_workable" && !state.mapReviewed) {
+    if (
+      (
+        action === "prepare_resolution" ||
+        action === "confirm_resolution" ||
+        action === "make_workable"
+      ) &&
+      !state.mapReviewed
+    ) {
       return NextResponse.json(
         {
-          error: "Review the current Map before turning it into a movement.",
+          error: "Review the current Map before resolving what it contains.",
           state,
         },
         { status: 409 },
       )
     }
 
-    if (action === "make_workable" && !state.movementReady) {
+    if (
+      (
+        action === "prepare_resolution" ||
+        action === "confirm_resolution" ||
+        action === "make_workable"
+      ) &&
+      !state.movementReady
+    ) {
       return NextResponse.json(
         {
-          error: "Discussion has not yet supplied a current movement problem to make workable.",
+          error: "Discussion has not yet supplied something that can honestly be resolved.",
           state,
         },
         { status: 409 },
       )
     }
 
-    if (action === "refresh_map" || action === "make_workable") {
+    if (
+      action === "confirm_resolution" &&
+      !state.resolutionCandidate
+    ) {
+      return NextResponse.json(
+        {
+          error: "Prepare the resolution before confirming its wording.",
+          state,
+        },
+        { status: 409 },
+      )
+    }
+
+    if (
+      action === "make_workable" &&
+      (!session.resolution_text || !session.resolution_confirmed_at)
+    ) {
+      return NextResponse.json(
+        {
+          error: "Confirm the resolution before choosing a movement.",
+          state,
+        },
+        { status: 409 },
+      )
+    }
+
+    if (
+      action === "refresh_map" ||
+      action === "prepare_resolution" ||
+      action === "make_workable"
+    ) {
       const result = await runCompassEndingEngine({
-        mode: action === "make_workable" ? "movement" : "map",
+        mode:
+          action === "make_workable"
+            ? "movement"
+            : action === "prepare_resolution"
+              ? "resolution"
+              : "map",
         selectedArea: session.selected_area,
         areaResponses: session.area_responses,
         recursiveLayers: session.recursive_layers,
@@ -111,11 +175,25 @@ export async function POST(request: Request) {
         discussionMessages: currentDiscussionMessages,
         existingMapItems: state.mapItems,
         movements: state.movements,
+        confirmedResolution: session.resolution_text,
       })
 
       if (!result) {
         return NextResponse.json(
           { error: "Compass could not build the Map from this discussion yet." },
+          { status: 502 },
+        )
+      }
+
+      if (
+        action === "make_workable" &&
+        result.resolution !== session.resolution_text
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Compass could not keep the confirmed resolution intact while building the movement.",
+          },
           { status: 502 },
         )
       }
@@ -137,6 +215,9 @@ export async function POST(request: Request) {
 
           state.mapItems = nextMapItems
           state.reframe = result.reframe
+          state.resolutionCandidate = null
+          state.resolutionConfirmed = false
+          state.resolutionConfirmedAt = null
           state.followUpQuestion = result.followUpQuestion
 
           if (mapChanged) {
@@ -148,6 +229,13 @@ export async function POST(request: Request) {
             )
             state.currentMovementId = null
           }
+        } else if (action === "prepare_resolution") {
+          state.reframe = result.reframe
+          state.resolutionCandidate = result.resolution
+          state.resolutionConfirmed = false
+          state.resolutionConfirmedAt = null
+          state.followUpQuestion = result.followUpQuestion
+          state.currentMovementId = null
         } else {
           state.reframe = result.reframe
           state.followUpQuestion = result.followUpQuestion
@@ -181,11 +269,30 @@ export async function POST(request: Request) {
         }
       } else {
         state.reframe = null
+        state.resolutionCandidate = null
+        state.resolutionConfirmed = false
+        state.resolutionConfirmedAt = null
         state.followUpQuestion = null
         state.currentMovementId = null
         state.movementReady = false
         state.mapReviewed = false
       }
+    } else if (action === "confirm_resolution") {
+      const resolutionText =
+        typeof body.resolutionText === "string" ? body.resolutionText.trim() : ""
+
+      if (!resolutionText) {
+        return NextResponse.json(
+          { error: "A resolution is required before Compass can continue.", state },
+          { status: 400 },
+        )
+      }
+
+      const now = new Date().toISOString()
+      state.resolutionCandidate = resolutionText
+      state.resolutionConfirmed = true
+      state.resolutionConfirmedAt = now
+      state.updatedAt = now
     } else if (action === "confirm_map") {
       state.mapReviewed = true
       state.updatedAt = new Date().toISOString()
@@ -283,12 +390,48 @@ export async function POST(request: Request) {
       state.updatedAt = new Date().toISOString()
     }
 
+    const invalidatesResolution = [
+      "refresh_map",
+      "complete_item",
+      "restore_item",
+      "release_item",
+      "edit_item",
+    ].includes(action)
+    const clearsStoredResolution =
+      action === "prepare_resolution" || invalidatesResolution
+
+    if (invalidatesResolution) {
+      state.resolutionCandidate = null
+      state.resolutionConfirmed = false
+      state.resolutionConfirmedAt = null
+    }
+
     await prisma.compass_sessions.update({
       where: { id: session.id },
       data: {
         detected_patterns: state as object,
         discussion_messages:
           currentDiscussionMessages as Prisma.InputJsonValue,
+        resolution_text:
+          action === "confirm_resolution"
+            ? state.resolutionCandidate
+            : clearsStoredResolution
+              ? null
+              : undefined,
+        resolution_confirmed_at:
+          action === "confirm_resolution" && state.resolutionConfirmedAt
+            ? new Date(state.resolutionConfirmedAt)
+            : clearsStoredResolution
+              ? null
+              : undefined,
+        final_step:
+          action === "confirm_resolution" || clearsStoredResolution
+            ? null
+            : undefined,
+        final_step_confirmed_at:
+          action === "confirm_resolution" || clearsStoredResolution
+            ? null
+            : undefined,
       },
     })
 
@@ -348,6 +491,15 @@ function readState(
     currentMovementId:
       typeof row.currentMovementId === "string" ? row.currentMovementId : null,
     reframe: typeof row.reframe === "string" ? row.reframe : null,
+    resolutionCandidate:
+      typeof row.resolutionCandidate === "string"
+        ? row.resolutionCandidate
+        : null,
+    resolutionConfirmed: row.resolutionConfirmed === true,
+    resolutionConfirmedAt:
+      typeof row.resolutionConfirmedAt === "string"
+        ? row.resolutionConfirmedAt
+        : null,
     followUpQuestion:
       typeof row.followUpQuestion === "string" ? row.followUpQuestion : null,
     movementReady: row.movementReady === true,
@@ -355,6 +507,25 @@ function readState(
     discussionCount:
       typeof row.discussionCount === "number" ? row.discussionCount : 0,
     updatedAt: typeof row.updatedAt === "string" ? row.updatedAt : empty.updatedAt,
+  }
+}
+
+function applySessionResolution(
+  state: CompassEndingState,
+  session: {
+    resolution_text: string | null
+    resolution_confirmed_at: Date | null
+  },
+): CompassEndingState {
+  if (!session.resolution_text || !session.resolution_confirmed_at) {
+    return state
+  }
+
+  return {
+    ...state,
+    resolutionCandidate: session.resolution_text,
+    resolutionConfirmed: true,
+    resolutionConfirmedAt: session.resolution_confirmed_at.toISOString(),
   }
 }
 

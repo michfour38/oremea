@@ -174,11 +174,11 @@ function DayArchiveCard({ day }: { day: DayGroup }) {
         ) : null}
 
         {day.guidance ? (
-          <section className="rounded-2xl border border-[#6d5b2b]/35 bg-[#17130d]/80 px-5 py-5">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-[#b6a36a]">
+          <section className="rounded-2xl border border-[#c8a96a]/35 bg-[#c8a96a]/[0.06] px-5 py-5">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-[#c8a96a]">
               2Q
             </p>
-            <div className="mt-4 space-y-5 text-sm leading-7 text-[#efe4c6]">
+            <div className="mt-4 space-y-5 text-sm leading-7 text-[#c8a96a]/90">
               <div>
                 <p>{day.guidance.questionOne}</p>
                 {day.guidance.answerOne ? (
@@ -212,8 +212,8 @@ function RunArchiveCard({ group }: { group: RunGroup }) {
       <summary className="cursor-pointer list-none">
         <div className="flex items-start justify-between gap-5">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-[#f1dfb4]/65">
-              Journey position {group.journeyPosition} · Week {group.weekNumber} · Run {group.runNumber}
+            <p className="text-[11px] uppercase tracking-[0.2em] text-[#c8a96a]/65">
+              Journey position {group.journeyPosition} · Week {group.weekNumber} · Visit {group.runNumber}
             </p>
             <h2 className="mt-2 text-2xl text-white">{group.title}</h2>
             <p className="mt-2 max-w-xl text-sm leading-7 text-zinc-400">
@@ -239,9 +239,9 @@ function RunArchiveCard({ group }: { group: RunGroup }) {
         ))}
 
         {group.mirror ? (
-          <section className="rounded-3xl border border-[#6d5b2b]/40 bg-[#15120c]/90 px-6 py-6">
+          <section className="rounded-3xl border border-[#c8a96a]/40 bg-[#c8a96a]/[0.06] px-6 py-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-[#b6a36a]">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-[#c8a96a]">
                 Cumulative Mirror
               </p>
               <p className="text-xs text-zinc-500">
@@ -256,7 +256,7 @@ function RunArchiveCard({ group }: { group: RunGroup }) {
                 .map((paragraph, index) => (
                   <p
                     key={index}
-                    className="whitespace-pre-wrap text-sm leading-7 text-[#efe4c6]"
+                    className="whitespace-pre-wrap text-sm leading-7 text-[#c8a96a]/90"
                   >
                     {paragraph}
                   </p>
@@ -265,7 +265,7 @@ function RunArchiveCard({ group }: { group: RunGroup }) {
           </section>
         ) : group.status === "completed" ? (
           <p className="text-sm text-zinc-500">
-            This completed run does not have a preserved cumulative Mirror.
+            This completed visit does not have a preserved cumulative Mirror.
           </p>
         ) : null}
       </div>
@@ -532,7 +532,7 @@ export default async function ArchivePage({ searchParams }: Props) {
             <h1 className="text-3xl font-semibold text-white">What has stayed</h1>
             <p className="max-w-xl text-sm leading-7 text-zinc-400">
               Return to each Resonance visit as it was lived. Repeating a room creates
-              a new run while the earlier visit stays intact.
+              a new visit while the earlier visit stays intact.
             </p>
           </header>
 
@@ -541,7 +541,7 @@ export default async function ArchivePage({ searchParams }: Props) {
               href="/resonance/archive?view=journey"
               className={`rounded-full border px-4 py-2 text-sm transition ${
                 view === "journey"
-                  ? "border-[#c8a96a]/60 text-[#f1dfb4]"
+                  ? "border-[#c8a96a]/60 text-[#c8a96a]"
                   : "border-white/10 text-zinc-400 hover:border-white/20 hover:text-white"
               }`}
             >
@@ -551,7 +551,7 @@ export default async function ArchivePage({ searchParams }: Props) {
               href="/resonance/archive?view=week"
               className={`rounded-full border px-4 py-2 text-sm transition ${
                 view === "week"
-                  ? "border-[#c8a96a]/60 text-[#f1dfb4]"
+                  ? "border-[#c8a96a]/60 text-[#c8a96a]"
                   : "border-white/10 text-zinc-400 hover:border-white/20 hover:text-white"
               }`}
             >
@@ -561,7 +561,7 @@ export default async function ArchivePage({ searchParams }: Props) {
               href="/resonance/archive?view=search"
               className={`rounded-full border px-4 py-2 text-sm transition ${
                 view === "search"
-                  ? "border-[#c8a96a]/60 text-[#f1dfb4]"
+                  ? "border-[#c8a96a]/60 text-[#c8a96a]"
                   : "border-white/10 text-zinc-400 hover:border-white/20 hover:text-white"
               }`}
             >
@@ -603,7 +603,7 @@ export default async function ArchivePage({ searchParams }: Props) {
                         className="rounded-2xl border border-zinc-800/80 bg-black/40 px-5 py-5"
                       >
                         <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-                          {hit.kind} · Week {hit.weekNumber} · Run {hit.runNumber}
+                          {hit.kind} · Week {hit.weekNumber} · Visit {hit.runNumber}
                           {hit.dayNumber ? ` · Day ${hit.dayNumber}` : ""}
                         </p>
                         <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-400">

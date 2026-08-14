@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
 import {
@@ -10,9 +11,20 @@ import type {
   CompassRecursiveLayer,
 } from "@/src/lib/compass/session/session-types"
 import type { CompassDescentAttempt } from "@/src/lib/compass/session/compass-descent.types"
+import { getCompassAccessState } from "@/src/lib/compass/compass-access"
 
 export async function POST(request: Request) {
   try {
+    const { userId } = auth()
+
+    if (!userId) {
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 })
+    }
+
+    if (!(await getCompassAccessState(userId)).active) {
+      return NextResponse.json({ ok: false, error: "Compass access has ended." }, { status: 403 })
+    }
+
     const body = await request.json()
 
     const layer = Number(body.layer)

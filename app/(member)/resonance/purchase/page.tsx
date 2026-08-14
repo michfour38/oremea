@@ -1,9 +1,18 @@
+import { randomUUID } from "node:crypto";
+
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
+import { getResonanceCheckoutUrl } from "@/src/lib/resonance/resonance-commerce";
 import {
+  RESONANCE_LAUNCH_LABEL,
+  RESONANCE_LAUNCH_PRICE,
+  RESONANCE_REGULAR_PRICE,
+} from "@/src/lib/resonance/resonance-pricing";
+import {
+  createPurchasedResonanceRun,
   getActiveResonanceRun,
   getResonanceWeekRuns,
 } from "@/src/lib/resonance/resonance-week-run";
@@ -11,10 +20,10 @@ import MemberNav from "../../member-nav";
 
 export const dynamic = "force-dynamic";
 
+const RESONANCE_TESTER_USER_ID = "user_3CLGEx3xqgXY6DsIHPyV3yOd1xi";
+
 type Props = {
-  searchParams?: {
-    week?: string;
-  };
+  searchParams?: { week?: string };
 };
 
 type RoomPurchaseDetail = {
@@ -86,6 +95,39 @@ const ROOM_PURCHASE_DETAILS: Record<number, RoomPurchaseDetail> = {
   },
 };
 
+async function completeTesterPurchase(formData: FormData) {
+  "use server";
+
+  const { userId } = await auth();
+  if (!userId) redirect("/sign-in");
+  if (userId !== RESONANCE_TESTER_USER_ID) redirect("/entry");
+
+  const weekNumber = Number(formData.get("weekNumber"));
+  if (!Number.isInteger(weekNumber) || weekNumber < 1 || weekNumber > 10) {
+    redirect("/entry");
+  }
+
+  const [week, activeRun] = await Promise.all([
+    prisma.resonance_weeks.findUnique({
+      where: { week_number: weekNumber },
+      select: { is_published: true },
+    }),
+    getActiveResonanceRun(userId),
+  ]);
+
+  if (!week?.is_published) redirect("/entry");
+  if (activeRun) redirect("/resonance");
+
+  await createPurchasedResonanceRun({
+    userId,
+    weekNumber,
+    purchaseSource: "manual_test",
+    purchaseReference: `manual-test-${userId}-${weekNumber}-${randomUUID()}`,
+  });
+
+  redirect("/resonance");
+}
+
 export default async function ResonancePurchasePage({ searchParams }: Props) {
   const { userId } = await auth();
   if (!userId) {
@@ -102,11 +144,7 @@ export default async function ResonancePurchasePage({ searchParams }: Props) {
   const [week, activeRun, previousRuns] = await Promise.all([
     prisma.resonance_weeks.findUnique({
       where: { week_number: weekNumber },
-      select: {
-        week_number: true,
-        title: true,
-        is_published: true,
-      },
+      select: { week_number: true, title: true, is_published: true },
     }),
     getActiveResonanceRun(userId),
     getResonanceWeekRuns(userId, weekNumber),
@@ -119,11 +157,8 @@ export default async function ResonancePurchasePage({ searchParams }: Props) {
   const completedRuns = previousRuns.filter((run) => run.status === "completed");
   const nextRunNumber =
     previousRuns.reduce((highest, run) => Math.max(highest, run.runNumber), 0) + 1;
-
-  const checkoutBase = process.env.RESONANCE_WEEK_CHECKOUT_URL?.trim() || "";
-  const checkoutHref = checkoutBase
-    ? `${checkoutBase}${checkoutBase.includes("?") ? "&" : "?"}week=${weekNumber}`
-    : null;
+  const checkoutHref = getResonanceCheckoutUrl(weekNumber);
+  const isTester = userId === RESONANCE_TESTER_USER_ID;
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-zinc-950 text-white">
@@ -141,7 +176,7 @@ export default async function ResonancePurchasePage({ searchParams }: Props) {
         <MemberNav />
 
         <div className="mx-auto max-w-2xl px-6 py-12 md:py-16">
-          <p className="text-xs uppercase tracking-[0.3em] text-[#f1dfb4]/70">
+          <p className="text-xs uppercase tracking-[0.3em] text-[#c8a96a]/70">
             Resonance · {detail?.label ?? "Seven-day room"}
           </p>
 
@@ -168,13 +203,28 @@ export default async function ResonancePurchasePage({ searchParams }: Props) {
                 </p>
                 <p className="mt-2 text-2xl text-zinc-100">One seven-day visit</p>
               </div>
-              <p className="text-2xl text-[#f1dfb4]">$5</p>
+
+              <div className="text-right">
+                <p className="text-xs uppercase tracking-[0.18em] text-[#c8a96a]/70">
+                  {RESONANCE_LAUNCH_LABEL}
+                </p>
+                <div className="mt-1 flex items-baseline justify-end gap-3">
+                  <span className="text-sm text-zinc-500 line-through">
+                    {RESONANCE_REGULAR_PRICE}
+                  </span>
+                  <span className="text-3xl text-[#c8a96a]">
+                    {RESONANCE_LAUNCH_PRICE}
+                  </span>
+                </div>
+              </div>
             </div>
 
             <p className="mt-5 text-sm leading-7 text-zinc-300">
-              This purchase opens one fresh seven-day visit to {week.title}. When the
-              visit closes, your daily reflections, 2Q answers, and cumulative Mirror
-              remain available in your archive.
+              This purchase opens one fresh seven-day visit to {week.title}. Each day
+              moves through private reflections, a Daily Mirror, and two follow-up
+              questions. Day 7 also opens a Closing Mirror across the full visit. When
+              the visit closes, your reflections, Mirrors, and answers remain available
+              in your archive.
             </p>
 
             {completedRuns.length > 0 ? (
@@ -185,17 +235,32 @@ export default async function ResonancePurchasePage({ searchParams }: Props) {
               </p>
             ) : null}
 
+            <p className="mt-4 text-sm leading-7 text-zinc-400">
+              Use the same email address at Whop that belongs to this Oremea account so
+              the successful payment can open the room automatically.
+            </p>
+
             <div className="mt-7 flex flex-wrap gap-3">
-              {checkoutHref ? (
+              {isTester ? (
+                <form action={completeTesterPurchase}>
+                  <input type="hidden" name="weekNumber" value={week.week_number} />
+                  <button
+                    type="submit"
+                    className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10"
+                  >
+                    Purchase {week.title} · {RESONANCE_LAUNCH_PRICE}
+                  </button>
+                </form>
+              ) : checkoutHref ? (
                 <a
                   href={checkoutHref}
-                  className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/10"
+                  className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10"
                 >
-                  Purchase {week.title} · $5
+                  Purchase {week.title} · {RESONANCE_LAUNCH_PRICE}
                 </a>
               ) : (
                 <span className="inline-flex rounded-xl border border-white/10 px-5 py-3 text-sm text-zinc-500">
-                  Checkout connection pending
+                  Checkout connection pending for this room
                 </span>
               )}
 

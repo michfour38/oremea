@@ -29,12 +29,10 @@ export function CompassCoreReflection({
   recursiveLayers: CompassRecursiveLayer[];
   extraReflection: string;
   onExtraReflectionChange: (value: string) => void;
-  onContinue: () => void;
+  onContinue: (savedMirror: string) => void;
 }) {
   const [savedCoreMirror, setSavedCoreMirror] = useState<string | null>(null);
   const [mirrorChecked, setMirrorChecked] = useState(false);
-  const [continuing, setContinuing] = useState(false);
-  const [continueError, setContinueError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -107,45 +105,9 @@ export function CompassCoreReflection({
     );
   }
 
-  async function continueWithSavedMirror() {
-    if (!savedCoreMirror || continuing) return;
-
-    if (savedCoreMirror === reflection) {
-      onContinue();
-      return;
-    }
-
-    setContinuing(true);
-    setContinueError("");
-
-    try {
-      const response = await fetch("/api/compass/session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phase: "discussion",
-          discussionMessages: [
-            {
-              role: "compass",
-              content: savedCoreMirror,
-            },
-          ],
-        }),
-      });
-
-      if (!response.ok) {
-        setContinueError("Compass could not continue with the saved reflection yet.");
-        return;
-      }
-
-      window.location.reload();
-    } catch {
-      setContinueError("Compass could not continue with the saved reflection yet.");
-    } finally {
-      setContinuing(false);
-    }
+  function continueWithSavedMirror() {
+    if (!savedCoreMirror) return;
+    onContinue(savedCoreMirror);
   }
 
   return (
@@ -173,16 +135,12 @@ export function CompassCoreReflection({
 
       <button
         type="button"
-        onClick={() => void continueWithSavedMirror()}
-        disabled={!mirrorAvailable || continuing}
-        className="primary-button disabled:cursor-wait disabled:opacity-60"
+        onClick={continueWithSavedMirror}
+        disabled={!mirrorAvailable}
+        className="primary-button disabled:opacity-60"
       >
-        {continuing ? "Continuing..." : "Continue"}
+        Continue
       </button>
-
-      {continueError ? (
-        <p className="text-sm leading-6 text-amber-200/80">{continueError}</p>
-      ) : null}
     </CompassCard>
   );
 }

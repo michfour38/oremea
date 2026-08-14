@@ -1,61 +1,26 @@
+import Link from "next/link";
+
 export function ProfileSupport() {
   return (
-    <section className="border-b border-white/5 bg-zinc-950/60">
-      <div className="mx-auto max-w-6xl px-5 py-20">
-        <div className="mb-10">
-          <p className="text-xs uppercase tracking-[0.28em] text-amber-200/70">
-            Support
-          </p>
-        </div>
-
-        <div className="grid gap-8 md:grid-cols-2">
-          <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-8">
-            <p className="text-sm uppercase tracking-[0.18em] text-zinc-500">
-              Contact
+    <section className="border-b border-white/5 bg-black/25">
+      <div className="mx-auto max-w-6xl px-5 py-7 md:py-8">
+        <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-zinc-950/70 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.24em] text-[#b79a63]">
+              Support
             </p>
-
-            <h3 className="mt-4 text-2xl font-light text-zinc-100">
-              Need assistance?
-            </h3>
-
-            <p className="mt-6 text-base leading-8 text-zinc-400">
-              Oremea support is available for account assistance,
-              access questions, payment concerns,
-              and platform-related support.
+            <p className="mt-2 text-sm leading-6 text-zinc-400">
+              Account access, payments and saved progress.
             </p>
-
-            <div className="mt-8">
-              <a
-                href="mailto:support@oremea.com"
-                className="inline-flex rounded-full border border-amber-200/20 bg-amber-100/[0.05] px-5 py-3 text-sm tracking-[0.16em] text-amber-100 transition hover:border-amber-100/50 hover:bg-amber-100/[0.08]"
-              >
-                support@oremea.com
-              </a>
-            </div>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-black/20 p-8">
-            <p className="text-sm uppercase tracking-[0.18em] text-zinc-500">
-              Important
-            </p>
-
-            <div className="mt-6 space-y-6 text-base leading-8 text-zinc-400">
-              <p>
-                Oremea is designed around self-led reflective systems
-                and intentional participation.
-              </p>
-
-              <p>
-                The platform does not provide therapy,
-                crisis support, or medical services.
-              </p>
-
-              <p>
-                Expanded recognition tools support reflective synthesis
-                and awareness rather than replacing personal judgment
-                or professional care.
-              </p>
-            </div>
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            <Link
+              href="/contact#contact-form"
+              className="text-[#b79a63] underline decoration-[#b79a63]/30 underline-offset-4 transition hover:text-zinc-100"
+            >
+              Contact support
+            </Link>
           </div>
         </div>
       </div>

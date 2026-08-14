@@ -10,6 +10,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 
 type MapReviewState = {
   reviewed: boolean;
@@ -42,6 +43,11 @@ export function CompassCard({
   const [mapReview, setMapReview] = useState<MapReviewState | null>(null);
   const [confirmingMap, setConfirmingMap] = useState(false);
   const [mapReviewError, setMapReviewError] = useState("");
+  const [portalReady, setPortalReady] = useState(false);
+
+  useEffect(() => {
+    setPortalReady(true);
+  }, []);
 
   useEffect(() => {
     if (!isResumeCard) return;
@@ -234,7 +240,7 @@ export function CompassCard({
     const button = target.closest("button");
     const label = button?.textContent?.trim() ?? "";
 
-    if (isDiscussionCard && label === "Make this workable" && !mapReview?.reviewed) {
+    if (isDiscussionCard && label === "Reach a resolution" && !mapReview?.reviewed) {
       event.preventDefault();
       event.stopPropagation();
 
@@ -366,22 +372,25 @@ export function CompassCard({
         </div>
       </section>
 
-      {isDiscussionCard ? (
-        <button
-          type="button"
-          aria-label="Return to top of Discussion"
-          title="Return to top"
-          onClick={() =>
-            cardRef.current?.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            })
-          }
-          className="fixed bottom-6 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-[#d8b15f]/50 bg-[#15110B]/95 text-lg text-[#E7C98B] shadow-lg shadow-black/40 backdrop-blur transition hover:border-[#d8b15f]"
-        >
-          ↟
-        </button>
-      ) : null}
+      {isDiscussionCard && portalReady
+        ? createPortal(
+            <button
+              type="button"
+              aria-label="Return to top of Discussion"
+              title="Return to top"
+              onClick={() =>
+                cardRef.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                })
+              }
+              className="fixed bottom-6 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-[#d8b15f]/50 bg-[#15110B]/95 text-lg text-[#E7C98B] shadow-lg shadow-black/40 backdrop-blur transition hover:border-[#d8b15f]"
+            >
+              ↟
+            </button>,
+            document.body,
+          )
+        : null}
     </>
   );
 }

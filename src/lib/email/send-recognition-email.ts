@@ -37,7 +37,7 @@ export async function sendRecognitionEmail({
       ? `Hi ${escapeHtml(firstName.trim())},`
       : "Hi,";
 
-    const continueLink = `https://www.oremea.com/recognition?session=${sessionId}`;
+    const archiveLink = `https://recognition.oremea.com/archive?session=${encodeURIComponent(sessionId)}`;
 
     await resend.emails.send({
       from: "Oremea <support@oremea.com>",
@@ -70,17 +70,17 @@ export async function sendRecognitionEmail({
               </p>
 
               <p style="margin-top:24px;font-size:18px;line-height:1.8;color:#BFBFBF;">
-                Your reflection remains available if you’d like to revisit it later.
+                Your Recognition remains available in your archive whenever you want to revisit it.
               </p>
 
-              <a href="${continueLink}" style="display:inline-block;margin-top:18px;padding:12px 22px;border:1px solid #3A2F1C;border-radius:999px;color:#BFBFBF;text-decoration:none;font-size:16px;">
-                Continue your reflection
+              <a href="${archiveLink}" style="display:inline-block;margin-top:18px;padding:12px 22px;border:1px solid #3A2F1C;border-radius:999px;color:#BFBFBF;text-decoration:none;font-size:16px;">
+                Open your Recognition Archive
               </a>
 
               <br />
 
-              <a href="https://www.oremea.com/#resonance" style="display:inline-block;margin-top:28px;padding:14px 26px;border:1px solid #C6A96B;border-radius:999px;color:#C6A96B;text-decoration:none;font-size:18px;">
-                See how Resonance continues this
+              <a href="https://resonance.oremea.com" style="display:inline-block;margin-top:28px;padding:14px 26px;border:1px solid #C6A96B;border-radius:999px;color:#C6A96B;text-decoration:none;font-size:18px;">
+                Continue to Resonance
               </a>
             </div>
           </div>

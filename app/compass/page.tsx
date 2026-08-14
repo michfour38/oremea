@@ -173,11 +173,26 @@ const possibilityMirror = useMemo(
       try {
         setIsRestoring(true);
 
+        const accessResponse = await fetch("/api/compass/access", {
+          cache: "no-store",
+        });
+        const accessData = await accessResponse.json().catch(() => null);
+
+        if (!accessResponse.ok || !accessData?.active) {
+          window.location.replace("/");
+          return;
+        }
+
         const response = await fetch("/api/compass/session", {
           method: "GET",
         });
 
         if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            window.location.replace("/");
+            return;
+          }
+
           setPhase("intro");
           return;
         }
@@ -192,7 +207,7 @@ const possibilityMirror = useMemo(
         }
       } catch (error) {
         console.error("Failed to load Compass session:", error);
-        setPhase("intro");
+        window.location.replace("/");
       } finally {
         setSessionLoaded(true);
         setIsRestoring(false);
@@ -378,9 +393,10 @@ const possibilityMirror = useMemo(
   }
 
   if (phase === "discussion") {
-  setPhase("core_reflection");
-  return;
-}
+    // Discussion owns its Map as a nested view. Leaving the Map must never
+    // rewind the completed reflection or regenerate earlier Compass stages.
+    return;
+  }
 
   if (phase === "execution_check") {
     setPhase("discussion");
@@ -810,23 +826,29 @@ pauseThen(() => setPhase("discussion"));
 async function completeCompassProcess() {
   setHasStarted(true);
 
-  await fetch("/api/compass/session", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      phase: "complete",
-      selectedArea,
-      areaResponses,
-      recursiveLayers,
-      possibilityAnswers,
-      resistanceMap,
-      discussionMessages,
-      proposedStep,
-      finalStep,
-    }),
-  });
+  try {
+    const response = await fetch("/api/compass/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        phase: "complete",
+        selectedArea,
+        areaResponses,
+        recursiveLayers,
+        possibilityAnswers,
+        resistanceMap,
+        discussionMessages,
+        proposedStep,
+        finalStep,
+      }),
+    });
+
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
   function moveToExecutionCheck() {
@@ -871,30 +893,33 @@ async function completeCompassProcess() {
     );
   }
 
-  const showBackButton = !["loading", "resume", "intro", "analyzing"].includes(
-    phase,
-  );
+  const showBackButton = ![
+    "loading",
+    "resume",
+    "intro",
+    "analyzing",
+    "discussion",
+  ].includes(phase);
 
   return (
     <main className="min-h-screen bg-[#090909] text-stone-100">
-<MemberNav />
-      <section className="relative z-0 min-h-screen overflow-hidden px-5 py-8 sm:px-8 lg:px-12">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(184,134,64,0.08),_transparent_28%),linear-gradient(180deg,_rgba(16,16,16,0.96),_rgba(9,9,9,1))]" />
+      <MemberNav />
+      <section className="relative isolate min-h-screen px-3 pb-12 sm:px-5 lg:px-8">
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_rgba(184,134,64,0.08),_transparent_28%),linear-gradient(180deg,_rgba(16,16,16,0.96),_rgba(9,9,9,1))]" />
 
-        <div className="relative z-0 mx-auto max-w-3xl">
-          <header className="mb-5 pt-1 text-center">
-            <div className="mx-auto mb-2 flex justify-center">
-              <Image
-                src="/images/compass-logo.webp"
-                alt="The Compass by Oremea"
-                width={640}
-                height={180}
-                priority
-                className="h-auto w-[380px] sm:w-[560px]"
-              />
-            </div>
+        <header className="compass-masthead pointer-events-none fixed inset-x-0 top-0 z-0 mx-auto flex h-[320px] max-w-3xl flex-col justify-center px-5 pt-16 text-center sm:h-[340px] sm:px-8">
+          <div className="mx-auto mb-2 flex justify-center">
+            <Image
+              src="/images/compass-logo.webp"
+              alt="The Compass by Oremea"
+              width={640}
+              height={180}
+              priority
+              className="h-auto w-[380px] sm:w-[560px]"
+            />
+          </div>
 
-            <p
+          <p
   className={`mx-auto max-w-2xl text-base leading-relaxed ${BODY_TEXT} sm:text-lg`}
 >
   Turn self-awareness into one executable next step
@@ -904,8 +929,12 @@ async function completeCompassProcess() {
   Clarity • Direction • Execution
 </p>
 
-          </header>
+        </header>
 
+        <div aria-hidden="true" className="h-[280px] sm:h-[300px]" />
+
+        <div className="compass-process-layer relative z-10 mx-auto max-w-[56rem] rounded-t-[2.25rem] border-x border-t border-white/[0.07] px-2 py-6 sm:px-6 sm:py-8">
+          <div className="compass-process-inner mx-auto max-w-3xl">
           {showBackButton && (
             <button
               type="button"
@@ -1077,8 +1106,9 @@ description=""
   recursiveLayers={recursiveLayers}
   extraReflection={extraReflection}
   onExtraReflectionChange={setExtraReflection}
-  onContinue={() => {
-    const mirrorText = compassMirrorOutput || coreReflection.reflection;
+  onContinue={(savedMirror) => {
+    const mirrorText =
+      savedMirror || compassMirrorOutput || coreReflection.reflection;
 
     setDiscussionMessages([
       {
@@ -1130,6 +1160,7 @@ description=""
   onComplete={completeCompassProcess}
 />
           )}
+          </div>
         </div>
       </section>
 
@@ -1204,11 +1235,44 @@ description=""
           color: #a1a1aa;
         }
 
+        .compass-descent-textarea::placeholder {
+          color: #f4f4f5;
+          opacity: 1;
+        }
+
         .compass-textarea:focus {
   border-color: #d8b15f;
   background: #1f1710;
   box-shadow: 0 0 0 1px rgba(216, 177, 95, 0.15);
 }
+
+        .compass-process-layer {
+          background: linear-gradient(
+            180deg,
+            rgba(9, 9, 9, 0.18) 0%,
+            rgba(9, 9, 9, 0.52) 16rem,
+            rgba(9, 9, 9, 0.96) 44rem
+          );
+          box-shadow: 0 -24px 80px rgba(0, 0, 0, 0.42);
+          -webkit-backdrop-filter: blur(2px) saturate(108%);
+          backdrop-filter: blur(2px) saturate(108%);
+        }
+
+        .compass-process-layer .compass-process-inner > section {
+          background: rgba(15, 15, 15, 0.62);
+          -webkit-backdrop-filter: blur(6px) saturate(106%);
+          backdrop-filter: blur(6px) saturate(106%);
+        }
+
+        @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+          .compass-process-layer {
+            background: rgba(9, 9, 9, 0.94);
+          }
+
+          .compass-process-layer .compass-process-inner > section {
+            background: rgba(15, 15, 15, 0.96);
+          }
+        }
       `}</style>
     </main>
   );
@@ -1247,9 +1311,11 @@ function normalizePhase(value: string | null | undefined): CompassPhase {
 "possibility_mirror",
     "resistance",
     "discussion",
-    "execution_check",
-    "complete",
   ];
+
+  if (value === "execution_check" || value === "complete") {
+    return "discussion";
+  }
 
   if (value && allowed.includes(value as CompassPhase)) {
     return value as CompassPhase;

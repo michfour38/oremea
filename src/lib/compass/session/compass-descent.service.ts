@@ -1,5 +1,4 @@
 import { OREMEA_EVIDENCE_BOUNDARY } from "@/src/lib/oremea/evidence-boundary"
-import { findUnsupportedEvidenceTerms } from "@/src/lib/oremea/evidence-grounding"
 import { MIRROR_AUTHORING_STANDARD } from "@/src/lib/oremea/mirror-authoring"
 import {
   MEANING_MOVEMENT_STANDARD,
@@ -32,6 +31,24 @@ const AREA_LABELS: Record<CompassGoalArea, string> = {
 }
 
 const COMPASS_MODEL = "claude-sonnet-4-5-20250929"
+const MAX_DESCENT_QUESTION_WORDS = 28
+
+const CONCISE_DESCENT_QUESTION_STANDARD = `
+CONCISE DESCENT QUESTION STANDARD — TIGHTEN WITHOUT FLATTENING
+- write one immediately understandable question, normally 12–24 words and never more than ${MAX_DESCENT_QUESTION_WORDS} words
+- use one grammatical spine that a participant can understand in one read
+- compress the participant's wording into faithful human synthesis; do not mechanically preserve every clause
+- preserve distinct supplied meanings when they operate together through cause, contrast, qualification, or accountability
+- every distinct meaning in the latest answer must survive the tightening; never select one clause and discard the others
+- preserve supplied timing and contrast when they change the meaning, including now/later and before/after relationships
+- use a short parallel list when several supplied meanings belong together
+- remove duplicated subjects, filler, and scaffolding such as "your state of"
+- never paste the participant's complete answer inside "Why does it matter to you that..."
+- never replace a specific compound answer with a generic abstraction or "this" merely to make the question shorter
+- never stack a because-clause, dash-clause, and with/where-clause into one question
+- faithful synthesis may name an explicit relationship concisely: "said you would and did" can become "keeping your commitment"
+- these are behavioural rules, not a fixed sentence; phrase each question naturally from the participant's immediately preceding answer
+`.trim()
 
 type DecisionValidationContext = {
   layer: number
@@ -40,7 +57,6 @@ type DecisionValidationContext = {
   currentQuestion: string
   recursiveLayers: CompassRecursiveLayer[]
   attempts: CompassDescentAttempt[]
-  questionFailureMode?: "throw" | "fallback"
 }
 
 export async function generateCompassDescentQuestion({
@@ -74,25 +90,33 @@ export async function generateCompassDescentQuestion({
   })
 
   const priorQuestions = recursiveLayers.map((item) => item.question)
-  const raw = await callMirrorWithRepair({
-    prompt,
-    maxTokens: 240,
-    validate: (value) => {
-      const question = parseQuestion(value)
-      validateCompassQuestion({
-        question,
-        sourceAnswer,
-        evidenceText: [
-          selectedAreaAnswer,
-          ...recursiveLayers.map((item) => item.answer),
-        ].join("\n"),
-        priorQuestions,
-      })
-      return question
-    },
-  })
+  const evidenceText = [
+    selectedAreaAnswer,
+    ...recursiveLayers.map((item) => item.answer),
+  ].join("\n")
 
-  return raw
+  try {
+    return await callMirrorWithRepair({
+      prompt,
+      maxTokens: 240,
+      validate: (value) => {
+        const question = parseQuestion(value)
+        validateCompassQuestion({
+          question,
+          sourceAnswer,
+          evidenceText,
+          priorQuestions,
+        })
+        return question
+      },
+    })
+  } catch {
+    return buildSafeWhyQuestion({
+      sourceAnswer,
+      evidenceText,
+      priorQuestions,
+    })
+  }
 }
 
 export async function evaluateCompassDescentAnswer({
@@ -130,24 +154,189 @@ export async function evaluateCompassDescentAnswer({
     attempts,
   })
 
-  return callMirrorWithRepair({
-    prompt,
-    maxTokens: 520,
-    validate: (value) =>
-      validateCompassDescentDecision(value, {
-        layer,
-        sourceAnswer: currentAnswer,
-        evidenceText: [
-          selectedAreaAnswer,
-          ...recursiveLayers.map((item) => item.answer),
-          currentAnswer,
-        ].join("\n"),
-        currentQuestion,
-        recursiveLayers,
-        attempts,
-        questionFailureMode: "fallback",
-      }),
+  try {
+    return await callMirrorWithRepair({
+      prompt,
+      maxTokens: 520,
+      validate: (value) =>
+        validateCompassDescentDecision(value, {
+          layer,
+          sourceAnswer: currentAnswer,
+          evidenceText: [
+            selectedAreaAnswer,
+            ...recursiveLayers.map((item) => item.answer),
+            currentAnswer,
+          ].join("\n"),
+          currentQuestion,
+          recursiveLayers,
+          attempts,
+        }),
+    })
+  } catch (error) {
+    console.error(
+      "Compass Descent decision recovered after Mirror failure:",
+      error instanceof Error ? error.message : "Unknown Mirror failure.",
+    )
+
+    return recoverCompassDescentDecision({
+      layer,
+      selectedArea,
+      areaResponses,
+      recursiveLayers,
+      currentQuestion,
+      currentAnswer,
+      attempts,
+    })
+  }
+}
+
+async function recoverCompassDescentDecision({
+  layer,
+  selectedArea,
+  areaResponses,
+  recursiveLayers,
+  currentQuestion,
+  currentAnswer,
+  attempts,
+}: {
+  layer: number
+  selectedArea: CompassGoalArea
+  areaResponses: CompassAreaResponse[]
+  recursiveLayers: CompassRecursiveLayer[]
+  currentQuestion: string
+  currentAnswer: string
+  attempts: CompassDescentAttempt[]
+}): Promise<CompassDescentDecision> {
+  const answer = currentAnswer.trim()
+  const normalizedAnswer = normalizeComparisonText(answer)
+  const isUncertaintyOnly = isOnlyUncertaintyAnswer(answer)
+  const isCorrection =
+    recursiveLayers.length > 0 &&
+    /^(?:no\b|actually\b|correction\b|that(?:'s| is) not what i meant\b|i meant\b)/i.test(
+      answer,
+    )
+  const isExactRepetition = [
+    ...recursiveLayers.map((item) => item.answer),
+    ...attempts.map((item) => item.answer),
+  ].some((item) => normalizeComparisonText(item) === normalizedAnswer)
+
+  const movement: CompassDescentDecision["movement"] = isUncertaintyOnly
+    ? "uncertainty_only"
+    : isCorrection
+      ? "correction"
+      : isExactRepetition
+        ? "repetition"
+        : "new_meaning"
+  const historyAction = expectedHistoryAction({
+    movement,
+    hasAcceptedLayer: recursiveLayers.length > 0,
   })
+  const substantiveAnswer = isUncertaintyOnly ? null : answer
+
+  if (historyAction === "stay") {
+    return {
+      direction: "self_to_self",
+      movement,
+      answerForm: "other",
+      substantiveAnswer,
+      historyAction,
+      advanceLayer: false,
+      question: currentQuestion,
+    }
+  }
+
+  if (layer === 7 && historyAction === "append") {
+    return {
+      direction: "self_to_self",
+      movement,
+      answerForm: "meaning",
+      substantiveAnswer,
+      historyAction,
+      advanceLayer: true,
+      question: null,
+    }
+  }
+
+  const recoveredLayers = buildRecoveredLayers({
+    layer,
+    recursiveLayers,
+    currentQuestion,
+    answer,
+    historyAction,
+  })
+  const priorQuestions = [
+    ...recoveredLayers.map((item) => item.question),
+    ...attempts.map((item) => item.question),
+  ]
+
+  let question: string
+
+  try {
+    question = await generateCompassDescentQuestion({
+      layer: historyAction === "append" ? layer + 1 : layer,
+      selectedArea,
+      areaResponses,
+      recursiveLayers: recoveredLayers,
+    })
+  } catch {
+    question = buildCompassRecoveryWhyQuestion({
+      sourceAnswer: answer,
+      priorQuestions,
+    })
+  }
+
+  return {
+    direction: "self_to_self",
+    movement,
+    answerForm: "meaning",
+    substantiveAnswer,
+    historyAction,
+    advanceLayer: historyAction === "append",
+    question,
+  }
+}
+
+function buildRecoveredLayers({
+  layer,
+  recursiveLayers,
+  currentQuestion,
+  answer,
+  historyAction,
+}: {
+  layer: number
+  recursiveLayers: CompassRecursiveLayer[]
+  currentQuestion: string
+  answer: string
+  historyAction: CompassDescentHistoryAction
+}): CompassRecursiveLayer[] {
+  const recoveredLayer: CompassRecursiveLayer = {
+    layer,
+    question: currentQuestion,
+    answer,
+    detectedValueWords: [],
+    detectedReasonWords: [],
+  }
+
+  if (historyAction === "replace_previous") {
+    return [...recursiveLayers.slice(0, -1), recoveredLayer]
+  }
+
+  return [...recursiveLayers, recoveredLayer]
+}
+
+function normalizeComparisonText(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[’']/g, "'")
+    .replace(/[^a-z0-9']+/g, " ")
+    .replace(/\s+/g, " ")
+}
+
+function isOnlyUncertaintyAnswer(value: string): boolean {
+  return /^(?:(?:i|we)\s+)?(?:(?:(?:do|did)\s+not|don't|didn't)\s+(?:know|understand)|(?:am|are)?\s*(?:not\s+sure|unsure|uncertain|unclear))(?:\s+(?:yet|really))?[.!?]*$/i.test(
+    value.trim().replace(/[’]/g, "'"),
+  )
 }
 
 function buildQuestionPrompt({
@@ -181,6 +370,8 @@ ${OREMEA_EVIDENCE_BOUNDARY}
 
 ${MEANING_MOVEMENT_STANDARD}
 
+${CONCISE_DESCENT_QUESTION_STANDARD}
+
 COMPASS DESCENT QUESTION POLICY — WHY ONLY
 - every participant-facing Descent question must begin with the exact word "Why"
 - every question must remain semantically equivalent to asking why the participant's supplied answer matters, is important, or is significant
@@ -197,12 +388,11 @@ COMPASS DESCENT QUESTION POLICY — WHY ONLY
 - when the participant names what they want for another person, ask why that supplied intended experience matters
 - do not move into possibility, planning, strategy, repair, action, coaching, or execution
 - preserve the participant's living language and do not add emotion or intensity
-- every content premise in the question must already exist in the participant's goal or answers
+- name or faithfully synthesize the immediately preceding answer as the subject; never substitute "this", "that", "it", or "your answer" when the answer contains substantive meaning
+- every content premise in the question must come from the immediately preceding answer
 - neutral inquiry words may open importance or significance; they may not supply deserving, worth, safety, love, identity, control, pressure, shame, or another construct the participant has not supplied
 
 Examples of form, not templates:
-- Why does this matter to you?
-- Why is this important to you?
 - Why did receiving as little as possible matter to you?
 - Why is freedom to create from within important to you?
 - Why does their knowing they are loved matter to you?
@@ -264,6 +454,8 @@ ${OREMEA_EVIDENCE_BOUNDARY}
 
 ${MEANING_MOVEMENT_STANDARD}
 
+${CONCISE_DESCENT_QUESTION_STANDARD}
+
 COMPASS HISTORY ACTION
 Choose exactly one:
 - append: a genuine new movement in meaning occurred; this answer becomes the next accepted layer
@@ -282,11 +474,10 @@ Required consistency:
 COMPASS QUESTION POLICY — WHY ONLY
 Every next question begins with the exact word "Why".
 Every next question asks why the participant's supplied answer matters, is important, or is significant.
-The subject changes as the participant answers. The inquiry does not.
+The immediately preceding answer becomes the subject. The subject changes as the participant answers. The inquiry does not.
+When the answer contains substantive meaning, name or faithfully synthesize it; never replace it with "this", "that", "it", or "your answer".
 
 Allowed grammatical movement:
-- Why is this important to you?
-- Why does this matter to you?
 - Why did receiving as little as possible matter to you?
 - Why was being seen as grateful significant to you?
 - Why would their knowing they are loved matter to you?
@@ -302,7 +493,7 @@ Hard boundaries:
 - do not move into possibility, planning, action, repair, coaching, or execution
 - do not validate or contradict a self-judgment
 - do not infer an unspoken emotion, motive, identity, deserving, worth, safety, love, control, pressure, shame, or meaning
-- every content premise in the question must be grounded in the participant's goal or answers; neutral why-language may open importance but may not provide meaning
+- every content premise in the question must come from the immediately preceding answer; neutral why-language may open importance but may not provide meaning
 - do not use "carry so much weight"
 - do not change the inquiry merely to avoid rhetorical repetition; the repetition is intentional
 - do not repeat an identical full question
@@ -375,7 +566,7 @@ async function callMirrorWithRepair<T>({
 }): Promise<T> {
   let validationError = ""
 
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
     const repair =
       attempt === 0
         ? ""
@@ -542,24 +733,12 @@ export function validateCompassDescentDecision(
     ]
     const questionSource = substantiveAnswer || context.sourceAnswer
 
-    try {
-      validateCompassQuestion({
-        question,
-        sourceAnswer: questionSource,
-        priorQuestions,
-        evidenceText: decisionEvidenceText,
-      })
-    } catch (error) {
-      if (context.questionFailureMode !== "fallback") {
-        throw error
-      }
-
-      resolvedQuestion = buildSafeWhyQuestion({
-        sourceAnswer: questionSource,
-        evidenceText: decisionEvidenceText,
-        priorQuestions,
-      })
-    }
+    validateCompassQuestion({
+      question,
+      sourceAnswer: questionSource,
+      priorQuestions,
+      evidenceText: decisionEvidenceText,
+    })
   }
 
   return {
@@ -582,8 +761,18 @@ function buildSafeWhyQuestion({
   evidenceText: string
   priorQuestions: string[]
 }): string {
-  const subject = extractSafeWhySubject(sourceAnswer)
+  const sourceFragments = extractWhyFragments(sourceAnswer)
+  const compoundSubject = buildQuotedCompoundSubject(sourceFragments)
+  const subject =
+    sourceFragments.length <= 1 ? extractSafeWhySubject(sourceAnswer) : ""
   const candidates = [
+    ...(compoundSubject
+      ? [
+          `Why do ${compoundSubject} matter to you?`,
+          `Why are ${compoundSubject} important to you?`,
+          `Why are ${compoundSubject} significant to you?`,
+        ]
+      : []),
     ...(subject
       ? [
           `Why does ${subject} matter to you?`,
@@ -591,11 +780,13 @@ function buildSafeWhyQuestion({
           `Why is ${subject} significant to you?`,
         ]
       : []),
-    "Why does this matter to you?",
-    "Why is this important to you?",
-    "Why is this significant to you?",
-    "Why does this remain important to you?",
-    "Why is this the reason beneath the goal?",
+    ...(!hasSubstantiveWhySubject(sourceAnswer)
+      ? [
+          "Why does this matter to you?",
+          "Why is this important to you?",
+          "Why is this significant to you?",
+        ]
+      : []),
   ]
 
   for (const candidate of candidates) {
@@ -615,6 +806,56 @@ function buildSafeWhyQuestion({
   throw new Error(
     "Compass could not form a distinct evidence-grounded Why question.",
   )
+}
+
+export function buildCompassRecoveryWhyQuestion({
+  sourceAnswer,
+  priorQuestions,
+}: {
+  sourceAnswer: string
+  priorQuestions: string[]
+}): string {
+  return buildSafeWhyQuestion({
+    sourceAnswer,
+    evidenceText: sourceAnswer,
+    priorQuestions,
+  })
+}
+
+function extractWhyFragments(sourceAnswer: string): string[] {
+  return sourceAnswer
+    .split(/\n|[,;:]+|[.!?]+|\s+[—–-]\s+/)
+    .map((item) =>
+      item
+        .trim()
+        .replace(/^[\s"'“”‘’()[\]{}]+/, "")
+        .replace(/[\s"'“”‘’()[\]{}]+$/, "")
+        .replace(
+          /^(?:it means|that means|this means|meaning|because|and|but|so|then)\s+/i,
+          "",
+        )
+        .replace(
+          /\s+so\s+(?:they|he|she|we|you)(?:['’]re|\s+are)\s+in\s+practice$/i,
+          "",
+        )
+        .replace(/\bnot\s+still\s+needing\b/i, "not needing")
+        .trim(),
+    )
+    .filter(Boolean)
+}
+
+function buildQuotedCompoundSubject(fragments: string[]): string {
+  if (fragments.length < 2 || fragments.length > 3) return ""
+
+  const quoted = fragments.map((fragment) => `“${fragment}”`)
+  const joined =
+    quoted.length === 2
+      ? `${quoted[0]} and ${quoted[1]}`
+      : `${quoted[0]}, ${quoted[1]}, and ${quoted[2]}`
+  const candidate = `Why do ${joined} matter to you?`
+  const wordCount = candidate.split(/\s+/).filter(Boolean).length
+
+  return wordCount <= MAX_DESCENT_QUESTION_WORDS ? joined : ""
 }
 
 function extractSafeWhySubject(sourceAnswer: string): string {
@@ -674,7 +915,6 @@ function expectedHistoryAction({
 export function validateCompassQuestion({
   question,
   sourceAnswer,
-  evidenceText = sourceAnswer,
   priorQuestions,
 }: {
   question: string
@@ -698,7 +938,45 @@ export function validateCompassQuestion({
     throw new Error("The Descent question is too long.")
   }
 
-  if (/\b(right now|now|today|currently|at present|in this moment|here)\b/i.test(lower)) {
+  assertCompassQuestionIsConcise(normalized)
+
+  if (
+    usesGenericWhySubject(normalized) &&
+    hasSubstantiveWhySubject(sourceAnswer)
+  ) {
+    throw new Error(
+      "The Descent question flattened an available grounded subject into a generic this.",
+    )
+  }
+
+  if (/^why does .+\bbecause\b.+matter to you\?$/i.test(normalized)) {
+    throw new Error(
+      "The Descent question embeds a because-clause inside its subject; recast it with one clear grammatical spine.",
+    )
+  }
+
+  const stackedClauseCount = [
+    /\bbecause\b/i,
+    /[—–]/,
+    /,\s+(?:with|where|while)\b/i,
+  ].filter((pattern) => pattern.test(normalized)).length
+
+  if (stackedClauseCount >= 3) {
+    throw new Error(
+      "The Descent question stacks too many linked clauses to understand in one read.",
+    )
+  }
+
+  const questionUsesPresentTime =
+    /\b(right now|now|today|currently|at present|in this moment|here)\b/i.test(
+      lower,
+    )
+  const sourceSuppliesPresentTime =
+    /\b(right now|now|today|currently|at present|in this moment|here)\b/i.test(
+      source,
+    )
+
+  if (questionUsesPresentTime && !sourceSuppliesPresentTime) {
     throw new Error("The Descent question pulls the participant back into the present.")
   }
 
@@ -707,7 +985,8 @@ export function validateCompassQuestion({
     /\bbecome(?:s|became|becoming)?\s+possible\b/i.test(lower) ||
     /\b(?:lead|leads|led|leading)\s+to\b/i.test(lower) ||
     /\b(?:allow|allows|allowing)\s+(?:you|them|him|her|someone|people)\s+to\b/i.test(lower) ||
-    /\bopens?\s+(?:up\s+)?(?:a|the|new|more)\b/i.test(lower)
+    /\bopens?\s+(?:up\s+)?(?:a|the|new|more)\b/i.test(lower) ||
+    /\bcreate(?:s|d|ing)?\s+(?:a\s+)?future\b/i.test(lower)
 
   if (movesIntoPossibility) {
     throw new Error("The Descent question moves into Possibility instead of asking why.")
@@ -740,6 +1019,8 @@ export function validateCompassQuestion({
   }
 
   const inferredLabels = [
+    "abandon",
+    "deserv",
     "frustrat",
     "hurt",
     "painful",
@@ -750,10 +1031,14 @@ export function validateCompassQuestion({
     "relief",
     "longing",
     "overwhelm",
+    "shame",
+    "trauma",
   ].some((label) => lower.includes(label) && !source.includes(label))
 
   if (inferredLabels) {
-    throw new Error("The Descent question adds an emotion the participant did not supply.")
+    throw new Error(
+      "The Descent question adds an emotion or meaning the participant did not supply.",
+    )
   }
 
   const inventedIntensity = ["deeply", "extremely", "devastating"].some(
@@ -764,67 +1049,63 @@ export function validateCompassQuestion({
     throw new Error("The Descent question adds unsupported intensity.")
   }
 
-  const unsupportedTerms = findUnsupportedEvidenceTerms({
-    text: normalized,
-    evidenceText,
-    allowedTerms: [
-      ...DESCENT_INQUIRY_TERMS,
-      ...getEvidenceSupportedInquiryTerms(evidenceText),
-    ],
-  })
+  const questionClaimsRecurrence =
+    /\b(?:always|constant(?:ly)?|continual(?:ly)?|recur(?:s|red|ring|rence)?|repeat(?:s|ed|ing|edly)?)\b/i.test(
+      normalized,
+    )
+  const sourceSuppliesRecurrence =
+    /\b(?:always|constant(?:ly)?|continual(?:ly)?|every\s+time|again\s+and\s+again|only\s+ever|recur(?:s|red|ring|rence)?|repeat(?:s|ed|ing|edly)?)\b/i.test(
+      sourceAnswer,
+    )
 
-  if (unsupportedTerms.length > 0) {
+  if (questionClaimsRecurrence && !sourceSuppliesRecurrence) {
     throw new Error(
-      `The Descent question introduces unsupported content: ${unsupportedTerms.join(", ")}.`,
+      "The Descent question adds recurrence the participant did not supply.",
     )
   }
 
-  const recentQuestions = priorQuestions
+  const earlierQuestions = priorQuestions
     .map((item) => item.trim())
     .filter(Boolean)
-    .slice(-3)
 
-  if (recentQuestions.some((item) => item.toLowerCase() === lower)) {
+  if (earlierQuestions.some((item) => item.toLowerCase() === lower)) {
     throw new Error("The Descent question repeats an earlier question.")
   }
 
 }
 
-function getEvidenceSupportedInquiryTerms(
-  evidenceText: string,
-): string[] {
-  const normalized = evidenceText.toLowerCase()
+function usesGenericWhySubject(question: string): boolean {
+  return /^(?:why does (?:this|that|it|your answer|the answer|what you (?:said|wrote|described)) (?:matter|remain important) to you|why is (?:this|that|it|your answer|the answer|what you (?:said|wrote|described)) (?:important|significant) to you)\?$/i.test(
+    question,
+  )
+}
 
-  const recurrenceWasSupplied =
-    /\b(?:always|constantly|continually|continuously|repeatedly|regularly|every\s+time|again\s+and\s+again|only\s+ever)\b/i.test(
+function hasSubstantiveWhySubject(sourceAnswer: string): boolean {
+  const normalized = sourceAnswer
+    .trim()
+    .toLowerCase()
+    .replace(/[’']/g, "'")
+    .replace(/\s+/g, " ")
+
+  if (!normalized) return false
+
+  const hasOnlyUncertainty =
+    /^(?:(?:i|we)\s+)?(?:(?:(?:do|did)\s+not|don't|didn't)\s+(?:know|understand)|(?:am|are)?\s*(?:not\s+sure|unsure|uncertain|unclear))(?:\s+(?:yet|really))?[.!?]*$/i.test(
       normalized,
     )
 
-  return recurrenceWasSupplied
-    ? ["repeat", "repeated", "repeatedly", "recurring", "recurrence"]
-    : []
+  return !hasOnlyUncertainty
 }
 
-const DESCENT_INQUIRY_TERMS = [
-  "answer",
-  "central",
-  "clear",
-  "closer",
-  "closest",
-  "feel",
-  "feels",
-  "goal",
-  "important",
-  "importance",
-  "itself",
-  "matter",
-  "matters",
-  "meaning",
-  "meant",
-  "reason",
-  "significance",
-  "significant",
-] as const
+function assertCompassQuestionIsConcise(question: string) {
+  const wordCount = question.trim().split(/\s+/).filter(Boolean).length
+
+  if (wordCount > MAX_DESCENT_QUESTION_WORDS) {
+    throw new Error(
+      `The Descent question has ${wordCount} words; tighten it to ${MAX_DESCENT_QUESTION_WORDS} or fewer without flattening the participant's meaning.`,
+    )
+  }
+}
 
 export function getCompassQuestionFrame(question: string): string | null {
   const normalized = question.trim().toLowerCase()

@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { getCompassAccessState } from "@/src/lib/compass/compass-access";
 import {
   createEmptyCompassEndingState,
   type CompassEndingState,
@@ -17,6 +18,13 @@ export async function POST(request: Request) {
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!(await getCompassAccessState(userId)).active) {
+      return NextResponse.json(
+        { error: "Compass access has ended." },
+        { status: 403 },
+      );
     }
 
     const body = await request.json();
@@ -94,6 +102,10 @@ export async function POST(request: Request) {
         data: {
           detected_patterns:
             nextState as unknown as Prisma.InputJsonValue,
+          resolution_text: null,
+          resolution_confirmed_at: null,
+          final_step: null,
+          final_step_confirmed_at: null,
         },
       });
     } else {
@@ -185,6 +197,9 @@ function restoreItemIntoState(
     ...state,
     mapItems,
     mapReviewed: false,
+    resolutionCandidate: null,
+    resolutionConfirmed: false,
+    resolutionConfirmedAt: null,
     updatedAt: now,
   };
 }

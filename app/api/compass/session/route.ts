@@ -4,8 +4,9 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { createEmptyCompassEndingState } from "@/src/lib/compass/ending/ending-types";
+import { getCompassAccessState } from "@/src/lib/compass/compass-access";
+import { validateCompassCompletion } from "@/src/lib/compass/session/completion-contract";
 import {
-  completeCompassSession,
   getActiveCompassSession,
   saveCompassSession,
 } from "@/src/lib/compass/session/session-persistence";
@@ -27,6 +28,13 @@ export async function GET() {
       return NextResponse.json(
         { session: null },
         { status: 401 },
+      );
+    }
+
+    if (!(await getCompassAccessState(userId)).active) {
+      return NextResponse.json(
+        { success: false, session: null, error: "Compass access has ended." },
+        { status: 403 },
       );
     }
 
@@ -68,6 +76,13 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 },
+      );
+    }
+
+    if (!(await getCompassAccessState(userId)).active) {
+      return NextResponse.json(
+        { error: "Compass access has ended." },
+        { status: 403 },
       );
     }
 
@@ -143,6 +158,45 @@ export async function POST(request: Request) {
       Array.isArray(body.areaResponses) &&
       body.areaResponses.length === 0;
 
+    if (body.phase === "complete") {
+      const activeSession = await getActiveCompassSession(userId);
+
+      const completion = validateCompassCompletion({
+        resolutionText: activeSession?.resolution_text,
+        resolutionConfirmedAt: activeSession?.resolution_confirmed_at,
+        finalStep: body.finalStep,
+      });
+
+      if (!completion.ok || !activeSession) {
+        return NextResponse.json(
+          { error: completion.ok ? "No active Compass session." : completion.error },
+          { status: 409 },
+        );
+      }
+
+      const session = await prisma.compass_sessions.update({
+        where: { id: activeSession.id },
+        data: {
+          status: "complete",
+          phase: "complete",
+          selected_area: body.selectedArea,
+          area_responses: body.areaResponses as Prisma.InputJsonValue,
+          recursive_layers: body.recursiveLayers as Prisma.InputJsonValue,
+          possibility_answers: body.possibilityAnswers as Prisma.InputJsonValue,
+          resistance_map: body.resistanceMap as Prisma.InputJsonValue,
+          discussion_messages: body.discussionMessages as Prisma.InputJsonValue,
+          proposed_step: body.proposedStep,
+          final_step: completion.finalStep,
+          final_step_confirmed_at: new Date(),
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        session,
+      });
+    }
+
     const session = await saveCompassSession({
       userId,
       phase: body.phase,
@@ -156,10 +210,6 @@ export async function POST(request: Request) {
       finalStep: body.finalStep,
       detectedPatterns: startsFresh ? EMPTY_MIRROR_CACHE : body.detectedPatterns,
     });
-
-    if (body.phase === "complete") {
-      await completeCompassSession(userId);
-    }
 
     return NextResponse.json({
       success: true,

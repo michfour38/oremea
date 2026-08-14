@@ -8,13 +8,18 @@ import {
 } from "@/src/lib/resonance/resonance-run-data";
 import { runResonanceRunWeeklyMirror } from "@/src/lib/resonance/resonance-run-weekly-mirror";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://app.oremea.com";
+const RESONANCE_URL =
+  process.env.NEXT_PUBLIC_RESONANCE_URL || "https://resonance.oremea.com";
+
+function resonanceRedirect(path: string) {
+  return NextResponse.redirect(new URL(path, RESONANCE_URL));
+}
 
 export async function GET(request: Request) {
   const { userId } = await auth();
 
   if (!userId) {
-    return NextResponse.redirect(`${APP_URL}/sign-in`);
+    return resonanceRedirect("/sign-in");
   }
 
   const url = new URL(request.url);
@@ -22,33 +27,31 @@ export async function GET(request: Request) {
   const dayNumber = Number(url.searchParams.get("dayNumber") ?? "0");
 
   if (!weekNumber || dayNumber !== 7) {
-    return NextResponse.redirect(`${APP_URL}/resonance?mirror=invalid#mirror`);
+    return resonanceRedirect("/resonance?mirror=invalid#mirror");
   }
 
   const activeRun = await getActiveResonanceRun(userId);
   if (!activeRun || activeRun.weekNumber !== weekNumber) {
-    return NextResponse.redirect(`${APP_URL}/resonance?mirror=invalid#mirror`);
+    return resonanceRedirect("/resonance?mirror=invalid#mirror");
   }
 
   const guidance = await getRunGuidance(activeRun.id, 7);
 
   if (!guidance?.answerOne?.trim() || !guidance.answerTwo?.trim()) {
-    return NextResponse.redirect(
-      `${APP_URL}/resonance?mirror=answers-required#mirror`,
-    );
+    return resonanceRedirect("/resonance?mirror=answers-required#mirror");
   }
 
   const existing = await getRunMirror(activeRun.id, 7);
 
   if (existing?.tier === "full") {
-    return NextResponse.redirect(`${APP_URL}/resonance?mirror=success#mirror`);
+    return resonanceRedirect("/resonance?mirror=success#mirror");
   }
 
   const result = await runResonanceRunWeeklyMirror(userId, weekNumber, 7);
 
   if (!result) {
-    return NextResponse.redirect(`${APP_URL}/resonance?mirror=error#mirror`);
+    return resonanceRedirect("/resonance?mirror=error#mirror");
   }
 
-  return NextResponse.redirect(`${APP_URL}/resonance?mirror=success#mirror`);
+  return resonanceRedirect("/resonance?mirror=success#mirror");
 }

@@ -9,6 +9,7 @@ import {
   type CompassEndingState,
 } from "@/src/lib/compass/ending/ending-types";
 import type { CompassScopeCategory } from "@/src/lib/compass/scope-boundary";
+import { getCompassAccessState } from "@/src/lib/compass/compass-access";
 
 import { CompassArchiveSessionView } from "./CompassArchiveSessionView";
 
@@ -44,6 +45,8 @@ export default async function CompassArchiveSessionPage({ params }: Props) {
     redirect("/sign-in");
   }
 
+  const access = await getCompassAccessState(userId);
+
   const session = await prisma.compass_sessions.findFirst({
     where: {
       id: params.id,
@@ -57,6 +60,10 @@ export default async function CompassArchiveSessionPage({ params }: Props) {
       selected_area: true,
       discussion_messages: true,
       detected_patterns: true,
+      resolution_text: true,
+      resolution_confirmed_at: true,
+      final_step: true,
+      final_step_confirmed_at: true,
       updated_at: true,
     },
   });
@@ -102,6 +109,13 @@ export default async function CompassArchiveSessionPage({ params }: Props) {
           sessionId={session.id}
           discussionMessages={discussionMessages}
           endingState={endingState}
+          resolutionText={
+            session.resolution_confirmed_at ? session.resolution_text : null
+          }
+          finalStep={
+            session.final_step_confirmed_at ? session.final_step : null
+          }
+          canRestoreToMap={access.active}
         />
       </section>
 

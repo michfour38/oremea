@@ -40,6 +40,10 @@ model compass_sessions {
   proposed_step String?
   final_step    String?
 
+  resolution_text         String?
+  resolution_confirmed_at DateTime?
+  final_step_confirmed_at DateTime?
+
   detected_patterns Json?
 
   created_at DateTime @default(now())

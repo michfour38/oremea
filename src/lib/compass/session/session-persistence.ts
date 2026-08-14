@@ -88,20 +88,3 @@ possibility_answers: possibilityAnswers as object,
     },
   })
 }
-
-export async function completeCompassSession(userId: string) {
-  const existing = await getActiveCompassSession(userId)
-
-  if (!existing) {
-    return null
-  }
-
-  return prisma.compass_sessions.update({
-    where: {
-      id: existing.id,
-    },
-    data: {
-      status: "complete",
-    },
-  })
-}

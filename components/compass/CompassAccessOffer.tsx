@@ -1,14 +1,22 @@
+import {
+  COMPASS_PRICING,
+  formatCompassPrice,
+} from "@/src/lib/compass/compass-pricing";
+
 type CompassAccessOfferProps = {
   onFirstMonth: () => void;
-  onMonthly: () => void;
-  onAnnual: () => void;
 };
 
 export function CompassAccessOffer({
   onFirstMonth,
-  onMonthly,
-  onAnnual,
 }: CompassAccessOfferProps) {
+  const launchPrice = formatCompassPrice(
+    COMPASS_PRICING.launchPriceCents,
+  );
+  const standardPrice = formatCompassPrice(
+    COMPASS_PRICING.standardPriceCents,
+  );
+
   return (
     <div className="rounded-[2rem] border border-[#2a2418] bg-[#10100f] p-6 text-stone-100">
       <p className="mb-3 text-xs uppercase tracking-[0.34em] text-[#d8b15f]">
@@ -26,31 +34,18 @@ export function CompassAccessOffer({
       </p>
 
       <button onClick={onFirstMonth} className="primary-button mt-6">
-        Start first month · R520
+        Enter Compass · {launchPrice}
       </button>
 
       <div className="mt-8 border-t border-[#2a2418] pt-6">
         <p className="text-sm font-medium text-stone-200">
-          Continue after your first month
+          Launch offer
         </p>
 
         <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-          Once you have experienced Compass, continue with monthly or annual
-          access.
-        </p>
-
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <button onClick={onMonthly} className="secondary-button">
-            Monthly Access · R520/month
-          </button>
-
-          <button onClick={onAnnual} className="secondary-button">
-            Annual Access · R5720/year
-          </button>
-        </div>
-
-        <p className="mt-3 text-xs text-zinc-500">
-          Annual access includes 12 months for the price of 11.
+          Your first {COMPASS_PRICING.accessDays} days are {launchPrice}.
+          Standard {COMPASS_PRICING.accessDays}-day access will be {standardPrice}.
+          Nothing renews automatically.
         </p>
       </div>
     </div>

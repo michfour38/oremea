@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getRouteSummary } from "@/lib/works/routes/get-route-summary";
+import { ownsWorksAnonymousSearch } from "@/lib/works/searches/anonymous-search-ownership";
 
 export async function GET(
   req: NextRequest,
@@ -18,12 +19,24 @@ export async function GET(
 
     const session = await prisma.works_search_sessions.findUnique({
       where: { id: searchSessionId },
-      select: { brief_id: true },
+      select: {
+        brief_id: true,
+        browser_session_id: true,
+        market: { select: { slug: true } },
+      },
     });
 
-    if (!session || session.brief_id !== params.briefId) {
+    if (
+      !session ||
+      session.brief_id !== params.briefId ||
+      !ownsWorksAnonymousSearch({
+        request: req,
+        marketSlug: session.market.slug,
+        expectedBrowserSessionId: session.browser_session_id,
+      })
+    ) {
       return NextResponse.json(
-        { error: "This production brief does not belong to this search." },
+        { error: "This production brief does not belong to this browser search." },
         { status: 404 }
       );
     }

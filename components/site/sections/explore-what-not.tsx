@@ -1,20 +1,20 @@
 export function ExploreWhatNot() {
   return (
     <section className="border-b border-white/5 bg-zinc-950/60">
-      <div className="mx-auto max-w-6xl px-5 py-24">
+      <div className="mx-auto max-w-6xl px-5 py-16 md:py-20">
         <div className="max-w-3xl">
-          <p className="mb-5 text-xs uppercase tracking-[0.28em] text-amber-200/70">
+          <p className="text-xs uppercase tracking-[0.28em] text-[#b79a63]">
             What Oremea Is Not
           </p>
 
-          <h2 className="text-3xl font-light leading-tight text-zinc-100 md:text-5xl">
-            Structured reflection — not therapy, diagnosis, or forced participation.
+          <h2 className="mt-4 text-3xl font-light leading-tight text-zinc-100 md:text-5xl">
+            Clear boundaries are part of the product.
           </h2>
         </div>
 
-        <div className="mt-16 grid gap-6 md:grid-cols-2">
-          <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-8">
-            <p className="mb-6 text-sm uppercase tracking-[0.18em] text-zinc-400">
+        <div className="mt-10 grid gap-4 md:grid-cols-2">
+          <div className="rounded-3xl border border-white/10 bg-zinc-950/80 p-6 md:p-8">
+            <p className="mb-6 text-sm uppercase tracking-[0.18em] text-zinc-500">
               Oremea is not
             </p>
 
@@ -22,14 +22,14 @@ export function ExploreWhatNot() {
               <li>• therapy or medical treatment</li>
               <li>• crisis support or emergency care</li>
               <li>• diagnosis or predictive profiling</li>
-              <li>• generic AI chat systems</li>
+              <li>• an open-ended AI chat service</li>
               <li>• forced social participation</li>
               <li>• manipulative engagement design</li>
             </ul>
           </div>
 
-          <div className="rounded-3xl border border-amber-200/10 bg-amber-100/[0.03] p-8">
-            <p className="mb-6 text-sm uppercase tracking-[0.18em] text-amber-100/70">
+          <div className="rounded-3xl border border-[#b79a63]/20 bg-[#b79a63]/[0.03] p-6 md:p-8">
+            <p className="mb-6 text-sm uppercase tracking-[0.18em] text-[#b79a63]">
               Core principles
             </p>
 
@@ -38,7 +38,7 @@ export function ExploreWhatNot() {
               <li>• private reflections remain private</li>
               <li>• structured awareness systems</li>
               <li>• guided recognition over dependency</li>
-              <li>• calm operational clarity</li>
+              <li>• clarity before action</li>
               <li>• intentional communication and alignment</li>
             </ul>
           </div>

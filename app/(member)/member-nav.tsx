@@ -11,16 +11,19 @@ function ProductLink({
   href,
   label,
   pathname,
+  activePath,
 }: {
   href: string
   label: string
   pathname: string
+  activePath: string
 }) {
   const active =
-    pathname === href || (href !== "/" && pathname.startsWith(href))
+    pathname === activePath ||
+    (activePath !== "/" && pathname.startsWith(activePath))
 
   return (
-    <Link
+    <a
       href={href}
       className={`text-[11px] uppercase tracking-[0.18em] transition ${
         active
@@ -29,13 +32,13 @@ function ProductLink({
       }`}
     >
       {label}
-    </Link>
+    </a>
   )
 }
 
 export default function MemberNav() {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null)
-  const [hasActiveMap, setHasActiveMap] = useState(false)
+  const [hasCompassAccess, setHasCompassAccess] = useState(false)
 
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -47,45 +50,25 @@ export default function MemberNav() {
   useEffect(() => {
     let cancelled = false
 
-    async function refreshMapAvailability() {
+    async function refreshCompassAccess() {
       try {
-        const response = await fetch("/api/compass/ending", {
-          method: "GET",
+        const response = await fetch("/api/compass/access", {
           cache: "no-store",
         })
+        const data = await response.json().catch(() => null)
 
-        if (!response.ok) {
-          if (!cancelled) setHasActiveMap(false)
-          return
+        if (!cancelled) {
+          setHasCompassAccess(Boolean(response.ok && data?.active))
         }
-
-        const data = await response.json()
-        const items = Array.isArray(data?.state?.mapItems)
-          ? data.state.mapItems
-          : []
-        const hasActive = items.some(
-          (item: { status?: string }) =>
-            item?.status === "active" || item?.status === "waiting",
-        )
-
-        if (!cancelled) setHasActiveMap(hasActive)
       } catch {
-        if (!cancelled) setHasActiveMap(false)
+        if (!cancelled) setHasCompassAccess(false)
       }
     }
 
-    void refreshMapAvailability()
-    window.addEventListener(
-      "compass-map-changed",
-      refreshMapAvailability,
-    )
+    void refreshCompassAccess()
 
     return () => {
       cancelled = true
-      window.removeEventListener(
-        "compass-map-changed",
-        refreshMapAvailability,
-      )
     }
   }, [pathname, searchParams])
 
@@ -94,18 +77,34 @@ export default function MemberNav() {
       <div className="mx-auto flex h-12 max-w-6xl items-center justify-between">
         <div className="flex h-12 items-center gap-6">
           <Link
-            href="/"
+            href="https://www.oremea.com"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-[11px] uppercase tracking-[0.28em] text-[#C8A96A]/90 transition hover:text-[#f1dfb4]"
           >
             Oremea
           </Link>
 
           <div className="hidden items-center gap-5 md:flex">
-            <ProductLink href="/recognition" label="Recognition" pathname={pathname} />
-            <ProductLink href="/resonance" label="Resonance" pathname={pathname} />
-            <ProductLink href="/compass" label="Compass" pathname={pathname} />
-            {hasActiveMap ? (
-              <ProductLink href="/compass/map" label="Map" pathname={pathname} />
+            <ProductLink
+              href="https://recognition.oremea.com/begin"
+              activePath="/recognition"
+              label="Recognition"
+              pathname={pathname}
+            />
+            <ProductLink
+              href="https://resonance.oremea.com/"
+              activePath="/resonance"
+              label="Resonance"
+              pathname={pathname}
+            />
+            {hasCompassAccess ? (
+              <ProductLink
+                href="https://compass.oremea.com/begin"
+                activePath="/compass"
+                label="Compass"
+                pathname={pathname}
+              />
             ) : null}
           </div>
         </div>
@@ -128,26 +127,26 @@ export default function MemberNav() {
             {openMenu === "archive" ? (
               <div className="absolute right-0 top-12 z-[200] min-w-[230px] rounded-[1.75rem] border border-zinc-800/80 bg-zinc-950/95 p-4 shadow-[0_10px_40px_rgba(0,0,0,0.45)]">
                 <div className="grid gap-2">
-                  <Link
-                    href="/recognition/archive"
+                  <a
+                    href="https://recognition.oremea.com/archive"
                     className="rounded-full border border-[#3A3224] bg-[#17130D] px-4 py-2 text-center text-sm text-[#E7C98B] transition hover:border-[#C8A96A] hover:bg-[#21190F]"
                   >
                     Recognition Archive
-                  </Link>
+                  </a>
 
-                  <Link
-                    href="/resonance/archive?view=day"
+                  <a
+                    href="https://resonance.oremea.com/archive?view=day"
                     className="rounded-full border border-[#3A3224] bg-[#17130D] px-4 py-2 text-center text-sm text-[#E7C98B] transition hover:border-[#C8A96A] hover:bg-[#21190F]"
                   >
                     Resonance Archive
-                  </Link>
+                  </a>
 
-                  <Link
-                    href="/compass/archive"
+                  <a
+                    href="https://compass.oremea.com/archive"
                     className="rounded-full border border-[#3A3224] bg-[#17130D] px-4 py-2 text-center text-sm text-[#E7C98B] transition hover:border-[#C8A96A] hover:bg-[#21190F]"
                   >
                     Compass Archive
-                  </Link>
+                  </a>
                 </div>
               </div>
             ) : null}
@@ -169,26 +168,26 @@ export default function MemberNav() {
 
             {openMenu === "profile" ? (
               <div className="absolute right-0 top-12 z-[200] min-w-[240px] rounded-[1.75rem] border border-zinc-800/80 bg-zinc-950/95 p-4 shadow-[0_10px_40px_rgba(0,0,0,0.45)]">
-                <Link
-                  href="/profile"
+                <a
+                  href="https://www.oremea.com/profile"
                   className="block rounded-xl px-4 py-3 text-center text-sm text-zinc-300 transition hover:bg-zinc-900 hover:text-white"
                 >
                   Profile
-                </Link>
+                </a>
 
-                <Link
-                  href="/compare"
+                <a
+                  href="https://www.oremea.com/compare"
                   className="mt-1 block rounded-xl px-4 py-3 text-center text-sm text-zinc-300 transition hover:bg-zinc-900 hover:text-white"
                 >
                   Compare Products
-                </Link>
+                </a>
 
-                <Link
-                  href="/contact"
+                <a
+                  href="https://www.oremea.com/contact"
                   className="mt-1 block rounded-xl px-4 py-3 text-center text-sm text-zinc-300 transition hover:bg-zinc-900 hover:text-white"
                 >
                   Contact Support
-                </Link>
+                </a>
 
                 <div className="mt-2 border-t border-zinc-800 pt-2">
                   <SignOutButton signOutOptions={{ redirectUrl: "/" }}>
