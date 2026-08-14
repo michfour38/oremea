@@ -69,6 +69,34 @@ assert.match(
   /ongoing private recursive accountability conversation/i,
   "Recognition metadata must describe the current ongoing product rather than generic Oremea copy.",
 );
+assert.doesNotMatch(
+  recognitionMetadata,
+  /All products/,
+  "Recognition must not carry the duplicate floating All products control.",
+);
+
+const recognitionChat = read("app/recognition/recognition-chat.tsx");
+const recognitionShellControls = read("app/recognition/recognition-shell-controls.tsx");
+assert.match(
+  recognitionChat,
+  /https:\/\/www\.oremea\.com/,
+  "Recognition must keep Oremea in the chat header.",
+);
+assert.match(
+  recognitionShellControls,
+  /target = "_blank"/,
+  "Recognition's Oremea header link must open the main site in a new tab.",
+);
+assert.match(
+  recognitionShellControls,
+  /Return to top/,
+  "Recognition must keep a return-to-top control for long conversations.",
+);
+assert.match(
+  recognitionChat,
+  /\/images\/recognition-logo\.webp/,
+  "Recognition must keep the faint fixed logo layer behind the conversation.",
+);
 
 const accessSource = read("src/lib/recognition/recognition-access.ts");
 assert.doesNotMatch(
