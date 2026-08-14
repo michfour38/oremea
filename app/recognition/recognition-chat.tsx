@@ -263,7 +263,7 @@ export default function RecognitionChat({
   }
 
   return (
-    <main className="min-h-screen bg-[#090909] text-zinc-100">
+    <main className="min-h-screen overflow-x-hidden bg-[#090909] text-zinc-100">
       <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-[#090909]/95 backdrop-blur-xl">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-5 px-5 py-4 md:px-8">
           <div>
@@ -299,7 +299,17 @@ export default function RecognitionChat({
         </div>
       </header>
 
-      <section className="mx-auto flex min-h-[calc(100vh-73px)] max-w-4xl flex-col px-5 md:px-8">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-x-0 bottom-[150px] top-[73px] z-0 flex items-center justify-center"
+      >
+        <div
+          className="h-[220px] w-[min(82vw,680px)] bg-contain bg-center bg-no-repeat opacity-[0.08] sm:h-[260px]"
+          style={{ backgroundImage: "url('/images/recognition-logo.webp')" }}
+        />
+      </div>
+
+      <section className="relative z-10 mx-auto flex min-h-[calc(100vh-73px)] max-w-4xl flex-col px-5 md:px-8">
         <div className="flex-1 py-8 md:py-12">
           {messages.length === 0 ? (
             <div className="mx-auto max-w-2xl py-12 md:py-20">
