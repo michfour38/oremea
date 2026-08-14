@@ -110,6 +110,8 @@ export default function MemberNav() {
         <div className="flex h-12 items-center gap-6">
           <Link
             href="https://www.oremea.com"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-[11px] uppercase tracking-[0.28em] text-[#C8A96A]/90 transition hover:text-[#f1dfb4]"
           >
             Oremea

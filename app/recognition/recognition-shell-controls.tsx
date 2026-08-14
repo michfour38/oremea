@@ -2,19 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const OREMEA_URL = "https://www.oremea.com";
 const SHOW_TOP_AFTER_PX = 520;
-
-function normalizeOremeaLinks() {
-  const links = document.querySelectorAll<HTMLAnchorElement>(
-    `a[href="${OREMEA_URL}"]`,
-  );
-
-  for (const link of links) {
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-  }
-}
 
 export default function RecognitionShellControls() {
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -24,15 +12,10 @@ export default function RecognitionShellControls() {
       setShowBackToTop(window.scrollY > SHOW_TOP_AFTER_PX);
     };
 
-    normalizeOremeaLinks();
     updateBackToTop();
-
-    const observer = new MutationObserver(normalizeOremeaLinks);
-    observer.observe(document.body, { childList: true, subtree: true });
     window.addEventListener("scroll", updateBackToTop, { passive: true });
 
     return () => {
-      observer.disconnect();
       window.removeEventListener("scroll", updateBackToTop);
     };
   }, []);

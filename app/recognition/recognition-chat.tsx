@@ -1,5 +1,6 @@
 "use client";
 
+import MemberNav from "@/app/(member)/member-nav";
 import { useEffect, useRef, useState } from "react";
 
 export type RecognitionChatMessage = {
@@ -185,7 +186,9 @@ export default function RecognitionChat({
       });
       const data = await response.json();
       if (!response.ok || !data?.ok) {
-        throw new Error(data?.error || "Recognition could not begin a new chat just now.");
+        throw new Error(
+          data?.error || "Recognition could not begin a new chat just now.",
+        );
       }
 
       clearStoredComposer();
@@ -264,44 +267,24 @@ export default function RecognitionChat({
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#090909] text-zinc-100">
-      <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-[#090909]/95 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-5 px-5 py-4 md:px-8">
-          <div>
-            <p className="font-serif text-xl text-[#e7c98b]">Recognition</p>
-            <p className="mt-0.5 text-xs text-zinc-500">
-              Private · ongoing · accountable to your words
-            </p>
-          </div>
-          <nav className="flex items-center gap-4 text-sm sm:gap-5">
-            {messages.length > 0 ? (
-              <button
-                type="button"
-                onClick={() => void startNewChat()}
-                disabled={isSending || isStartingNewChat}
-                className="text-zinc-400 transition hover:text-[#e7c98b] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {isStartingNewChat ? "Starting…" : "New chat"}
-              </button>
-            ) : null}
-            <a
-              href="https://recognition.oremea.com/archive"
-              className="text-zinc-400 transition hover:text-[#e7c98b]"
-            >
-              Archive
-            </a>
-            <a
-              href="https://www.oremea.com"
-              className="text-zinc-500 transition hover:text-zinc-200"
-            >
-              Oremea
-            </a>
-          </nav>
+      <MemberNav />
+
+      {messages.length > 0 ? (
+        <div className="relative z-20 mx-auto flex w-full max-w-4xl justify-end px-5 pt-3 md:px-8">
+          <button
+            type="button"
+            onClick={() => void startNewChat()}
+            disabled={isSending || isStartingNewChat}
+            className="text-xs uppercase tracking-[0.16em] text-zinc-500 transition hover:text-[#e7c98b] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {isStartingNewChat ? "Starting…" : "New chat"}
+          </button>
         </div>
-      </header>
+      ) : null}
 
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-x-0 bottom-[150px] top-[73px] z-0 flex items-center justify-center"
+        className="pointer-events-none fixed inset-x-0 bottom-[150px] top-[65px] z-0 flex items-center justify-center"
       >
         <div
           className="h-[220px] w-[min(82vw,680px)] bg-contain bg-center bg-no-repeat opacity-[0.08] sm:h-[260px]"
@@ -309,19 +292,25 @@ export default function RecognitionChat({
         />
       </div>
 
-      <section className="relative z-10 mx-auto flex min-h-[calc(100vh-73px)] max-w-4xl flex-col px-5 md:px-8">
-        <div className="flex-1 py-8 md:py-12">
+      <section className="relative z-10 mx-auto flex min-h-[calc(100vh-65px)] max-w-4xl flex-col px-5 md:px-8">
+        <div
+          className={
+            messages.length === 0
+              ? "py-4 md:py-5"
+              : "flex-1 py-8 md:py-12"
+          }
+        >
           {messages.length === 0 ? (
-            <div className="mx-auto max-w-2xl py-12 md:py-20">
+            <div className="mx-auto max-w-2xl py-2 md:py-3">
               <p className="text-xs uppercase tracking-[0.28em] text-[#b79a63]">
                 Begin where you are
               </p>
-              <h1 className="mt-5 font-serif text-4xl leading-tight text-zinc-100 md:text-6xl">
+              <h1 className="mt-3 font-serif text-4xl leading-tight text-zinc-100 md:text-6xl">
                 {firstName
                   ? `${firstName}, what has your attention?`
                   : "What has your attention?"}
               </h1>
-              <p className="mt-7 max-w-xl font-serif text-xl leading-9 text-zinc-400">
+              <p className="mt-4 max-w-xl font-serif text-xl leading-8 text-zinc-400">
                 Bring what is here. Recognition stays with what you actually say,
                 remembers your own earlier words when they matter, and does not
                 decide where the conversation has to go.
@@ -431,7 +420,11 @@ export default function RecognitionChat({
                   <button
                     type="button"
                     onClick={() => void sendMessage()}
-                    disabled={isSending || isStartingNewChat || draft.trim().length === 0}
+                    disabled={
+                      isSending ||
+                      isStartingNewChat ||
+                      draft.trim().length === 0
+                    }
                     aria-label={
                       isSending
                         ? "Recognition is responding"

@@ -76,21 +76,33 @@ assert.doesNotMatch(
 );
 
 const recognitionChat = read("app/recognition/recognition-chat.tsx");
+const recognitionArchive = read("app/recognition/archive/page.tsx");
 const recognitionShellControls = read("app/recognition/recognition-shell-controls.tsx");
+const memberNav = read("app/(member)/member-nav.tsx");
 assert.match(
   recognitionChat,
-  /https:\/\/www\.oremea\.com/,
-  "Recognition must keep Oremea in the chat header.",
+  /MemberNav/,
+  "Recognition chat must reuse the shared member navigation.",
 );
 assert.match(
-  recognitionShellControls,
-  /target = "_blank"/,
-  "Recognition's Oremea header link must open the main site in a new tab.",
+  recognitionArchive,
+  /MemberNav/,
+  "Recognition Archive must reuse the shared member navigation.",
+);
+assert.match(
+  memberNav,
+  /href="https:\/\/www\.oremea\.com"[\s\S]*target="_blank"[\s\S]*rel="noopener noreferrer"/,
+  "The shared Oremea member-nav link must open the main site in a new tab.",
 );
 assert.match(
   recognitionShellControls,
   /Return to top/,
   "Recognition must keep a return-to-top control for long conversations.",
+);
+assert.doesNotMatch(
+  recognitionShellControls,
+  /MutationObserver|normalizeOremeaLinks/,
+  "Recognition shell controls must not duplicate member-navigation behavior.",
 );
 assert.match(
   recognitionChat,
