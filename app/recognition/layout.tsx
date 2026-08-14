@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+
+import { ReturnToTop } from "@/components/site/return-to-top";
+
 import "./recognition-theme.css";
 import "./recognition-reading.css";
-import RecognitionInputFocus from "./recognition-input-focus";
-import RecognitionShellControls from "./recognition-shell-controls";
 
 export const metadata: Metadata = {
   title: "Recognition | Oremea",
@@ -21,12 +22,12 @@ export default function RecognitionLayout({
 }>) {
   return (
     <div
+      id="top"
       className="recognition-theme"
       data-recognition-root="true"
       style={{ caretColor: "#C8A96A" }}
     >
-      <RecognitionInputFocus />
-      <RecognitionShellControls />
+      <ReturnToTop />
       {children}
     </div>
   );

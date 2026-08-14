@@ -1,6 +1,7 @@
 "use client";
 
 import MemberNav from "@/app/(member)/member-nav";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 export type RecognitionChatMessage = {
@@ -111,10 +112,6 @@ export default function RecognitionChat({
       : null;
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, isSending]);
-
-  useEffect(() => {
     const stored = readStoredComposer();
     if (stored?.clientMessageId) {
       const matchingSavedTurn = initialMessages.find(
@@ -131,7 +128,14 @@ export default function RecognitionChat({
     }
 
     setComposerHydrated(true);
-    window.requestAnimationFrame(() => inputRef.current?.focus());
+
+    // Initial refresh positioning only. After hydration, the participant owns scroll position.
+    const frame = window.requestAnimationFrame(() => {
+      bottomRef.current?.scrollIntoView({ block: "end" });
+      inputRef.current?.focus({ preventScroll: true });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
     // Initial server state is intentionally read once; later message changes are local.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -261,7 +265,9 @@ export default function RecognitionChat({
       );
     } finally {
       setIsSending(false);
-      window.requestAnimationFrame(() => inputRef.current?.focus());
+      window.requestAnimationFrame(() =>
+        inputRef.current?.focus({ preventScroll: true }),
+      );
     }
   }
 
@@ -286,10 +292,15 @@ export default function RecognitionChat({
         aria-hidden="true"
         className="pointer-events-none fixed inset-x-0 bottom-[150px] top-[65px] z-0 flex items-center justify-center"
       >
-        <div
-          className="h-[220px] w-[min(82vw,680px)] bg-contain bg-center bg-no-repeat opacity-[0.08] sm:h-[260px]"
-          style={{ backgroundImage: "url('/images/recognition-logo.webp')" }}
-        />
+        <div className="relative h-[220px] w-[min(82vw,680px)] sm:h-[260px]">
+          <Image
+            src="/images/recognition-logo.webp"
+            alt=""
+            fill
+            sizes="(min-width: 640px) 680px, 82vw"
+            className="object-contain opacity-[0.11]"
+          />
+        </div>
       </div>
 
       <section className="relative z-10 mx-auto flex min-h-[calc(100vh-65px)] max-w-4xl flex-col px-5 md:px-8">
