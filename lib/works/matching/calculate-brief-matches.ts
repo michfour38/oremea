@@ -170,6 +170,7 @@ export async function calculateBriefMatches(briefId: string) {
       }));
 
     const result = evaluateOfferingFit(normalizedBrief, {
+      evidenceStatus: offering.evidence_status,
       categoryKeys: offering.categories.map((row) => row.category.key),
       serviceKeys: offering.services.map((row) => row.service.key),
       capabilityKeys: offering.capabilities.map((row) => row.capability.key),

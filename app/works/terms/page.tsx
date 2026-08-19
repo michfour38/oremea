@@ -1,8 +1,17 @@
+import type { Metadata } from "next";
+
 import {
   LegalDocument,
   type LegalSection,
 } from "@/components/legal/legal-document";
 import { WORKS_RETURN_LINK } from "@/src/lib/legal/legal-links";
+import { worksUrl } from "@/lib/works/seo";
+
+export const metadata: Metadata = {
+  title: "Terms for customers and providers | WORKS",
+  description: "The rules for WORKS customer briefs, provider profiles, matching, enquiries, plans, reviews and commercial introductions.",
+  alternates: { canonical: worksUrl("/terms") },
+};
 
 const sections: readonly LegalSection[] = [
   {

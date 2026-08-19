@@ -89,7 +89,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     provider,
-    message: "Your WORKS provider profile is created. You can now decide what becomes public and add the operational information WORKS uses privately for matching and demand generation.",
+    message: "Your WORKS provider profile is created. Add one or more genuine business offerings next. Active provider-supplied offerings can enter matching as possible fits while WORKS keeps their review status visible.",
     hadExistingMembership: Boolean(existingMembership),
   });
 }

@@ -12,9 +12,9 @@ export const metadata: Metadata = {
 export default function WorksProviderBillingPage() {
   return (
     <main className="mx-auto min-h-screen w-full max-w-6xl px-5 py-8 md:px-8 md:py-12">
-      <WorksPageHeader context="Provider billing" />
+      <WorksPageHeader context="Provider billing" href="/works/provider" />
       <div className="mt-8">
-        <WorksProviderNav current="/works/provider" />
+        <WorksProviderNav current="/works/provider/billing" />
       </div>
       <div className="mt-8">
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#16834f]">Plans & billing</p>

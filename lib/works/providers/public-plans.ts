@@ -23,10 +23,10 @@ export const WORKS_PROVIDER_PLANS: readonly WorksProviderPlan[] = [
     priceMonthlyZar: 0,
     priceLabel: "R0",
     detail:
-      "A searchable public listing for customers who are actively looking for a business like yours.",
+      "A public business profile that can enter customer matching once its capability has been structured.",
     features: [
       "Searchable public business profile",
-      "Appear in customer searches where your capability fits",
+      "Eligible for matching after capability setup",
       "Keep core business information visible",
       "Customer reviews can appear on your public profile",
     ],
@@ -37,7 +37,7 @@ export const WORKS_PROVIDER_PLANS: readonly WorksProviderPlan[] = [
     priceMonthlyZar: 599,
     priceLabel: "R599 / month",
     detail:
-      "Receive suitable WORKS opportunities and keep your capability, capacity and availability information current.",
+      "Receive suitable WORKS opportunities once capability fit is established, and keep capacity and availability current.",
     features: [
       "Everything in Free",
       "Matched opportunities sent to your WORKS inbox",

@@ -9,10 +9,21 @@ import {
   WORKS_LEGAL_LINKS,
 } from "@/src/lib/legal/legal-links";
 
-export function WorksLegalFooter() {
-  const pathname = usePathname();
+const OREMEA_SITE_ORIGIN = "https://www.oremea.com";
+const OREMEA_LEGAL_LINKS = LEGAL_LINKS.map((link) => ({
+  ...link,
+  href: `${OREMEA_SITE_ORIGIN}${link.href}`,
+}));
 
-  if (WORKS_LEGAL_LINKS.some((link) => link.href === pathname)) {
+export function WorksLegalFooter({ currentYear }: { currentYear: number }) {
+  const pathname = usePathname();
+  const internalPathname = pathname.startsWith("/works")
+    ? pathname
+    : pathname === "/"
+      ? "/works"
+      : `/works${pathname}`;
+
+  if (WORKS_LEGAL_LINKS.some((link) => link.href === internalPathname)) {
     return null;
   }
 
@@ -28,7 +39,7 @@ export function WorksLegalFooter() {
             introductions with clear evidence boundaries.
           </p>
           <Link
-            href="/"
+            href={OREMEA_SITE_ORIGIN}
             className="mt-5 inline-flex text-sm text-black/65 underline decoration-black/20 underline-offset-4 transition hover:text-black"
           >
             Return to Oremea
@@ -36,17 +47,17 @@ export function WorksLegalFooter() {
         </div>
 
         <FooterGroup title="WORKS legal" links={WORKS_LEGAL_LINKS} />
-        <FooterGroup title="Oremea legal" links={LEGAL_LINKS} />
+        <FooterGroup title="Oremea legal" links={OREMEA_LEGAL_LINKS} />
       </div>
 
       <div className="border-t border-black/10 px-5 py-5">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 text-xs leading-6 text-black/45 md:flex-row md:items-center md:justify-between md:px-3">
           <p>
-            © {new Date().getFullYear()} Oremea · Operated by{" "}
+            © {currentYear} Oremea · Operated by{" "}
             {OREMEA_OPERATOR.name}, {OREMEA_OPERATOR.legalForm}
           </p>
           <Link
-            href="/contact#contact-form"
+            href={`${OREMEA_SITE_ORIGIN}/contact#contact-form`}
             className="transition hover:text-black"
           >
             {OREMEA_OPERATOR.email}

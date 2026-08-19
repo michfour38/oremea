@@ -2,6 +2,7 @@ import {
   PrismaClient,
   WorksClaimStatus,
   WorksEvidenceType,
+  WorksOfferingEvidenceStatus,
   WorksProviderProfileStatus,
   WorksProviderSourceType,
   WorksVerificationMethod,
@@ -315,6 +316,7 @@ export async function seedWorksProvider(definition: ProviderSeed) {
         quote_required: offering.quoteRequired ?? true,
         packaging_supplied: offering.packagingSupplied,
         client_packaging_accepted: offering.clientPackagingAccepted,
+        evidence_status: WorksOfferingEvidenceStatus.SOURCE_REVIEWED,
         active: true,
       },
       create: {
@@ -335,6 +337,7 @@ export async function seedWorksProvider(definition: ProviderSeed) {
         quote_required: offering.quoteRequired ?? true,
         packaging_supplied: offering.packagingSupplied,
         client_packaging_accepted: offering.clientPackagingAccepted,
+        evidence_status: WorksOfferingEvidenceStatus.SOURCE_REVIEWED,
         active: true,
       },
       select: { id: true },

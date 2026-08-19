@@ -236,7 +236,7 @@ export default function OremeaAboutPage() {
           </p>
 
           <div className="mt-8 space-y-6 text-lg leading-9 text-[#d8d2c6]">
-            <p>I didn't set out to build a company.</p>
+            <p>I didn&apos;t set out to build a company.</p>
 
             <p>
               I set out to understand what allows people to remain present with

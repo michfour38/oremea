@@ -1,28 +1,35 @@
+enum WorksOfferingEvidenceStatus {
+  SELF_REPORTED
+  SOURCE_REVIEWED
+  VERIFIED
+}
+
 model works_offerings {
-  id                        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  provider_market_id        String   @db.Uuid
+  id                        String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider_market_id        String                      @db.Uuid
   name                      String
   slug                      String
   description               String?
   production_model          String?
-  moq_value                 Decimal? @db.Decimal(14, 3)
+  moq_value                 Decimal?                    @db.Decimal(14, 3)
   moq_unit                  String?
-  max_run_value             Decimal? @db.Decimal(14, 3)
+  max_run_value             Decimal?                    @db.Decimal(14, 3)
   max_run_unit              String?
   lead_time_min_days        Int?
   lead_time_max_days        Int?
   lead_time_basis           String?
   sample_available          Boolean?
-  sample_cost_amount        Decimal? @db.Decimal(14, 2)
+  sample_cost_amount        Decimal?                    @db.Decimal(14, 2)
   sample_cost_currency      String?
   startup_friendly          Boolean?
-  quote_required            Boolean  @default(true)
+  quote_required            Boolean                     @default(true)
   pricing_model             String?
   packaging_supplied        Boolean?
   client_packaging_accepted Boolean?
-  active                    Boolean  @default(true)
-  created_at                DateTime @default(now()) @db.Timestamptz(6)
-  updated_at                DateTime @updatedAt @db.Timestamptz(6)
+  evidence_status           WorksOfferingEvidenceStatus @default(SELF_REPORTED)
+  active                    Boolean                     @default(true)
+  created_at                DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime                    @updatedAt @db.Timestamptz(6)
 
   provider_market   works_provider_markets             @relation(fields: [provider_market_id], references: [id], onDelete: Cascade)
   categories        works_offering_categories[]

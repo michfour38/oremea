@@ -87,6 +87,7 @@ export function WorksProviderDashboard() {
   return <div className="mx-auto min-h-screen w-full max-w-5xl px-5 py-8 md:px-8 md:py-12">
     <WorksPageHeader
       context="Provider workspace"
+      href="/works/provider"
       action={<SignedIn><UserButton afterSignOutUrl="/works/za" /></SignedIn>}
     />
 
@@ -134,9 +135,16 @@ export function WorksProviderDashboard() {
         </section>
 
         <section>
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">4 · Work you want</p>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">4 · Capabilities used for matching</p>
+          <h2 className="mt-2 font-serif text-3xl">Describe what this business can actually provide</h2>
+          <p className="mt-3 text-sm leading-6 text-black/50">Create separate offerings with their product categories, production services, specific processes, quantity range and lead time. Provider-supplied information appears as a possible fit until WORKS reviews it.</p>
+          <a href="/works/provider/capabilities" className="mt-5 inline-flex rounded-full border border-black/15 bg-white px-5 py-2.5 text-sm">Open capabilities & matching →</a>
+        </section>
+
+        <section>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">5 · Work you want</p>
           <h2 className="mt-2 font-serif text-3xl">Tell WORKS where to direct opportunity</h2>
-          <p className="mt-3 text-sm leading-6 text-black/50">These are private matching and marketing instructions. Customers never see them.</p>
+          <p className="mt-3 text-sm leading-6 text-black/50">These are private demand preferences. They do not add or verify capability; WORKS matches against the business&apos;s structured offering record.</p>
 
           <div className="mt-6 space-y-5">
             <label className="flex items-start gap-3 rounded-2xl border border-black/10 bg-white/65 p-5"><input type="checkbox" checked={edit.wantsMoreWork} onChange={event => setEdit(value => value ? { ...value, wantsMoreWork: event.target.checked } : value)} className="mt-1"/><span><span className="block text-sm font-medium">We want more work</span><span className="mt-1 block text-xs leading-5 text-black/45">Private signal used by WORKS when opportunity matches your capability.</span></span></label>

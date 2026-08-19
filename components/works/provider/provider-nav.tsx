@@ -1,8 +1,12 @@
+import Link from "next/link";
+
 const items = [
   { href: "/works/provider", label: "Profile & capacity" },
+  { href: "/works/provider/capabilities", label: "Capabilities & matching" },
   { href: "/works/provider/inbox", label: "Inbox" },
   { href: "/works/provider/insights", label: "Demand insights" },
   { href: "/works/provider/reviews", label: "Reviews" },
+  { href: "/works/provider/billing", label: "Plans & billing" },
 ] as const;
 
 export function WorksProviderNav({ current }: { current: string }) {
@@ -11,7 +15,7 @@ export function WorksProviderNav({ current }: { current: string }) {
       {items.map((item) => {
         const active = item.href === current;
         return (
-          <a
+          <Link
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
@@ -22,7 +26,7 @@ export function WorksProviderNav({ current }: { current: string }) {
             }`}
           >
             {item.label}
-          </a>
+          </Link>
         );
       })}
     </nav>

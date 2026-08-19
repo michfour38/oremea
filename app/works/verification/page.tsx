@@ -1,8 +1,17 @@
+import type { Metadata } from "next";
+
 import {
   LegalDocument,
   type LegalSection,
 } from "@/components/legal/legal-document";
 import { WORKS_RETURN_LINK } from "@/src/lib/legal/legal-links";
+import { worksUrl } from "@/lib/works/seo";
+
+export const metadata: Metadata = {
+  title: "Verification and evidence policy | WORKS",
+  description: "What WORKS checks, what each evidence status means and what buyers still need to confirm directly.",
+  alternates: { canonical: worksUrl("/verification") },
+};
 
 const sections: readonly LegalSection[] = [
   {
