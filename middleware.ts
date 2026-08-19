@@ -8,6 +8,7 @@ const APP_HOST = "app.oremea.com";
 const WORKS_HOST = (process.env.WORKS_HOST || "works.oremea.com")
   .trim()
   .toLowerCase();
+const WORKS_AUTH_PATHS = ["/sign-in", "/sign-up"];
 const OREMEA_PUBLIC_HOSTS = new Set(["oremea.com", "www.oremea.com"]);
 
 function getHostname(req: NextRequest) {
@@ -25,6 +26,17 @@ function worksDomainResponse(req: NextRequest) {
   // WORKS APIs already live at /api/works and keep that stable path.
   if (pathname.startsWith("/api/works")) {
     return NextResponse.next();
+  }
+
+  // Clerk's path-based authentication pages are shared by every Oremea host.
+  // Let them render at their real routes instead of rewriting them beneath
+  // /works, where no matching pages exist.
+  if (
+    WORKS_AUTH_PATHS.some(
+      (authPath) => pathname === authPath || pathname.startsWith(`${authPath}/`),
+    )
+  ) {
+    return null;
   }
 
   // Existing /works links remain valid, but the dedicated host exposes clean paths.

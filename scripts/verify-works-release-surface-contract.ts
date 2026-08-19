@@ -25,6 +25,7 @@ const providerNav = read("components/works/provider/provider-nav.tsx");
 const providerDashboard = read("components/works/provider/provider-dashboard.tsx");
 const publicPlans = read("lib/works/providers/public-plans.ts");
 const worksSeo = read("lib/works/seo.ts");
+const middleware = read("middleware.ts");
 
 requireText(worksSeo, 'WORKS_ORIGIN = "https://works.oremea.com"', "WORKS must have one canonical production origin.");
 requireText(marketPage, 'market.slug === "za" ? worksUrl("/")', "The South African WORKS intake must canonicalize to the clean production root.");
@@ -54,5 +55,7 @@ requireText(providerNav, 'href: "/works/provider/billing"', "Provider billing mu
 requireText(providerPage, 'provider.slug === "works-qa-supplier"', "The QA-only provider profile must not be indexed.");
 requireText(providerDashboard, "They do not add or verify capability", "Provider demand preferences must not be presented as matching capability.");
 requireText(publicPlans, "Eligible for matching after capability setup", "Provider plans must not promise matching before capability setup exists.");
+requireText(middleware, 'WORKS_AUTH_PATHS = ["/sign-in", "/sign-up"]', "WORKS must expose Clerk's shared sign-in and sign-up pages on its clean host.");
+requireText(middleware, "pathname.startsWith(`${authPath}/`)", "WORKS must preserve Clerk catch-all auth paths instead of rewriting them beneath /works.");
 
 console.log("✓ WORKS release surface contract");
