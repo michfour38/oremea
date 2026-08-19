@@ -327,6 +327,7 @@ const isPublicRoute = createRouteMatcher([
   "/oremea(.*)",
   "/compare(.*)",
   "/contact(.*)",
+  "/api/contact",
   "/terms(.*)",
   "/privacy(.*)",
   "/disclaimer(.*)",

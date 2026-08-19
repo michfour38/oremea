@@ -40,7 +40,16 @@ export function ContactSupport() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      const data = await response.json();
+      const isJson = response.headers
+        .get("content-type")
+        ?.includes("application/json");
+      const data = isJson
+        ? await response.json()
+        : {
+            success: false,
+            error:
+              "Support is temporarily unavailable. Please try again shortly.",
+          };
 
       if (!response.ok || !data.success) {
         throw new Error(data.error || "Your message could not be sent.");

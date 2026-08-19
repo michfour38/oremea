@@ -55,6 +55,12 @@ assert.doesNotMatch(
 );
 
 assert.match(
+  middleware,
+  /["']\/api\/contact["']/,
+  "The public contact form endpoint must remain accessible without signing in."
+);
+
+assert.match(
   searchSessionCreateRoute,
   /normalizeWorksBrowserSessionId/,
   "Anonymous WORKS searches must reject malformed browser-session identifiers."
