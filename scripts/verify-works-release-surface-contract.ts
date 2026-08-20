@@ -22,6 +22,7 @@ const customerFlow = read("components/works/intake/founder-conversation-v2.tsx")
 const myWorks = read("components/works/account/my-works-dashboard.tsx");
 const accountButton = read("components/works/works-account-button.tsx");
 const providerOnboarding = read("components/works/provider/provider-onboarding-v2.tsx");
+const providerCreateApi = read("app/api/works/providers/new/route.ts");
 const footer = read("components/works/works-legal-footer.tsx");
 const worksLayout = read("app/works/layout.tsx");
 const providerNav = read("components/works/provider/provider-nav.tsx");
@@ -60,6 +61,9 @@ requireText(myWorks, 'bg-[#f3eee4]', "My WORKS must provide its own readable ful
 requireText(myWorks, "Begin with the product you need made.", "The empty My WORKS state must give the customer a clear next action.");
 requireText(providerOnboarding, "SignUpButton", "Provider onboarding must offer provider account creation explicitly.");
 requireText(providerOnboarding, "forceRedirectUrl={returnUrl}", "Provider authentication must return to provider onboarding.");
+requireText(providerOnboarding, "response.status === 409", "An existing business match must enter the connection flow instead of becoming a dead-end error.");
+requireText(providerOnboarding, "claimPanelRef.current?.scrollIntoView", "An existing business match must keep the manufacturer at the connection action.");
+requireText(providerCreateApi, "alreadyConnected", "The duplicate-business response must distinguish the current manager from a new claimant.");
 requireText(accountButton, "user.hasImage", "The WORKS account control must use a supplied profile image when available.");
 requireText(accountButton, "user.setProfileImage", "The WORKS account control must let people save an adjusted profile image.");
 requireText(accountButton, 'label="Zoom"', "The WORKS photo editor must expose a zoom control.");

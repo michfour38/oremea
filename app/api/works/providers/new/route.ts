@@ -47,12 +47,27 @@ export async function POST(request: Request) {
 
   const duplicate = await prisma.works_providers.findFirst({
     where: { name: { equals: name, mode: "insensitive" }, profile_status: { not: "ARCHIVED" } },
-    select: { id: true, name: true, slug: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      memberships: {
+        where: { active: true },
+        select: { clerk_user_id: true },
+      },
+    },
   });
   if (duplicate) {
+    const alreadyConnected = duplicate.memberships.some((membership) => membership.clerk_user_id === userId);
     return NextResponse.json({
       error: `${duplicate.name} already appears to be on WORKS. Connect that existing profile instead of creating a duplicate.`,
-      existingProvider: duplicate,
+      existingProvider: {
+        id: duplicate.id,
+        name: duplicate.name,
+        slug: duplicate.slug,
+        alreadyClaimed: duplicate.memberships.length > 0,
+        alreadyConnected,
+      },
     }, { status: 409 });
   }
 

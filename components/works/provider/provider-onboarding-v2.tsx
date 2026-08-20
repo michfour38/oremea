@@ -1,7 +1,7 @@
 "use client";
 
 import { SignInButton, SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { MemberWorksNav } from "@/components/works/member-works-nav";
 import { WorksAccountButton } from "@/components/works/works-account-button";
@@ -90,6 +90,7 @@ export function WorksProviderOnboardingV2() {
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const claimPanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
@@ -159,6 +160,37 @@ export function WorksProviderOnboardingV2() {
         body: JSON.stringify({ marketSlug: "za", ...form }),
       });
       const data = await response.json();
+      if (response.status === 409 && data?.existingProvider?.id) {
+        const existing = data.existingProvider as {
+          id: string;
+          name: string;
+          slug: string;
+          alreadyClaimed?: boolean;
+          alreadyConnected?: boolean;
+        };
+
+        if (existing.alreadyConnected) {
+          setCreated({ name: existing.name, slug: existing.slug });
+          setMessage(`${existing.name} is already connected to your WORKS account.`);
+          setTab("progress");
+          return;
+        }
+
+        setQuery(existing.name);
+        setSelected({
+          id: existing.id,
+          name: existing.name,
+          slug: existing.slug,
+          website: null,
+          alreadyClaimed: Boolean(existing.alreadyClaimed),
+        });
+        setMode("claim");
+        setMessage(existing.alreadyClaimed
+          ? `${existing.name} is already managed on WORKS.`
+          : `We found ${existing.name}. Confirm your relationship with the business below.`);
+        setError("");
+        return;
+      }
       if (!response.ok) throw new Error(data?.error ?? "WORKS could not add this business yet.");
       setCreated(data.provider);
       setMessage(data.message ?? "Your business has been added to WORKS.");
@@ -193,6 +225,14 @@ export function WorksProviderOnboardingV2() {
     void loadClaims(query.trim());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, ready]);
+
+  useEffect(() => {
+    if (mode !== "claim" || !selected) return;
+    const frame = window.requestAnimationFrame(() => {
+      claimPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [mode, selected]);
 
   async function search() {
     setSelected(null);
@@ -378,18 +418,27 @@ export function WorksProviderOnboardingV2() {
                   </div>
 
                   {selected ? (
-                    <div className="rounded-3xl border border-black/10 bg-white p-6 md:p-8">
+                    <div ref={claimPanelRef} className="rounded-3xl border border-black/10 bg-white p-6 md:p-8">
                       <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Connect to {selected.name}</p>
-                      <h2 className="mt-3 font-serif text-3xl">Confirm the business relationship</h2>
-                      <p className="mt-3 max-w-2xl text-sm leading-7 text-black/55">Use an email on the business&apos;s own domain. The email and verification note are backend verification evidence; they are never public profile fields.</p>
-                      <div className="mt-6 grid gap-4">
-                        <label className="text-xs text-black/45">Business email<input type="email" value={businessEmail} onChange={(event) => setBusinessEmail(event.target.value)} placeholder="you@company.co.za" className="mt-1 w-full rounded-xl border border-black/10 px-4 py-3" /></label>
-                        <label className="text-xs text-black/45">Role / verification note<textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} maxLength={1000} placeholder="Owner, operations manager, company director…" className="mt-1 w-full resize-none rounded-xl border border-black/10 px-4 py-3 text-sm leading-6" /></label>
-                      </div>
-                      <div className="mt-6 flex flex-wrap gap-3">
-                        <button type="button" onClick={() => void submitClaim()} disabled={sending || !businessEmail.trim()} className="rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white disabled:opacity-40">{sending ? "Submitting…" : "Submit connection request →"}</button>
-                        <button type="button" onClick={() => setSelected(null)} className="rounded-full border border-black/15 bg-white px-5 py-3 text-sm">Cancel</button>
-                      </div>
+                      {selected.alreadyClaimed ? (
+                        <>
+                          <h2 className="mt-3 font-serif text-3xl">This profile already has a manager</h2>
+                          <p className="mt-3 max-w-2xl text-sm leading-7 text-black/55">Ask the business owner or current WORKS manager to add you. Public connection requests cannot override an existing business relationship.</p>
+                        </>
+                      ) : (
+                        <>
+                          <h2 className="mt-3 font-serif text-3xl">Confirm the business relationship</h2>
+                          <p className="mt-3 max-w-2xl text-sm leading-7 text-black/55">Use an email on the business&apos;s own domain. The email and verification note are backend verification evidence; they are never public profile fields.</p>
+                          <div className="mt-6 grid gap-4">
+                            <label className="text-xs text-black/45">Business email<input type="email" value={businessEmail} onChange={(event) => setBusinessEmail(event.target.value)} placeholder="you@company.co.za" className="mt-1 w-full rounded-xl border border-black/10 px-4 py-3" /></label>
+                            <label className="text-xs text-black/45">Role / verification note<textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} maxLength={1000} placeholder="Owner, operations manager, company director…" className="mt-1 w-full resize-none rounded-xl border border-black/10 px-4 py-3 text-sm leading-6" /></label>
+                          </div>
+                          <div className="mt-6 flex flex-wrap gap-3">
+                            <button type="button" onClick={() => void submitClaim()} disabled={sending || !businessEmail.trim()} className="rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white disabled:opacity-40">{sending ? "Submitting…" : "Submit connection request →"}</button>
+                            <button type="button" onClick={() => setSelected(null)} className="rounded-full border border-black/15 bg-white px-5 py-3 text-sm">Cancel</button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   ) : null}
 
