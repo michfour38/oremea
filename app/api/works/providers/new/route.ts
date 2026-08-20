@@ -40,11 +40,6 @@ export async function POST(request: Request) {
   const market = await prisma.works_markets.findUnique({ where: { slug: marketSlug }, select: { id: true, slug: true } });
   if (!market) return NextResponse.json({ error: "This WORKS market is not available yet." }, { status: 400 });
 
-  const existingMembership = await prisma.works_provider_memberships.findFirst({
-    where: { clerk_user_id: userId, active: true },
-    select: { provider: { select: { id: true, name: true, slug: true } } },
-  });
-
   const duplicate = await prisma.works_providers.findFirst({
     where: { name: { equals: name, mode: "insensitive" }, profile_status: { not: "ARCHIVED" } },
     select: {
@@ -124,10 +119,21 @@ export async function POST(request: Request) {
         email: clean(body?.email),
         phone: clean(body?.phone),
         description: clean(body?.description),
-        profile_status: "CLAIMED",
-        memberships: { create: { clerk_user_id: userId, role: "OWNER" } },
+        // Creating a record is not proof of ownership. Keep it unclaimed and
+        // private until the business inbox confirms the connection.
+        profile_status: "CLAIM_INVITED",
         commercial_profile: { create: {} },
-        public_settings: { create: {} },
+        public_settings: {
+          create: {
+            show_legal_name: false,
+            show_website: false,
+            show_email: false,
+            show_phone: false,
+            show_description: false,
+            show_location: false,
+            show_capacity: false,
+          },
+        },
         markets: {
           create: {
             market_id: market.id,
@@ -145,8 +151,12 @@ export async function POST(request: Request) {
   });
 
   return NextResponse.json({
-    provider,
-    message: "Your WORKS provider profile is created. Add one or more genuine business offerings next. Active provider-supplied offerings can enter matching as possible fits while WORKS keeps their review status visible.",
-    hadExistingMembership: Boolean(existingMembership),
-  });
+    verificationRequired: true,
+    existingProvider: {
+      ...provider,
+      alreadyClaimed: false,
+      alreadyConnected: false,
+    },
+    message: `${name} is ready for business-email verification.`,
+  }, { status: 202 });
 }

@@ -19,6 +19,7 @@ export const WORKS_PRIVATE_PATHS = [
   "/provider/",
   "/providers/claim",
   "/providers/new",
+  "/providers/verify-claim",
   "/respond$",
   "/respond/",
   "/reviews/new",

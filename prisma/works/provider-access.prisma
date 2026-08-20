@@ -34,6 +34,9 @@ model works_provider_claims {
   requested_role WorksProviderMembershipRole @default(OWNER)
   note           String?
   profile_draft  Json?
+  verification_token_hash       String?   @unique
+  verification_expires_at       DateTime? @db.Timestamptz(6)
+  business_email_verified_at    DateTime? @db.Timestamptz(6)
   status         WorksProviderClaimStatus @default(PENDING)
   reviewed_at    DateTime?                @db.Timestamptz(6)
   created_at     DateTime                 @default(now()) @db.Timestamptz(6)
@@ -45,4 +48,5 @@ model works_provider_claims {
   @@index([clerk_user_id, status])
   @@index([provider_id, status])
   @@index([business_email])
+  @@index([verification_expires_at])
 }
