@@ -184,6 +184,7 @@ export function WorksProviderOnboardingV2() {
           website: null,
           alreadyClaimed: Boolean(existing.alreadyClaimed),
         });
+        setBusinessEmail(form.email.trim());
         setMode("claim");
         setMessage(existing.alreadyClaimed
           ? `${existing.name} is already managed on WORKS.`
@@ -249,7 +250,13 @@ export function WorksProviderOnboardingV2() {
       const response = await fetch("/api/works/provider-claims", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ providerId: selected.id, businessEmail, note }),
+        body: JSON.stringify({
+          providerId: selected.id,
+          businessEmail,
+          note,
+          marketSlug: "za",
+          profileDraft: form,
+        }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error ?? "WORKS could not submit this connection request yet.");
@@ -257,6 +264,12 @@ export function WorksProviderOnboardingV2() {
       setSelected(null);
       setBusinessEmail("");
       setNote("");
+      if (data.accessGranted && data.provider) {
+        setCreated({ name: data.provider.name, slug: data.provider.slug });
+        window.localStorage.removeItem(FORM_KEY);
+        setTab("progress");
+        return;
+      }
       await loadClaims(query.trim());
       setTab("progress");
     } catch (err) {
@@ -414,31 +427,26 @@ export function WorksProviderOnboardingV2() {
                       <input value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void search(); }} placeholder="Business name" className="min-w-0 flex-1 rounded-xl border border-black/12 bg-white px-4 py-3 outline-none focus:border-[#16834f]" />
                       <button type="button" onClick={() => void search()} disabled={loading || query.trim().length < 2} className="rounded-full bg-[#1f1c17] px-5 py-3 text-sm text-white disabled:opacity-40">{loading ? "Searching…" : "Search"}</button>
                     </div>
-                    {results.length ? <div className="mt-6 space-y-3">{results.map((provider) => <button key={provider.id} type="button" disabled={provider.alreadyClaimed} onClick={() => { setSelected(provider); setError(""); setMessage(""); }} className="flex w-full items-center justify-between gap-4 rounded-2xl border border-black/10 bg-white p-5 text-left disabled:opacity-45"><div><p className="font-medium">{provider.name}</p>{provider.website ? <p className="mt-1 text-xs text-black/40">{provider.website}</p> : null}</div><span className="text-sm text-black/45">{provider.alreadyClaimed ? "Already managed" : "Connect →"}</span></button>)}</div> : query.trim().length >= 2 && !loading ? <div className="mt-6 rounded-2xl bg-[#fbfaf7] p-5 text-sm">No matching WORKS profile found. <button type="button" onClick={() => chooseMode("add")} className="underline underline-offset-4">Add it instead →</button></div> : null}
+                    {results.length ? <div className="mt-6 space-y-3">{results.map((provider) => <button key={provider.id} type="button" onClick={() => { setSelected(provider); setError(""); setMessage(""); }} className="flex w-full items-center justify-between gap-4 rounded-2xl border border-black/10 bg-white p-5 text-left"><div><p className="font-medium">{provider.name}</p>{provider.website ? <p className="mt-1 text-xs text-black/40">{provider.website}</p> : null}</div><span className="text-sm text-black/45">{provider.alreadyClaimed ? "Request access →" : "Connect →"}</span></button>)}</div> : query.trim().length >= 2 && !loading ? <div className="mt-6 rounded-2xl bg-[#fbfaf7] p-5 text-sm">No matching WORKS profile found. <button type="button" onClick={() => chooseMode("add")} className="underline underline-offset-4">Add it instead →</button></div> : null}
                   </div>
 
                   {selected ? (
                     <div ref={claimPanelRef} className="rounded-3xl border border-black/10 bg-white p-6 md:p-8">
                       <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Connect to {selected.name}</p>
-                      {selected.alreadyClaimed ? (
-                        <>
-                          <h2 className="mt-3 font-serif text-3xl">This profile already has a manager</h2>
-                          <p className="mt-3 max-w-2xl text-sm leading-7 text-black/55">Ask the business owner or current WORKS manager to add you. Public connection requests cannot override an existing business relationship.</p>
-                        </>
-                      ) : (
-                        <>
-                          <h2 className="mt-3 font-serif text-3xl">Confirm the business relationship</h2>
-                          <p className="mt-3 max-w-2xl text-sm leading-7 text-black/55">Use an email on the business&apos;s own domain. The email and verification note are backend verification evidence; they are never public profile fields.</p>
-                          <div className="mt-6 grid gap-4">
-                            <label className="text-xs text-black/45">Business email<input type="email" value={businessEmail} onChange={(event) => setBusinessEmail(event.target.value)} placeholder="you@company.co.za" className="mt-1 w-full rounded-xl border border-black/10 px-4 py-3" /></label>
-                            <label className="text-xs text-black/45">Role / verification note<textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} maxLength={1000} placeholder="Owner, operations manager, company director…" className="mt-1 w-full resize-none rounded-xl border border-black/10 px-4 py-3 text-sm leading-6" /></label>
-                          </div>
-                          <div className="mt-6 flex flex-wrap gap-3">
-                            <button type="button" onClick={() => void submitClaim()} disabled={sending || !businessEmail.trim()} className="rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white disabled:opacity-40">{sending ? "Submitting…" : "Submit connection request →"}</button>
-                            <button type="button" onClick={() => setSelected(null)} className="rounded-full border border-black/15 bg-white px-5 py-3 text-sm">Cancel</button>
-                          </div>
-                        </>
-                      )}
+                      <h2 className="mt-3 font-serif text-3xl">Confirm the business relationship</h2>
+                      <p className="mt-3 max-w-2xl text-sm leading-7 text-black/55">
+                        {selected.alreadyClaimed
+                          ? "This profile already has a manager. A signed-in, verified email on the business's own domain can still request owner access without replacing the existing manager."
+                          : "Use an email on the business's own domain. The email and verification note are backend verification evidence; they are never public profile fields."}
+                      </p>
+                      <div className="mt-6 grid gap-4">
+                        <label className="text-xs text-black/45">Business email<input type="email" value={businessEmail} onChange={(event) => setBusinessEmail(event.target.value)} placeholder="you@company.co.za" className="mt-1 w-full rounded-xl border border-black/10 px-4 py-3" /></label>
+                        <label className="text-xs text-black/45">Role / verification note<textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} maxLength={1000} placeholder="Owner, operations manager, company director…" className="mt-1 w-full resize-none rounded-xl border border-black/10 px-4 py-3 text-sm leading-6" /></label>
+                      </div>
+                      <div className="mt-6 flex flex-wrap gap-3">
+                        <button type="button" onClick={() => void submitClaim()} disabled={sending || !businessEmail.trim()} className="rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white disabled:opacity-40">{sending ? "Submitting…" : "Submit connection request →"}</button>
+                        <button type="button" onClick={() => setSelected(null)} className="rounded-full border border-black/15 bg-white px-5 py-3 text-sm">Cancel</button>
+                      </div>
                     </div>
                   ) : null}
 

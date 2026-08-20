@@ -37,6 +37,27 @@ function emailSha256(email: string) {
   return createHash("sha256").update(email.trim().toLowerCase()).digest("hex");
 }
 
+function limitedString(value: unknown, maxLength: number) {
+  return typeof value === "string" && value.trim() ? value.trim().slice(0, maxLength) : null;
+}
+
+function submittedProfile(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const draft = value as Record<string, unknown>;
+  return {
+    name: limitedString(draft.name, 240),
+    legalName: limitedString(draft.legalName, 240),
+    website: limitedString(draft.website, 500),
+    email: limitedString(draft.email, 320),
+    phone: limitedString(draft.phone, 80),
+    description: limitedString(draft.description, 2_000),
+    administrativeArea: limitedString(draft.administrativeArea, 160),
+    locality: limitedString(draft.locality, 160),
+    servesNationally: draft.servesNationally === true,
+    acceptsRemoteClients: draft.acceptsRemoteClients === true,
+  };
+}
+
 async function signedInPrimaryEmail() {
   const user = await currentUser();
   if (!user) return null;
@@ -44,8 +65,9 @@ async function signedInPrimaryEmail() {
   const primary = user.emailAddresses.find(
     (address) => address.id === user.primaryEmailAddressId,
   );
-
-  return (primary ?? user.emailAddresses[0])?.emailAddress?.trim().toLowerCase() ?? null;
+  const address = primary ?? user.emailAddresses[0];
+  if (address?.verification?.status !== "verified") return null;
+  return address.emailAddress.trim().toLowerCase();
 }
 
 export async function GET(request: NextRequest) {
@@ -115,6 +137,8 @@ export async function POST(request: NextRequest) {
   const providerId = typeof body?.providerId === "string" ? body.providerId : "";
   const businessEmail = typeof body?.businessEmail === "string" ? body.businessEmail.trim().toLowerCase() : "";
   const note = typeof body?.note === "string" && body.note.trim() ? body.note.trim() : null;
+  const profileDraft = submittedProfile(body?.profileDraft);
+  const marketSlug = typeof body?.marketSlug === "string" && body.marketSlug.trim() ? body.marketSlug.trim() : "za";
 
   if (!providerId) return NextResponse.json({ error: "Choose the business you are claiming." }, { status: 400 });
 
@@ -138,17 +162,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "This provider profile is already connected to your account." }, { status: 409 });
   }
 
-  // Once a business has an active WORKS manager/owner, additional access must come from
-  // that business's own access-management flow rather than the public claim doorway.
-  if (provider.memberships.length > 0) {
-    return NextResponse.json({ error: "This business is already managed on WORKS. Ask the business owner or manager to add you." }, { status: 409 });
-  }
-
   const isQaProvider = provider.slug === QA_PROVIDER_SLUG;
   let verifiedBusinessEmail = businessEmail;
+  const accountEmail = await signedInPrimaryEmail();
+  let verifiedDomainOwner = false;
 
   if (isQaProvider) {
-    const accountEmail = await signedInPrimaryEmail();
     if (!accountEmail || emailSha256(accountEmail) !== QA_OWNER_EMAIL_SHA256) {
       return NextResponse.json(
         { error: "This QA supplier profile is reserved for the Oremea owner test account." },
@@ -173,6 +192,13 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    verifiedDomainOwner = Boolean(
+      accountEmail
+      && accountEmail === businessEmail
+      && siteHost
+      && sameOrganizationDomain(emailHost, siteHost),
+    );
+
     // A missing website removes the strongest automatic signal, so require useful evidence
     // and leave the request pending for manual verification. No membership is created here.
     if (!siteHost && (!note || note.length < 12)) {
@@ -182,7 +208,17 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const claimStatus = isQaProvider
+  // Existing access cannot be bypassed by an unrelated claimant. A Clerk-verified
+  // primary email on the provider's own website domain is strong enough to add a
+  // legitimate owner without removing any current manager.
+  if (provider.memberships.length > 0 && !isQaProvider && !verifiedDomainOwner) {
+    return NextResponse.json({
+      error: "This business is already managed on WORKS. Sign in with a verified email on the business's own domain, or ask the current manager to add you.",
+    }, { status: 409 });
+  }
+
+  const accessApproved = isQaProvider || verifiedDomainOwner;
+  const claimStatus = accessApproved
     ? WorksProviderClaimStatus.APPROVED
     : WorksProviderClaimStatus.PENDING;
 
@@ -194,47 +230,72 @@ export async function POST(request: NextRequest) {
       business_email: verifiedBusinessEmail,
       requested_role: WorksProviderMembershipRole.OWNER,
       note,
+      profile_draft: profileDraft ?? undefined,
       status: claimStatus,
-      reviewed_at: isQaProvider ? new Date() : null,
+      reviewed_at: accessApproved ? new Date() : null,
     },
     update: {
       business_email: verifiedBusinessEmail,
       note,
       requested_role: WorksProviderMembershipRole.OWNER,
+      profile_draft: profileDraft ?? undefined,
       status: claimStatus,
-      reviewed_at: isQaProvider ? new Date() : null,
+      reviewed_at: accessApproved ? new Date() : null,
     },
     select: { id: true, status: true, created_at: true },
   });
 
-  if (isQaProvider) {
-    await prisma.works_provider_memberships.upsert({
-      where: {
-        provider_id_clerk_user_id: {
+  if (accessApproved) {
+    const market = await prisma.works_markets.findUnique({ where: { slug: marketSlug }, select: { id: true } });
+    await prisma.$transaction([
+      prisma.works_provider_memberships.upsert({
+        where: {
+          provider_id_clerk_user_id: {
+            provider_id: providerId,
+            clerk_user_id: userId,
+          },
+        },
+        create: {
           provider_id: providerId,
           clerk_user_id: userId,
+          role: WorksProviderMembershipRole.OWNER,
+          active: true,
         },
-      },
-      create: {
-        provider_id: providerId,
-        clerk_user_id: userId,
-        role: WorksProviderMembershipRole.OWNER,
-        active: true,
-      },
-      update: {
-        role: WorksProviderMembershipRole.OWNER,
-        active: true,
-      },
-    });
-
-    await prisma.works_providers.update({
-      where: { id: providerId },
-      data: { profile_status: "ACTIVE" },
-    });
+        update: {
+          role: WorksProviderMembershipRole.OWNER,
+          active: true,
+        },
+      }),
+      prisma.works_providers.update({
+        where: { id: providerId },
+        data: {
+          name: profileDraft?.name ?? undefined,
+          legal_name: profileDraft?.legalName ?? undefined,
+          website: profileDraft?.website ?? undefined,
+          email: profileDraft?.email ?? undefined,
+          phone: profileDraft?.phone ?? undefined,
+          description: profileDraft?.description ?? undefined,
+          profile_status: "ACTIVE",
+        },
+      }),
+      ...(market && profileDraft ? [prisma.works_provider_markets.updateMany({
+        where: { provider_id: providerId, market_id: market.id },
+        data: {
+          administrative_area: profileDraft.administrativeArea ?? undefined,
+          locality: profileDraft.locality ?? undefined,
+          serves_nationally: profileDraft.servesNationally,
+          accepts_remote_clients: profileDraft.acceptsRemoteClients,
+        },
+      })] : []),
+    ]);
 
     return NextResponse.json({
       claim,
-      message: `QA claim approved for ${provider.name}. Your test account now has owner access so the supplier workspace can be audited end to end.`,
+      accessGranted: true,
+      provider: { id: provider.id, name: provider.name, slug: provider.slug },
+      message: isQaProvider
+        ? `QA claim approved for ${provider.name}. Your test account now has owner access so the supplier workspace can be audited end to end.`
+        : `${provider.name} is verified and connected to your account. Its WORKS profile now uses the information you supplied.`,
     });
   }
 
@@ -245,6 +306,6 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     claim,
-    message: `Claim request received for ${provider.name}. The request remains pending until WORKS verifies that the account genuinely represents the business. No profile access has been granted.`,
+    message: `Claim request received for ${provider.name}. Your submitted profile details are saved with the request and will replace WORKS's starting information only after the business relationship is verified. No profile access has been granted yet.`,
   });
 }

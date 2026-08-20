@@ -59,8 +59,50 @@ export async function POST(request: Request) {
   });
   if (duplicate) {
     const alreadyConnected = duplicate.memberships.some((membership) => membership.clerk_user_id === userId);
+    if (alreadyConnected) {
+      await prisma.$transaction([
+        prisma.works_providers.update({
+          where: { id: duplicate.id },
+          data: {
+            name,
+            legal_name: clean(body?.legalName),
+            website: clean(body?.website),
+            email: clean(body?.email),
+            phone: clean(body?.phone),
+            description: clean(body?.description),
+            profile_status: "ACTIVE",
+          },
+        }),
+        prisma.works_provider_markets.upsert({
+          where: { provider_id_market_id: { provider_id: duplicate.id, market_id: market.id } },
+          create: {
+            provider_id: duplicate.id,
+            market_id: market.id,
+            administrative_area: clean(body?.administrativeArea),
+            locality: clean(body?.locality),
+            serves_nationally: body?.servesNationally === true,
+            accepts_remote_clients: body?.acceptsRemoteClients === true,
+            active: true,
+          },
+          update: {
+            administrative_area: clean(body?.administrativeArea),
+            locality: clean(body?.locality),
+            serves_nationally: body?.servesNationally === true,
+            accepts_remote_clients: body?.acceptsRemoteClients === true,
+            active: true,
+          },
+        }),
+      ]);
+
+      return NextResponse.json({
+        provider: { id: duplicate.id, name, slug: duplicate.slug },
+        message: `${name} is already connected to your account. Its WORKS profile has been updated with the information you supplied.`,
+        hadExistingMembership: true,
+      });
+    }
+
     return NextResponse.json({
-      error: `${duplicate.name} already appears to be on WORKS. Connect that existing profile instead of creating a duplicate.`,
+      error: `${duplicate.name} already appears to be on WORKS. Connect that existing profile instead of creating a duplicate`,
       existingProvider: {
         id: duplicate.id,
         name: duplicate.name,

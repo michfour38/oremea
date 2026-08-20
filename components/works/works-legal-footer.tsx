@@ -29,14 +29,14 @@ export function WorksLegalFooter({ currentYear }: { currentYear: number }) {
 
   return (
     <footer className="border-t border-black/10 bg-[#f3eee4] text-[#1f1c17]">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-10 md:grid-cols-[1.2fr_1fr_1fr] md:px-8">
-        <div>
+      <div className="mx-auto grid max-w-6xl gap-x-6 gap-y-8 px-5 py-8 min-[420px]:grid-cols-2 md:px-8 lg:grid-cols-[1.2fr_1fr_1fr] lg:gap-10 lg:py-10">
+        <div className="min-[420px]:col-span-2 lg:col-span-1">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#8b6a31]">
             WORKS by Oremea
           </p>
           <p className="mt-4 max-w-sm text-sm leading-7 text-black/55">
             South African business discovery, production routing and provider
-            introductions with clear evidence boundaries.
+            introductions with clear evidence boundaries
           </p>
           <Link
             href={OREMEA_SITE_ORIGIN}
@@ -80,7 +80,7 @@ function FooterGroup({
       <p className="text-[11px] uppercase tracking-[0.18em] text-black/40">
         {title}
       </p>
-      <nav className="mt-4 grid gap-3" aria-label={title}>
+      <nav className="mt-3 grid gap-2.5" aria-label={title}>
         {links.map((link) => (
           <Link
             key={link.href}
