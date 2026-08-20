@@ -58,8 +58,10 @@ type ProviderMarket = {
 type Provider = {
   id: string;
   name: string;
+  slug: string;
   role: "OWNER" | "MANAGER";
   profileStatus: string;
+  plan: "FREE" | "VERIFIED" | "GROWTH" | "ENTERPRISE";
   markets: ProviderMarket[];
 };
 
@@ -538,7 +540,19 @@ export function WorksProviderCapabilities() {
                     <label className="flex items-start gap-3"><input type="checkbox" checked={form.active} onChange={(event) => setForm((current) => ({ ...current, active: event.target.checked }))} className="mt-1 accent-[#16834f]" /><span><span className="block font-medium">Include this offering in customer matching</span><span className="mt-2 block text-sm leading-6 text-black/55">Provider-supplied information enters as a possible fit. WORKS does not present it as confirmed until the relevant evidence is reviewed.</span></span></label>
                   </section>
 
-                  {message ? <p className="rounded-2xl bg-[#eef7f1] p-4 text-sm text-[#11683d]">{message}</p> : null}
+                  {message ? (
+                    <div className="rounded-3xl border border-[#16834f]/20 bg-[#eef7f1] p-6 md:p-8">
+                      <p className="text-xs font-medium uppercase tracking-[0.16em] text-[#16834f]">Offering saved</p>
+                      <p className="mt-3 text-sm leading-6 text-black/60">{message} Add another distinct offering, review the completed public profile, or continue to the final onboarding choice.</p>
+                      <div className="mt-6 flex flex-wrap gap-3">
+                        <button type="button" onClick={() => chooseOffering(null)} className="rounded-full border border-black/15 bg-white px-5 py-2.5 text-sm">Add another offering</button>
+                        <Link href={`/works/providers/${selectedProvider.slug}`} className="rounded-full border border-black/15 bg-white px-5 py-2.5 text-sm">Review public profile</Link>
+                        <Link href={selectedProvider.plan === "FREE" ? "/works/provider/billing" : "/works/provider"} className="rounded-full bg-[#1f1c17] px-5 py-2.5 text-sm text-white">
+                          {selectedProvider.plan === "FREE" ? "Continue to plan choice →" : "Finish onboarding →"}
+                        </Link>
+                      </div>
+                    </div>
+                  ) : null}
                   {error && data ? <p className="text-sm text-red-700">{error}</p> : null}
                   <button type="submit" disabled={saving || form.name.trim().length < 2} className="rounded-full bg-[#1f1c17] px-7 py-3 text-sm font-medium text-white disabled:opacity-40">{saving ? "Saving offering…" : selectedOfferingId ? "Save offering →" : "Create offering →"}</button>
                 </form>

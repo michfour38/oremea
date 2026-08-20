@@ -327,7 +327,9 @@ export async function GET() {
           select: {
             id: true,
             name: true,
+            slug: true,
             profile_status: true,
+            commercial_profile: { select: { plan: true } },
             markets: {
               where: { active: true },
               orderBy: { created_at: "asc" },
@@ -388,8 +390,10 @@ export async function GET() {
     providers: memberships.map((membership) => ({
       id: membership.provider.id,
       name: membership.provider.name,
+      slug: membership.provider.slug,
       role: membership.role,
       profileStatus: membership.provider.profile_status,
+      plan: membership.provider.commercial_profile?.plan ?? "FREE",
       markets: membership.provider.markets.map((market) => ({
         id: market.id,
         marketId: market.market_id,
