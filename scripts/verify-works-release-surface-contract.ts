@@ -115,6 +115,7 @@ requireText(providerDashboard, "They do not add or verify capability", "Provider
 rejectText(providerDashboard, "Open capabilities & matching →", "The profile form must not jump into capability setup before the current profile can be saved.");
 requireText(providerDashboard, "edit.wantsMoreWork || edit.marketingOptIn", "Detailed work preferences must stay hidden until a provider explicitly asks for work or marketing.");
 requireText(providerDashboard, "informational profile", "The work-preference section must explain when it should remain off.");
+requireText(providerDashboard, 'router.push("/works/provider/capabilities")', "A successful provider profile save must advance to capabilities and matching.");
 requireText(publicPlans, "Eligible for matching after capability setup", "Provider plans must not promise matching before capability setup exists.");
 requireText(middleware, 'WORKS_AUTH_PATHS = ["/sign-in", "/sign-up"]', "WORKS must expose Clerk's shared sign-in and sign-up pages on its clean host.");
 requireText(middleware, "pathname.startsWith(`${authPath}/`)", "WORKS must preserve Clerk catch-all auth paths instead of rewriting them beneath /works.");

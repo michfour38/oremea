@@ -1,6 +1,7 @@
 "use client";
 
 import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { WorksProviderNav } from "@/components/works/provider/provider-nav";
@@ -30,6 +31,7 @@ function toggle(list: string[], value: string) {
 }
 
 export function WorksProviderDashboard() {
+  const router = useRouter();
   const [providers, setProviders] = useState<Provider[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [edit, setEdit] = useState<EditState | null>(null);
@@ -78,6 +80,7 @@ export function WorksProviderDashboard() {
       if (!response.ok) throw new Error(data?.error ?? "WORKS could not save these changes.");
       setProviders(current => current.map(provider => provider.id === selected.id ? { ...provider, ...data.provider, commercial: data.commercial, visibility: data.visibility } : provider));
       setMessage("Saved.");
+      router.push("/works/provider/capabilities");
     } catch (err) {
       setError(err instanceof Error ? err.message : "WORKS could not save these changes.");
     } finally {
