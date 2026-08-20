@@ -19,6 +19,9 @@ const providerPage = read("app/works/providers/[slug]/page.tsx");
 const brand = read("components/works/works-brand.tsx");
 const memberNav = read("components/works/member-works-nav.tsx");
 const customerFlow = read("components/works/intake/founder-conversation-v2.tsx");
+const myWorks = read("components/works/account/my-works-dashboard.tsx");
+const accountButton = read("components/works/works-account-button.tsx");
+const providerOnboarding = read("components/works/provider/provider-onboarding-v2.tsx");
 const footer = read("components/works/works-legal-footer.tsx");
 const worksLayout = read("app/works/layout.tsx");
 const providerNav = read("components/works/provider/provider-nav.tsx");
@@ -43,9 +46,23 @@ requireText(brand, 'from "next/image"', "The above-the-fold WORKS logo must use 
 requireText(memberNav, "<WorksBrand href={href}", "Member WORKS navigation must pass its destination through to the brand link.");
 
 requireText(marketPage, "embedded", "The public WORKS page must embed the customer flow without a duplicate header.");
+requireText(marketPage, "Before you describe it", "Material matching limits must appear before the customer starts the brief.");
+rejectText(marketPage, "What WORKS does—and does not claim", "Material pre-start information must not be stranded below the customer flow.");
+if (marketPage.indexOf("Before you describe it") > marketPage.indexOf("<FounderConversationV2")) {
+  throw new Error("Material matching limits must appear before the customer flow.");
+}
 requireText(customerFlow, "embedded?: boolean", "The customer flow must explicitly support embedded rendering.");
+requireText(customerFlow, 'embedded ? "pb-6" : "min-h-screen', "The embedded customer flow must not force an empty viewport beneath the form.");
 requireText(customerFlow, 'href="/works/my"', "Signed-in customers need a working path to My WORKS.");
 rejectText(customerFlow, '<main className="py-10', "The embedded customer flow must not create a nested main landmark.");
+
+requireText(myWorks, 'bg-[#f3eee4]', "My WORKS must provide its own readable full-page surface.");
+requireText(myWorks, "Begin with the product you need made.", "The empty My WORKS state must give the customer a clear next action.");
+requireText(providerOnboarding, "SignUpButton", "Provider onboarding must offer provider account creation explicitly.");
+requireText(providerOnboarding, "forceRedirectUrl={returnUrl}", "Provider authentication must return to provider onboarding.");
+requireText(accountButton, "user.hasImage", "The WORKS account control must use a supplied profile image when available.");
+requireText(accountButton, "user.setProfileImage", "The WORKS account control must let people save an adjusted profile image.");
+requireText(accountButton, 'label="Zoom"', "The WORKS photo editor must expose a zoom control.");
 
 requireText(footer, 'https://www.oremea.com', "WORKS must use an absolute destination when returning to Oremea.");
 requireText(footer, "OREMEA_LEGAL_LINKS", "Oremea legal links must leave the WORKS subdomain.");

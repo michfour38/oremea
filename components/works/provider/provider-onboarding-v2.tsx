@@ -1,9 +1,10 @@
 "use client";
 
-import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { SignInButton, SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import { useEffect, useMemo, useState } from "react";
 
 import { MemberWorksNav } from "@/components/works/member-works-nav";
+import { WorksAccountButton } from "@/components/works/works-account-button";
 
 type Tab = "start" | "business" | "progress";
 type Mode = "add" | "claim" | null;
@@ -244,11 +245,12 @@ export function WorksProviderOnboardingV2() {
             <>
               <SignedOut>
                 <SignInButton mode="modal" forceRedirectUrl={returnUrl}>
-                  <button className="rounded-full border border-black/15 bg-white px-4 py-2 text-sm">Manage my business</button>
+                  <button className="rounded-full border border-black/15 bg-white px-4 py-2 text-sm">Sign in</button>
                 </SignInButton>
               </SignedOut>
               <SignedIn>
                 <a href="/works/provider" className="rounded-full border border-black/15 bg-white px-4 py-2 text-sm">Manage my business →</a>
+                <WorksAccountButton afterSignOutUrl="/works/za" />
               </SignedIn>
             </>
           }
@@ -316,11 +318,16 @@ export function WorksProviderOnboardingV2() {
               {mode ? (
                 <div className="mt-8 rounded-3xl border border-black/10 bg-white p-7 md:p-8">
                   <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Your place is saved</p>
-                  <h2 className="mt-3 font-serif text-3xl">Sign in to continue</h2>
-                  <p className="mt-4 max-w-xl text-sm leading-7 text-black/55">WORKS returns to this step after sign-in. Anything you entered in the business form remains on this device.</p>
-                  <SignInButton mode="modal" forceRedirectUrl={returnUrl}>
-                    <button className="mt-6 rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Sign in to continue →</button>
-                  </SignInButton>
+                  <h2 className="mt-3 font-serif text-3xl">Create your provider account to continue</h2>
+                  <p className="mt-4 max-w-xl text-sm leading-7 text-black/55">WORKS returns here after signup. Anything already entered in the business form remains on this device.</p>
+                  <div className="mt-6 flex flex-wrap items-center gap-3">
+                    <SignUpButton mode="modal" forceRedirectUrl={returnUrl}>
+                      <button className="rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Create provider account →</button>
+                    </SignUpButton>
+                    <SignInButton mode="modal" forceRedirectUrl={returnUrl}>
+                      <button className="rounded-full border border-black/15 bg-white px-6 py-3 text-sm">I already have an account</button>
+                    </SignInButton>
+                  </div>
                 </div>
               ) : null}
             </SignedOut>

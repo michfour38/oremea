@@ -1,11 +1,12 @@
 "use client";
 
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 
 import { ProviderIntelligence } from "@/components/works/provider/provider-intelligence";
 import { WorksProviderNav } from "@/components/works/provider/provider-nav";
 import { WorksPageHeader } from "@/components/works/works-brand";
+import { WorksAccountButton } from "@/components/works/works-account-button";
 
 type Provider = { id: string; name: string };
 
@@ -40,7 +41,7 @@ export function ProviderInsightsPage() {
     <WorksPageHeader
       href="/works/provider"
       context="Provider workspace"
-      action={<SignedIn><UserButton afterSignOutUrl="/works/za" /></SignedIn>}
+      action={<SignedIn><WorksAccountButton afterSignOutUrl="/works/za" /></SignedIn>}
     />
 
     <SignedOut><section className="py-16"><h1 className="font-serif text-4xl text-[#1f1c17]">Sign in to view provider insights</h1><SignInButton mode="modal"><button className="mt-7 rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Sign in →</button></SignInButton></section></SignedOut>

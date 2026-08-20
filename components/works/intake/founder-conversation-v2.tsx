@@ -1,11 +1,12 @@
 "use client";
 
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import type { WorksMarketCategory } from "@/lib/works/categories/list-market-categories";
 import { ProviderOutreachPanel } from "@/components/works/outreach/provider-outreach-panel";
+import { WorksAccountButton } from "@/components/works/works-account-button";
 
 type MarketView = {
   slug: string;
@@ -282,7 +283,7 @@ function WorksConversationHeader({ market }: { market: MarketView }) {
         </SignedOut>
         <SignedIn>
           <Link href="/works/my" className="text-sm text-[#1f1c17] underline-offset-4 hover:underline">My WORKS</Link>
-          <UserButton afterSignOutUrl={`/works/${market.slug}`} />
+          <WorksAccountButton afterSignOutUrl={`/works/${market.slug}`} />
         </SignedIn>
       </div>
     </header>
@@ -777,9 +778,9 @@ export function FounderConversationV2({
   }
 
   return (
-    <div className={`mx-auto min-h-screen w-full max-w-3xl px-5 md:px-8 ${embedded ? "pb-8 md:pb-12" : "py-8 md:py-12"}`}>
+    <div className={`mx-auto w-full max-w-3xl px-5 md:px-8 ${embedded ? "pb-6" : "min-h-screen py-8 md:py-12"}`}>
       {embedded ? null : <WorksConversationHeader market={market} />}
-      <section className="py-10 md:py-14">
+      <section className={embedded ? "py-5 md:py-6" : "py-10 md:py-14"}>
         <div className="space-y-4">
           {panels.slice(0, safeFurthest + 1).map((key, index) => {
             const entry = answers[key];

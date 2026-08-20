@@ -100,7 +100,7 @@ export default async function WorksMarketPage({
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-3xl px-5 pt-8 md:px-8 md:pt-12">
+      <div className="mx-auto w-full max-w-3xl px-5 pt-5 md:px-8 md:pt-7">
         <WorksPageHeader
           context={`${market.localName} · Find a provider`}
           action={
@@ -110,31 +110,22 @@ export default async function WorksMarketPage({
           }
         />
 
-        <section className="mt-8 rounded-3xl border border-black/10 bg-white/55 p-5 md:p-7">
+        <section className="mt-5 rounded-3xl border border-black/10 bg-white/55 p-5 md:p-6">
           <h1 className="font-serif text-3xl leading-tight md:text-4xl">Know who can make it—and exactly what still needs confirming.</h1>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-black/55">
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-black/55">
             Describe the product once. WORKS maps the production steps, finds South African providers whose current offering fits and keeps unknowns visible instead of pretending they are answers.
           </p>
-          <div className="mt-5 grid gap-2 text-sm text-black/60 sm:grid-cols-3">
+          <div className="mt-4 grid gap-2 text-sm text-black/60 sm:grid-cols-3">
             <span className="rounded-2xl border border-black/8 bg-white/65 px-4 py-3">1 · Build the brief</span>
             <span className="rounded-2xl border border-black/8 bg-white/65 px-4 py-3">2 · See the route</span>
             <span className="rounded-2xl border border-black/8 bg-white/65 px-4 py-3">3 · Reach suitable providers</span>
           </div>
-        </section>
-
-        <section className="mt-5 grid gap-3 sm:grid-cols-3" aria-label="How WORKS handles evidence">
-          <article className="rounded-2xl border border-black/10 bg-white/45 p-4">
-            <h2 className="text-sm font-medium">For a real production decision</h2>
-            <p className="mt-2 text-xs leading-6 text-black/50">WORKS turns the product, quantity, location and constraints you provide into a route providers can assess.</p>
-          </article>
-          <article className="rounded-2xl border border-black/10 bg-white/45 p-4">
-            <h2 className="text-sm font-medium">Fit comes from current offerings</h2>
-            <p className="mt-2 text-xs leading-6 text-black/50">Matches use a provider&apos;s structured services, capabilities, minimums and other available evidence.</p>
-          </article>
-          <article className="rounded-2xl border border-black/10 bg-white/45 p-4">
-            <h2 className="text-sm font-medium">Unknown stays unknown</h2>
-            <p className="mt-2 text-xs leading-6 text-black/50">A possible fit is not presented as confirmed when a hard requirement still needs an answer.</p>
-          </article>
+          <div className="mt-4 border-t border-black/10 pt-4" aria-label="Important information before starting">
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#16834f]">Before you describe it</p>
+            <p className="mt-2 text-sm leading-6 text-black/60">
+              Matches use the provider information currently available in WORKS. They are possible fits—not guarantees of capacity, final specifications, price or timing. Confirm those directly before appointing a provider.
+            </p>
+          </div>
         </section>
       </div>
 
@@ -150,25 +141,6 @@ export default async function WorksMarketPage({
           embedded
         />
       </div>
-
-      <section className="mx-auto w-full max-w-3xl border-t border-black/10 px-5 py-12 md:px-8" aria-labelledby="works-questions">
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Before you start</p>
-        <h2 id="works-questions" className="mt-2 font-serif text-3xl">What WORKS does—and does not claim</h2>
-        <div className="mt-6 space-y-5 text-sm leading-7 text-black/60">
-          <div>
-            <h3 className="font-medium text-[#1f1c17]">Do I need an account to describe what I need?</h3>
-            <p> No. You can start the brief and see the production route without signing in. WORKS asks for contact details only when they are needed to save or send an enquiry.</p>
-          </div>
-          <div>
-            <h3 className="font-medium text-[#1f1c17]">How does WORKS choose a possible provider?</h3>
-            <p> It compares the brief with the provider&apos;s current structured offering, including relevant services, capabilities, location and known production constraints.</p>
-          </div>
-          <div>
-            <h3 className="font-medium text-[#1f1c17]">Does a match guarantee that the provider can take the work?</h3>
-            <p> No. Capacity, final specifications, price, timing and other material facts still need direct confirmation before you contract.</p>
-          </div>
-        </div>
-      </section>
 
       <style>{`
         .works-market-conversation [data-works-outreach-panel] + [data-works-sourcing-fallback] {

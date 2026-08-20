@@ -1,10 +1,11 @@
 "use client";
 
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { useEffect, useMemo, useState } from "react";
 
 import { WorksProviderNav } from "@/components/works/provider/provider-nav";
 import { WorksPageHeader } from "@/components/works/works-brand";
+import { WorksAccountButton } from "@/components/works/works-account-button";
 
 type Opportunity = {
   id: string;
@@ -135,7 +136,7 @@ export function WorksProviderInbox() {
     <WorksPageHeader
       href="/works/provider"
       context="Provider workspace"
-      action={<SignedIn><UserButton afterSignOutUrl="/works/za" /></SignedIn>}
+      action={<SignedIn><WorksAccountButton afterSignOutUrl="/works/za" /></SignedIn>}
     />
 
     <SignedOut><section className="py-16"><h1 className="font-serif text-4xl md:text-5xl">Production opportunities sent to your business</h1><p className="mt-5 max-w-xl text-sm leading-7 text-black/55">Sign in with the account connected to your WORKS provider profile.</p><SignInButton mode="modal"><button className="mt-7 rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Sign in →</button></SignInButton></section></SignedOut>

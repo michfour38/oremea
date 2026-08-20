@@ -1,10 +1,11 @@
 "use client";
 
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import { useEffect, useMemo, useState } from "react";
 
 import { WorksProviderNav } from "@/components/works/provider/provider-nav";
 import { WorksPageHeader } from "@/components/works/works-brand";
+import { WorksAccountButton } from "@/components/works/works-account-button";
 
 const SERVICES = [
   ["PRODUCT_DEVELOPMENT", "Product development"], ["FORMULATION", "Formulation / recipe work"], ["TESTING", "Testing / analysis"],
@@ -88,7 +89,7 @@ export function WorksProviderDashboard() {
     <WorksPageHeader
       context="Provider workspace"
       href="/works/provider"
-      action={<SignedIn><UserButton afterSignOutUrl="/works/za" /></SignedIn>}
+      action={<SignedIn><WorksAccountButton afterSignOutUrl="/works/za" /></SignedIn>}
     />
 
     <SignedOut><main className="py-16"><h1 className="max-w-2xl font-serif text-4xl leading-tight text-[#1f1c17] md:text-5xl">Put your available capacity to work</h1><p className="mt-5 max-w-xl text-sm leading-6 text-black/55">Sign in to manage your WORKS provider profile.</p><SignInButton mode="modal"><button className="mt-7 rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Sign in →</button></SignInButton></main></SignedOut>
