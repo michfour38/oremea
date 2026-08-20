@@ -4,6 +4,7 @@ import { Resend } from "resend";
 export const runtime = "nodejs";
 
 const SUPPORT_EMAIL = "support@oremea.com";
+const CONTACT_FROM_EMAIL = "Oremea website <website@oremea.com>";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function clean(value: unknown, maximum: number) {
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     const resend = new Resend(apiKey);
     const { error } = await resend.emails.send({
-      from: "Oremea website <support@oremea.com>",
+      from: CONTACT_FROM_EMAIL,
       to: SUPPORT_EMAIL,
       replyTo: email,
       subject: "[Oremea contact] " + subject,

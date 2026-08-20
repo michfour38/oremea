@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 
 const middleware = readFileSync("middleware.ts", "utf8");
+const contactRoute = readFileSync("app/api/contact/route.ts", "utf8");
 const searchSessionCreateRoute = readFileSync(
   "app/api/works/search-sessions/route.ts",
   "utf8"
@@ -58,6 +59,11 @@ assert.match(
   middleware,
   /["']\/api\/contact["']/,
   "The public contact form endpoint must remain accessible without signing in."
+);
+assert.match(
+  contactRoute,
+  /Oremea website <website@oremea\.com>/,
+  "Contact mail must use a sender address distinct from the support inbox."
 );
 
 assert.match(
