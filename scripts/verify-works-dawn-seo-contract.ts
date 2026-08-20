@@ -24,8 +24,9 @@ assert.match(layout, /"max-image-preview": "large"/);
 
 assert.match(market, /"@type": "WebSite"/);
 assert.match(market, /"@type": "Service"/);
-assert.match(market, /Unknown stays unknown/);
-assert.match(market, /What WORKS does—and does not claim/);
+assert.match(market, /Before you describe it/);
+assert.match(market, /possible fits—not guarantees/);
+assert.match(market, /Confirm those directly before appointing a provider/);
 
 assert.match(plans, /"@type": "OfferCatalog"/);
 assert.match(plans, /WORKS_PROVIDER_PLANS\.map/);
