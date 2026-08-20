@@ -85,7 +85,7 @@ export function WorksProviderDashboard() {
     }
   }
 
-  return <div className="mx-auto min-h-screen w-full max-w-5xl px-5 py-8 md:px-8 md:py-12">
+  return <div className="mx-auto min-h-screen w-full max-w-6xl px-5 py-8 md:px-8 md:py-12">
     <WorksPageHeader
       context="Provider workspace"
       href="/works/provider"
@@ -99,22 +99,22 @@ export function WorksProviderDashboard() {
 
       {providers.length > 1 ? <div className="mt-8 flex flex-wrap gap-2">{providers.map(provider => <button key={provider.id} type="button" onClick={() => chooseProvider(provider)} className={`rounded-full border px-4 py-2 text-sm ${selected.id === provider.id ? "border-[#1f1c17] bg-[#1f1c17] text-white" : "border-black/15 bg-white"}`}>{provider.name}</button>)}</div> : null}
 
-      <div className="mt-10 flex flex-wrap items-end justify-between gap-5 border-b border-black/10 pb-6">
+      <div className="mx-auto mt-10 flex max-w-4xl flex-wrap items-end justify-between gap-5 border-b border-black/10 pb-6">
         <div><p className="text-xs uppercase tracking-[0.18em] text-black/40">{selected.commercial.plan} plan</p><h1 className="mt-2 font-serif text-4xl text-[#1f1c17]">Profile & capacity</h1><p className="mt-2 text-sm text-black/45">{selected.name}</p></div>
         <a href={`/works/providers/${selected.slug}`} className="text-sm underline underline-offset-4">View public profile →</a>
       </div>
 
-      <div className="mt-10 max-w-3xl space-y-10">
+      <div className="mx-auto mt-10 max-w-4xl space-y-10">
         <section>
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">1 · Business profile</p>
           <h2 className="mt-2 font-serif text-3xl">Information about your business</h2>
           <p className="mt-3 text-sm leading-6 text-black/50">Edit the source information here. Public visibility is controlled separately below.</p>
-          <div className="mt-6 grid gap-3 rounded-3xl border border-black/10 bg-white/70 p-6">
-            <input value={edit.name} onChange={event => setEdit(value => value ? { ...value, name: event.target.value } : value)} placeholder="Business name" className="rounded-xl border border-black/10 bg-white px-4 py-3" />
-            <input value={edit.legalName} onChange={event => setEdit(value => value ? { ...value, legalName: event.target.value } : value)} placeholder="Legal name (optional)" className="rounded-xl border border-black/10 bg-white px-4 py-3" />
-            <input value={edit.website} onChange={event => setEdit(value => value ? { ...value, website: event.target.value } : value)} placeholder="Website" className="rounded-xl border border-black/10 bg-white px-4 py-3" />
-            <div className="grid gap-3 sm:grid-cols-2"><input value={edit.email} onChange={event => setEdit(value => value ? { ...value, email: event.target.value } : value)} placeholder="Contact email" className="rounded-xl border border-black/10 bg-white px-4 py-3" /><input value={edit.phone} onChange={event => setEdit(value => value ? { ...value, phone: event.target.value } : value)} placeholder="Phone" className="rounded-xl border border-black/10 bg-white px-4 py-3" /></div>
-            <textarea value={edit.description} onChange={event => setEdit(value => value ? { ...value, description: event.target.value } : value)} rows={5} placeholder="Describe what you make and who you serve." className="resize-none rounded-xl border border-black/10 bg-white px-4 py-3 text-sm leading-6" />
+          <div className="mt-6 grid gap-4 rounded-3xl border border-black/10 bg-white/70 p-6 md:p-8">
+            <label className="text-xs text-black/45">Business name<input value={edit.name} onChange={event => setEdit(value => value ? { ...value, name: event.target.value } : value)} placeholder="Business name" className="mt-1 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-base text-[#1f1c17]" /></label>
+            <label className="text-xs text-black/45">Legal name <span className="text-black/30">(optional)</span><input value={edit.legalName} onChange={event => setEdit(value => value ? { ...value, legalName: event.target.value } : value)} placeholder="Registered company name" className="mt-1 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-base text-[#1f1c17]" /></label>
+            <label className="text-xs text-black/45">Website<input value={edit.website} onChange={event => setEdit(value => value ? { ...value, website: event.target.value } : value)} placeholder="https://example.com" className="mt-1 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-base text-[#1f1c17]" /></label>
+            <div className="grid gap-4 sm:grid-cols-2"><label className="text-xs text-black/45">Contact email<input type="email" value={edit.email} onChange={event => setEdit(value => value ? { ...value, email: event.target.value } : value)} placeholder="hello@example.com" className="mt-1 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-base text-[#1f1c17]" /></label><label className="text-xs text-black/45">Phone <span className="text-black/30">(optional)</span><input value={edit.phone} onChange={event => setEdit(value => value ? { ...value, phone: event.target.value } : value)} placeholder="Business phone" className="mt-1 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-base text-[#1f1c17]" /></label></div>
+            <label className="text-xs text-black/45">Business description<textarea value={edit.description} onChange={event => setEdit(value => value ? { ...value, description: event.target.value } : value)} rows={5} placeholder="What the business does, who it serves and where its boundaries are…" className="mt-1 w-full resize-none rounded-xl border border-black/10 bg-white px-4 py-3 text-sm leading-6 text-[#1f1c17]" /></label>
           </div>
         </section>
 

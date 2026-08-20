@@ -107,6 +107,9 @@ rejectText(footer, "introductions with clear evidence boundaries.", "The WORKS f
 requireText(footer, "{currentYear}", "The client footer must render the server-provided year without a hydration race.");
 requireText(worksLayout, "currentYear={new Date().getFullYear()}", "The WORKS server layout must provide a stable footer year.");
 requireText(providerNav, 'href: "/works/provider/billing"', "Provider billing must be part of the canonical provider navigation.");
+requireText(providerNav, "flex flex-wrap justify-center gap-2", "Provider workspace navigation must remain visually centred across its pages.");
+requireText(providerDashboard, "mx-auto mt-10 max-w-4xl", "Provider profile content must stay centred beneath the workspace navigation.");
+requireText(providerDashboard, "Business description", "Provider profile fields must have visible labels instead of relying on placeholder text.");
 requireText(providerPage, 'provider.slug === "works-qa-supplier"', "The QA-only provider profile must not be indexed.");
 requireText(providerDashboard, "They do not add or verify capability", "Provider demand preferences must not be presented as matching capability.");
 requireText(publicPlans, "Eligible for matching after capability setup", "Provider plans must not promise matching before capability setup exists.");

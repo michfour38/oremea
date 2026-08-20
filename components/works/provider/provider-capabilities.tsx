@@ -428,7 +428,7 @@ export function WorksProviderCapabilities() {
         <section className="py-10 md:py-14">
           <WorksProviderNav current="/works/provider/capabilities" />
 
-          <div className="mt-10 max-w-3xl">
+          <div className="mx-auto mt-10 max-w-3xl text-center">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Capability setup</p>
             <h1 className="mt-2 font-serif text-4xl leading-tight text-[#1f1c17] md:text-5xl">Describe each offering WORKS can match</h1>
             <p className="mt-4 text-sm leading-7 text-black/55">An offering is one distinct thing the business can supply or do. WORKS uses its category, production services, capabilities, quantity range and lead time against a customer brief.</p>

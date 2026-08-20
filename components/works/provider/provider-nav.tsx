@@ -11,7 +11,7 @@ const items = [
 
 export function WorksProviderNav({ current }: { current: string }) {
   return (
-    <nav className="flex flex-wrap gap-2" aria-label="WORKS provider workspace">
+    <nav className="flex flex-wrap justify-center gap-2" aria-label="WORKS provider workspace">
       {items.map((item) => {
         const active = item.href === current;
         return (
