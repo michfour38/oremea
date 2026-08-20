@@ -112,6 +112,9 @@ requireText(providerDashboard, "mx-auto mt-10 max-w-4xl", "Provider profile cont
 requireText(providerDashboard, "Business description", "Provider profile fields must have visible labels instead of relying on placeholder text.");
 requireText(providerPage, 'provider.slug === "works-qa-supplier"', "The QA-only provider profile must not be indexed.");
 requireText(providerDashboard, "They do not add or verify capability", "Provider demand preferences must not be presented as matching capability.");
+rejectText(providerDashboard, "Open capabilities & matching →", "The profile form must not jump into capability setup before the current profile can be saved.");
+requireText(providerDashboard, "edit.wantsMoreWork || edit.marketingOptIn", "Detailed work preferences must stay hidden until a provider explicitly asks for work or marketing.");
+requireText(providerDashboard, "informational profile", "The work-preference section must explain when it should remain off.");
 requireText(publicPlans, "Eligible for matching after capability setup", "Provider plans must not promise matching before capability setup exists.");
 requireText(middleware, 'WORKS_AUTH_PATHS = ["/sign-in", "/sign-up"]', "WORKS must expose Clerk's shared sign-in and sign-up pages on its clean host.");
 requireText(middleware, "pathname.startsWith(`${authPath}/`)", "WORKS must preserve Clerk catch-all auth paths instead of rewriting them beneath /works.");

@@ -136,24 +136,19 @@ export function WorksProviderDashboard() {
         </section>
 
         <section>
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">4 · Capabilities used for matching</p>
-          <h2 className="mt-2 font-serif text-3xl">Describe what this business can actually provide</h2>
-          <p className="mt-3 text-sm leading-6 text-black/50">Create separate offerings with their product categories, production services, specific processes, quantity range and lead time. Provider-supplied information appears as a possible fit until WORKS reviews it.</p>
-          <a href="/works/provider/capabilities" className="mt-5 inline-flex rounded-full border border-black/15 bg-white px-5 py-2.5 text-sm">Open capabilities & matching →</a>
-        </section>
-
-        <section>
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">5 · Work you want</p>
-          <h2 className="mt-2 font-serif text-3xl">Tell WORKS where to direct opportunity</h2>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">4 · Work you want</p>
+          <h2 className="mt-2 font-serif text-3xl">Only if this business is seeking production work</h2>
           <p className="mt-3 text-sm leading-6 text-black/50">These are private demand preferences. They do not add or verify capability; WORKS matches against the business&apos;s structured offering record.</p>
 
           <div className="mt-6 space-y-5">
             <label className="flex items-start gap-3 rounded-2xl border border-black/10 bg-white/65 p-5"><input type="checkbox" checked={edit.wantsMoreWork} onChange={event => setEdit(value => value ? { ...value, wantsMoreWork: event.target.checked } : value)} className="mt-1"/><span><span className="block text-sm font-medium">We want more work</span><span className="mt-1 block text-xs leading-5 text-black/45">Private signal used by WORKS when opportunity matches your capability.</span></span></label>
             <label className="flex items-start gap-3 rounded-2xl border border-black/10 bg-white/65 p-5"><input type="checkbox" checked={edit.marketingOptIn} onChange={event => setEdit(value => value ? { ...value, marketingOptIn: event.target.checked } : value)} className="mt-1"/><span><span className="block text-sm font-medium">Actively market our capabilities</span><span className="mt-1 block text-xs leading-5 text-black/45">Permission for WORKS to actively create demand around genuine capability.</span></span></label>
 
-            <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><p className="text-sm font-medium">Production work</p><div className="mt-4 flex flex-wrap gap-2">{SERVICES.map(([key,label]) => <button key={key} type="button" onClick={() => setEdit(value => value ? { ...value, targetServiceKeys: toggle(value.targetServiceKeys, key) } : value)} className={`rounded-full border px-4 py-2.5 text-sm ${edit.targetServiceKeys.includes(key) ? "border-[#1f1c17] bg-[#1f1c17] text-white" : "border-black/15 bg-white"}`}>{label}</button>)}</div></div>
-            <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><p className="text-sm font-medium">Product categories</p><div className="mt-4 flex flex-wrap gap-2">{CATEGORIES.map(([key,label]) => <button key={key} type="button" onClick={() => setEdit(value => value ? { ...value, targetCategoryKeys: toggle(value.targetCategoryKeys, key) } : value)} className={`rounded-full border px-4 py-2.5 text-sm ${edit.targetCategoryKeys.includes(key) ? "border-[#1f1c17] bg-[#1f1c17] text-white" : "border-black/15 bg-white"}`}>{label}</button>)}</div></div>
-            <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><label className="text-sm font-medium">Anything specific WORKS should market?</label><textarea value={edit.marketingNote} onChange={event => setEdit(value => value ? { ...value, marketingNote: event.target.value } : value)} rows={4} placeholder="Private-label sauces, 500–5,000 unit skincare runs…" className="mt-4 w-full resize-none rounded-xl border border-black/10 bg-white px-4 py-3 text-sm leading-6" /></div>
+            {edit.wantsMoreWork || edit.marketingOptIn ? <>
+              <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><p className="text-sm font-medium">Production work</p><div className="mt-4 flex flex-wrap gap-2">{SERVICES.map(([key,label]) => <button key={key} type="button" onClick={() => setEdit(value => value ? { ...value, targetServiceKeys: toggle(value.targetServiceKeys, key) } : value)} className={`rounded-full border px-4 py-2.5 text-sm ${edit.targetServiceKeys.includes(key) ? "border-[#1f1c17] bg-[#1f1c17] text-white" : "border-black/15 bg-white"}`}>{label}</button>)}</div></div>
+              <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><p className="text-sm font-medium">Product categories</p><div className="mt-4 flex flex-wrap gap-2">{CATEGORIES.map(([key,label]) => <button key={key} type="button" onClick={() => setEdit(value => value ? { ...value, targetCategoryKeys: toggle(value.targetCategoryKeys, key) } : value)} className={`rounded-full border px-4 py-2.5 text-sm ${edit.targetCategoryKeys.includes(key) ? "border-[#1f1c17] bg-[#1f1c17] text-white" : "border-black/15 bg-white"}`}>{label}</button>)}</div></div>
+              <div className="rounded-3xl border border-black/10 bg-white/70 p-6"><label className="text-sm font-medium">Anything specific WORKS should market?</label><textarea value={edit.marketingNote} onChange={event => setEdit(value => value ? { ...value, marketingNote: event.target.value } : value)} rows={4} placeholder="Private-label sauces, 500–5,000 unit skincare runs…" className="mt-4 w-full resize-none rounded-xl border border-black/10 bg-white px-4 py-3 text-sm leading-6" /></div>
+            </> : <p className="rounded-2xl bg-black/[0.035] p-5 text-sm leading-6 text-black/50">Leave both options off for an informational profile that should not receive or be marketed for provider work.</p>}
           </div>
         </section>
 
