@@ -1,0 +1,3 @@
+WORKS_RELEASE=2026-08-23-payfast-screenshot-ready
+SOURCE_BRANCH=works-production
+PAYFAST_ACCOUNT_CONFIGURED=false
