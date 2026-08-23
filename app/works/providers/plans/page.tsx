@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { WorksPageHeader } from "@/components/works/works-brand";
+import { WorksRecurringCardMethods } from "@/components/works/works-recurring-card-methods";
 import { WORKS_PROVIDER_PLANS } from "@/lib/works/providers/public-plans";
 import {
   WORKS_ORGANIZATION_ID,
@@ -97,6 +98,9 @@ export default function WorksProviderPlansPage() {
                 ) : null}
                 <p className="text-xs uppercase tracking-[0.18em] text-black/40">{plan.name}</p>
                 <p className="mt-3 font-serif text-3xl">{plan.priceLabel}</p>
+                <p className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-black/40">
+                  {plan.priceMonthlyZar > 0 ? "ZAR · recurring monthly" : "ZAR · no charge"}
+                </p>
                 <p className="mt-4 min-h-20 text-sm leading-6 text-black/55">{plan.detail}</p>
                 <div className="mt-6 space-y-2 border-t border-black/8 pt-5">
                   {plan.features.map((feature) => (
@@ -118,6 +122,10 @@ export default function WorksProviderPlansPage() {
                 </a>
               </article>
             ))}
+          </div>
+
+          <div className="mt-8">
+            <WorksRecurringCardMethods />
           </div>
 
           <div className="mt-8 grid gap-4 rounded-3xl border border-black/10 bg-[#f3eee4] p-6 md:grid-cols-2 md:p-8">

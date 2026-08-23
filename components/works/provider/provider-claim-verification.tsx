@@ -37,7 +37,13 @@ export function ProviderClaimVerification() {
       });
       const data = await response.json() as VerificationResult;
       setResult(data);
-      if (response.ok) window.history.replaceState(null, "", window.location.pathname);
+      if (response.ok) {
+        window.history.replaceState(null, "", window.location.pathname);
+        if (data.verified && data.accessGranted) {
+          window.location.assign("/works/provider/capabilities");
+          return;
+        }
+      }
     } catch {
       setResult({ error: "WORKS could not verify this connection yet. Please try again." });
     } finally {
@@ -80,14 +86,12 @@ export function ProviderClaimVerification() {
           </SignedIn>
 
           {result?.error ? <p className="mt-6 rounded-2xl bg-white p-5 text-sm text-red-700">{result.error}</p> : null}
-          {result?.verified ? (
+          {result?.verified && !result.accessGranted ? (
             <div className="mt-8 rounded-3xl bg-[#1f1c17] p-6 text-white md:p-8">
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#78d7a4]">Email verified</p>
-              <h2 className="mt-3 font-serif text-3xl">{result.accessGranted ? "Business connected" : "Verification recorded"}</h2>
+              <h2 className="mt-3 font-serif text-3xl">Verification recorded</h2>
               <p className="mt-4 max-w-xl text-sm leading-7 text-white/65">{result.message}</p>
-              <a href={result.accessGranted ? "/works/provider/capabilities" : "/works/providers/join?tab=progress"} className="mt-6 inline-flex rounded-full bg-[#d7bd82] px-6 py-3 text-sm font-medium text-[#1f1c17]">
-                {result.accessGranted ? "Add business capabilities →" : "Return to claim progress →"}
-              </a>
+              <a href="/works/providers/join?tab=progress" className="mt-6 inline-flex rounded-full bg-[#d7bd82] px-6 py-3 text-sm font-medium text-[#1f1c17]">Return to claim progress →</a>
             </div>
           ) : null}
         </section>

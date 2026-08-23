@@ -13,6 +13,10 @@ const checkout = read("app/api/works/billing/payfast/checkout/route.ts");
 const itn = read("app/api/works/billing/payfast/itn/route.ts");
 const subscription = read("app/api/works/billing/payfast/subscription/route.ts");
 const billing = read("components/works/provider/provider-billing.tsx");
+const cardMethods = read("components/works/works-recurring-card-methods.tsx");
+const plans = read("app/works/providers/plans/page.tsx");
+const visa = read("public/payments/works/visa.svg");
+const mastercard = read("public/payments/works/mastercard.svg");
 const schema = read("prisma/schema/works-payfast.prisma");
 const migration = read("prisma/migrations/20260811071500_add_works_payfast_billing/migration.sql");
 const consentMigration = read("prisma/migrations/20260823164000_add_works_payfast_recurring_consent/migration.sql");
@@ -48,6 +52,23 @@ for (const disclosure of [
   requireText(billing, disclosure, `WORKS checkout disclosure missing: ${disclosure}`);
 }
 requireText(billing, "acceptRecurringTerms: true", "WORKS billing UI must send explicit recurring acceptance to the server.");
+requireText(billing, "<WorksRecurringCardMethods compact />", "WORKS authenticated checkout must show recurring card methods before PayFast.");
+
+requireText(plans, "ZAR · recurring monthly", "WORKS public plans must state the paid transaction currency and billing interval.");
+requireText(plans, "<WorksRecurringCardMethods />", "WORKS public plans must expose the recurring card methods for merchant review.");
+for (const cardDisclosure of [
+  "Recurring card setup · PayFast by Network",
+  "PayFast&apos;s secure checkout",
+  "3D Secure",
+  "WORKS does not receive or store full card details",
+  "/payments/works/visa.svg",
+  "/payments/works/mastercard.svg",
+]) {
+  requireText(cardMethods, cardDisclosure, `WORKS recurring card disclosure missing: ${cardDisclosure}`);
+}
+requireText(visa, "#143CCB", "WORKS Visa asset must be the authorised colour mark from the PayFast merchant pack.");
+requireText(mastercard, "#EB001B", "WORKS Mastercard asset must be the authorised colour mark from the PayFast merchant pack.");
+requireText(mastercard, "#F79D1C", "WORKS Mastercard asset must retain the authorised overlapping-card artwork.");
 
 for (const guard of [
   "verifyPayfastItnSignature",

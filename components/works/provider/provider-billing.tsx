@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { WorksRecurringCardMethods } from "@/components/works/works-recurring-card-methods";
 import {
   WORKS_PROVIDER_PLANS,
   type WorksProviderPlanKey,
@@ -240,11 +241,14 @@ export function WorksProviderBilling() {
                         Cancel any time from WORKS Billing. Cancellation stops future PayFast renewals and returns the business to Free. Charges already validly incurred, billing errors, failed supply and mandatory consumer rights are handled under Oremea&apos;s Payments, Subscriptions, Cancellation &amp; Refund Policy.
                       </p>
                       <p className="mt-2">
-                        Payment details are entered on PayFast&apos;s secure payment service; WORKS does not receive full card details. Oremea is domiciled in South Africa. Customer service: support@oremea.com.
+                        Oremea is domiciled in South Africa. Customer service: support@oremea.com.
                       </p>
                       <p className="mt-2">
                         Full policies: <a className="underline underline-offset-2" href="/terms" target="_blank" rel="noreferrer">WORKS Terms</a> · <a className="underline underline-offset-2" href="https://www.oremea.com/refunds" target="_blank" rel="noreferrer">Payments &amp; Refunds</a> · <a className="underline underline-offset-2" href="https://www.oremea.com/privacy" target="_blank" rel="noreferrer">Privacy &amp; POPIA</a>
                       </p>
+                      <div className="mt-4">
+                        <WorksRecurringCardMethods compact />
+                      </div>
                       <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-black/10 bg-white p-3 text-[#1f1c17]">
                         <input
                           type="checkbox"
