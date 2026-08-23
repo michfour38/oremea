@@ -1,0 +1,129 @@
+name: One-time WORKS PayFast live proof
+
+on:
+  push:
+    branches:
+      - ops/works-payfast-live-proof-2026-08-23
+    paths:
+      - .github/workflows/works-payfast-live-proof-2026-08-23.yml
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install Playwright Chromium
+        run: |
+          mkdir -p /tmp/works-proof
+          cd /tmp/works-proof
+          npm init -y
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Wait for merged WORKS release and capture merchant-review pages
+        env:
+          OUT_DIR: ${{ github.workspace }}/artifacts/payfast-review
+        run: |
+          mkdir -p "$OUT_DIR"
+          cd /tmp/works-proof
+          cat > capture.mjs <<'NODE'
+          import { chromium } from 'playwright';
+          import { writeFile } from 'node:fs/promises';
+          import path from 'node:path';
+
+          const outDir = process.env.OUT_DIR;
+          const expectedCommit = 'cae49f10641f0a5630cfe4f5383067633aed040b';
+          const browser = await chromium.launch({ headless: true });
+          const desktop = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
+          const page = await desktop.newPage();
+
+          async function text(url) {
+            await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+            await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+            return await page.locator('body').innerText();
+          }
+
+          let releaseReady = false;
+          let lastBody = '';
+          for (let attempt = 1; attempt <= 36; attempt += 1) {
+            try {
+              lastBody = await text('https://works.oremea.com/providers/plans');
+              const visa = await page.locator('img[alt="Visa"]').count();
+              const mastercard = await page.locator('img[alt="Mastercard"]').count();
+              if (lastBody.includes('ZAR · recurring monthly') && lastBody.includes('Recurring card setup · PayFast by Network') && visa > 0 && mastercard > 0) {
+                releaseReady = true;
+                console.log(`Merged screenshot-readiness release is live on attempt ${attempt}.`);
+                break;
+              }
+            } catch (error) {
+              console.log(`Release probe ${attempt} failed: ${error instanceof Error ? error.message : String(error)}`);
+            }
+            await new Promise((resolve) => setTimeout(resolve, 10000));
+          }
+          if (!releaseReady) throw new Error(`Merged WORKS release did not become visible. Last plans text: ${lastBody.slice(0, 1200)}`);
+
+          const checks = [
+            ['01-works-home.jpg', 'https://works.oremea.com/', ['Need something made? Start below', 'Know who can make it']],
+            ['02-provider-plans.jpg', 'https://works.oremea.com/providers/plans', ['R599 / month', 'R1,999 / month', 'ZAR · recurring monthly', 'Recurring card setup · PayFast by Network', '3D Secure']],
+            ['03-provider-join.jpg', 'https://works.oremea.com/providers/join', []],
+            ['04-provider-evidence-profile.jpg', 'https://works.oremea.com/providers/nexus-fulfilment', []],
+            ['05-works-terms.jpg', 'https://works.oremea.com/terms', ['South African law', 'support@oremea.com']],
+            ['06-verification-policy.jpg', 'https://works.oremea.com/verification', []],
+            ['07-reviews-policy.jpg', 'https://works.oremea.com/reviews-policy', []],
+            ['08-partner-disclosure.jpg', 'https://works.oremea.com/partner-disclosure', []],
+            ['09-payments-refunds.jpg', 'https://www.oremea.com/refunds', ['Cancellation', 'Refund', 'South Africa']],
+            ['10-privacy-popia.jpg', 'https://www.oremea.com/privacy', ['Privacy']],
+            ['11-customer-support.jpg', 'https://www.oremea.com/contact', ['support@oremea.com']],
+          ];
+
+          const proof = { expectedCommit, capturedAt: new Date().toISOString(), pages: [] };
+          for (const [filename, url, required] of checks) {
+            const body = await text(url);
+            for (const needle of required) {
+              if (!body.includes(needle)) throw new Error(`${url} is missing required merchant-review text: ${needle}`);
+            }
+            const target = path.join(outDir, filename);
+            await page.screenshot({ path: target, type: 'jpeg', quality: 72, fullPage: true });
+            proof.pages.push({ filename, url, title: await page.title(), requiredText: required });
+            console.log(`Captured ${filename} <- ${url}`);
+          }
+
+          const visaResponse = await page.request.get('https://works.oremea.com/payments/works/visa.svg');
+          const mastercardResponse = await page.request.get('https://works.oremea.com/payments/works/mastercard.svg');
+          if (!visaResponse.ok() || !mastercardResponse.ok()) throw new Error(`Card assets are not live: Visa ${visaResponse.status()} Mastercard ${mastercardResponse.status()}`);
+
+          const mobile = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
+          const mobilePage = await mobile.newPage();
+          for (const [filename, url] of [
+            ['12-works-home-mobile.jpg', 'https://works.oremea.com/'],
+            ['13-provider-plans-mobile.jpg', 'https://works.oremea.com/providers/plans'],
+          ]) {
+            await mobilePage.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+            await mobilePage.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+            await mobilePage.screenshot({ path: path.join(outDir, filename), type: 'jpeg', quality: 72, fullPage: true });
+            proof.pages.push({ filename, url, viewport: '390x844' });
+            console.log(`Captured ${filename} <- ${url}`);
+          }
+
+          await writeFile(path.join(outDir, 'proof.json'), JSON.stringify(proof, null, 2));
+          await mobile.close();
+          await desktop.close();
+          await browser.close();
+          NODE
+          node capture.mjs
+
+      - name: Upload PayFast review screenshot pack
+        uses: actions/upload-artifact@v4
+        with:
+          name: works-payfast-review-screenshots-2026-08-23
+          path: artifacts/payfast-review
+          if-no-files-found: error
+          retention-days: 14
