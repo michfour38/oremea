@@ -18,8 +18,8 @@ jobs:
         run: |
           set -euo pipefail
           BASE="https://works.oremea.com"
+          echo "Checking freshly promoted WORKS production release"
 
-          echo "Checking deployment signature at $BASE"
           ready=0
           for attempt in $(seq 1 48); do
             robots_code=$(curl --connect-timeout 8 --max-time 20 -sS -o /tmp/robots.txt -w '%{http_code}' "$BASE/robots.txt" || true)
@@ -66,13 +66,6 @@ jobs:
           done
 
           curl --connect-timeout 8 --max-time 20 -fsS "$BASE/" -o /tmp/home.html
-          if ! grep -qi 'WORKS' /tmp/home.html; then
-            echo "Homepage does not identify WORKS."
-            exit 1
-          fi
-          if ! grep -qi 'canonical' /tmp/home.html; then
-            echo "Homepage canonical metadata is missing."
-            exit 1
-          fi
-
+          grep -qi 'WORKS' /tmp/home.html
+          grep -qi 'canonical' /tmp/home.html
           echo "WORKS live smoke passed."
