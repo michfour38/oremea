@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { WorksPageHeader } from "@/components/works/works-brand";
+import { WorksRecurringCardMethods } from "@/components/works/works-recurring-card-methods";
 import { WORKS_PROVIDER_PLANS } from "@/lib/works/providers/public-plans";
 import {
   WORKS_ORGANIZATION_ID,
@@ -121,6 +122,10 @@ export default function WorksProviderPlansPage() {
                 </a>
               </article>
             ))}
+          </div>
+
+          <div className="mt-8">
+            <WorksRecurringCardMethods />
           </div>
 
           <div className="mt-8 grid gap-4 rounded-3xl border border-black/10 bg-[#f3eee4] p-6 md:grid-cols-2 md:p-8">
