@@ -1,0 +1,67 @@
+name: One-time WORKS Clerk security refresh
+
+on:
+  push:
+    branches:
+      - works-production
+    paths:
+      - .github/workflows/works-security-refresh-2026-08-23.yml
+
+permissions:
+  contents: write
+
+jobs:
+  security-refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out WORKS production
+        uses: actions/checkout@v4
+        with:
+          ref: works-production
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Patch Clerk v5 and safe transitive advisories
+        run: |
+          npm install --save-exact @clerk/nextjs@5.7.6
+          npm audit fix --omit=dev
+
+      - name: Prove critical production advisories are gone
+        run: npm audit --omit=dev --audit-level=critical
+
+      - name: Show resolved Clerk security packages
+        run: npm ls @clerk/nextjs @clerk/clerk-react @clerk/backend @clerk/shared
+
+      - name: Run launch contracts
+        run: npm run test:launch
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build production application
+        run: |
+          npx prisma generate
+          npx next build
+
+      - name: Commit verified lock refresh
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- package.json package-lock.json; then
+            echo "Dependency files already contain the secure resolution."
+            exit 0
+          fi
+          git config user.name "Oremea release bot"
+          git config user.email "support@oremea.com"
+          git add package.json package-lock.json
+          git commit -m "security: patch Clerk middleware bypass"
+          git push origin HEAD:works-production
