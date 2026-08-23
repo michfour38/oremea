@@ -49,6 +49,7 @@ jobs:
           const browser = await chromium.launch({ headless: true });
           const desktop = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
           const page = await desktop.newPage();
+          const includesText = (body, needle) => body.toLocaleLowerCase().includes(needle.toLocaleLowerCase());
 
           async function loadFresh(url, required = []) {
             let lastBody = '';
@@ -58,7 +59,7 @@ jobs:
               await page.goto(proofUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
               await page.waitForTimeout(1500);
               lastBody = await page.locator('body').innerText();
-              const missing = required.filter((needle) => !lastBody.includes(needle));
+              const missing = required.filter((needle) => !includesText(lastBody, needle));
               if (missing.length === 0) {
                 if (attempt > 1) console.log(`Fresh edge reached for ${url} on attempt ${attempt}.`);
                 return lastBody;
@@ -115,7 +116,7 @@ jobs:
               await mobilePage.goto(`${url}${separator}worksReviewProof=${Date.now()}-${attempt}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
               await mobilePage.waitForTimeout(1500);
               const body = await mobilePage.locator('body').innerText();
-              if (required.every((needle) => body.includes(needle))) {
+              if (required.every((needle) => includesText(body, needle))) {
                 await mobilePage.screenshot({ path: path.join(outDir, filename), type: 'jpeg', quality: 78, fullPage: true });
                 proof.pages.push({ filename, url, viewport: '390x844' });
                 console.log(`Captured ${filename} <- ${url}`);
