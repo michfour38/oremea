@@ -1,0 +1,38 @@
+name: One-time WORKS live source probe
+
+on:
+  pull_request:
+    branches:
+      - works-production
+    paths:
+      - .github/workflows/works-live-source-probe-2026-08-23.yml
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Probe live WORKS deployment markers
+        run: |
+          set -euo pipefail
+          echo '=== plans status ==='
+          curl -fsS -D /tmp/headers.txt https://works.oremea.com/providers/plans -o /tmp/plans.html
+          head -20 /tmp/headers.txt
+          echo '=== canonical ==='
+          grep -Eio '<link[^>]+rel=["'"']canonical["'"'][^>]*>|<link[^>]+href=["'"'][^"'"']+["'"'][^>]+rel=["'"']canonical["'"'][^>]*>' /tmp/plans.html | head -5 || true
+          echo '=== new review markers ==='
+          for marker in 'ZAR · recurring monthly' 'Recurring card setup · PayFast by Network' '3D Secure'; do
+            if grep -Fq "$marker" /tmp/plans.html; then echo "FOUND: $marker"; else echo "MISSING: $marker"; fi
+          done
+          echo '=== release marker ==='
+          code=$(curl -sS -o /tmp/release.txt -w '%{http_code}' https://works.oremea.com/works-release.txt)
+          echo "HTTP $code"
+          cat /tmp/release.txt || true
+          echo '=== card assets ==='
+          for asset in visa.svg mastercard.svg; do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' "https://works.oremea.com/payments/works/$asset")
+            echo "$asset HTTP $code"
+          done
