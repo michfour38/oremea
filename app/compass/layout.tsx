@@ -7,6 +7,8 @@ import "./compass-legibility.css";
 
 export const metadata: Metadata = {
   title: "Compass | Oremea",
+  description:
+    "Turn awareness into one executable next step, keep what matters visible, and build movement through choices you can actually make.",
   icons: {
     icon: [{ url: "/icons/compass.svg", type: "image/svg+xml" }],
     shortcut: "/icons/compass.svg",
