@@ -18,7 +18,7 @@ permissions:
 jobs:
   capture:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -33,7 +33,7 @@ jobs:
           npm install playwright@1.55.0
           npx playwright install --with-deps chromium
 
-      - name: Wait for merged WORKS release and capture merchant-review pages
+      - name: Capture live WORKS merchant-review pages
         env:
           OUT_DIR: ${{ github.workspace }}/artifacts/payfast-review
         run: |
@@ -45,35 +45,23 @@ jobs:
           import path from 'node:path';
 
           const outDir = process.env.OUT_DIR;
-          const expectedCommit = 'cae49f10641f0a5630cfe4f5383067633aed040b';
+          const expectedRelease = 'WORKS_RELEASE=2026-08-23-payfast-screenshot-ready';
           const browser = await chromium.launch({ headless: true });
           const desktop = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
           const page = await desktop.newPage();
 
-          async function text(url) {
+          async function load(url) {
             await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-            await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+            await page.waitForTimeout(1200);
             return await page.locator('body').innerText();
           }
 
-          let releaseReady = false;
-          let lastBody = '';
-          for (let attempt = 1; attempt <= 36; attempt += 1) {
-            try {
-              lastBody = await text('https://works.oremea.com/providers/plans');
-              const visa = await page.locator('img[alt="Visa"]').count();
-              const mastercard = await page.locator('img[alt="Mastercard"]').count();
-              if (lastBody.includes('ZAR · recurring monthly') && lastBody.includes('Recurring card setup · PayFast by Network') && visa > 0 && mastercard > 0) {
-                releaseReady = true;
-                console.log(`Merged screenshot-readiness release is live on attempt ${attempt}.`);
-                break;
-              }
-            } catch (error) {
-              console.log(`Release probe ${attempt} failed: ${error instanceof Error ? error.message : String(error)}`);
-            }
-            await new Promise((resolve) => setTimeout(resolve, 10000));
+          const releaseResponse = await page.request.get('https://works.oremea.com/works-release.txt');
+          if (!releaseResponse.ok()) throw new Error(`WORKS release marker returned ${releaseResponse.status()}`);
+          const releaseText = await releaseResponse.text();
+          if (!releaseText.includes(expectedRelease) || !releaseText.includes('SOURCE_BRANCH=works-production')) {
+            throw new Error(`Unexpected WORKS release marker: ${releaseText}`);
           }
-          if (!releaseReady) throw new Error(`Merged WORKS release did not become visible. Last plans text: ${lastBody.slice(0, 1200)}`);
 
           const checks = [
             ['01-works-home.jpg', 'https://works.oremea.com/', ['Need something made? Start below', 'Know who can make it']],
@@ -89,14 +77,14 @@ jobs:
             ['11-customer-support.jpg', 'https://www.oremea.com/contact', ['support@oremea.com']],
           ];
 
-          const proof = { expectedCommit, capturedAt: new Date().toISOString(), pages: [] };
+          const proof = { releaseText, capturedAt: new Date().toISOString(), pages: [] };
           for (const [filename, url, required] of checks) {
-            const body = await text(url);
+            const body = await load(url);
             for (const needle of required) {
               if (!body.includes(needle)) throw new Error(`${url} is missing required merchant-review text: ${needle}`);
             }
             const target = path.join(outDir, filename);
-            await page.screenshot({ path: target, type: 'jpeg', quality: 72, fullPage: true });
+            await page.screenshot({ path: target, type: 'jpeg', quality: 78, fullPage: true });
             proof.pages.push({ filename, url, title: await page.title(), requiredText: required });
             console.log(`Captured ${filename} <- ${url}`);
           }
@@ -112,8 +100,8 @@ jobs:
             ['13-provider-plans-mobile.jpg', 'https://works.oremea.com/providers/plans'],
           ]) {
             await mobilePage.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-            await mobilePage.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
-            await mobilePage.screenshot({ path: path.join(outDir, filename), type: 'jpeg', quality: 72, fullPage: true });
+            await mobilePage.waitForTimeout(1200);
+            await mobilePage.screenshot({ path: path.join(outDir, filename), type: 'jpeg', quality: 78, fullPage: true });
             proof.pages.push({ filename, url, viewport: '390x844' });
             console.log(`Captured ${filename} <- ${url}`);
           }
