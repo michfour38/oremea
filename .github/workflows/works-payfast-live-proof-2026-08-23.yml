@@ -6,6 +6,11 @@ on:
       - ops/works-payfast-live-proof-2026-08-23
     paths:
       - .github/workflows/works-payfast-live-proof-2026-08-23.yml
+  pull_request:
+    branches:
+      - works-production
+    paths:
+      - .github/workflows/works-payfast-live-proof-2026-08-23.yml
 
 permissions:
   contents: read
