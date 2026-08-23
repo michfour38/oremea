@@ -28,3 +28,65 @@ jobs:
 
       - name: Build application
         run: npm run build
+
+  works-live-smoke:
+    if: github.base_ref == 'works-production'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Verify deployed WORKS release
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://works.oremea.com"
+
+          echo "Checking deployment signature at $BASE"
+          ready=0
+          for attempt in $(seq 1 48); do
+            robots_code=$(curl --connect-timeout 8 --max-time 20 -sS -o /tmp/robots.txt -w '%{http_code}' "$BASE/robots.txt" || true)
+            sitemap_code=$(curl --connect-timeout 8 --max-time 20 -sS -o /tmp/sitemap.xml -w '%{http_code}' "$BASE/sitemap.xml" || true)
+            verify_code=$(curl --connect-timeout 8 --max-time 20 -sS -o /tmp/verify.html -w '%{http_code}' "$BASE/providers/verify-claim" || true)
+
+            if [[ "$robots_code" == "200" ]] \
+              && [[ "$sitemap_code" == "200" ]] \
+              && [[ "$verify_code" =~ ^(200|30[1278])$ ]] \
+              && grep -qi 'sitemap' /tmp/robots.txt \
+              && grep -qi 'works.oremea.com' /tmp/sitemap.xml; then
+              ready=1
+              echo "New WORKS release signature is live on attempt $attempt."
+              break
+            fi
+
+            echo "attempt=$attempt robots=$robots_code sitemap=$sitemap_code verify-claim=$verify_code"
+            sleep 10
+          done
+
+          if [[ "$ready" != "1" ]]; then
+            echo "WORKS did not expose the new release signature."
+            echo "--- robots.txt ---"
+            cat /tmp/robots.txt 2>/dev/null || true
+            echo "--- sitemap.xml (first 80 lines) ---"
+            sed -n '1,80p' /tmp/sitemap.xml 2>/dev/null || true
+            exit 1
+          fi
+
+          echo "--- robots.txt ---"
+          cat /tmp/robots.txt
+          echo
+          echo "--- sitemap URLs ---"
+          grep -oE 'https://works\.oremea\.com[^< ]*' /tmp/sitemap.xml | sort -u || true
+
+          echo "--- public route status ---"
+          for path in / /my /providers/plans /providers/join /provider /provider/capabilities /provider/billing /verification /terms /reviews-policy /partner-disclosure; do
+            code=$(curl --connect-timeout 8 --max-time 20 -sS -o /dev/null -w '%{http_code}' "$BASE$path" || true)
+            echo "$code $path"
+            if [[ ! "$code" =~ ^(200|30[1278])$ ]]; then
+              echo "Unexpected status for $path"
+              exit 1
+            fi
+          done
+
+          curl --connect-timeout 8 --max-time 20 -fsS "$BASE/" -o /tmp/home.html
+          grep -qi 'WORKS' /tmp/home.html
+          grep -qi 'canonical' /tmp/home.html
+          echo "WORKS live smoke passed."
