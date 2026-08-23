@@ -29,6 +29,7 @@ export function WorksProviderBilling() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<Subscription>(null);
+  const [acceptedPlan, setAcceptedPlan] = useState<WorksProviderPlanKey | null>(null);
   const [loading, setLoading] = useState(true);
   const [billingLoading, setBillingLoading] = useState(false);
   const [error, setError] = useState("");
@@ -62,6 +63,7 @@ export function WorksProviderBilling() {
   }, []);
 
   useEffect(() => {
+    setAcceptedPlan(null);
     if (!selectedId) {
       setSubscription(null);
       return;
@@ -96,6 +98,10 @@ export function WorksProviderBilling() {
 
   async function startCheckout(plan: WorksProviderPlanKey) {
     if (!selected || plan === "FREE") return;
+    if (acceptedPlan !== plan) {
+      setError("Accept the recurring payment, cancellation and refund arrangement for this plan before continuing to PayFast.");
+      return;
+    }
     setBillingLoading(true);
     setError("");
     setMessage("");
@@ -103,7 +109,11 @@ export function WorksProviderBilling() {
       const response = await fetch("/api/works/billing/payfast/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ providerId: selected.id, plan }),
+        body: JSON.stringify({
+          providerId: selected.id,
+          plan,
+          acceptRecurringTerms: true,
+        }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error ?? "WORKS could not open PayFast.");
@@ -139,9 +149,10 @@ export function WorksProviderBilling() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error ?? "WORKS could not cancel this plan.");
-      setMessage("Subscription cancelled. This business is back on the Free plan.");
+      setMessage("Subscription cancelled. This business is back on the Free plan and future PayFast renewals are stopped.");
       setSubscription((current) => current ? { ...current, status: "CANCELLED", cancelled_at: new Date().toISOString() } : current);
       setProviders((current) => current.map((provider) => provider.id === selected.id ? { ...provider, commercial: { plan: "FREE" } } : provider));
+      setAcceptedPlan(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "WORKS could not cancel this plan.");
     } finally {
@@ -171,6 +182,7 @@ export function WorksProviderBilling() {
               type="button"
               onClick={() => {
                 setSelectedId(provider.id);
+                setAcceptedPlan(null);
                 setError("");
                 setMessage("");
               }}
@@ -203,24 +215,63 @@ export function WorksProviderBilling() {
           <div className="mt-8 grid gap-4 lg:grid-cols-3">
             {WORKS_PROVIDER_PLANS.map((plan) => {
               const current = selected.commercial.plan === plan.key;
+              const paid = plan.key !== "FREE";
+              const accepted = acceptedPlan === plan.key;
               return (
                 <article key={plan.key} className={`rounded-3xl border bg-white p-6 ${plan.recommended ? "border-[#16834f]/40" : "border-black/10"}`}>
                   <p className="text-xs uppercase tracking-[0.18em] text-black/40">{plan.name}</p>
                   <p className="mt-3 font-serif text-3xl">{plan.priceLabel}</p>
+                  <p className="mt-1 text-xs text-black/40">{paid ? "ZAR · recurring monthly" : "No payment required"}</p>
                   <p className="mt-4 min-h-20 text-sm leading-6 text-black/55">{plan.detail}</p>
                   <div className="mt-5 space-y-2 border-t border-black/8 pt-5">
                     {plan.features.map((feature) => <p key={feature} className="text-sm leading-6 text-black/65">✓ {feature}</p>)}
                   </div>
+
+                  {!current && paid ? (
+                    <div className="mt-6 rounded-2xl border border-black/10 bg-[#f7f3eb] p-4 text-xs leading-5 text-black/60">
+                      <p className="font-semibold text-[#1f1c17]">Before PayFast</p>
+                      <p className="mt-2">
+                        <strong>{plan.priceLabel} in ZAR</strong> is charged for the initial successful payment, then the same amount is charged approximately monthly on the same calendar day as that first successful payment, until cancelled.
+                      </p>
+                      <p className="mt-2">
+                        Service delivery is digital: paid WORKS access begins after WORKS receives and verifies PayFast&apos;s successful server notification.
+                      </p>
+                      <p className="mt-2">
+                        Cancel any time from WORKS Billing. Cancellation stops future PayFast renewals and returns the business to Free. Charges already validly incurred, billing errors, failed supply and mandatory consumer rights are handled under Oremea&apos;s Payments, Subscriptions, Cancellation &amp; Refund Policy.
+                      </p>
+                      <p className="mt-2">
+                        Payment details are entered on PayFast&apos;s secure payment service; WORKS does not receive full card details. Oremea is domiciled in South Africa. Customer service: support@oremea.com.
+                      </p>
+                      <p className="mt-2">
+                        Full policies: <a className="underline underline-offset-2" href="/terms" target="_blank" rel="noreferrer">WORKS Terms</a> · <a className="underline underline-offset-2" href="https://www.oremea.com/refunds" target="_blank" rel="noreferrer">Payments &amp; Refunds</a> · <a className="underline underline-offset-2" href="https://www.oremea.com/privacy" target="_blank" rel="noreferrer">Privacy &amp; POPIA</a>
+                      </p>
+                      <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-black/10 bg-white p-3 text-[#1f1c17]">
+                        <input
+                          type="checkbox"
+                          checked={accepted}
+                          onChange={(event) => {
+                            setAcceptedPlan(event.target.checked ? plan.key : null);
+                            setError("");
+                          }}
+                          className="mt-0.5 h-4 w-4 shrink-0"
+                        />
+                        <span>
+                          I accept this recurring payment, service delivery, cancellation and refund arrangement and authorise the monthly PayFast subscription described above.
+                        </span>
+                      </label>
+                    </div>
+                  ) : null}
+
                   {current ? (
                     <span className="mt-7 inline-flex rounded-full bg-[#eef7f1] px-5 py-2.5 text-sm text-[#16834f]">Current plan</span>
                   ) : plan.key === "FREE" ? null : (
                     <button
                       type="button"
-                      disabled={billingLoading || subscription?.status === "ACTIVE"}
+                      disabled={billingLoading || subscription?.status === "ACTIVE" || !accepted}
                       onClick={() => startCheckout(plan.key)}
                       className="mt-7 rounded-full bg-[#1f1c17] px-5 py-2.5 text-sm text-white disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      {billingLoading ? "Opening PayFast…" : `Choose ${plan.name} →`}
+                      {billingLoading ? "Opening PayFast…" : accepted ? `Continue to PayFast for ${plan.name} →` : "Accept above to continue"}
                     </button>
                   )}
                 </article>
@@ -228,7 +279,7 @@ export function WorksProviderBilling() {
             })}
           </div>
 
-          <p className="mt-6 max-w-3xl text-xs leading-5 text-black/45">Paid WORKS plans renew monthly through PayFast. WORKS changes plan access only after a verified PayFast server notification. Cancelling here also cancels the PayFast subscription and returns the business to Free.</p>
+          <p className="mt-6 max-w-3xl text-xs leading-5 text-black/45">Paid WORKS plans renew monthly through PayFast. WORKS changes plan access only after a verified PayFast server notification. Each checkout stores the account&apos;s dated acceptance of the recurring amount, frequency, timing, duration, cancellation and refund arrangement shown immediately before PayFast.</p>
         </>
       ) : null}
     </div>
