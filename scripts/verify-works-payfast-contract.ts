@@ -64,10 +64,14 @@ requireText(itn, "WorksProviderPlan.FREE", "Verified PayFast cancellation must r
 requireText(subscription, "cancelPayfastSubscription", "WORKS cancellation endpoint must cancel the PayFast subscription before changing access.");
 requireText(subscription, "works_provider_memberships.findFirst", "WORKS cancellation must verify provider ownership.");
 
-requireText(schema, "merchant_payment_id String", "WORKS billing must retain a merchant-side payment identity.");
-requireText(schema, "event_key", "WORKS PayFast notifications must have an idempotency key.");
-requireText(schema, "recurring_consent_at", "WORKS billing schema must retain recurring acceptance time.");
-requireText(schema, "recurring_consent_summary", "WORKS billing schema must retain recurring disclosure content.");
+for (const schemaField of [
+  "merchant_payment_id",
+  "event_key",
+  "recurring_consent_at",
+  "recurring_consent_summary",
+]) {
+  requireText(schema, schemaField, `WORKS billing schema field missing: ${schemaField}`);
+}
 requireText(migration, "FOREIGN KEY (\"provider_id\") REFERENCES \"works_providers\"", "WORKS billing records must be bound to a real provider.");
 requireText(migration, "UNIQUE INDEX \"works_provider_payfast_events_event_key_key\"", "WORKS PayFast event idempotency must be enforced in the database.");
 requireText(consentMigration, "recurring_consent_at", "WORKS recurring consent migration must retain acceptance time.");
