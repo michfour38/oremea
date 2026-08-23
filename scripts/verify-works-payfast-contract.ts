@@ -12,8 +12,10 @@ const helper = read("lib/works/billing/payfast.ts");
 const checkout = read("app/api/works/billing/payfast/checkout/route.ts");
 const itn = read("app/api/works/billing/payfast/itn/route.ts");
 const subscription = read("app/api/works/billing/payfast/subscription/route.ts");
+const billing = read("components/works/provider/provider-billing.tsx");
 const schema = read("prisma/schema/works-payfast.prisma");
 const migration = read("prisma/migrations/20260811071500_add_works_payfast_billing/migration.sql");
+const consentMigration = read("prisma/migrations/20260823164000_add_works_payfast_recurring_consent/migration.sql");
 const env = read(".env.example");
 
 requireText(helper, "payfastPaymentSignature", "WORKS PayFast checkout must be signed server-side.");
@@ -28,6 +30,24 @@ requireText(checkout, "resolveWorksProviderPlan(planKey)", "WORKS checkout price
 requireText(checkout, "amountCents = plan.priceMonthlyZar * 100", "WORKS checkout must derive amount server-side.");
 requireText(checkout, "works_provider_memberships.findFirst", "WORKS checkout must verify provider ownership.");
 requireText(checkout, "status: \"PENDING\"", "WORKS checkout must create a pending billing record before redirecting.");
+requireText(checkout, "acceptRecurringTerms !== true", "WORKS checkout must require affirmative recurring-payment acceptance.");
+requireText(checkout, "recurring_consent_at: new Date()", "WORKS checkout must retain a dated recurring-payment acceptance.");
+requireText(checkout, "recurring_consent_version: RECURRING_CONSENT_VERSION", "WORKS checkout must retain the accepted disclosure version.");
+requireText(checkout, "recurring_consent_summary: recurringConsentSummary", "WORKS checkout must retain the accepted recurring-payment terms.");
+requireText(checkout, "recurring_consent_user_id: userId", "WORKS checkout must bind recurring acceptance to the signed-in account.");
+
+for (const disclosure of [
+  "Before PayFast",
+  "ZAR",
+  "same calendar day",
+  "until cancelled",
+  "Cancel any time from WORKS Billing",
+  "Payments, Subscriptions, Cancellation &amp; Refund Policy",
+  "I accept this recurring payment, service delivery, cancellation and refund arrangement",
+]) {
+  requireText(billing, disclosure, `WORKS checkout disclosure missing: ${disclosure}`);
+}
+requireText(billing, "acceptRecurringTerms: true", "WORKS billing UI must send explicit recurring acceptance to the server.");
 
 for (const guard of [
   "verifyPayfastItnSignature",
@@ -46,8 +66,14 @@ requireText(subscription, "works_provider_memberships.findFirst", "WORKS cancell
 
 requireText(schema, "merchant_payment_id String", "WORKS billing must retain a merchant-side payment identity.");
 requireText(schema, "event_key", "WORKS PayFast notifications must have an idempotency key.");
+requireText(schema, "recurring_consent_at", "WORKS billing schema must retain recurring acceptance time.");
+requireText(schema, "recurring_consent_summary", "WORKS billing schema must retain recurring disclosure content.");
 requireText(migration, "FOREIGN KEY (\"provider_id\") REFERENCES \"works_providers\"", "WORKS billing records must be bound to a real provider.");
 requireText(migration, "UNIQUE INDEX \"works_provider_payfast_events_event_key_key\"", "WORKS PayFast event idempotency must be enforced in the database.");
+requireText(consentMigration, "recurring_consent_at", "WORKS recurring consent migration must retain acceptance time.");
+requireText(consentMigration, "recurring_consent_version", "WORKS recurring consent migration must retain disclosure version.");
+requireText(consentMigration, "recurring_consent_summary", "WORKS recurring consent migration must retain disclosure content.");
+requireText(consentMigration, "recurring_consent_user_id", "WORKS recurring consent migration must retain the accepting account.");
 
 for (const variable of [
   "PAYFAST_MERCHANT_ID=",
