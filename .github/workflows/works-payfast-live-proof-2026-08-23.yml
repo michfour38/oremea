@@ -50,13 +50,26 @@ jobs:
           const desktop = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
           const page = await desktop.newPage();
 
-          async function load(url) {
-            await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-            await page.waitForTimeout(1200);
-            return await page.locator('body').innerText();
+          async function loadFresh(url, required = []) {
+            let lastBody = '';
+            for (let attempt = 1; attempt <= 12; attempt += 1) {
+              const separator = url.includes('?') ? '&' : '?';
+              const proofUrl = `${url}${separator}worksReviewProof=${Date.now()}-${attempt}`;
+              await page.goto(proofUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+              await page.waitForTimeout(1500);
+              lastBody = await page.locator('body').innerText();
+              const missing = required.filter((needle) => !lastBody.includes(needle));
+              if (missing.length === 0) {
+                if (attempt > 1) console.log(`Fresh edge reached for ${url} on attempt ${attempt}.`);
+                return lastBody;
+              }
+              console.log(`Stale edge for ${url} attempt ${attempt}; missing: ${missing.join(' | ')}`);
+              await page.waitForTimeout(2000);
+            }
+            throw new Error(`${url} never reached the required release. Last body: ${lastBody.slice(0, 1200)}`);
           }
 
-          const releaseResponse = await page.request.get('https://works.oremea.com/works-release.txt');
+          const releaseResponse = await page.request.get(`https://works.oremea.com/works-release.txt?proof=${Date.now()}`, { headers: { 'cache-control': 'no-cache' } });
           if (!releaseResponse.ok()) throw new Error(`WORKS release marker returned ${releaseResponse.status()}`);
           const releaseText = await releaseResponse.text();
           if (!releaseText.includes(expectedRelease) || !releaseText.includes('SOURCE_BRANCH=works-production')) {
@@ -79,31 +92,39 @@ jobs:
 
           const proof = { releaseText, capturedAt: new Date().toISOString(), pages: [] };
           for (const [filename, url, required] of checks) {
-            const body = await load(url);
-            for (const needle of required) {
-              if (!body.includes(needle)) throw new Error(`${url} is missing required merchant-review text: ${needle}`);
-            }
+            await loadFresh(url, required);
             const target = path.join(outDir, filename);
             await page.screenshot({ path: target, type: 'jpeg', quality: 78, fullPage: true });
             proof.pages.push({ filename, url, title: await page.title(), requiredText: required });
             console.log(`Captured ${filename} <- ${url}`);
           }
 
-          const visaResponse = await page.request.get('https://works.oremea.com/payments/works/visa.svg');
-          const mastercardResponse = await page.request.get('https://works.oremea.com/payments/works/mastercard.svg');
+          const visaResponse = await page.request.get(`https://works.oremea.com/payments/works/visa.svg?proof=${Date.now()}`, { headers: { 'cache-control': 'no-cache' } });
+          const mastercardResponse = await page.request.get(`https://works.oremea.com/payments/works/mastercard.svg?proof=${Date.now()}`, { headers: { 'cache-control': 'no-cache' } });
           if (!visaResponse.ok() || !mastercardResponse.ok()) throw new Error(`Card assets are not live: Visa ${visaResponse.status()} Mastercard ${mastercardResponse.status()}`);
 
           const mobile = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
           const mobilePage = await mobile.newPage();
-          for (const [filename, url] of [
-            ['12-works-home-mobile.jpg', 'https://works.oremea.com/'],
-            ['13-provider-plans-mobile.jpg', 'https://works.oremea.com/providers/plans'],
+          for (const [filename, url, required] of [
+            ['12-works-home-mobile.jpg', 'https://works.oremea.com/', ['Need something made? Start below']],
+            ['13-provider-plans-mobile.jpg', 'https://works.oremea.com/providers/plans', ['ZAR · recurring monthly', 'Recurring card setup · PayFast by Network']],
           ]) {
-            await mobilePage.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-            await mobilePage.waitForTimeout(1200);
-            await mobilePage.screenshot({ path: path.join(outDir, filename), type: 'jpeg', quality: 78, fullPage: true });
-            proof.pages.push({ filename, url, viewport: '390x844' });
-            console.log(`Captured ${filename} <- ${url}`);
+            let captured = false;
+            for (let attempt = 1; attempt <= 12; attempt += 1) {
+              const separator = url.includes('?') ? '&' : '?';
+              await mobilePage.goto(`${url}${separator}worksReviewProof=${Date.now()}-${attempt}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+              await mobilePage.waitForTimeout(1500);
+              const body = await mobilePage.locator('body').innerText();
+              if (required.every((needle) => body.includes(needle))) {
+                await mobilePage.screenshot({ path: path.join(outDir, filename), type: 'jpeg', quality: 78, fullPage: true });
+                proof.pages.push({ filename, url, viewport: '390x844' });
+                console.log(`Captured ${filename} <- ${url}`);
+                captured = true;
+                break;
+              }
+              await mobilePage.waitForTimeout(2000);
+            }
+            if (!captured) throw new Error(`Mobile ${url} never reached the required WORKS release.`);
           }
 
           await writeFile(path.join(outDir, 'proof.json'), JSON.stringify(proof, null, 2));
