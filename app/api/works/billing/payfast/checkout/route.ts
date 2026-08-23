@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const PAID_PLANS = new Set(["VERIFIED", "GROWTH"]);
+const RECURRING_CONSENT_VERSION = "works-payfast-recurring-v1-2026-08-23";
 
 export async function POST(request: Request) {
   const { userId } = auth();
@@ -22,7 +23,11 @@ export async function POST(request: Request) {
   }
 
   const body = (await request.json().catch(() => null)) as
-    | { providerId?: unknown; plan?: unknown }
+    | {
+        providerId?: unknown;
+        plan?: unknown;
+        acceptRecurringTerms?: unknown;
+      }
     | null;
   const providerId =
     typeof body?.providerId === "string" ? body.providerId.trim() : "";
@@ -31,6 +36,16 @@ export async function POST(request: Request) {
   if (!providerId || !PAID_PLANS.has(planKey)) {
     return NextResponse.json(
       { error: "Choose a WORKS provider and paid plan." },
+      { status: 400 },
+    );
+  }
+
+  if (body?.acceptRecurringTerms !== true) {
+    return NextResponse.json(
+      {
+        error:
+          "Confirm the recurring charge, cancellation and refund terms before opening PayFast.",
+      },
       { status: 400 },
     );
   }
@@ -78,6 +93,13 @@ export async function POST(request: Request) {
 
   const merchantPaymentId = `works-${randomUUID()}`;
   const amountCents = plan.priceMonthlyZar * 100;
+  const amountLabel = `R${plan.priceMonthlyZar.toLocaleString("en-ZA")}.00 ZAR`;
+  const recurringConsentSummary = [
+    `${plan.name} plan: ${amountLabel} is charged for the initial successful PayFast payment.`,
+    `The same ${amountLabel} recurring charge is then scheduled monthly, on or around the same calendar day as the initial successful payment, until cancelled.`,
+    "Cancellation from WORKS Billing cancels the PayFast subscription and returns the business to the Free plan, stopping future renewals.",
+    "Charges already validly incurred, billing errors, failed supply and mandatory consumer rights are handled under Oremea's Payments, Subscriptions, Cancellation & Refund Policy.",
+  ].join(" ");
 
   try {
     const checkout = buildWorksPayfastCheckout({
@@ -94,6 +116,10 @@ export async function POST(request: Request) {
         status: "PENDING",
         amount_cents: amountCents,
         currency: "ZAR",
+        recurring_consent_at: new Date(),
+        recurring_consent_version: RECURRING_CONSENT_VERSION,
+        recurring_consent_summary: recurringConsentSummary,
+        recurring_consent_user_id: userId,
       },
     });
 
