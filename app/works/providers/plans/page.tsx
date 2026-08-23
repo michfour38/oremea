@@ -97,6 +97,9 @@ export default function WorksProviderPlansPage() {
                 ) : null}
                 <p className="text-xs uppercase tracking-[0.18em] text-black/40">{plan.name}</p>
                 <p className="mt-3 font-serif text-3xl">{plan.priceLabel}</p>
+                <p className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-black/40">
+                  {plan.priceMonthlyZar > 0 ? "ZAR · recurring monthly" : "ZAR · no charge"}
+                </p>
                 <p className="mt-4 min-h-20 text-sm leading-6 text-black/55">{plan.detail}</p>
                 <div className="mt-6 space-y-2 border-t border-black/8 pt-5">
                   {plan.features.map((feature) => (
