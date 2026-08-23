@@ -53,9 +53,9 @@ export const metadata: Metadata = {
 
 export default function WorksLayout({ children }: { children: ReactNode }) {
   return (
-    <>
+    <div className="min-h-screen bg-[#fbfaf7] text-[#1f1c17]">
       {children}
       <WorksLegalFooter currentYear={new Date().getFullYear()} />
-    </>
+    </div>
   );
 }
