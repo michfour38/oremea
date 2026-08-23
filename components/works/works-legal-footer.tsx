@@ -9,26 +9,37 @@ import {
   WORKS_LEGAL_LINKS,
 } from "@/src/lib/legal/legal-links";
 
-export function WorksLegalFooter() {
-  const pathname = usePathname();
+const OREMEA_SITE_ORIGIN = "https://www.oremea.com";
+const OREMEA_LEGAL_LINKS = LEGAL_LINKS.map((link) => ({
+  ...link,
+  href: `${OREMEA_SITE_ORIGIN}${link.href}`,
+}));
 
-  if (WORKS_LEGAL_LINKS.some((link) => link.href === pathname)) {
+export function WorksLegalFooter({ currentYear }: { currentYear: number }) {
+  const pathname = usePathname();
+  const internalPathname = pathname.startsWith("/works")
+    ? pathname
+    : pathname === "/"
+      ? "/works"
+      : `/works${pathname}`;
+
+  if (WORKS_LEGAL_LINKS.some((link) => link.href === internalPathname)) {
     return null;
   }
 
   return (
     <footer className="border-t border-black/10 bg-[#f3eee4] text-[#1f1c17]">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-10 md:grid-cols-[1.2fr_1fr_1fr] md:px-8">
-        <div>
+      <div className="mx-auto grid max-w-6xl gap-x-6 gap-y-8 px-5 py-8 min-[420px]:grid-cols-2 md:px-8 lg:grid-cols-[1.2fr_1fr_1fr] lg:gap-10 lg:py-10">
+        <div className="min-[420px]:col-span-2 lg:col-span-1">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#8b6a31]">
             WORKS by Oremea
           </p>
           <p className="mt-4 max-w-sm text-sm leading-7 text-black/55">
             South African business discovery, production routing and provider
-            introductions with clear evidence boundaries.
+            introductions with clear evidence boundaries
           </p>
           <Link
-            href="/"
+            href={OREMEA_SITE_ORIGIN}
             className="mt-5 inline-flex text-sm text-black/65 underline decoration-black/20 underline-offset-4 transition hover:text-black"
           >
             Return to Oremea
@@ -36,17 +47,17 @@ export function WorksLegalFooter() {
         </div>
 
         <FooterGroup title="WORKS legal" links={WORKS_LEGAL_LINKS} />
-        <FooterGroup title="Oremea legal" links={LEGAL_LINKS} />
+        <FooterGroup title="Oremea legal" links={OREMEA_LEGAL_LINKS} />
       </div>
 
       <div className="border-t border-black/10 px-5 py-5">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 text-xs leading-6 text-black/45 md:flex-row md:items-center md:justify-between md:px-3">
           <p>
-            © {new Date().getFullYear()} Oremea · Operated by{" "}
+            © {currentYear} Oremea · Operated by{" "}
             {OREMEA_OPERATOR.name}, {OREMEA_OPERATOR.legalForm}
           </p>
           <Link
-            href="/contact#contact-form"
+            href={`${OREMEA_SITE_ORIGIN}/contact#contact-form`}
             className="transition hover:text-black"
           >
             {OREMEA_OPERATOR.email}
@@ -69,7 +80,7 @@ function FooterGroup({
       <p className="text-[11px] uppercase tracking-[0.18em] text-black/40">
         {title}
       </p>
-      <nav className="mt-4 grid gap-3" aria-label={title}>
+      <nav className="mt-3 grid gap-2.5" aria-label={title}>
         {links.map((link) => (
           <Link
             key={link.href}

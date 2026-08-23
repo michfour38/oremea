@@ -48,6 +48,7 @@ export type MatchBrief = {
 };
 
 export type MatchOffering = {
+  evidenceStatus?: "SELF_REPORTED" | "SOURCE_REVIEWED" | "VERIFIED";
   categoryKeys: string[];
   serviceKeys: string[];
   capabilityKeys: string[];
@@ -282,6 +283,18 @@ export function evaluateOfferingFit(
   offering: MatchOffering
 ): OfferingFitResult {
   const outcomes: MatchOutcomeDraft[] = [];
+
+  if (offering.evidenceStatus === "SELF_REPORTED") {
+    outcomes.push({
+      criterionType: "EVIDENCE_BOUNDARY",
+      criterionKey: "offering.self_reported",
+      status: "UNKNOWN",
+      hardConstraint: true,
+      scoreDelta: 0,
+      actualValue: "SELF_REPORTED",
+      explanation: "The provider supplied this offering information. WORKS still needs supporting evidence before presenting it as a confirmed fit.",
+    });
+  }
 
   if (brief.categoryKey) {
     const categoryMatch = offering.categoryKeys.includes(brief.categoryKey);

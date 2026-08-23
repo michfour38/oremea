@@ -1,8 +1,17 @@
+import type { Metadata } from "next";
+
 import {
   LegalDocument,
   type LegalSection,
 } from "@/components/legal/legal-document";
 import { WORKS_RETURN_LINK } from "@/src/lib/legal/legal-links";
+import { worksUrl } from "@/lib/works/seo";
+
+export const metadata: Metadata = {
+  title: "Customer review policy | WORKS",
+  description: "How WORKS links reviews to genuine provider interactions, handles reviewer privacy and moderates provider responses.",
+  alternates: { canonical: worksUrl("/reviews-policy") },
+};
 
 const sections: readonly LegalSection[] = [
   {

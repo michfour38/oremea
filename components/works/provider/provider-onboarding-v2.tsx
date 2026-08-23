@@ -1,9 +1,10 @@
 "use client";
 
-import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
-import { useEffect, useMemo, useState } from "react";
+import { SignInButton, SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { MemberWorksNav } from "@/components/works/member-works-nav";
+import { WorksAccountButton } from "@/components/works/works-account-button";
 
 type Tab = "start" | "business" | "progress";
 type Mode = "add" | "claim" | null;
@@ -89,6 +90,7 @@ export function WorksProviderOnboardingV2() {
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const claimPanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
@@ -158,6 +160,40 @@ export function WorksProviderOnboardingV2() {
         body: JSON.stringify({ marketSlug: "za", ...form }),
       });
       const data = await response.json();
+      if ((response.status === 409 || response.status === 202) && data?.existingProvider?.id) {
+        const existing = data.existingProvider as {
+          id: string;
+          name: string;
+          slug: string;
+          alreadyClaimed?: boolean;
+          alreadyConnected?: boolean;
+        };
+
+        if (existing.alreadyConnected) {
+          setCreated({ name: existing.name, slug: existing.slug });
+          setMessage(`${existing.name} is already connected to your WORKS account.`);
+          setTab("progress");
+          return;
+        }
+
+        setQuery(existing.name);
+        setSelected({
+          id: existing.id,
+          name: existing.name,
+          slug: existing.slug,
+          website: null,
+          alreadyClaimed: Boolean(existing.alreadyClaimed),
+        });
+        setBusinessEmail(form.email.trim());
+        setMode("claim");
+        setMessage(existing.alreadyClaimed
+          ? `${existing.name} is already managed on WORKS.`
+          : response.status === 202
+            ? `${existing.name} is saved privately. Verify the business inbox below before WORKS connects it to your account.`
+            : `We found ${existing.name}. Confirm your relationship with the business below.`);
+        setError("");
+        return;
+      }
       if (!response.ok) throw new Error(data?.error ?? "WORKS could not add this business yet.");
       setCreated(data.provider);
       setMessage(data.message ?? "Your business has been added to WORKS.");
@@ -193,6 +229,14 @@ export function WorksProviderOnboardingV2() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, ready]);
 
+  useEffect(() => {
+    if (mode !== "claim" || !selected) return;
+    const frame = window.requestAnimationFrame(() => {
+      claimPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [mode, selected]);
+
   async function search() {
     setSelected(null);
     setMessage("");
@@ -208,7 +252,13 @@ export function WorksProviderOnboardingV2() {
       const response = await fetch("/api/works/provider-claims", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ providerId: selected.id, businessEmail, note }),
+        body: JSON.stringify({
+          providerId: selected.id,
+          businessEmail,
+          note,
+          marketSlug: "za",
+          profileDraft: form,
+        }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error ?? "WORKS could not submit this connection request yet.");
@@ -244,11 +294,12 @@ export function WorksProviderOnboardingV2() {
             <>
               <SignedOut>
                 <SignInButton mode="modal" forceRedirectUrl={returnUrl}>
-                  <button className="rounded-full border border-black/15 bg-white px-4 py-2 text-sm">Manage my business</button>
+                  <button className="rounded-full border border-black/15 bg-white px-4 py-2 text-sm">Sign in</button>
                 </SignInButton>
               </SignedOut>
               <SignedIn>
                 <a href="/works/provider" className="rounded-full border border-black/15 bg-white px-4 py-2 text-sm">Manage my business →</a>
+                <WorksAccountButton afterSignOutUrl="/works/za" />
               </SignedIn>
             </>
           }
@@ -274,8 +325,8 @@ export function WorksProviderOnboardingV2() {
         {ready && tab === "start" ? (
           <section className="py-12 md:py-16">
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#16834f]">For providers</p>
-            <h1 className="mt-4 max-w-4xl font-serif text-5xl leading-[1.05] md:text-6xl">Be findable when a real brief needs what your business can do</h1>
-            <p className="mt-6 max-w-2xl text-base leading-8 text-black/60">Add a business or connect an existing WORKS listing. Your account becomes the place to manage what is public, what capacity is available, which opportunities fit and what kind of demand you want to grow.</p>
+            <h1 className="mt-4 max-w-4xl font-serif text-5xl leading-[1.05] md:text-6xl">Build the business profile WORKS can match with confidence</h1>
+            <p className="mt-6 max-w-2xl text-base leading-8 text-black/60">Add a business or connect an existing WORKS listing. Then describe its actual offerings, capacity and production range. Provider-supplied information can enter matching as a possible fit while WORKS keeps its evidence boundary visible.</p>
 
             <div className="mt-10 grid gap-4 md:grid-cols-2">
               <button type="button" onClick={() => chooseMode("add")} className="rounded-3xl bg-[#1f1c17] p-7 text-left text-white">
@@ -316,11 +367,16 @@ export function WorksProviderOnboardingV2() {
               {mode ? (
                 <div className="mt-8 rounded-3xl border border-black/10 bg-white p-7 md:p-8">
                   <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Your place is saved</p>
-                  <h2 className="mt-3 font-serif text-3xl">Sign in to continue</h2>
-                  <p className="mt-4 max-w-xl text-sm leading-7 text-black/55">WORKS returns to this step after sign-in. Anything you entered in the business form remains on this device.</p>
-                  <SignInButton mode="modal" forceRedirectUrl={returnUrl}>
-                    <button className="mt-6 rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Sign in to continue →</button>
-                  </SignInButton>
+                  <h2 className="mt-3 font-serif text-3xl">Create your provider account to continue</h2>
+                  <p className="mt-4 max-w-xl text-sm leading-7 text-black/55">WORKS returns here after signup. Anything already entered in the business form remains on this device.</p>
+                  <div className="mt-6 flex flex-wrap items-center gap-3">
+                    <SignUpButton mode="modal" forceRedirectUrl={returnUrl}>
+                      <button className="rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Create provider account →</button>
+                    </SignUpButton>
+                    <SignInButton mode="modal" forceRedirectUrl={returnUrl}>
+                      <button className="rounded-full border border-black/15 bg-white px-6 py-3 text-sm">I already have an account</button>
+                    </SignInButton>
+                  </div>
                 </div>
               ) : null}
             </SignedOut>
@@ -371,18 +427,27 @@ export function WorksProviderOnboardingV2() {
                   </div>
 
                   {selected ? (
-                    <div className="rounded-3xl border border-black/10 bg-white p-6 md:p-8">
+                    <div ref={claimPanelRef} className="rounded-3xl border border-black/10 bg-white p-6 md:p-8">
                       <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Connect to {selected.name}</p>
-                      <h2 className="mt-3 font-serif text-3xl">Confirm the business relationship</h2>
-                      <p className="mt-3 max-w-2xl text-sm leading-7 text-black/55">Use an email on the business&apos;s own domain. The email and verification note are backend verification evidence; they are never public profile fields.</p>
-                      <div className="mt-6 grid gap-4">
-                        <label className="text-xs text-black/45">Business email<input type="email" value={businessEmail} onChange={(event) => setBusinessEmail(event.target.value)} placeholder="you@company.co.za" className="mt-1 w-full rounded-xl border border-black/10 px-4 py-3" /></label>
-                        <label className="text-xs text-black/45">Role / verification note<textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} maxLength={1000} placeholder="Owner, operations manager, company director…" className="mt-1 w-full resize-none rounded-xl border border-black/10 px-4 py-3 text-sm leading-6" /></label>
-                      </div>
-                      <div className="mt-6 flex flex-wrap gap-3">
-                        <button type="button" onClick={() => void submitClaim()} disabled={sending || !businessEmail.trim()} className="rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white disabled:opacity-40">{sending ? "Submitting…" : "Submit connection request →"}</button>
-                        <button type="button" onClick={() => setSelected(null)} className="rounded-full border border-black/15 bg-white px-5 py-3 text-sm">Cancel</button>
-                      </div>
+                      {selected.alreadyClaimed ? (
+                        <>
+                          <h2 className="mt-3 font-serif text-3xl">This profile already has a manager</h2>
+                          <p className="mt-3 max-w-2xl text-sm leading-7 text-black/55">Ask the current business owner or WORKS manager to add you. Public claim emails cannot add another owner to an already-managed profile.</p>
+                        </>
+                      ) : (
+                        <>
+                          <h2 className="mt-3 font-serif text-3xl">Confirm the business relationship</h2>
+                          <p className="mt-3 max-w-2xl text-sm leading-7 text-black/55">WORKS will send a secure, one-use verification link to this business-domain email. No access or profile changes happen until the signed-in claimant confirms through that email.</p>
+                          <div className="mt-6 grid gap-4">
+                            <label className="text-xs text-black/45">Business email<input type="email" value={businessEmail} onChange={(event) => setBusinessEmail(event.target.value)} placeholder="you@company.co.za" className="mt-1 w-full rounded-xl border border-black/10 px-4 py-3" /></label>
+                            <label className="text-xs text-black/45">Role / verification note<textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} maxLength={1000} placeholder="Owner, operations manager, company director…" className="mt-1 w-full resize-none rounded-xl border border-black/10 px-4 py-3 text-sm leading-6" /></label>
+                          </div>
+                          <div className="mt-6 flex flex-wrap gap-3">
+                            <button type="button" onClick={() => void submitClaim()} disabled={sending || !businessEmail.trim()} className="rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white disabled:opacity-40">{sending ? "Sending…" : "Send verification email →"}</button>
+                            <button type="button" onClick={() => setSelected(null)} className="rounded-full border border-black/15 bg-white px-5 py-3 text-sm">Cancel</button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   ) : null}
 
@@ -397,7 +462,7 @@ export function WorksProviderOnboardingV2() {
         {ready && tab === "progress" ? (
           <section className="py-10 md:py-14">
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#16834f]">Your progress</p>
-            {created ? <div className="mt-4 rounded-3xl border border-black/10 bg-white p-7 md:p-9"><h1 className="max-w-3xl font-serif text-4xl leading-tight md:text-5xl">{created.name} is connected to your WORKS account</h1><p className="mt-5 max-w-2xl text-sm leading-7 text-black/55">Manage the business to choose public fields, update capacity and tell WORKS which work you want more of.</p><div className="mt-8 flex flex-wrap gap-3"><a href="/works/provider" className="rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Manage my business →</a><a href={`/works/providers/${created.slug}`} className="rounded-full border border-black/15 bg-white px-6 py-3 text-sm">View public profile</a><a href="/works/providers/plans" className="rounded-full border border-black/15 bg-white px-6 py-3 text-sm">Compare plans</a><button type="button" onClick={startAnother} className="rounded-full border border-black/15 bg-white px-6 py-3 text-sm">Add another business</button></div></div> : null}
+            {created ? <div className="mt-4 rounded-3xl border border-black/10 bg-white p-7 md:p-9"><h1 className="max-w-3xl font-serif text-4xl leading-tight md:text-5xl">{created.name} is connected to your WORKS account</h1><p className="mt-5 max-w-2xl text-sm leading-7 text-black/55">Add the business&apos;s first offering so WORKS knows which customer briefs it can genuinely consider.</p><div className="mt-8 flex flex-wrap gap-3"><a href="/works/provider/capabilities" className="rounded-full bg-[#1f1c17] px-6 py-3 text-sm text-white">Add capabilities →</a><a href="/works/provider" className="rounded-full border border-black/15 bg-white px-6 py-3 text-sm">Manage profile</a><a href={`/works/providers/${created.slug}`} className="rounded-full border border-black/15 bg-white px-6 py-3 text-sm">View public profile</a><a href="/works/providers/plans" className="rounded-full border border-black/15 bg-white px-6 py-3 text-sm">Compare plans</a><button type="button" onClick={startAnother} className="rounded-full border border-black/15 bg-white px-6 py-3 text-sm">Add another business</button></div></div> : null}
             {!created && message ? <div className="mt-4 rounded-3xl bg-[#eef7f1] p-7 text-sm leading-7">{message}</div> : null}
             {!created && !message && claims.length ? <div className="mt-5 space-y-3">{claims.map((claim) => <div key={claim.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-5"><p className="text-sm font-medium">{claim.provider.name}</p><span className="rounded-full border border-black/10 px-3 py-1.5 text-xs text-black/55">{claim.status.charAt(0) + claim.status.slice(1).toLowerCase()}</span></div>)}</div> : null}
             {!created && !message && !claims.length ? <div className="mt-4 rounded-3xl border border-black/10 bg-white/70 p-7 text-sm text-black/50">Completed business records and connection requests will remain available here.</div> : null}

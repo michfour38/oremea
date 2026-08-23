@@ -3,8 +3,7 @@ import { notFound } from "next/navigation";
 
 import { WorksPageHeader } from "@/components/works/works-brand";
 import { prisma } from "@/lib/prisma";
-
-const WORKS_ORIGIN = "https://works.oremea.com";
+import { worksUrl } from "@/lib/works/seo";
 
 const DEFAULT_VISIBILITY = {
   show_legal_name: false,
@@ -22,7 +21,72 @@ async function getProvider(slug: string) {
     include: {
       public_settings: true,
       commercial_profile: true,
-      markets: { where: { active: true }, include: { market: true } },
+      markets: {
+        where: { active: true },
+        include: {
+          market: true,
+          offerings: {
+            where: { active: true },
+            orderBy: { name: "asc" },
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              production_model: true,
+              moq_value: true,
+              moq_unit: true,
+              max_run_value: true,
+              max_run_unit: true,
+              lead_time_min_days: true,
+              lead_time_max_days: true,
+              lead_time_basis: true,
+              evidence_status: true,
+              categories: {
+                select: {
+                  category: {
+                    select: {
+                      key: true,
+                      translations: {
+                        where: { locale: { code: "en-ZA" } },
+                        select: { name: true },
+                        take: 1,
+                      },
+                    },
+                  },
+                },
+              },
+              services: {
+                select: {
+                  service: {
+                    select: {
+                      key: true,
+                      translations: {
+                        where: { locale: { code: "en-ZA" } },
+                        select: { name: true },
+                        take: 1,
+                      },
+                    },
+                  },
+                },
+              },
+              capabilities: {
+                select: {
+                  capability: {
+                    select: {
+                      key: true,
+                      translations: {
+                        where: { locale: { code: "en-ZA" } },
+                        select: { name: true },
+                        take: 1,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
       reviews: { where: { status: "PUBLISHED" }, orderBy: { created_at: "desc" }, take: 30 },
     },
   });
@@ -33,14 +97,15 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   if (!provider || provider.profile_status === "ARCHIVED") return {};
 
   const visibility = provider.public_settings ?? DEFAULT_VISIBILITY;
-  const canonical = `${WORKS_ORIGIN}/works/providers/${provider.slug}`;
+  const canonical = worksUrl(`/providers/${provider.slug}`);
   const description = visibility.show_description && provider.description
     ? provider.description.slice(0, 155)
     : `${provider.name} is listed on WORKS, where buyers find South African manufacturers, suppliers and specialist production providers.`;
 
   return {
-    title: `${provider.name} | WORKS provider`,
+    title: `${provider.name} | WORKS manufacturer profile`,
     description,
+    robots: provider.slug === "works-qa-supplier" ? { index: false, follow: false } : undefined,
     alternates: { canonical },
     openGraph: {
       title: `${provider.name} | WORKS`,
@@ -58,7 +123,16 @@ export default async function WorksProviderPublicProfile({ params }: { params: {
   const visibility = provider.public_settings ?? DEFAULT_VISIBILITY;
   const reviews = provider.reviews;
   const average = reviews.length ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : null;
-  const canonical = `${WORKS_ORIGIN}/works/providers/${provider.slug}`;
+  const canonical = worksUrl(`/providers/${provider.slug}`);
+  const offerings = provider.markets.flatMap((providerMarket) =>
+    providerMarket.offerings.map((offering) => ({
+      ...offering,
+      marketName: providerMarket.market.name,
+      categories: offering.categories.map((row) => row.category.translations[0]?.name ?? row.category.key),
+      services: offering.services.map((row) => row.service.translations[0]?.name ?? row.service.key),
+      capabilities: offering.capabilities.map((row) => row.capability.translations[0]?.name ?? row.capability.key),
+    }))
+  );
 
   const structuredData: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -72,6 +146,28 @@ export default async function WorksProviderPublicProfile({ params }: { params: {
   if (visibility.show_website && provider.website) structuredData.sameAs = [provider.website];
   if (visibility.show_email && provider.email) structuredData.email = provider.email;
   if (visibility.show_phone && provider.phone) structuredData.telephone = provider.phone;
+  const reviewedOffers = offerings.filter((offering) => offering.evidence_status !== "SELF_REPORTED");
+  if (reviewedOffers.length) {
+    structuredData.makesOffer = reviewedOffers.map((offering) => ({
+      "@type": "Offer",
+      name: offering.name,
+      url: `${canonical}#offering-${offering.id}`,
+      itemOffered: {
+        "@type": "Service",
+        name: offering.name,
+        ...(offering.description ? { description: offering.description } : {}),
+        ...(offering.services.length ? { serviceType: offering.services } : {}),
+        areaServed: { "@type": "Country", name: offering.marketName },
+        additionalProperty: [
+          {
+            "@type": "PropertyValue",
+            name: "WORKS evidence status",
+            value: offering.evidence_status === "VERIFIED" ? "Verified evidence" : "Source reviewed",
+          },
+        ],
+      },
+    }));
+  }
   if (average) {
     structuredData.aggregateRating = {
       "@type": "AggregateRating",
@@ -117,6 +213,53 @@ export default async function WorksProviderPublicProfile({ params }: { params: {
         </div>
 
         {visibility.show_location && provider.markets.length ? <div className="mt-8 flex flex-wrap gap-2">{provider.markets.map((entry) => <span key={entry.id} className="rounded-full border border-black/10 bg-white/70 px-4 py-2 text-xs text-black/50">{entry.locality ?? entry.administrative_area ?? entry.market.name}</span>)}</div> : null}
+
+        {offerings.length ? (
+          <section className="mt-10 border-t border-black/10 pt-9" aria-labelledby="provider-offerings">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Current offerings</p>
+            <h2 id="provider-offerings" className="mt-2 font-serif text-3xl text-[#1f1c17]">What {provider.name} can help with</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-black/50">Each offering shows where its information came from. Final specifications, capacity, timing and price still need direct confirmation.</p>
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              {offerings.map((offering) => {
+                const evidenceLabel = offering.evidence_status === "VERIFIED"
+                  ? "Verified evidence"
+                  : offering.evidence_status === "SOURCE_REVIEWED"
+                    ? "Source reviewed"
+                    : "Provider supplied · review pending";
+                const minimumOrder = offering.moq_value == null
+                  ? null
+                  : `${Number(offering.moq_value).toLocaleString("en-ZA")} ${offering.moq_unit?.toLowerCase() ?? "units"}`;
+                const maximumRun = offering.max_run_value == null
+                  ? null
+                  : `${Number(offering.max_run_value).toLocaleString("en-ZA")} ${offering.max_run_unit?.toLowerCase() ?? "units"}`;
+                const leadTime = offering.lead_time_min_days == null && offering.lead_time_max_days == null
+                  ? null
+                  : `${offering.lead_time_min_days ?? "?"}–${offering.lead_time_max_days ?? "?"} days`;
+
+                return (
+                  <article id={`offering-${offering.id}`} key={offering.id} className="rounded-3xl border border-black/10 bg-white/70 p-6">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <h3 className="font-serif text-2xl text-[#1f1c17]">{offering.name}</h3>
+                      <span className="rounded-full border border-black/10 bg-[#f3eee4] px-3 py-1 text-[11px] text-black/50">{evidenceLabel}</span>
+                    </div>
+                    {offering.description ? <p className="mt-3 text-sm leading-7 text-black/55">{offering.description}</p> : null}
+                    {offering.services.length ? <p className="mt-4 text-xs leading-6 text-black/50"><strong className="font-medium text-black/70">Services:</strong> {offering.services.join(", ")}</p> : null}
+                    {offering.capabilities.length ? <p className="mt-1 text-xs leading-6 text-black/50"><strong className="font-medium text-black/70">Capabilities:</strong> {offering.capabilities.join(", ")}</p> : null}
+                    {offering.categories.length ? <p className="mt-1 text-xs leading-6 text-black/50"><strong className="font-medium text-black/70">Categories:</strong> {offering.categories.join(", ")}</p> : null}
+                    {minimumOrder || maximumRun || leadTime || offering.production_model ? (
+                      <div className="mt-4 flex flex-wrap gap-2 text-[11px] text-black/50">
+                        {offering.production_model ? <span className="rounded-full bg-[#f3eee4] px-3 py-1.5">{offering.production_model.replaceAll("_", " ").toLowerCase()}</span> : null}
+                        {minimumOrder ? <span className="rounded-full bg-[#f3eee4] px-3 py-1.5">MOQ · {minimumOrder}</span> : null}
+                        {maximumRun ? <span className="rounded-full bg-[#f3eee4] px-3 py-1.5">Run up to · {maximumRun}</span> : null}
+                        {leadTime ? <span className="rounded-full bg-[#f3eee4] px-3 py-1.5">Lead time · {leadTime}</span> : null}
+                      </div>
+                    ) : null}
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
 
         <div className="mt-8 rounded-2xl border border-black/10 bg-[#f3eee4] p-5 text-sm leading-7 text-black/55">
           WORKS matches businesses against the requirements in a buyer&apos;s brief. Start with what you need made so the route can distinguish confirmed fits, possible fits and details that still need checking.

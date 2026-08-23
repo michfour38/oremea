@@ -1,10 +1,12 @@
 "use client";
 
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import type { WorksMarketCategory } from "@/lib/works/categories/list-market-categories";
 import { ProviderOutreachPanel } from "@/components/works/outreach/provider-outreach-panel";
+import { WorksAccountButton } from "@/components/works/works-account-button";
 
 type MarketView = {
   slug: string;
@@ -264,12 +266,38 @@ function browserKey(marketSlug: string) {
   return `oremea:works:${marketSlug}:browser-session`;
 }
 
+function WorksConversationHeader({ market }: { market: MarketView }) {
+  return (
+    <header className="flex items-center justify-between border-b border-black/10 pb-5">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#8b6a31]">WORKS</p>
+        <p className="mt-1 text-xs text-black/40">by Oremea · {market.name}</p>
+      </div>
+      <div className="flex items-center gap-3">
+        <SignedOut>
+          <SignInButton mode="modal">
+            <button type="button" className="rounded-full border border-black/15 bg-white/70 px-4 py-2 text-sm text-[#1f1c17]">
+              My WORKS
+            </button>
+          </SignInButton>
+        </SignedOut>
+        <SignedIn>
+          <Link href="/works/my" className="text-sm text-[#1f1c17] underline-offset-4 hover:underline">My WORKS</Link>
+          <WorksAccountButton afterSignOutUrl={`/works/${market.slug}`} />
+        </SignedIn>
+      </div>
+    </header>
+  );
+}
+
 export function FounderConversationV2({
   market,
   categories,
+  embedded = false,
 }: {
   market: MarketView;
   categories: WorksMarketCategory[];
+  embedded?: boolean;
 }) {
   const [form, setForm] = useState<IntakeState>(INITIAL_STATE);
   const [panel, setPanel] = useState(0);
@@ -629,30 +657,6 @@ export function FounderConversationV2({
   );
   const needsSourcing = !route || route.gaps.length > 0 || confirmedProviders.size === 0;
 
-  function WorksHeader() {
-    return (
-      <header className="flex items-center justify-between border-b border-black/10 pb-5">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#8b6a31]">WORKS</p>
-          <p className="mt-1 text-xs text-black/40">by Oremea · {market.name}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <SignedOut>
-            <SignInButton mode="modal">
-              <button type="button" className="rounded-full border border-black/15 bg-white/70 px-4 py-2 text-sm text-[#1f1c17]">
-                My WORKS
-              </button>
-            </SignInButton>
-          </SignedOut>
-          <SignedIn>
-            <span className="text-sm text-[#1f1c17]">My WORKS</span>
-            <UserButton afterSignOutUrl={`/works/${market.slug}`} />
-          </SignedIn>
-        </div>
-      </header>
-    );
-  }
-
   if (restoring) {
     return <div className="mx-auto min-h-screen w-full max-w-4xl px-5 py-8 text-sm text-black/40 md:px-8">Restoring WORKS…</div>;
   }
@@ -662,8 +666,8 @@ export function FounderConversationV2({
     const externalQuestions = route?.nextQuestions.filter((question) => question.audience !== "FOUNDER") ?? [];
 
     return (
-      <div className="mx-auto w-full max-w-5xl px-5 py-8 md:px-8 md:py-12">
-        <WorksHeader />
+      <div className={`mx-auto w-full max-w-5xl px-5 md:px-8 ${embedded ? "pb-8 md:pb-12" : "py-8 md:py-12"}`}>
+        {embedded ? null : <WorksConversationHeader market={market} />}
         <div className="py-10 md:py-14">
           <p className="text-sm text-black/45">{route?.label ?? "Production route"}</p>
           <h1 className="mt-2 max-w-3xl font-serif text-4xl leading-tight text-[#1f1c17] md:text-5xl">
@@ -745,7 +749,7 @@ export function FounderConversationV2({
           ) : null}
 
           {needsSourcing ? (
-            <section className="mt-10 rounded-3xl border border-black/10 bg-white/75 p-6 md:p-8">
+            <section data-works-sourcing-fallback className="mt-10 rounded-3xl border border-black/10 bg-white/75 p-6 md:p-8">
               <h2 className="font-serif text-3xl text-[#1f1c17]">We haven&apos;t found enough current matches yet.</h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-black/55">Leave your details and WORKS can continue looking for suitable South African providers for this brief.</p>
               {leadStatus === "SAVED" ? (
@@ -774,9 +778,9 @@ export function FounderConversationV2({
   }
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-3xl px-5 py-8 md:px-8 md:py-12">
-      <WorksHeader />
-      <main className="py-10 md:py-14">
+    <div className={`mx-auto w-full max-w-3xl px-5 md:px-8 ${embedded ? "pb-6" : "min-h-screen py-8 md:py-12"}`}>
+      {embedded ? null : <WorksConversationHeader market={market} />}
+      <section className={embedded ? "py-5 md:py-6" : "py-10 md:py-14"}>
         <div className="space-y-4">
           {panels.slice(0, safeFurthest + 1).map((key, index) => {
             const entry = answers[key];
@@ -834,7 +838,7 @@ export function FounderConversationV2({
             );
           })}
         </div>
-      </main>
+      </section>
     </div>
   );
 }

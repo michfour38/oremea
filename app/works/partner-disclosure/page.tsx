@@ -1,8 +1,17 @@
+import type { Metadata } from "next";
+
 import {
   LegalDocument,
   type LegalSection,
 } from "@/components/legal/legal-document";
 import { WORKS_RETURN_LINK } from "@/src/lib/legal/legal-links";
+import { worksUrl } from "@/lib/works/seo";
+
+export const metadata: Metadata = {
+  title: "Provider and partner disclosure | WORKS",
+  description: "How WORKS distinguishes independent provider listings, commercial referrals, sponsored placement and substantiated partnerships.",
+  alternates: { canonical: worksUrl("/partner-disclosure") },
+};
 
 const sections: readonly LegalSection[] = [
   {

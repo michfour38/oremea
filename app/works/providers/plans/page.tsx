@@ -2,19 +2,72 @@ import type { Metadata } from "next";
 
 import { WorksPageHeader } from "@/components/works/works-brand";
 import { WORKS_PROVIDER_PLANS } from "@/lib/works/providers/public-plans";
+import {
+  WORKS_ORGANIZATION_ID,
+  worksUrl,
+} from "@/lib/works/seo";
 
-const CANONICAL_URL = "https://works.oremea.com/works/providers/plans";
+const CANONICAL_URL = worksUrl("/providers/plans");
+const PROVIDER_SERVICE_ID = `${CANONICAL_URL}#provider-service`;
 
 export const metadata: Metadata = {
-  title: "WORKS provider plans | Oremea",
+  title: "Provider plans for manufacturers | WORKS",
   description:
     "Compare WORKS Free, Active and Growth plans for South African manufacturers, suppliers and business-service providers.",
   alternates: { canonical: CANONICAL_URL },
 };
 
 export default function WorksProviderPlansPage() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": WORKS_ORGANIZATION_ID,
+        name: "Oremea",
+        url: "https://www.oremea.com",
+      },
+      {
+        "@type": "Service",
+        "@id": PROVIDER_SERVICE_ID,
+        name: "WORKS provider plans",
+        serviceType: "Business profile, opportunity routing and demand generation",
+        provider: { "@id": WORKS_ORGANIZATION_ID },
+        areaServed: { "@type": "Country", name: "South Africa" },
+        url: CANONICAL_URL,
+        hasOfferCatalog: {
+          "@type": "OfferCatalog",
+          name: "WORKS provider plans",
+          itemListElement: WORKS_PROVIDER_PLANS.map((plan) => ({
+            "@type": "Offer",
+            name: plan.name,
+            description: plan.detail,
+            price: plan.priceMonthlyZar,
+            priceCurrency: "ZAR",
+            url: CANONICAL_URL,
+            itemOffered: { "@id": PROVIDER_SERVICE_ID },
+            ...(plan.priceMonthlyZar > 0
+              ? {
+                  priceSpecification: {
+                    "@type": "UnitPriceSpecification",
+                    price: plan.priceMonthlyZar,
+                    priceCurrency: "ZAR",
+                    billingDuration: "P1M",
+                  },
+                }
+              : {}),
+          })),
+        },
+      },
+    ],
+  };
+
   return (
     <main className="min-h-screen bg-[#fbfaf7] text-[#1f1c17]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-8 md:py-12">
         <WorksPageHeader context="Provider plans" />
 

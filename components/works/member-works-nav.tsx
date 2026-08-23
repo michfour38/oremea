@@ -1,11 +1,13 @@
 "use client";
 
-import { SignedIn, UserButton } from "@clerk/nextjs";
+import { SignedIn } from "@clerk/nextjs";
 import type { ReactNode } from "react";
 
 import { WorksBrand } from "@/components/works/works-brand";
+import { WorksAccountButton } from "@/components/works/works-account-button";
 
 export function MemberWorksNav({
+  href = "/works",
   action,
 }: {
   href?: string;
@@ -13,10 +15,10 @@ export function MemberWorksNav({
 }) {
   return (
     <header className="flex items-center justify-between gap-4 border-b border-black/10 pb-5">
-      <WorksBrand context="by Oremea · South Africa" />
+      <WorksBrand href={href} context="by Oremea · South Africa" />
       {action ?? (
         <SignedIn>
-          <UserButton afterSignOutUrl="/works" />
+          <WorksAccountButton />
         </SignedIn>
       )}
     </header>
