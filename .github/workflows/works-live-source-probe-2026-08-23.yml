@@ -20,10 +20,9 @@ jobs:
           set -euo pipefail
           url="https://works.oremea.com/providers/nexus-fulfilment"
           for attempt in $(seq 1 30); do
-            curl -fsS "${url}?contrastProof=${attempt}-$(date +%s)" -o /tmp/provider.html
+            curl -fsS "${url}?contrastProof=recheck-${attempt}-$(date +%s)" -o /tmp/provider.html
             if grep -Fq 'min-h-screen bg-[#fbfaf7] text-[#1f1c17]' /tmp/provider.html; then
               echo "LIVE_WORKS_BASE_CANVAS=PASS attempt=${attempt}"
-              grep -o 'min-h-screen bg-\[#fbfaf7\] text-\[#1f1c17\]' /tmp/provider.html | head -1 || true
               exit 0
             fi
             echo "Waiting for Railway contrast deployment: attempt ${attempt}"
