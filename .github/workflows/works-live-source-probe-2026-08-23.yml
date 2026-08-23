@@ -13,26 +13,21 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     steps:
-      - name: Probe live WORKS deployment markers
+      - name: Verify live WORKS base canvas deployment
         run: |
           set -euo pipefail
-          echo '=== plans status ==='
-          curl -fsS -D /tmp/headers.txt https://works.oremea.com/providers/plans -o /tmp/plans.html
-          head -20 /tmp/headers.txt
-          echo '=== canonical candidates ==='
-          grep -o 'https://works\.oremea\.com[^"<> ]*' /tmp/plans.html | sort -u | head -20 || true
-          echo '=== new review markers ==='
-          for marker in 'ZAR · recurring monthly' 'Recurring card setup · PayFast by Network' '3D Secure'; do
-            if grep -Fq "$marker" /tmp/plans.html; then echo "FOUND: $marker"; else echo "MISSING: $marker"; fi
+          url="https://works.oremea.com/providers/nexus-fulfilment"
+          for attempt in $(seq 1 30); do
+            curl -fsS "${url}?contrastProof=${attempt}-$(date +%s)" -o /tmp/provider.html
+            if grep -Fq 'min-h-screen bg-[#fbfaf7] text-[#1f1c17]' /tmp/provider.html; then
+              echo "LIVE_WORKS_BASE_CANVAS=PASS attempt=${attempt}"
+              grep -o 'min-h-screen bg-\[#fbfaf7\] text-\[#1f1c17\]' /tmp/provider.html | head -1 || true
+              exit 0
+            fi
+            echo "Waiting for Railway contrast deployment: attempt ${attempt}"
+            sleep 6
           done
-          echo '=== release marker ==='
-          code=$(curl -sS -o /tmp/release.txt -w '%{http_code}' https://works.oremea.com/works-release.txt)
-          echo "HTTP $code"
-          head -20 /tmp/release.txt || true
-          echo '=== card assets ==='
-          for asset in visa.svg mastercard.svg; do
-            code=$(curl -sS -o /dev/null -w '%{http_code}' "https://works.oremea.com/payments/works/$asset")
-            echo "$asset HTTP $code"
-          done
+          echo "Live public provider profile never exposed the new WORKS base canvas."
+          exit 1
