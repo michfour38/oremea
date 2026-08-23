@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "prebuild": "npm run test:launch",
-    "build": "prisma generate && next build",
+    "build": "node scripts/verify-works-live-deployment.mjs && prisma generate && next build",
     "start": "next start",
     "postinstall": "prisma generate",
     "lint": "next lint",
