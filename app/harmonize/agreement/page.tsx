@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 
 const agreements = [
   "Private reflections remain private.",
@@ -14,7 +14,7 @@ const agreements = [
   "Minor participation is not available in this version.",
 ]
 
-export default function HarmonizeAgreementPage() {
+function HarmonizeAgreementContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const mode = searchParams.get("mode") || "couple"
@@ -160,5 +160,13 @@ Participants remain solely responsible for their own decisions actions communica
         </Link>
       </section>
     </main>
+  )
+}
+
+export default function HarmonizeAgreementPage() {
+  return (
+    <Suspense fallback={null}>
+      <HarmonizeAgreementContent />
+    </Suspense>
   )
 }
