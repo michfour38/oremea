@@ -6,10 +6,10 @@ export const WORKS_BUYER_TITLE =
   "Find South African manufacturers | WORKS";
 
 export const WORKS_BUYER_DESCRIPTION =
-  "Describe what you need made. WORKS maps the production route and finds South African manufacturers, suppliers and specialist providers that fit the brief.";
+  "Describe the product, component, formula, packaging or production service you need. WORKS maps the route and finds South African manufacturers, suppliers and specialist providers that fit the brief.";
 
 export const WORKS_SERVICE_DESCRIPTION =
-  "WORKS helps buyers turn a product brief into a production route and find suitable South African manufacturers, suppliers and specialist providers while keeping unconfirmed requirements visible.";
+  "WORKS turns a product, component, formula, packaging or production-service need into a production route and suitable South African provider matches while keeping unconfirmed requirements visible.";
 
 export const WORKS_PRIVATE_PATHS = [
   "/api/",

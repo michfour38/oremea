@@ -26,11 +26,11 @@ export function generateMetadata({ params }: { params: { market: string } }): Me
     title: market.slug === "za" ? WORKS_BUYER_TITLE : `Find manufacturers in ${market.localName} | WORKS`,
     description: market.slug === "za"
       ? WORKS_BUYER_DESCRIPTION
-      : `Describe what you need made. WORKS maps the production route and finds manufacturers, suppliers and specialist providers in ${market.localName} that fit the brief.`,
+      : `Describe the product, component, formula, packaging or production service you need. WORKS maps the production route and finds manufacturers, suppliers and specialist providers in ${market.localName} that fit the brief.`,
     alternates: { canonical },
     openGraph: {
       title: `Make it in ${market.localName} with WORKS`,
-      description: "Turn a product idea into a production route, provider matches and the questions that still need answering.",
+      description: "Turn a production need into a route, provider matches and the questions that still need answering.",
       url: canonical,
       type: "website",
     },
@@ -71,7 +71,7 @@ export default async function WorksMarketPage({
         description: WORKS_SERVICE_DESCRIPTION,
         audience: {
           "@type": "BusinessAudience",
-          audienceType: "Businesses and product founders who need something made",
+          audienceType: "Businesses and founders who need production help",
         },
         areaServed: {
           "@type": "Country",
@@ -92,7 +92,7 @@ export default async function WorksMarketPage({
 
       <div className="border-b border-black/10 bg-white/45">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-5 py-3 text-sm sm:flex-row sm:items-center sm:justify-between md:px-8">
-          <span className="text-black/55">Need something made? Start below — no account required.</span>
+          <span className="text-black/55">Need something produced? Start below — no account required.</span>
           <div className="flex flex-wrap gap-x-5 gap-y-2">
             <a href="/works/providers/plans" className="font-medium underline underline-offset-4">For businesses</a>
             <a href="/works/provider" className="font-medium underline underline-offset-4">Manage my business</a>
@@ -113,7 +113,7 @@ export default async function WorksMarketPage({
         <section className="mt-5 rounded-3xl border border-black/10 bg-white/55 p-5 md:p-6">
           <h1 className="font-serif text-3xl leading-tight md:text-4xl">Know who can make it—and exactly what still needs confirming.</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-black/55">
-            Describe the product once. WORKS maps the production steps, finds South African providers whose current offering fits and keeps unknowns visible instead of pretending they are answers.
+            Describe what you need once. WORKS maps the production steps, finds South African providers whose current offering fits and keeps unknowns visible instead of pretending they are answers.
           </p>
           <div className="mt-4 grid gap-2 text-sm text-black/60 sm:grid-cols-3">
             <span className="rounded-2xl border border-black/8 bg-white/65 px-4 py-3">1 · Build the brief</span>
@@ -127,6 +127,23 @@ export default async function WorksMarketPage({
             </p>
           </div>
         </section>
+
+        {market.slug === "za" && categories.length > 0 ? (
+          <nav className="mt-4 rounded-3xl border border-black/10 bg-white/35 p-5" aria-label="Browse South African manufacturers by category">
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-black/40">Browse by category</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {categories.map((category) => (
+                <a
+                  key={category.key}
+                  href={`/manufacturers/${category.slug}`}
+                  className="rounded-full border border-black/12 bg-white/70 px-4 py-2 text-sm text-[#1f1c17] transition hover:border-black/30 hover:bg-white"
+                >
+                  {category.name} manufacturers →
+                </a>
+              ))}
+            </div>
+          </nav>
+        ) : null}
       </div>
 
       <div className="works-market-conversation">

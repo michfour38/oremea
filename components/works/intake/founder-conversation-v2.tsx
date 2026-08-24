@@ -266,6 +266,26 @@ function browserKey(marketSlug: string) {
   return `oremea:works:${marketSlug}:browser-session`;
 }
 
+function acquisitionAttribution() {
+  const params = new URLSearchParams(window.location.search);
+  let referrerHost = "";
+  try {
+    referrerHost = document.referrer ? new URL(document.referrer).hostname.toLowerCase() : "";
+  } catch {
+    referrerHost = "";
+  }
+
+  return {
+    landingPath: window.location.pathname,
+    referrerHost,
+    utmSource: params.get("utm_source") ?? "",
+    utmMedium: params.get("utm_medium") ?? "",
+    utmCampaign: params.get("utm_campaign") ?? "",
+    utmTerm: params.get("utm_term") ?? "",
+    utmContent: params.get("utm_content") ?? "",
+  };
+}
+
 function WorksConversationHeader({ market }: { market: MarketView }) {
   return (
     <header className="flex items-center justify-between border-b border-black/10 pb-5">
@@ -294,12 +314,17 @@ export function FounderConversationV2({
   market,
   categories,
   embedded = false,
+  initialCategoryKey = "",
 }: {
   market: MarketView;
   categories: WorksMarketCategory[];
   embedded?: boolean;
+  initialCategoryKey?: string;
 }) {
-  const [form, setForm] = useState<IntakeState>(INITIAL_STATE);
+  const [form, setForm] = useState<IntakeState>(() => ({
+    ...INITIAL_STATE,
+    categoryKey: initialCategoryKey,
+  }));
   const [panel, setPanel] = useState(0);
   const [furthestPanel, setFurthestPanel] = useState(0);
   const [searchSessionId, setSearchSessionId] = useState<string | null>(null);
@@ -492,6 +517,7 @@ export function FounderConversationV2({
       body: JSON.stringify({
         marketSlug: market.slug,
         browserSessionId: browserSessionId(),
+        attribution: acquisitionAttribution(),
         answers: form,
         currentStep,
       }),
@@ -617,6 +643,7 @@ export function FounderConversationV2({
         body: JSON.stringify({
           searchSessionId,
           briefId,
+          capturePoint: "route-sourcing-fallback",
           ...lead,
         }),
       });
@@ -631,7 +658,7 @@ export function FounderConversationV2({
 
   function reset() {
     window.localStorage.removeItem(storageKey(market.slug));
-    setForm(INITIAL_STATE);
+    setForm({ ...INITIAL_STATE, categoryKey: initialCategoryKey });
     setPanel(0);
     setFurthestPanel(0);
     setSearchSessionId(null);

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Resend } from "resend";
 
 import { prisma } from "@/lib/prisma";
 import { ownsWorksAnonymousSearch } from "@/lib/works/searches/anonymous-search-ownership";
@@ -12,6 +13,106 @@ function emailValue(value: unknown) {
   return email.includes("@") ? email : "";
 }
 
+const WORKS_CAPTURE_POINTS = new Set([
+  "provider-outreach",
+  "route-sourcing-fallback",
+]);
+
+function capturePointValue(value: unknown) {
+  const point = stringValue(value).slice(0, 80);
+  return WORKS_CAPTURE_POINTS.has(point) ? point : undefined;
+}
+
+function sourceSummary(session: {
+  landing_path: string | null;
+  referrer_host: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  utm_term: string | null;
+  utm_content: string | null;
+}) {
+  const parts = [
+    session.utm_source ? `source=${session.utm_source}` : "",
+    session.utm_medium ? `medium=${session.utm_medium}` : "",
+    session.utm_campaign ? `campaign=${session.utm_campaign}` : "",
+    session.utm_term ? `term=${session.utm_term}` : "",
+    session.utm_content ? `content=${session.utm_content}` : "",
+    session.referrer_host ? `referrer=${session.referrer_host}` : "",
+    session.landing_path ? `landing=${session.landing_path}` : "",
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : "Direct / unattributed";
+}
+
+async function notifyOremeaOfSourcingLead({
+  session,
+  briefId,
+  requestId,
+  name,
+  email,
+  phone,
+  preferredContactMethod,
+  capturePoint,
+}: {
+  session: NonNullable<Awaited<ReturnType<typeof ownedSession>>>;
+  briefId: string;
+  requestId: string;
+  name: string;
+  email: string;
+  phone?: string;
+  preferredContactMethod?: string;
+  capturePoint?: string;
+}) {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  const from =
+    process.env.WORKS_OUTREACH_FROM?.trim() ||
+    process.env.RESEND_FROM_EMAIL?.trim();
+  const to = process.env.WORKS_LEAD_NOTIFY_TO?.trim() || "support@oremea.com";
+  if (!apiKey || !from || !to) {
+    console.warn("WORKS sourcing lead notification is not configured.");
+    return;
+  }
+
+  const brief = await prisma.works_product_briefs.findUnique({
+    where: { id: briefId },
+    select: {
+      product_description: true,
+      stage: true,
+      target_quantity: true,
+      quantity_unit: true,
+      administrative_area: true,
+    },
+  });
+  const product = brief?.product_description?.replace(/\s+/g, " ").trim() || "New sourcing request";
+  const resend = new Resend(apiKey);
+  await resend.emails.send({
+    from,
+    to,
+    replyTo: email,
+    subject: `WORKS sourcing lead: ${product.slice(0, 90)}`,
+    text: [
+      "A new WORKS buyer has asked to continue sourcing.",
+      "",
+      `Product / need: ${product}`,
+      brief?.stage ? `Stage: ${brief.stage}` : "",
+      brief?.target_quantity != null
+        ? `Quantity: ${String(brief.target_quantity)} ${brief.quantity_unit ?? ""}`.trim()
+        : "",
+      brief?.administrative_area ? `Area: ${brief.administrative_area}` : "",
+      `Name: ${name}`,
+      `Email: ${email}`,
+      phone ? `Phone: ${phone}` : "",
+      preferredContactMethod ? `Preferred contact: ${preferredContactMethod}` : "",
+      `Conversion point: ${capturePoint ?? "unknown"}`,
+      `Acquisition: ${sourceSummary(session)}`,
+      `Request ID: ${requestId}`,
+      `Brief ID: ${briefId}`,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  });
+}
+
 async function ownedSession(
   req: NextRequest,
   searchSessionId: string,
@@ -23,6 +124,13 @@ async function ownedSession(
       id: true,
       brief_id: true,
       browser_session_id: true,
+      landing_path: true,
+      referrer_host: true,
+      utm_source: true,
+      utm_medium: true,
+      utm_campaign: true,
+      utm_term: true,
+      utm_content: true,
       market: { select: { slug: true } },
     },
   });
@@ -93,6 +201,7 @@ export async function POST(req: NextRequest) {
     const email = emailValue(body?.email);
     const phone = stringValue(body?.phone) || undefined;
     const preferredContactMethod = stringValue(body?.preferredContactMethod) || undefined;
+    const capturePoint = capturePointValue(body?.capturePoint);
 
     if (!searchSessionId || !briefId) {
       return NextResponse.json(
@@ -118,6 +227,10 @@ export async function POST(req: NextRequest) {
     }
 
     const request = await prisma.$transaction(async (tx) => {
+      const existingRequest = await tx.works_procurement_requests.findUnique({
+        where: { search_session_id: searchSessionId },
+        select: { id: true },
+      });
       const procurementRequest = await tx.works_procurement_requests.upsert({
         where: { search_session_id: searchSessionId },
         update: {
@@ -135,6 +248,7 @@ export async function POST(req: NextRequest) {
           email,
           phone,
           preferred_contact_method: preferredContactMethod,
+          capture_point: capturePoint,
           status: "REQUESTED",
         },
         select: { id: true, status: true },
@@ -150,8 +264,25 @@ export async function POST(req: NextRequest) {
         data: { contact_email: email, status: "SOURCING_REQUESTED" },
       });
 
-      return procurementRequest;
+      return { ...procurementRequest, newlyCreated: !existingRequest };
     });
+
+    if (request.newlyCreated) {
+      try {
+        await notifyOremeaOfSourcingLead({
+          session,
+          briefId,
+          requestId: request.id,
+          name,
+          email,
+          phone,
+          preferredContactMethod,
+          capturePoint,
+        });
+      } catch (notificationError) {
+        console.error("WORKS sourcing lead notification failed:", notificationError);
+      }
+    }
 
     return NextResponse.json({
       requestId: request.id,
