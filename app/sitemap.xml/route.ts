@@ -4,6 +4,7 @@ const MAIN_ROUTES = [
   "/",
   "/explore",
   "/compare",
+  "/reviews",
   "/contact",
   "/terms",
   "/privacy",
