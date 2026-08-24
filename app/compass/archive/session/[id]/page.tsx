@@ -14,9 +14,9 @@ import { getCompassAccessState } from "@/src/lib/compass/compass-access";
 import { CompassArchiveSessionView } from "./CompassArchiveSessionView";
 
 type Props = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 const AREA_LABELS: Record<string, string> = {
@@ -38,7 +38,8 @@ function formatDate(value: Date | string) {
   });
 }
 
-export default async function CompassArchiveSessionPage({ params }: Props) {
+export default async function CompassArchiveSessionPage(props: Props) {
+  const params = await props.params;
   const { userId } = await auth();
 
   if (!userId) {

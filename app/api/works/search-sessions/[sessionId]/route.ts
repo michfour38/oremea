@@ -42,10 +42,8 @@ async function ownedSession(req: NextRequest, sessionId: string) {
   return session;
 }
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { sessionId: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ sessionId: string }> }) {
+  const params = await props.params;
   try {
     const session = await ownedSession(req, params.sessionId);
 
@@ -69,10 +67,8 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { sessionId: string } }
-) {
+export async function PATCH(req: NextRequest, props: { params: Promise<{ sessionId: string }> }) {
+  const params = await props.params;
   try {
     const existing = await ownedSession(req, params.sessionId);
     if (!existing) {

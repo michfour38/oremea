@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Sign in to open the WORKS provider inbox." }, { status: 401 });
 
   const memberships = await prisma.works_provider_memberships.findMany({

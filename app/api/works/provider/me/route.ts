@@ -30,7 +30,7 @@ const DEFAULT_VISIBILITY = {
 };
 
 export async function GET() {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Sign in to manage a WORKS provider profile." }, { status: 401 });
 
   const memberships = await prisma.works_provider_memberships.findMany({
@@ -79,7 +79,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Sign in to manage a WORKS provider profile." }, { status: 401 });
 
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;

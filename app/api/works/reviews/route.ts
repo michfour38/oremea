@@ -30,7 +30,7 @@ async function ownedOutreach(outreachId: string, userId: string) {
 }
 
 export async function GET(request: Request) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Sign in to review a WORKS provider." }, { status: 401 });
 
   const outreachId = new URL(request.url).searchParams.get("outreachId");
@@ -61,7 +61,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Sign in to review a WORKS provider." }, { status: 401 });
 
   const payload = await request.json().catch(() => null) as Record<string, unknown> | null;

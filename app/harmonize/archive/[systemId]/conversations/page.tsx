@@ -2,7 +2,7 @@
 
 import MemberNav from "@/app/(member)/member-nav"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react";
 
 function conversationHref(systemId: string, cycle: any) {
   if (cycle.status === "reviewed") {
@@ -20,11 +20,12 @@ function conversationHref(systemId: string, cycle: any) {
   return `/harmonize/system/${systemId}/cycle/${cycle.id}/private`
 }
 
-export default function ArchivedConversationsPage({
-  params,
-}: {
-  params: { systemId: string }
-}) {
+export default function ArchivedConversationsPage(
+  props: {
+    params: Promise<{ systemId: string }>
+  }
+) {
+  const params = use(props.params);
   const [system, setSystem] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -61,88 +62,88 @@ export default function ArchivedConversationsPage({
 
   const archivedConversations = system?.cycles ?? []
 
-return (
-    <>
-      <MemberNav />
+  return (
+      <>
+        <MemberNav />
 
-      <main
-        className="min-h-screen text-[#f4f1ea]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(0,0,0,0.76), rgba(0,0,0,0.76)), url('/images/harmonize/bg-harmonize-private.webp')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundAttachment: "fixed",
-        }}
-      >
-        <section className="mx-auto max-w-5xl px-6 py-20">
-          <Link
-            href={`/harmonize/archive/${params.systemId}`}
-            className="text-sm text-[#c6a96b]"
-          >
-            ← Back to Archive
-          </Link>
+        <main
+          className="min-h-screen text-[#f4f1ea]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(0,0,0,0.76), rgba(0,0,0,0.76)), url('/images/harmonize/bg-harmonize-private.webp')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundAttachment: "fixed",
+          }}
+        >
+          <section className="mx-auto max-w-5xl px-6 py-20">
+            <Link
+              href={`/harmonize/archive/${params.systemId}`}
+              className="text-sm text-[#c6a96b]"
+            >
+              ← Back to Archive
+            </Link>
 
-          <p className="mt-10 text-xs uppercase tracking-[0.35em] text-[#c6a96b]">
-            Harmonize by Oremea
-          </p>
-
-          <h1 className="mt-4 text-4xl font-semibold">
-            Conversations
-          </h1>
-
-          <p className="mt-6 max-w-3xl text-base leading-7 text-[#d8d2c6]">
-            Every completed conversation in this Relationship Space.
-          </p>
-
-          {loading ? (
-            <p className="mt-8 text-sm text-[#bfb8aa]">
-              Loading conversations...
+            <p className="mt-10 text-xs uppercase tracking-[0.35em] text-[#c6a96b]">
+              Harmonize by Oremea
             </p>
-          ) : null}
 
-          {error ? (
-            <p className="mt-8 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
-              {error}
+            <h1 className="mt-4 text-4xl font-semibold">
+              Conversations
+            </h1>
+
+            <p className="mt-6 max-w-3xl text-base leading-7 text-[#d8d2c6]">
+              Every completed conversation in this Relationship Space.
             </p>
-          ) : null}
 
-          {!loading && !error && archivedConversations.length === 0 ? (
-            <div className="mt-10 rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-              <p className="text-sm leading-6 text-[#bfb8aa]">
-                No completed conversations are available yet.
+            {loading ? (
+              <p className="mt-8 text-sm text-[#bfb8aa]">
+                Loading conversations...
               </p>
-            </div>
-          ) : null}
+            ) : null}
 
-          {!loading && !error && archivedConversations.length > 0 ? (
-            <div className="mt-10 space-y-4">
-              {archivedConversations.map((cycle: any, index: number) => (
-                <Link
-                  key={cycle.id}
-                  href={conversationHref(params.systemId, cycle)}
-                  className="block rounded-3xl border border-white/10 bg-white/[0.04] p-6 transition hover:border-[#c6a96b]/50"
-                >
-                  <p className="text-xs uppercase tracking-[0.2em] text-[#8f8778]">
-                    {cycle.displayTitle || "Untitled Conversation"}
-                  </p>
+            {error ? (
+              <p className="mt-8 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+                {error}
+              </p>
+            ) : null}
 
-                  <h2 className="mt-3 text-xl font-medium text-[#f4f1ea]">
-                    {cycle.displayTitle || "Untitled Conversation"}
-                  </h2>
+            {!loading && !error && archivedConversations.length === 0 ? (
+              <div className="mt-10 rounded-3xl border border-white/10 bg-white/[0.04] p-6">
+                <p className="text-sm leading-6 text-[#bfb8aa]">
+                  No completed conversations are available yet.
+                </p>
+              </div>
+            ) : null}
 
-                  <p className="mt-3 text-xs text-[#777]">
-                    Started{" "}
-                    {cycle.started_at
-                      ? new Date(cycle.started_at).toLocaleString()
-                      : "Unknown"}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          ) : null}
-        </section>
-      </main>
-    </>
-  )
+            {!loading && !error && archivedConversations.length > 0 ? (
+              <div className="mt-10 space-y-4">
+                {archivedConversations.map((cycle: any, index: number) => (
+                  <Link
+                    key={cycle.id}
+                    href={conversationHref(params.systemId, cycle)}
+                    className="block rounded-3xl border border-white/10 bg-white/[0.04] p-6 transition hover:border-[#c6a96b]/50"
+                  >
+                    <p className="text-xs uppercase tracking-[0.2em] text-[#8f8778]">
+                      {cycle.displayTitle || "Untitled Conversation"}
+                    </p>
+
+                    <h2 className="mt-3 text-xl font-medium text-[#f4f1ea]">
+                      {cycle.displayTitle || "Untitled Conversation"}
+                    </h2>
+
+                    <p className="mt-3 text-xs text-[#777]">
+                      Started{" "}
+                      {cycle.started_at
+                        ? new Date(cycle.started_at).toLocaleString()
+                        : "Unknown"}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+          </section>
+        </main>
+      </>
+    )
 }

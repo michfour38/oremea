@@ -29,7 +29,7 @@ function sameOrganizationDomain(emailHost: string, siteHost: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     return NextResponse.json({ error: "Sign in to claim a WORKS provider profile." }, { status: 401 });
   }
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     return NextResponse.json({ error: "Sign in to claim a WORKS provider profile." }, { status: 401 });
   }

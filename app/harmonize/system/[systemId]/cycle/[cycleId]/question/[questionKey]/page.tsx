@@ -2,17 +2,18 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, use } from "react";
 
 import { readinessChoices } from "@/lib/harmonize/decisions"
 import { getNextQuestion } from "@/lib/harmonize/flow"
 import { getQuestionByKey } from "@/lib/harmonize/questions"
 
-export default function HarmonizeQuestionPage({
-  params,
-}: {
-  params: { systemId: string; cycleId: string; questionKey: string }
-}) {
+export default function HarmonizeQuestionPage(
+  props: {
+    params: Promise<{ systemId: string; cycleId: string; questionKey: string }>
+  }
+) {
+  const params = use(props.params);
   const router = useRouter()
   const question = getQuestionByKey(params.questionKey)
   const nextQuestion = getNextQuestion(params.questionKey)

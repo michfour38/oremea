@@ -26,9 +26,8 @@ export function ExploreStartingPoint() {
               Start with the sentence that feels closest.
             </h2>
             <p className="mt-6 text-base leading-8 text-zinc-400">
-              There is no locked sequence. Resonance remains the strongest
-              foundation for deeper reflective work, while every product is
-              available as its own entry point.
+              There is no locked sequence and no prerequisite product. Start with
+              the container that matches the need you actually have now.
             </p>
           </div>
 

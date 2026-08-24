@@ -14,18 +14,18 @@ export function ExploreWhatIs() {
 
         <div className="space-y-5 text-base leading-8 text-zinc-400">
           <p>
-            Oremea helps people recognise patterns, remain with what becomes
-            visible, and turn clarity into action.
+            Oremea helps people see themselves more clearly, stay with relational
+            material, and move when movement is the actual need.
           </p>
 
           <p>
-            Its products use carefully sequenced prompts and synthesis grounded
-            in the participant&apos;s own words.
+            Its products use product-specific questions and synthesis grounded in
+            the participant&apos;s own words.
           </p>
 
           <p>
-            Every experience is designed around clear purpose, user authority,
-            and an honest next movement.
+            Every experience is designed around clear purpose, participant
+            authority, and a clean stopping point when its job is done.
           </p>
         </div>
       </div>

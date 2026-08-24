@@ -75,10 +75,8 @@ function decisionLabel(decision: string) {
 
 const DECISIONS = new Set(["YES", "POSSIBLE", "OUTSIDE_CAPABILITY"]);
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { token: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ token: string }> }) {
+  const params = await props.params;
   try {
     const tokenHash = hashToken(params.token);
     const body = await req.json();

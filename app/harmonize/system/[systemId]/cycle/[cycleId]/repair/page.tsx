@@ -4,38 +4,39 @@ import { HarmonizeDrawer } from "@/components/harmonize/harmonize-drawer"
 import { cycleStatusMessage } from "@/lib/harmonize/cycle-status"
 import { repairQuestions } from "@/lib/harmonize/repair-questions"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react";
 
-export default function HarmonizeRepairPage({
-  params,
-}: {
-  params: { systemId: string; cycleId: string }
-}) {
-  const [answers, setAnswers] = useState<Record<string, string>>({})
-const [saving, setSaving] = useState(false)
-const [saved, setSaved] = useState(false)
-const [error, setError] = useState("")
-const [cycleStatus, setCycleStatus] = useState("")
-
-useEffect(() => {
-  async function loadCycleStatus() {
-    try {
-      const response = await fetch(
-        `/api/harmonize/cycle/summary?cycleId=${params.cycleId}`,
-      )
-
-      const data = await response.json()
-
-      if (response.ok && data.success) {
-        setCycleStatus(data.cycle?.status || "")
-      }
-    } catch {
-      // Status warning is helpful but not required.
-    }
+export default function HarmonizeRepairPage(
+  props: {
+    params: Promise<{ systemId: string; cycleId: string }>
   }
+) {
+  const params = use(props.params);
+  const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState("")
+  const [cycleStatus, setCycleStatus] = useState("")
 
-  loadCycleStatus()
-}, [params.cycleId])
+  useEffect(() => {
+    async function loadCycleStatus() {
+      try {
+        const response = await fetch(
+          `/api/harmonize/cycle/summary?cycleId=${params.cycleId}`,
+        )
+
+        const data = await response.json()
+
+        if (response.ok && data.success) {
+          setCycleStatus(data.cycle?.status || "")
+        }
+      } catch {
+        // Status warning is helpful but not required.
+      }
+    }
+
+    loadCycleStatus()
+  }, [params.cycleId])
 
   function updateAnswer(key: string, value: string) {
     setAnswers((current) => ({

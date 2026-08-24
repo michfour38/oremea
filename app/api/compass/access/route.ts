@@ -6,7 +6,7 @@ import { getCompassAccessState } from "@/src/lib/compass/compass-access";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     return NextResponse.json({ active: false }, { status: 401 });

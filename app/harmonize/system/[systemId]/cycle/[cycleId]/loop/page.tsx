@@ -3,18 +3,19 @@
 import { HarmonizeDrawer } from "@/components/harmonize/harmonize-drawer"
 import { cycleStatusMessage } from "@/lib/harmonize/cycle-status"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react";
 
-export default function HarmonizeLoopPage({
-  params,
-}: {
-  params: { systemId: string; cycleId: string }
-}) {
+export default function HarmonizeLoopPage(
+  props: {
+    params: Promise<{ systemId: string; cycleId: string }>
+  }
+) {
+  const params = use(props.params);
   const [summary, setSummary] = useState<any>(null)
-const [patternBetween, setPatternBetween] = useState<any>(null)
+  const [patternBetween, setPatternBetween] = useState<any>(null)
   const [entries, setEntries] = useState<any[]>([])
   const [error, setError] = useState("")
-const [cycleStatus, setCycleStatus] = useState("")
+  const [cycleStatus, setCycleStatus] = useState("")
 
   useEffect(() => {
     async function loadLoop() {

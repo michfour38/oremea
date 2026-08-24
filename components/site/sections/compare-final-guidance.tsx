@@ -11,11 +11,11 @@ export function CompareFinalGuidance() {
         </h2>
 
         <p className="mx-auto mt-8 max-w-3xl text-base leading-8 text-zinc-400">
-          Each Oremea product stands on its own. Recognition is an ongoing
-          accountability conversation for seeing yourself accurately. Resonance
-          gives what becomes visible a contained seven-day place to deepen.
-          Compass is there when clarity is ready to become deliberate movement.
-          Use one, return to one, or move between them as the need changes.
+          Each Oremea product stands on its own. Recognition is a private AI
+          discussion journal for seeing yourself more clearly. Resonance gives one
+          relational territory a contained seven-day room. Compass is for
+          navigation when something actually needs to move. Use one, return to one,
+          or move between them as the need changes.
         </p>
 
         <div className="mt-16 flex flex-col items-center justify-center gap-6 md:flex-row">

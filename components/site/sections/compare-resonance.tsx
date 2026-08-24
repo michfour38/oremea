@@ -17,7 +17,7 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
         <div className="grid gap-14 md:grid-cols-[0.95fr_1.05fr]">
           <div>
             <p className="mb-5 text-xs uppercase tracking-[0.28em] text-[#b79a63]">
-              Recommended Starting Point
+              Relational Reflection
             </p>
 
             <h2 className="text-4xl font-light leading-tight text-zinc-100">
@@ -27,10 +27,6 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
             <p className="mt-6 text-lg leading-8 text-zinc-400">
               Relational awareness and self-observation.
             </p>
-
-            <div className="mt-10 inline-flex rounded-full border border-[#b79a63]/25 bg-[#b79a63]/[0.05] px-5 py-2 text-xs uppercase tracking-[0.18em] text-[#b79a63]">
-              Foundation of the Ecosystem
-            </div>
           </div>
 
           <div className="rounded-3xl border border-[#b79a63]/20 bg-[#b79a63]/[0.03] p-10">
@@ -84,10 +80,10 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
                   </p>
 
                   <p className="text-base leading-8 text-zinc-300">
-                    Resonance is a structured reflective journey designed to
-                    help users better understand repeated relational patterns,
-                    communication tendencies, emotional loops, attraction
-                    dynamics, and reflective honesty over time.
+                    Resonance is a private seven-day room with one teacher and one
+                    relational territory. Daily questions and Mirrors stay inside
+                    the participant&apos;s own material rather than turning the room
+                    into advice, diagnosis, or a theory about the person.
                   </p>
                 </div>
 
@@ -121,8 +117,9 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
 
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-6">
                   <p className="text-sm leading-7 text-zinc-400">
-                    Resonance is strongly recommended before progressing into
-                    Compass, Harmonize, or The Current.
+                    Each Resonance room stands on its own. Choose the teacher whose
+                    territory matches what you want to stay with; no room is a
+                    prerequisite for another Oremea product.
                   </p>
                 </div>
 

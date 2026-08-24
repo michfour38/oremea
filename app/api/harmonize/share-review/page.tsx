@@ -2,13 +2,14 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react";
 
-export default function HarmonizeShareReviewPage({
-  params,
-}: {
-  params: { systemId: string; cycleId: string }
-}) {
+export default function HarmonizeShareReviewPage(
+  props: {
+    params: Promise<{ systemId: string; cycleId: string }>
+  }
+) {
+  const params = use(props.params);
   const router = useRouter()
   const [review, setReview] = useState<any>(null)
   const [loading, setLoading] = useState(true)

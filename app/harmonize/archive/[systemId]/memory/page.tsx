@@ -2,13 +2,14 @@
 
 import MemberNav from "@/app/(member)/member-nav"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react";
 
-export default function MemoryPage({
-  params,
-}: {
-  params: { systemId: string }
-}) {
+export default function MemoryPage(
+  props: {
+    params: Promise<{ systemId: string }>
+  }
+) {
+  const params = use(props.params);
   const [system, setSystem] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")

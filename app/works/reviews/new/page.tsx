@@ -1,7 +1,8 @@
 import { WorksCustomerReviewForm } from "@/components/works/reviews/customer-review-form";
 import { WorksPageHeader } from "@/components/works/works-brand";
 
-export default function WorksReviewPage({ searchParams }: { searchParams: { outreach?: string } }) {
+export default async function WorksReviewPage(props: { searchParams: Promise<{ outreach?: string }> }) {
+  const searchParams = await props.searchParams;
   const outreachId = searchParams.outreach;
 
   return (

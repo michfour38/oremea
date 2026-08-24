@@ -4,10 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { getRouteSummary } from "@/lib/works/routes/get-route-summary";
 import { ownsWorksAnonymousSearch } from "@/lib/works/searches/anonymous-search-ownership";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { briefId: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ briefId: string }> }) {
+  const params = await props.params;
   try {
     const searchSessionId = req.nextUrl.searchParams.get("searchSessionId")?.trim();
     if (!searchSessionId) {

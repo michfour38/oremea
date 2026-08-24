@@ -3,7 +3,7 @@
 import { HarmonizeDrawer } from "@/components/harmonize/harmonize-drawer"
 import { cycleStatusMessage } from "@/lib/harmonize/cycle-status"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react";
 
 function outcomeText(outcome?: string) {
   if (outcome === "integration") return "Something appears to have shifted in this cycle."
@@ -12,11 +12,12 @@ function outcomeText(outcome?: string) {
   return "This cycle has been reviewed."
 }
 
-export default function HarmonizeCycleCompletePage({
-  params,
-}: {
-  params: { systemId: string; cycleId: string }
-}) {
+export default function HarmonizeCycleCompletePage(
+  props: {
+    params: Promise<{ systemId: string; cycleId: string }>
+  }
+) {
+  const params = use(props.params);
   const [summary, setSummary] = useState<any>(null)
 
   useEffect(() => {
@@ -37,8 +38,8 @@ export default function HarmonizeCycleCompletePage({
   }, [params.cycleId])
 
   const latestOutcome = summary?.reviews?.[0]?.outcome
-const statusMessage = cycleStatusMessage(summary?.status)
-const cycleSummary = summary?.systemSnapshot?.cycleSummary
+  const statusMessage = cycleStatusMessage(summary?.status)
+  const cycleSummary = summary?.systemSnapshot?.cycleSummary
 
   return (
     <main className="min-h-screen bg-[#0b0b0b] text-[#f4f1ea]">

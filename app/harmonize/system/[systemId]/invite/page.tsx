@@ -4,7 +4,7 @@ import ParticipantList from "@/components/harmonize/invite/ParticipantList"
 import MemberNav from "@/app/(member)/member-nav"
 import InvitationDetails from "@/components/harmonize/invite/InvitationDetails"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react";
 import {
   BASE_INCLUDED_PARTICIPANTS,
   BASE_PRICE,
@@ -14,11 +14,12 @@ import {
   type InviteParticipant,
 } from "@/components/harmonize/invite/invite-types"
 
-export default function HarmonizeInvitePage({
-  params,
-}: {
-  params: { systemId: string }
-}) {
+export default function HarmonizeInvitePage(
+  props: {
+    params: Promise<{ systemId: string }>
+  }
+) {
+  const params = use(props.params);
   const [participants, setParticipants] = useState<InviteParticipant[]>([
     { email: "", relationshipContext: "Partner" },
   ])
@@ -114,38 +115,38 @@ Harmonize by Oremea`
     }
   }
 
-async function saveInvites() {
-  setError("")
-  setSaved(false)
-  setSaving(true)
+  async function saveInvites() {
+    setError("")
+    setSaved(false)
+    setSaving(true)
 
-  try {
-    const response = await fetch("/api/harmonize/invite", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        systemId: params.systemId,
-        invites: participants,
-      }),
-    })
+    try {
+      const response = await fetch("/api/harmonize/invite", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          systemId: params.systemId,
+          invites: participants,
+        }),
+      })
 
-    const data = await response.json()
+      const data = await response.json()
 
-    if (!response.ok) {
-      throw new Error(data.error || "Unable to save invites.")
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to save invites.")
+      }
+
+      setSaved(true)
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Unable to save invites.",
+      )
+    } finally {
+      setSaving(false)
     }
-
-    setSaved(true)
-  } catch (err) {
-    setError(
-      err instanceof Error ? err.message : "Unable to save invites.",
-    )
-  } finally {
-    setSaving(false)
   }
-}
 
   return (
   <>
