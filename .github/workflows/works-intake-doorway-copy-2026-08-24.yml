@@ -1,0 +1,42 @@
+name: One-time WORKS intake doorway copy
+
+on:
+  pull_request:
+    branches:
+      - works-production
+    paths:
+      - .github/workflows/works-intake-doorway-copy-2026-08-24.yml
+
+permissions:
+  contents: write
+
+jobs:
+  update-copy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+      - name: Update doorway copy and self-clean
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('components/works/intake/founder-conversation-v2.tsx')
+          s = p.read_text()
+          old_q = 'What are you making?'
+          new_q = 'What do you need help producing?'
+          old_ph = 'A chilli sauce from my family recipe…'
+          new_ph = 'Describe the product, component, formula, packaging or service you need…'
+          if s.count(old_q) != 2:
+              raise SystemExit(f'Expected exactly 2 heading/question matches, found {s.count(old_q)}')
+          if s.count(old_ph) != 1:
+              raise SystemExit(f'Expected exactly 1 placeholder match, found {s.count(old_ph)}')
+          p.write_text(s.replace(old_q, new_q).replace(old_ph, new_ph))
+          PY
+          rm .github/workflows/works-intake-doorway-copy-2026-08-24.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add components/works/intake/founder-conversation-v2.tsx .github/workflows/works-intake-doorway-copy-2026-08-24.yml
+          git commit -m "Refine WORKS intake doorway copy"
+          git push
