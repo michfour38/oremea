@@ -46,13 +46,21 @@ assert.equal(
 )
 
 const accessPage = readFileSync("app/compass/access/page.tsx", "utf8")
+const accessOffer = readFileSync("components/compass/CompassAccessOffer.tsx", "utf8")
+const publicCompassAccess = `${accessPage}\n${accessOffer}`
+
 assert.doesNotMatch(
-  accessPage,
-  /Choose 30-day pass|30-day pass or monthly|want a defined Compass period|COMPASS_CHECKOUT_URL/,
-  "Compass must not publicly sell the superseded 30-day pass.",
+  publicCompassAccess,
+  /Choose 30-day pass|30-day pass or monthly|want a defined Compass period|COMPASS_CHECKOUT_URL|No automatic renewal|Nothing renews automatically|Standard [^\n]*-day access/,
+  "Compass must not publicly sell or describe the superseded 30-day pass.",
+)
+assert.doesNotMatch(
+  accessOffer,
+  /COMPASS_PRICING\.accessDays/,
+  "Compass access UI must not depend on the removed current-pass duration field.",
 )
 assert.match(
-  accessPage,
+  publicCompassAccess,
   /Cancel anytime[\s\S]*Archive/i,
   "Compass checkout must communicate monthly cancellation and preserved Archive access.",
 )
