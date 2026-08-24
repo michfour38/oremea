@@ -39,7 +39,7 @@ jobs:
             react-dom@19 \
             @types/react@19 \
             @types/react-dom@19 \
-            @clerk/nextjs@latest-v6
+            @clerk/nextjs@6.39.6
 
       - name: Capture resolved dependency files
         if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
