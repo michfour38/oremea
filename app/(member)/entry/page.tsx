@@ -17,6 +17,9 @@ import MemberNav from "../member-nav";
 
 export const dynamic = "force-dynamic";
 
+const HAS_RESONANCE_LAUNCH_DISCOUNT =
+  RESONANCE_LAUNCH_PRICE !== RESONANCE_REGULAR_PRICE;
+
 type RoomDetail = {
   label: string;
   question: string;
@@ -196,11 +199,15 @@ export default async function EntryPage() {
 
               <div className="mt-5 inline-flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-full border border-[#c8a96a]/25 bg-black/30 px-4 py-2 text-sm">
                 <span className="text-xs uppercase tracking-[0.16em] text-[#c8a96a]/75">
-                  {RESONANCE_LAUNCH_LABEL}
+                  {HAS_RESONANCE_LAUNCH_DISCOUNT
+                    ? RESONANCE_LAUNCH_LABEL
+                    : "Seven-day room"}
                 </span>
-                <span className="text-zinc-500 line-through">
-                  {RESONANCE_REGULAR_PRICE}
-                </span>
+                {HAS_RESONANCE_LAUNCH_DISCOUNT ? (
+                  <span className="text-zinc-500 line-through">
+                    {RESONANCE_REGULAR_PRICE}
+                  </span>
+                ) : null}
                 <span className="text-lg text-[#c8a96a]">
                   {RESONANCE_LAUNCH_PRICE}
                 </span>
@@ -360,9 +367,11 @@ export default async function EntryPage() {
                                 ? `Purchase ${week.title} again`
                                 : `Purchase ${week.title}`}
                             </span>
-                            <span className="ml-2 text-zinc-500 line-through">
-                              {RESONANCE_REGULAR_PRICE}
-                            </span>
+                            {HAS_RESONANCE_LAUNCH_DISCOUNT ? (
+                              <span className="ml-2 text-zinc-500 line-through">
+                                {RESONANCE_REGULAR_PRICE}
+                              </span>
+                            ) : null}
                             <span className="ml-2">{RESONANCE_LAUNCH_PRICE}</span>
                           </Link>
                         ) : null}
