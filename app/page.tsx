@@ -18,9 +18,7 @@ import {
   formatRecognitionPrice,
 } from "@/src/lib/recognition/recognition-pricing";
 
-const COMPASS_LAUNCH_PRICE = formatCompassPrice(
-  COMPASS_PRICING.launchPriceCents,
-);
+const COMPASS_PRICE = formatCompassPrice(COMPASS_PRICING.launchPriceCents);
 const COMPASS_STANDARD_PRICE = formatCompassPrice(
   COMPASS_PRICING.standardPriceCents,
 );
@@ -37,13 +35,13 @@ const products = [
     href: "https://recognition.oremea.com",
     active: true,
     short:
-      "An ongoing private conversation that keeps you accountable to your own words without deciding where you should go.",
+      "A private AI discussion journal for thoughts that need more than a journal page.",
     action: "Enter Recognition",
     full: [
       "Recognition begins wherever your attention is now.",
       "There is no fixed question sequence. Each reply follows what you actually said, while earlier participant-written evidence can return when it materially clarifies recurrence, correction, contrast, responsibility, or a distinction you are trying to hold.",
       "Recognition can question an absolute, place two of your own statements beside one another, separate observation from interpretation, and keep your participation visible without absorbing someone else's responsibility for you.",
-      "Recognition does not turn clarity into an action plan. The conversation can end with one thing simply becoming visible.",
+      "Recognition does not turn clarity into an action plan. Meaning and choices remain yours, and the conversation can end with one thing simply becoming visible.",
     ],
   },
   {
@@ -51,15 +49,14 @@ const products = [
     href: "/resonance",
     active: true,
     short:
-      "A private seven-day reflection experience that helps you stay with what becomes visible.",
+      "A private seven-day reflection room that helps you stay with yourself inside one relational territory.",
     action: "Enter Resonance",
     full: [
-      "Resonance gives you a structured place to notice what happens inside connection across seven days, one thematic room at a time.",
-      "Each day you respond to carefully sequenced prompts in your own words. The Daily Mirror then reads those reflections together and reflects the pattern, tension, contrast, or movement becoming visible.",
-      "That Daily Mirror ends with two precise questions arising from the reflection, giving you somewhere specific to stay before you choose to continue.",
-      "On Day 7, a Closing Mirror reads across the full visit and reflects what persisted, changed, sharpened, or became newly visible over time.",
-      "Your completed visit remains available in your archive, and returning to the same room later creates a fresh visit while preserving the earlier one.",
-      "Resonance creates the reflective foundation from which Compass can help turn awareness into movement.",
+      "Resonance gives you a structured place to notice what happens inside connection across seven days, one teacher at a time.",
+      "Each day you respond to the room's current seed questions in your own words. Guiding questions stay inside that teacher and that day's material rather than turning the experience into advice or diagnosis.",
+      "A Daily Mirror can reflect what is visible in that day's participant-written material without inventing a deeper theory about you.",
+      "On Day 7, a Closing Mirror can read across the full visit and reflect what becomes visible because the seven days can now be heard together.",
+      "Your completed visit remains available in your Archive, and returning to the same room later creates a fresh visit while preserving the earlier one.",
     ],
   },
   {
@@ -67,15 +64,14 @@ const products = [
     href: "/compass/access",
     active: true,
     short:
-      "Turn clarity into direction, keep what matters visible on your Map, and choose the next movement you can actually make.",
+      "Turn what matters into clear direction, a working Map, and the next movement you can actually make.",
     action: "Enter Compass",
     full: [
-      "Compass is for the moment after awareness, when you know something matters but still do not know what to do next.",
-      "It helps you move from scattered goals into one clear priority, then takes you deeper into why it matters.",
-      "Your Map keeps what the conversation surfaces visible, while Today lets you add and tick off the goals you choose for yourself.",
-      "Compass does not rush you into fantasy intensity. It helps you find embodied momentum: the smallest honest next step you can actually take.",
-      "Through layered reflection and discussion, Compass helps reveal what interrupts movement, where resistance lives, and what kind of action your nervous system can realistically hold.",
-      "Confidence in the self to follow through is built through kept agreements. Compass helps you begin there.",
+      "Compass is for navigation when something needs to move.",
+      "It helps clarify current reality, make the choice visible, and structure movement without becoming the chooser.",
+      "Your Map keeps what the conversation surfaces visible, while participant-authored goals remain yours rather than being silently rewritten by the intelligence.",
+      "Understanding and planning are useful only while they improve navigation. When movement is current, Compass can stop and reality becomes the teacher again.",
+      "Compass is available as one monthly membership. Cancel anytime; your saved Archive remains available after cancellation.",
     ],
   },
 ];
@@ -188,8 +184,8 @@ export default function Home() {
                       <ProductLaunchPrice
                         className="mt-4"
                         regularPrice={COMPASS_STANDARD_PRICE}
-                        launchPrice={COMPASS_LAUNCH_PRICE}
-                        unit="30-day pass or monthly"
+                        launchPrice={COMPASS_PRICE}
+                        unit="/ month"
                       />
                     ) : null}
                   </div>
