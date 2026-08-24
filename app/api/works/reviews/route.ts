@@ -4,9 +4,10 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 
+// A provider declining work is not a poor service experience. Reviews become
+// available only after a substantive YES/POSSIBLE response to a real WORKS brief.
 const REVIEWABLE_OUTREACH = new Set<WorksProviderOutreachStatus>([
   WorksProviderOutreachStatus.RESPONDED,
-  WorksProviderOutreachStatus.DECLINED,
 ]);
 
 async function ownedOutreach(outreachId: string, userId: string) {
@@ -79,7 +80,9 @@ export async function POST(request: Request) {
   const outreach = await ownedOutreach(outreachId, userId);
   if (!outreach) return NextResponse.json({ error: "This WORKS interaction is not available to this account." }, { status: 404 });
   if (!REVIEWABLE_OUTREACH.has(outreach.status)) {
-    return NextResponse.json({ error: "A review becomes available after the provider has responded to the WORKS brief." }, { status: 409 });
+    return NextResponse.json({
+      error: "A review becomes available after the provider gives a substantive response to the WORKS brief. Declining work alone is not reviewable.",
+    }, { status: 409 });
   }
 
   const publicIdentity = requestedPublicIdentity && Boolean(reviewerName);
