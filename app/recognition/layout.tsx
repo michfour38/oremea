@@ -8,7 +8,7 @@ import "./recognition-reading.css";
 export const metadata: Metadata = {
   title: "Recognition | Oremea",
   description:
-    "An ongoing private recursive accountability conversation that helps you see yourself clearly and stay accountable to your own words without directing your next move.",
+    "A private AI discussion journal for thoughts that need more than a journal page. One focused question at a time, with meaning and choices remaining yours.",
   icons: {
     icon: [{ url: "/icons/recognition.svg", type: "image/svg+xml" }],
     shortcut: "/icons/recognition.svg",
