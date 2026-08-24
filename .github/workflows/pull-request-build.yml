@@ -33,9 +33,53 @@ jobs:
         if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
         run: npx -y @next/codemod@latest next-async-request-api .
 
-      - name: Apply official Clerk v6 codemod
+      - name: Apply Clerk v6 async auth AST transform directly
         if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
-        run: npx -y @clerk/upgrade@1.2.4 --from=core-1
+        run: |
+          curl -fsSL \
+            https://raw.githubusercontent.com/clerk/javascript/e21ae9a4cf189ed20cb04bee94497533cd9d4dbe/packages/upgrade/src/codemods/transform-async-request.cjs \
+            -o /tmp/clerk-transform-async-request.cjs
+          npx -y jscodeshift@17.3.0 \
+            --transform /tmp/clerk-transform-async-request.cjs \
+            --extensions=ts,tsx,js,jsx \
+            --ignore-pattern='**/node_modules/**' \
+            --ignore-pattern='**/.next/**' \
+            app src components lib middleware.ts
+
+      - name: Audit remaining Clerk async call sites
+        if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          roots = [Path('app'), Path('src'), Path('components'), Path('lib')]
+          unawaited_auth = []
+          clerk_client = []
+          for root in roots:
+              if not root.exists():
+                  continue
+              for path in root.rglob('*'):
+                  if path.suffix not in {'.ts', '.tsx', '.js', '.jsx'}:
+                      continue
+                  text = path.read_text(encoding='utf-8')
+                  if '@clerk/nextjs/server' not in text:
+                      continue
+                  for line_no, line in enumerate(text.splitlines(), 1):
+                      if re.search(r'(?<!await )\bauth\(\)', line):
+                          unawaited_auth.append(f'{path}:{line_no}:{line.strip()}')
+                      if re.search(r'\bclerkClient\(\)', line) and not re.search(r'await\s+clerkClient\(\)', line):
+                          clerk_client.append(f'{path}:{line_no}:{line.strip()}')
+
+          print(f'Unawaited auth() sites: {len(unawaited_auth)}')
+          for item in unawaited_auth:
+              print(item)
+          print(f'Unawaited clerkClient() sites: {len(clerk_client)}')
+          for item in clerk_client:
+              print(item)
+          if unawaited_auth or clerk_client:
+              raise SystemExit(1)
+          PY
 
       - name: Install supported Next 15 stack for security migration
         if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
