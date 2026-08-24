@@ -1,0 +1,18 @@
+CLERK_SECURITY_PATCH=PASS
+target=@clerk/nextjs@5.7.6
+critical=0
+high=11
+moderate=3
+low=6
+total=20
+--- resolved packages ---
+oremea@0.1.0 /home/runner/work/oremea/oremea
+└─┬ @clerk/nextjs@5.7.6
+  ├─┬ @clerk/backend@1.14.1
+  │ └── @clerk/shared@2.9.2 deduped
+  ├─┬ @clerk/clerk-react@5.12.0
+  │ └── @clerk/shared@2.9.2 deduped
+  └── @clerk/shared@2.9.2
+
+
+validation=full-launch-contracts+typecheck+next-build
