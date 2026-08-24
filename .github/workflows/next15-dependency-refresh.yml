@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   rehearsal:
@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Check out migration branch
         uses: actions/checkout@v4
+        with:
+          ref: security-next15-20260824
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -57,7 +59,6 @@ jobs:
             ));
 
             if (!hasClerkServerImport) return undefined;
-
             let dirty = false;
 
             function makeEnclosingFunctionAsync(path) {
@@ -88,7 +89,6 @@ jobs:
 
             return dirty ? root.toSource() : undefined;
           };
-
           module.exports.parser = 'tsx';
           EOF
           npx -y jscodeshift@17.3.0 \
@@ -107,7 +107,6 @@ jobs:
           unawaited_auth = []
           unawaited_clerk_client = []
           legacy_clerk_client = []
-
           for path in Path('.').rglob('*'):
               if any(part in {'.git', '.next', 'node_modules'} for part in path.parts):
                   continue
@@ -175,3 +174,15 @@ jobs:
 
       - name: Build application with full launch gate
         run: npm run build
+
+      - name: Persist the tested migration to the branch
+        run: |
+          if git diff --quiet; then
+            echo 'No migration changes to persist.'
+            exit 0
+          fi
+          git config user.name 'oremea-migration-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git commit -m 'Persist tested Next 15 React 19 Clerk 6 migration'
+          git push origin HEAD:security-next15-20260824
