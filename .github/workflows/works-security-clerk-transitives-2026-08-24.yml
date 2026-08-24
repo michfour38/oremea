@@ -1,0 +1,90 @@
+name: One-time WORKS Clerk transitive security patch
+
+on:
+  push:
+    branches:
+      - works/security-clerk-5.7.6-2026-08-24
+    paths:
+      - .github/workflows/works-security-clerk-transitives-2026-08-24.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Pin patched Clerk transitive releases
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          npm pkg set 'overrides.@clerk/clerk-react=5.61.6'
+          npm pkg set 'overrides.@clerk/shared=2.22.1'
+          npm install
+
+          npm ls @clerk/nextjs @clerk/clerk-react @clerk/backend @clerk/shared > /tmp/clerk-ls.txt 2>&1 || true
+          npm audit --omit=dev --json > /tmp/audit.json || true
+
+          node <<'NODE' > /tmp/audit-summary.txt
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('/tmp/audit.json', 'utf8'));
+          const counts = data.metadata?.vulnerabilities ?? {};
+          const clerk = Object.entries(data.vulnerabilities ?? {})
+            .filter(([name, value]) => name.startsWith('@clerk/') && ['high','critical'].includes(value.severity))
+            .map(([name, value]) => `${name}:${value.severity}`);
+          console.log(`critical=${counts.critical ?? 0}`);
+          console.log(`high=${counts.high ?? 0}`);
+          console.log(`moderate=${counts.moderate ?? 0}`);
+          console.log(`low=${counts.low ?? 0}`);
+          console.log(`total=${counts.total ?? 0}`);
+          console.log(`clerk_high_or_critical=${clerk.length}`);
+          for (const item of clerk) console.log(`clerk_vulnerability=${item}`);
+          NODE
+
+          critical=$(sed -n 's/^critical=//p' /tmp/audit-summary.txt)
+          clerk_bad=$(sed -n 's/^clerk_high_or_critical=//p' /tmp/audit-summary.txt)
+          {
+            echo "CLERK_TRANSITIVE_SECURITY=$([ "${critical:-99}" = "0" ] && [ "${clerk_bad:-99}" = "0" ] && echo PASS || echo FAIL)"
+            echo "targets=@clerk/nextjs@5.7.6,@clerk/clerk-react@5.61.6,@clerk/shared@2.22.1"
+            cat /tmp/audit-summary.txt
+            echo "--- resolved packages ---"
+            cat /tmp/clerk-ls.txt
+          } > .works-clerk-security-result
+
+          if [ "${critical:-99}" != "0" ] || [ "${clerk_bad:-99}" != "0" ]; then
+            rm .github/workflows/works-security-clerk-transitives-2026-08-24.yml
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package.json package-lock.json .works-clerk-security-result .github/workflows/works-security-clerk-transitives-2026-08-24.yml
+            git commit -m "security: record unresolved Clerk transitive audit"
+            git push origin HEAD:works/security-clerk-5.7.6-2026-08-24
+            exit 1
+          fi
+      - name: Validate full launch surface
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run test:launch
+          npm run typecheck
+          npx prisma generate
+          npx next build
+      - name: Commit verified Clerk security pins
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/works-security-clerk-transitives-2026-08-24.yml
+          printf '\nvalidation=full-launch-contracts+typecheck+next-build\n' >> .works-clerk-security-result
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json .works-clerk-security-result .github/workflows/works-security-clerk-transitives-2026-08-24.yml
+          git commit -m "security: patch Clerk authorization transitives"
+          git push origin HEAD:works/security-clerk-5.7.6-2026-08-24
