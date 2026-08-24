@@ -15,7 +15,7 @@ import { getCompassAccessState } from "@/src/lib/compass/compass-access"
 
 export async function POST(request: Request) {
   try {
-    const { userId } = auth()
+    const { userId } = await auth()
 
     if (!userId) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 })

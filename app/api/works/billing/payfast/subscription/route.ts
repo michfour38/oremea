@@ -20,7 +20,7 @@ async function ownedProvider(providerId: string, userId: string) {
 }
 
 export async function GET(request: Request) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     return NextResponse.json({ error: "Sign in to view WORKS billing." }, { status: 401 });
   }
@@ -54,7 +54,7 @@ export async function GET(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     return NextResponse.json({ error: "Sign in to cancel WORKS billing." }, { status: 401 });
   }

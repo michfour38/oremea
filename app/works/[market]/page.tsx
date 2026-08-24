@@ -10,7 +10,8 @@ export const dynamic = "force-dynamic";
 
 const WORKS_ORIGIN = "https://works.oremea.com";
 
-export function generateMetadata({ params }: { params: { market: string } }): Metadata {
+export async function generateMetadata(props: { params: Promise<{ market: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const market = resolveWorksMarket(params.market);
   if (!market?.active) return {};
 
@@ -28,11 +29,12 @@ export function generateMetadata({ params }: { params: { market: string } }): Me
   };
 }
 
-export default async function WorksMarketPage({
-  params,
-}: {
-  params: { market: string };
-}) {
+export default async function WorksMarketPage(
+  props: {
+    params: Promise<{ market: string }>;
+  }
+) {
+  const params = await props.params;
   const market = resolveWorksMarket(params.market);
   if (!market?.active) notFound();
 

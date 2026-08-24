@@ -4,7 +4,7 @@ import { HarmonizeDrawer } from "@/components/harmonize/harmonize-drawer"
 import { reviewQuestions } from "@/lib/harmonize/review-questions"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react";
 
 type ReviewAnswers = {
   same_within_self: string
@@ -76,11 +76,12 @@ function evidenceText(item: any) {
   return `A signal appeared around “${item.evidence}”.`
 }
 
-export default function HarmonizeReviewPage({
-  params,
-}: {
-  params: { systemId: string; cycleId: string }
-}) {
+export default function HarmonizeReviewPage(
+  props: {
+    params: Promise<{ systemId: string; cycleId: string }>
+  }
+) {
+  const params = use(props.params);
   const router = useRouter()
 
   const [answers, setAnswers] = useState<ReviewAnswers>(initialAnswers)

@@ -4,13 +4,14 @@ import { HarmonizeDrawer } from "@/components/harmonize/harmonize-drawer"
 import { detectPauseReadiness } from "@/lib/harmonize/pause-signals"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react";
 
-export default function HarmonizePausePage({
-  params,
-}: {
-  params: { systemId: string; cycleId: string }
-}) {
+export default function HarmonizePausePage(
+  props: {
+    params: Promise<{ systemId: string; cycleId: string }>
+  }
+) {
+  const params = use(props.params);
   const router = useRouter()
   const [reopening, setReopening] = useState(false)
   const [pauseReason, setPauseReason] = useState("")
@@ -18,7 +19,7 @@ export default function HarmonizePausePage({
   const [reflection, setReflection] = useState("")
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-const [appearsReflective, setAppearsReflective] = useState(false)
+  const [appearsReflective, setAppearsReflective] = useState(false)
 
   useEffect(() => {
     async function markPaused() {

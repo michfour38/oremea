@@ -28,7 +28,8 @@ async function getProvider(slug: string) {
   });
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const provider = await getProvider(params.slug);
   if (!provider || provider.profile_status === "ARCHIVED") return {};
 
@@ -51,7 +52,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function WorksProviderPublicProfile({ params }: { params: { slug: string } }) {
+export default async function WorksProviderPublicProfile(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const provider = await getProvider(params.slug);
   if (!provider || provider.profile_status === "ARCHIVED") notFound();
 

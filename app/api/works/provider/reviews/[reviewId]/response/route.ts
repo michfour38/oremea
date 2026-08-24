@@ -10,8 +10,9 @@ function cleanResponse(value: unknown) {
   return trimmed.slice(0, 2000);
 }
 
-export async function PATCH(request: Request, { params }: { params: { reviewId: string } }) {
-  const { userId } = auth();
+export async function PATCH(request: Request, props: { params: Promise<{ reviewId: string }> }) {
+  const params = await props.params;
+  const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Sign in to respond to reviews." }, { status: 401 });
 
   const review = await prisma.works_provider_reviews.findUnique({

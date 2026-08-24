@@ -4,7 +4,7 @@ import MemberNav from "@/app/(member)/member-nav"
 import ParticipantForm from "@/components/harmonize/ParticipantForm"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react";
 
 function cycleHref(systemId: string, cycle: any) {
   if (cycle.status === "paused") {
@@ -63,13 +63,14 @@ const TITLE_SUGGESTIONS = [
   "Betrayal",
 ]
 
-export default function HarmonizeSystemPage({
-  params,
-}: {
-  params: {
-    systemId: string
+export default function HarmonizeSystemPage(
+  props: {
+    params: Promise<{
+      systemId: string
+    }>
   }
-}) {
+) {
+  const params = use(props.params);
   const router = useRouter()
 
   const [system, setSystem] = useState<any>(null)

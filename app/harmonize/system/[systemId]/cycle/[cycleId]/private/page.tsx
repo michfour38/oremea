@@ -5,7 +5,7 @@ import { HarmonizeDrawer } from "@/components/harmonize/harmonize-drawer"
 import { cycleStatusMessage } from "@/lib/harmonize/cycle-status"
 import { privateWitnessEngine } from "@/src/lib/harmonize/private-witness-engine"
 import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, use } from "react";
 
 type HarmonizeEntry = {
   id: string
@@ -17,11 +17,12 @@ type HarmonizeEntry = {
 const OPENING_QUESTION =
   "What feels important enough to bring into this space today?"
 
-export default function HarmonizePrivatePage({
-  params,
-}: {
-  params: { systemId: string; cycleId: string }
-}) {
+export default function HarmonizePrivatePage(
+  props: {
+    params: Promise<{ systemId: string; cycleId: string }>
+  }
+) {
+  const params = use(props.params);
   const [content, setContent] = useState("")
   const [entries, setEntries] = useState<HarmonizeEntry[]>([])
   const [loadingEntries, setLoadingEntries] = useState(true)
@@ -110,25 +111,25 @@ export default function HarmonizePrivatePage({
     }
   }
 
-async function loadConversationTitle() {
-  try {
-    const response = await fetch(
-      `/api/harmonize/cycle/summary?cycleId=${params.cycleId}`,
-    )
+  async function loadConversationTitle() {
+    try {
+      const response = await fetch(
+        `/api/harmonize/cycle/summary?cycleId=${params.cycleId}`,
+      )
 
-    const data = await response.json()
+      const data = await response.json()
 
-    if (
-      response.ok &&
-      data.success &&
-      data.cycle?.displayTitle
-    ) {
-      setConversationTitle(data.cycle.displayTitle)
+      if (
+        response.ok &&
+        data.success &&
+        data.cycle?.displayTitle
+      ) {
+        setConversationTitle(data.cycle.displayTitle)
+      }
+    } catch {
+      // Ignore title lookup errors.
     }
-  } catch {
-    // Ignore title lookup errors.
   }
-}
 
   async function saveEntry() {
   if (saving || !content.trim()) return

@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const stage = body.stage ?? "discussion"
 
     if (product === "compass") {
-      const { userId } = auth()
+      const { userId } = await auth()
 
       if (!userId) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       stage === "discussion" &&
       result.scopeCategory
     ) {
-      const { userId } = auth()
+      const { userId } = await auth()
 
       if (userId) {
         const session = await prisma.compass_sessions.findFirst({

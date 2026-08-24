@@ -12,7 +12,7 @@ export async function ReportPostForm({
   reportedPostId,
   reason = "In-app user report",
 }: Props) {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     return null;

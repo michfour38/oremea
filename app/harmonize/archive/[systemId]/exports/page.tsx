@@ -1,13 +1,15 @@
-"use client"
+"use client";
+import { use } from "react";
 
 import MemberNav from "@/app/(member)/member-nav"
 import Link from "next/link"
 
-export default function ExportsPage({
-  params,
-}: {
-  params: { systemId: string }
-}) {
+export default function ExportsPage(
+  props: {
+    params: Promise<{ systemId: string }>
+  }
+) {
+  const params = use(props.params);
   return (
     <>
       <MemberNav />

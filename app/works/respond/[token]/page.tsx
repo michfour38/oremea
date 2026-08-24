@@ -10,11 +10,12 @@ function hashToken(token: string) {
 
 export const dynamic = "force-dynamic";
 
-export default async function WorksProviderResponsePage({
-  params,
-}: {
-  params: { token: string };
-}) {
+export default async function WorksProviderResponsePage(
+  props: {
+    params: Promise<{ token: string }>;
+  }
+) {
+  const params = await props.params;
   const outreach = await prisma.works_provider_outreach.findUnique({
     where: { response_token_hash: hashToken(params.token) },
     include: {

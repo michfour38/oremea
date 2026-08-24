@@ -25,7 +25,7 @@ const HAS_RESONANCE_LAUNCH_DISCOUNT =
   RESONANCE_LAUNCH_PRICE !== RESONANCE_REGULAR_PRICE;
 
 type Props = {
-  searchParams?: { week?: string };
+  searchParams?: Promise<{ week?: string }>;
 };
 
 type RoomPurchaseDetail = {
@@ -130,7 +130,8 @@ async function completeTesterPurchase(formData: FormData) {
   redirect("/resonance");
 }
 
-export default async function ResonancePurchasePage({ searchParams }: Props) {
+export default async function ResonancePurchasePage(props: Props) {
+  const searchParams = await props.searchParams;
   const { userId } = await auth();
   if (!userId) {
     redirect(

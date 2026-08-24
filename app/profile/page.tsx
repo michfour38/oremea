@@ -11,8 +11,8 @@ import { ProfileSupport } from "@/components/site/sections/profile-support";
 
 export const dynamic = "force-dynamic";
 
-export default function ProfilePage() {
-  const { userId } = auth();
+export default async function ProfilePage() {
+  const { userId } = await auth();
 
   if (!userId) {
     redirect("/sign-in");

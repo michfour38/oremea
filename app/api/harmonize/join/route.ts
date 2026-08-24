@@ -85,7 +85,7 @@ class InviteClaimError extends Error {
 
 export async function GET(request: Request) {
   try {
-    const { userId } = auth()
+    const { userId } = await auth()
 
     const url = new URL(request.url)
 
@@ -314,7 +314,7 @@ export async function POST(
   request: Request,
 ) {
   try {
-    const { userId } = auth()
+    const { userId } = await auth()
 
     if (!userId) {
       return NextResponse.json(
