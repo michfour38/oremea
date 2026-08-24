@@ -19,6 +19,8 @@ const providerPage = read("app/works/providers/[slug]/page.tsx");
 const brand = read("components/works/works-brand.tsx");
 const memberNav = read("components/works/member-works-nav.tsx");
 const customerFlow = read("components/works/intake/founder-conversation-v2.tsx");
+const customerResume = read("components/works/intake/founder-conversation-resume.tsx");
+const resumeApi = read("app/api/works/search-sessions/resume/route.ts");
 const myWorks = read("components/works/account/my-works-dashboard.tsx");
 const accountButton = read("components/works/works-account-button.tsx");
 const providerOnboarding = read("components/works/provider/provider-onboarding-v2.tsx");
@@ -57,9 +59,18 @@ requireText(memberNav, "<WorksBrand href={href}", "Member WORKS navigation must 
 requireText(marketPage, "embedded", "The public WORKS page must embed the customer flow without a duplicate header.");
 requireText(marketPage, "Before you describe it", "Material matching limits must appear before the customer starts the brief.");
 rejectText(marketPage, "What WORKS does—and does not claim", "Material pre-start information must not be stranded below the customer flow.");
-if (marketPage.indexOf("Before you describe it") > marketPage.indexOf("<FounderConversationV2")) {
+requireText(marketPage, "<FounderConversationResumeBoundary", "The customer flow must pass through saved-progress recovery before rendering.");
+const customerFlowMount = marketPage.indexOf("<FounderConversationResumeBoundary");
+if (customerFlowMount < 0 || marketPage.indexOf("Before you describe it") > customerFlowMount) {
   throw new Error("Material matching limits must appear before the customer flow.");
 }
+requireText(customerResume, "for (let attempt = 0; attempt < 3; attempt += 1)", "Saved WORKS progress must retry transient restore failures before showing an error.");
+requireText(customerResume, "Your saved WORKS progress has not been cleared.", "A temporary restore failure must tell the customer their progress was preserved.");
+requireText(customerResume, "Resume saved brief →", "A recovered browser-owned search must offer an explicit resume action.");
+requireText(customerResume, "Start a new product", "A recovered search must never force resumption when the customer deliberately wants a fresh brief.");
+requireText(resumeApi, "worksBrowserSessionCookieName", "Saved-progress recovery must use the secure WORKS browser cookie rather than trusting a client-supplied session owner.");
+requireText(resumeApi, "browser_session_id: browserSessionId", "Saved-progress recovery must only search sessions owned by the current browser.");
+requireText(resumeApi, 'orderBy: { updated_at: "desc" }', "Saved-progress recovery must choose the browser's latest WORKS search.");
 requireText(customerFlow, "embedded?: boolean", "The customer flow must explicitly support embedded rendering.");
 requireText(customerFlow, 'embedded ? "pb-6" : "min-h-screen', "The embedded customer flow must not force an empty viewport beneath the form.");
 requireText(customerFlow, 'href="/works/my"', "Signed-in customers need a working path to My WORKS.");
