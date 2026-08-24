@@ -41,9 +41,14 @@ for (const route of routes) {
 const returnLabelUses = shell.match(/← \{returnLink\.label\}/g)?.length ?? 0;
 if (returnLabelUses < 2) throw new Error("LegalDocument must show return controls at the top and bottom");
 
-for (const required of ["LEGAL_LINKS", "WORKS_LEGAL_LINKS"]) {
-  if (!footer.includes(required)) throw new Error("Site footer does not use canonical " + required);
-  if (!worksFooter.includes(required)) throw new Error("WORKS footer does not use canonical " + required);
+if (!footer.includes("LEGAL_LINKS")) {
+  throw new Error("Site footer does not use canonical Oremea LEGAL_LINKS");
+}
+if (!worksFooter.includes("WORKS_LEGAL_LINKS")) {
+  throw new Error("WORKS footer does not use canonical WORKS_LEGAL_LINKS");
+}
+if (!worksFooter.includes("LEGAL_LINKS")) {
+  throw new Error("WORKS footer does not expose the canonical Oremea legal links");
 }
 
 if (!worksLayout.includes("<WorksLegalFooter")) throw new Error("WORKS routes are not wrapped with the legal footer");
