@@ -1,0 +1,68 @@
+name: One-time WORKS production audit detail
+
+on:
+  push:
+    branches:
+      - works/security-production-audit-2026-08-24
+    paths:
+      - .github/workflows/works-production-audit-detail-2026-08-24.yml
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Record production high and critical advisories
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          npm audit --omit=dev --json > /tmp/audit.json || true
+          node <<'NODE' > .works-production-audit-detail
+          const fs = require('fs');
+          const audit = JSON.parse(fs.readFileSync('/tmp/audit.json','utf8'));
+          const counts = audit.metadata?.vulnerabilities ?? {};
+          console.log(`critical=${counts.critical ?? 0}`);
+          console.log(`high=${counts.high ?? 0}`);
+          console.log(`moderate=${counts.moderate ?? 0}`);
+          console.log(`low=${counts.low ?? 0}`);
+          console.log(`total=${counts.total ?? 0}`);
+          console.log('=== HIGH_OR_CRITICAL ===');
+          for (const [name, vuln] of Object.entries(audit.vulnerabilities || {})) {
+            if (!['high','critical'].includes(vuln.severity)) continue;
+            console.log(`PACKAGE=${name}`);
+            console.log(`severity=${vuln.severity}`);
+            console.log(`range=${vuln.range}`);
+            console.log(`nodes=${(vuln.nodes || []).join(',')}`);
+            console.log(`fixAvailable=${JSON.stringify(vuln.fixAvailable)}`);
+            for (const via of vuln.via || []) {
+              if (typeof via === 'string') {
+                console.log(`via_package=${via}`);
+              } else {
+                console.log(`via_source=${via.source}`);
+                console.log(`via_title=${via.title}`);
+                console.log(`via_url=${via.url}`);
+                console.log(`via_range=${via.range}`);
+                console.log(`via_severity=${via.severity}`);
+              }
+            }
+            console.log('---');
+          }
+          NODE
+          cat .works-production-audit-detail
+          rm .github/workflows/works-production-audit-detail-2026-08-24.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .works-production-audit-detail .github/workflows/works-production-audit-detail-2026-08-24.yml
+          git commit -m "security: record remaining production advisories"
+          git push origin HEAD:works/security-production-audit-2026-08-24
