@@ -32,7 +32,7 @@ export function CompareCompass({ mode }: CompareCompassProps) {
             </h2>
 
             <p className="mt-6 text-lg leading-8 text-zinc-400">
-              Turn self-awareness into deliberate movement.
+              Turn what matters into participant-owned movement.
             </p>
           </div>
 
@@ -41,12 +41,12 @@ export function CompareCompass({ mode }: CompareCompassProps) {
               <div className="space-y-8">
                 <div className="rounded-3xl border border-white/10 bg-zinc-950/80 p-8">
                   <p className="font-serif text-2xl leading-relaxed text-zinc-100 md:text-3xl">
-                    Like finally knowing what to do next.
+                    Like knowing what you are choosing next.
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
-                    Like several competing priorities collapsing into one clear
-                    direction.
+                    Like several competing priorities becoming clear enough to
+                    choose between.
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
@@ -55,23 +55,20 @@ export function CompareCompass({ mode }: CompareCompassProps) {
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
-                    Like keeping what matters visible on a Map and ticking off the
-                    goals you choose for today.
+                    Like keeping what matters visible on a Map while your goals
+                    remain yours to choose.
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
-                    Like understanding what keeps interrupting movement.
-                  </p>
-
-                  <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
-                    Like making an agreement with yourself you can actually keep.
+                    Like noticing when more discussion is no longer changing what
+                    can happen outside the conversation.
                   </p>
 
                   <ProductLaunchPrice
                     className="mt-10"
                     regularPrice={COMPASS_REGULAR_PRICE}
                     launchPrice={COMPASS_LAUNCH_PRICE}
-                    unit="30-day pass or monthly"
+                    unit="/ month"
                   />
 
                   <div className="mt-4 flex flex-wrap gap-4">
@@ -92,13 +89,11 @@ export function CompareCompass({ mode }: CompareCompassProps) {
                   </p>
 
                   <p className="text-base leading-8 text-zinc-300">
-                    Compass helps transform awareness into movement by identifying
-                    what matters, what keeps interrupting progress, and what next
-                    movement can realistically be taken. Its Map keeps what the
-                    conversation surfaces visible, while Today holds the goals the
-                    participant chooses to add and complete. Compass narrows
-                    attention toward workable direction without claiming ownership
-                    of the participant&apos;s goals.
+                    Compass clarifies current reality, choice, and workable
+                    movement. Its Map keeps what the conversation surfaces visible,
+                    while participant-authored goals remain separate from AI-generated
+                    Map state. Compass can structure navigation without becoming the
+                    chooser.
                   </p>
                 </div>
 
@@ -123,27 +118,31 @@ export function CompareCompass({ mode }: CompareCompassProps) {
                   <ul className="grid gap-3 text-base leading-7 text-zinc-400 md:grid-cols-2">
                     <li>• layered goal exploration</li>
                     <li>• priority clarification</li>
-                    <li>• interruption identification</li>
                     <li>• recursive discussion</li>
                     <li>• persistent Compass Map</li>
-                    <li>• participant-created daily goals</li>
-                    <li>• executable next-movement creation</li>
+                    <li>• participant-created goals</li>
+                    <li>• executable next-movement structure</li>
                   </ul>
                 </div>
 
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-6">
                   <p className="text-sm leading-7 text-zinc-400">
-                    Compass turns clarity into participation. The conversation can
-                    surface what belongs on the Map; the participant keeps authority
-                    over what becomes a personal goal and what gets completed next.
+                    Compass can illuminate and structure the choice. The participant
+                    remains the chooser, and movement outside the conversation remains
+                    the authority.
                   </p>
                 </div>
 
                 <ProductLaunchPrice
                   regularPrice={COMPASS_REGULAR_PRICE}
                   launchPrice={COMPASS_LAUNCH_PRICE}
-                  unit="30-day pass or monthly"
+                  unit="/ month"
                 />
+
+                <p className="text-sm leading-7 text-zinc-500">
+                  Monthly membership. Cancel anytime. Saved Archive remains available
+                  after cancellation.
+                </p>
 
                 <div className="flex flex-wrap gap-4 pt-2">
                   <Link
