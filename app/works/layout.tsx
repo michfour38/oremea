@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import { WorksAcquisitionCapture } from "@/components/works/works-acquisition-capture";
 import { WorksLegalFooter } from "@/components/works/works-legal-footer";
 import {
   WORKS_BUYER_DESCRIPTION,
@@ -54,6 +55,7 @@ export const metadata: Metadata = {
 export default function WorksLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-[#fbfaf7] text-[#1f1c17]">
+      <WorksAcquisitionCapture />
       {children}
       <WorksLegalFooter currentYear={new Date().getFullYear()} />
     </div>
