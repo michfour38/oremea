@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
+import {
+  evaluateOfferingFit,
+  type MatchBrief,
+} from "../lib/works/matching/eligibility";
+
 function read(path: string) {
   return readFileSync(path, "utf8");
 }
@@ -38,6 +43,94 @@ assert.match(eligibility, /The provider supplied this offering information/);
 assert.match(eligibility, /status: "UNKNOWN"/);
 assert.match(freshness, /WORKS_EVIDENCE_FRESHNESS_DAYS = 180/);
 assert.match(freshness, /Previously reviewed · needs reconfirmation/);
+
+const structuralBrief: MatchBrief = {
+  categoryKey: "FOOD",
+  requirements: [],
+  steps: [
+    {
+      id: "manufacturing",
+      serviceKey: "MANUFACTURING",
+      title: "Manufacturing",
+      status: "NEEDED",
+    },
+  ],
+};
+const structuralOffering = {
+  categoryKeys: ["FOOD"],
+  serviceKeys: ["MANUFACTURING"],
+  capabilityKeys: [],
+  packagingFormatKeys: [],
+  providerLocationAreas: [],
+  claims: [],
+};
+const staleReviewed = evaluateOfferingFit(structuralBrief, {
+  ...structuralOffering,
+  evidenceStatus: "SOURCE_REVIEWED" as const,
+  evidenceAgeDays: 181,
+});
+assert.equal(
+  staleReviewed.status,
+  "UNKNOWN",
+  "A reviewed offering older than the freshness boundary must become provisional.",
+);
+assert.ok(
+  staleReviewed.outcomes.some(
+    (outcome) =>
+      outcome.criterionKey === "offering.stale" &&
+      outcome.status === "UNKNOWN" &&
+      outcome.hardConstraint,
+  ),
+  "A stale offering must carry an explicit hard evidence boundary.",
+);
+
+const regulatedBrief: MatchBrief = {
+  ...structuralBrief,
+  requirements: [
+    {
+      id: "halaal",
+      requirementType: "CREDENTIAL",
+      field: "credential.HALAAL.required",
+      value: true,
+      priority: "REQUIRED",
+    },
+  ],
+};
+const selfReportedCredential = evaluateOfferingFit(regulatedBrief, {
+  ...structuralOffering,
+  evidenceStatus: "SOURCE_REVIEWED" as const,
+  claims: [
+    {
+      id: "claim-self",
+      field: "credential.HALAAL.required",
+      value: true,
+      status: "SELF_REPORTED" as const,
+    },
+  ],
+});
+assert.equal(
+  selfReportedCredential.status,
+  "UNKNOWN",
+  "A provider's self-reported regulated credential cannot produce a confirmed match.",
+);
+
+const explicitConflict = evaluateOfferingFit(regulatedBrief, {
+  ...structuralOffering,
+  evidenceStatus: "SOURCE_REVIEWED" as const,
+  claims: [
+    {
+      id: "claim-no",
+      field: "credential.HALAAL.required",
+      value: false,
+      status: "SOURCE_CONFIRMED" as const,
+    },
+  ],
+});
+assert.equal(
+  explicitConflict.status,
+  "NO_MATCH",
+  "A current explicit conflict with a required fact must fail closed.",
+);
 
 // Credential expiry is re-evaluated at match time rather than trusting a stale DB badge.
 assert.match(matching, /credential_detail:\s*\{[\s\S]*expires_at: true/);
