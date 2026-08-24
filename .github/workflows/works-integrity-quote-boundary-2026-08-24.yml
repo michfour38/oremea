@@ -1,0 +1,51 @@
+name: One-time WORKS quote-farming boundary
+
+on:
+  push:
+    branches:
+      - works/integrity-guardrails-2026-08-24
+    paths:
+      - .github/workflows/works-integrity-quote-boundary-2026-08-24.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Add non-editable provider enquiry boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+
+          route = Path("app/api/works/provider-outreach/route.ts")
+          text = route.read_text()
+          old = '''              <div>${bodyTextToHtml(draft.bodyText)}</div>\n              <p style="margin-top:28px"><a href="${responseUrl}" style="display:inline-block;background:#1f1c17;color:white;text-decoration:none;padding:12px 20px;border-radius:999px">Respond to this brief</a></p>\n'''
+          new = '''              <div>${bodyTextToHtml(draft.bodyText)}</div>\n              <div style="margin-top:24px;padding:14px 16px;border:1px solid #ddd6c7;border-radius:14px;background:#f8f5ee;font-size:12px;color:#625d54"><strong>WORKS enquiry boundary:</strong> This is a fit and current-capability enquiry, not a request for unpaid formulation, design, samples, engineering or other detailed technical development. Any detailed development work, samples, testing or paid scoping should be agreed directly between the buyer and provider before that work begins.</div>\n              <p style="margin-top:28px"><a href="${responseUrl}" style="display:inline-block;background:#1f1c17;color:white;text-decoration:none;padding:12px 20px;border-radius:999px">Respond to this brief</a></p>\n'''
+          if text.count(old) != 1:
+              raise SystemExit(f"Expected one provider email insertion point, found {text.count(old)}")
+          route.write_text(text.replace(old, new, 1))
+
+          contract = Path("scripts/verify-works-integrity-contract.ts")
+          text = contract.read_text()
+          marker = 'assert.match(outreach, /This provider has already been contacted for this brief/);\n'
+          addition = marker + 'assert.match(outreach, /not a request for unpaid formulation, design, samples, engineering or other detailed technical development/);\n'
+          if text.count(marker) != 1:
+              raise SystemExit("Could not extend integrity contract with quote-farming boundary")
+          contract.write_text(text.replace(marker, addition, 1))
+          PY
+
+          rm .github/workflows/works-integrity-quote-boundary-2026-08-24.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/api/works/provider-outreach/route.ts scripts/verify-works-integrity-contract.ts .github/workflows/works-integrity-quote-boundary-2026-08-24.yml
+          git commit -m "integrity: prevent quote farming in provider outreach"
+          git push origin HEAD:works/integrity-guardrails-2026-08-24
