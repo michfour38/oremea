@@ -356,7 +356,13 @@ export async function POST(req: NextRequest) {
         brief_id: briefId,
         search_session_id: searchSessionId,
       },
-      select: { id: true, name: true, email: true, phone: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        preferred_contact_method: true,
+      },
     });
 
     if (!procurement) {
@@ -365,6 +371,12 @@ export async function POST(req: NextRequest) {
         { status: 409 }
       );
     }
+
+    const requesterPhoneForProvider =
+      procurement.preferred_contact_method &&
+      procurement.preferred_contact_method !== "EMAIL"
+        ? procurement.phone
+        : null;
 
     const routeSummary = await getRouteSummary(briefId);
     if (!routeSummary) {
@@ -450,7 +462,7 @@ export async function POST(req: NextRequest) {
             providerName: provider.name,
             requesterName: procurement.name,
             requesterEmail: procurement.email,
-            requesterPhone: procurement.phone,
+            requesterPhone: requesterPhoneForProvider,
             questions,
           }),
           questionCount: questions.length,
@@ -535,7 +547,7 @@ export async function POST(req: NextRequest) {
             providerName: provider.name,
             requesterName: procurement.name,
             requesterEmail: procurement.email,
-            requesterPhone: procurement.phone,
+            requesterPhone: requesterPhoneForProvider,
             questions,
           }),
         };
