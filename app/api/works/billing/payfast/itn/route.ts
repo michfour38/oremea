@@ -1,4 +1,3 @@
-import { WorksProviderPlan } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
@@ -11,6 +10,7 @@ import {
   verifyPayfastServerConfirmation,
   verifyPayfastSource,
 } from "@/lib/works/billing/payfast";
+import { worksPaidThroughEnd } from "@/lib/works/billing/period";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -27,13 +27,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Billing is not configured." }, { status: 503 });
   }
 
-  if (
-    !verifyPayfastItnSignature({
-      data,
-      parameterString,
-      passphrase: config.passphrase,
-    })
-  ) {
+  if (!verifyPayfastItnSignature({ data, parameterString, passphrase: config.passphrase })) {
     return NextResponse.json({ error: "Invalid PayFast signature." }, { status: 401 });
   }
 
@@ -50,10 +44,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing merchant payment ID." }, { status: 422 });
   }
 
-  const subscription =
-    await prisma.works_provider_payfast_subscriptions.findUnique({
-      where: { merchant_payment_id: merchantPaymentId },
-    });
+  const subscription = await prisma.works_provider_payfast_subscriptions.findUnique({
+    where: { merchant_payment_id: merchantPaymentId },
+  });
   if (!subscription) {
     return NextResponse.json({ error: "Unknown WORKS payment." }, { status: 404 });
   }
@@ -64,10 +57,7 @@ export async function POST(request: Request) {
   }
 
   if (!(await verifyPayfastServerConfirmation(parameterString))) {
-    return NextResponse.json(
-      { error: "PayFast server confirmation failed." },
-      { status: 401 },
-    );
+    return NextResponse.json({ error: "PayFast server confirmation failed." }, { status: 401 });
   }
 
   const eventKey = payfastEventKey(rawBody);
@@ -77,10 +67,7 @@ export async function POST(request: Request) {
   const now = new Date();
 
   if (paymentStatus === "COMPLETE" && !payfastPaymentId) {
-    return NextResponse.json(
-      { error: "Completed PayFast payment is missing its payment ID." },
-      { status: 422 },
-    );
+    return NextResponse.json({ error: "Completed PayFast payment is missing its payment ID." }, { status: 422 });
   }
 
   try {
@@ -129,6 +116,12 @@ export async function POST(request: Request) {
           },
         });
       } else if (paymentStatus === "CANCELLED") {
+        const accessEndsAt = worksPaidThroughEnd({
+          lastPaymentAt: subscription.last_payment_at,
+          startedAt: subscription.started_at,
+          now,
+        });
+
         await tx.works_provider_payfast_subscriptions.update({
           where: { id: subscription.id },
           data: {
@@ -143,10 +136,7 @@ export async function POST(request: Request) {
             provider_id: subscription.provider_id,
             plan: subscription.plan,
           },
-          data: {
-            plan: WorksProviderPlan.FREE,
-            plan_ends_at: now,
-          },
+          data: { plan_ends_at: accessEndsAt },
         });
       }
 
@@ -155,8 +145,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ received: true, duplicate: result.duplicate });
   } catch (error) {
-    // A concurrent retry can race the unique event insert. Returning a failure
-    // asks PayFast to retry, after which the event-key guard resolves it safely.
     console.error("WORKS PayFast ITN processing failed:", error);
     return NextResponse.json(
       { error: "WORKS could not record this PayFast notification." },

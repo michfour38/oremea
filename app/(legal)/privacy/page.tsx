@@ -1,14 +1,12 @@
-import {
-  LegalDocument,
-  type LegalSection,
-} from "@/components/legal/legal-document";
+import { LegalDocument, type LegalSection } from "@/components/legal/legal-document";
+import { OREMEA_OPERATOR } from "@/src/lib/legal/legal-links";
 
 const sections: readonly LegalSection[] = [
   {
     title: "1. Scope and responsible party",
     paragraphs: [
       "This Privacy and POPIA Policy explains how Oremea collects, uses, stores, shares and protects personal information across www.oremea.com, Oremea accounts, Recognition, Resonance, Compass, Mirror, WORKS and related services.",
-      "Michelle Fourie, a sole proprietor trading as Oremea, is the responsible party for personal information processed for Oremea's own purposes. Independent providers introduced through WORKS are ordinarily separate responsible parties for information they receive and use for their own services.",
+      `Michelle Fourie, a sole proprietor trading as Oremea, is the responsible party for personal information processed for Oremea's own purposes. Physical and legal-service address: ${OREMEA_OPERATOR.serviceAddress}. Independent providers introduced through WORKS are ordinarily separate responsible parties for information they receive and use for their own services.`,
     ],
   },
   {
@@ -17,8 +15,9 @@ const sections: readonly LegalSection[] = [
       "Account and identity information, including name, email address, authentication identifiers and contact details.",
       "Purchase, entitlement, billing-status and transaction-reference information. Complete payment-card details are handled by the processor identified at checkout rather than intentionally stored by Oremea.",
       "Private reflective content, including Recognition conversation messages and participant-controlled remembered excerpts, Resonance responses and Mirrors, Compass discussion, Map and participant-created goals, archives, preferences and feedback.",
-      "WORKS customer requirements, briefs, searches, messages, contact details, provider profiles, capabilities, capacity, locations, credentials, claims, reviews and response records.",
+      "WORKS customer requirements, briefs, searches, messages, contact details, provider profiles, capabilities, capacity, locations, credentials, claims, reviews, responses and introduction records.",
       "Technical and usage information, including device, browser, IP address, session, security, error, diagnostic and interaction data reasonably required to operate and protect the platform.",
+      "First-touch acquisition information for WORKS, such as the landing path, referring website or domain and campaign tags including source, medium, campaign, term and content where those values are supplied to the site.",
       "Support, consent, communication, complaint, legal and compliance records.",
     ],
   },
@@ -34,6 +33,7 @@ const sections: readonly LegalSection[] = [
     paragraphs: [
       "Oremea receives information directly from users, their authorised representatives, connected account and payment services, requested referrals, interactions on the platform and communications with support.",
       "WORKS provider information may also come from an authorised business representative, a customer, a public business source or Oremea's own research. The source and claim status may affect how the information is displayed and whether it is treated as confirmed.",
+      "WORKS acquisition attribution may be derived from the page on which a visitor first arrives, the referring host supplied by the browser and campaign parameters included in a marketing link. Oremea does not need the complete referring URL where the referring host is sufficient for attribution.",
     ],
   },
   {
@@ -42,6 +42,7 @@ const sections: readonly LegalSection[] = [
       "Create and secure accounts, authenticate users and maintain access.",
       "Deliver purchased or requested products, generate requested reflective responses, preserve ongoing conversations and archives where the product provides them, and maintain participant-selected memory or progress controls.",
       "Receive WORKS requirements, create provider records, identify possible matches, route enquiries and facilitate requested introductions.",
+      "Attribute WORKS enquiries to their first known acquisition source, understand which landing pages or campaigns create useful demand and avoid losing the source of a captured lead.",
       "Process payment confirmations, subscriptions, cancellations, refunds and support requests.",
       "Communicate about accounts, security, purchases, requested opportunities, service changes and consented marketing.",
       "Prevent fraud, misuse and security incidents; enforce terms; meet legal obligations; establish or defend legal rights.",
@@ -63,7 +64,7 @@ const sections: readonly LegalSection[] = [
     title: "7. WORKS visibility and introductions",
     paragraphs: [
       "A WORKS provider profile may include information intended for public business discovery and information held privately for matching, operations or verification. Visibility settings and claim status determine what is displayed.",
-      "Where a user requests an introduction, Oremea may share the contact, requirement, capability or other information reasonably necessary to make that introduction after the purpose and recipient are identified or made reasonably apparent.",
+      "Where a user requests an introduction, Oremea may share the contact, requirement, capability or other information reasonably necessary to make that introduction after the purpose and recipient are identified or made reasonably apparent. Phone details are not shared merely because they exist when the user has chosen email as the preferred route.",
       "Information shared with an independent customer or provider is then also processed under that party's own privacy responsibilities.",
     ],
   },
@@ -92,6 +93,7 @@ const sections: readonly LegalSection[] = [
     title: "11. Retention and deletion",
     paragraphs: [
       "Oremea keeps information for as long as reasonably required to supply the service, maintain the user's requested record, meet legal and tax obligations, resolve disputes, prevent fraud and enforce agreements.",
+      "Where Consumer Protection Act intermediary record-keeping rules apply, Oremea retains the applicable intermediary disclosure information, written consumer instructions and, where a transaction results and advice was furnished, the relevant advice record and basis for at least three years.",
       "Where a product provides direct controls, the user may remove product-held memory or delete the applicable private conversation without cancelling the underlying account or requiring deletion of transaction, legal, security or billing records that must be retained separately.",
       "Retention periods vary by record type. Information is deleted, de-identified or securely archived when its purpose and applicable retention duties have ended. Backup copies may remain for a limited cycle before deletion.",
       "A deletion request may be limited where Oremea must retain a transaction, legal, security or dispute record or where another lawful ground applies.",
@@ -145,7 +147,7 @@ const sections: readonly LegalSection[] = [
   {
     title: "18. Information Officer, complaints and changes",
     paragraphs: [
-      "Information Officer and responsible party contact: Michelle Fourie, support@oremea.com, 061 537 5188, South Africa.",
+      `Information Officer and responsible party contact: ${OREMEA_OPERATOR.name}, ${OREMEA_OPERATOR.email}, ${OREMEA_OPERATOR.telephone}, ${OREMEA_OPERATOR.serviceAddress}.`,
       "Privacy complaints may also be submitted to the Information Regulator through its official complaints process. Oremea may update this policy when services, providers or legal requirements change. Material changes will be communicated reasonably and renewed consent obtained where required.",
     ],
   },
@@ -156,18 +158,12 @@ export default function PrivacyPage() {
     <LegalDocument
       activePath="/privacy"
       title="Privacy & POPIA Policy"
-      summary="How personal information, private reflections and WORKS business data move through Oremea—and the choices and rights attached to them."
-      updated="10 August 2026"
+      summary="How personal information, private reflections, WORKS business data and acquisition attribution move through Oremea—and the choices and rights attached to them."
+      updated="24 August 2026"
       sections={sections}
       references={[
-        {
-          label: "Protection of Personal Information Act 4 of 2013",
-          href: "https://www.gov.za/documents/protection-personal-information-act",
-        },
-        {
-          label: "Information Regulator complaints",
-          href: "https://inforegulator.org.za/complaints/",
-        },
+        { label: "Protection of Personal Information Act 4 of 2013", href: "https://www.gov.za/documents/protection-personal-information-act" },
+        { label: "Information Regulator complaints", href: "https://inforegulator.org.za/complaints/" },
       ]}
     />
   );

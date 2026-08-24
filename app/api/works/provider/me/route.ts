@@ -3,6 +3,7 @@ import { WorksProviderCapacityStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { effectiveWorksProviderPlan } from "@/lib/works/billing/period";
 
 const CAPACITY_VALUES = new Set(Object.values(WorksProviderCapacityStatus));
 
@@ -47,34 +48,40 @@ export async function GET() {
     },
   });
 
+  const now = new Date();
   return NextResponse.json({
-    providers: memberships.map((membership) => ({
-      id: membership.provider.id,
-      name: membership.provider.name,
-      slug: membership.provider.slug,
-      legalName: membership.provider.legal_name,
-      website: membership.provider.website,
-      email: membership.provider.email,
-      phone: membership.provider.phone,
-      description: membership.provider.description,
-      profileStatus: membership.provider.profile_status,
-      role: membership.role,
-      reviews: membership.provider.reviews,
-      visibility: membership.provider.public_settings ?? DEFAULT_VISIBILITY,
-      commercial: membership.provider.commercial_profile ?? {
-        plan: "FREE",
-        marketing_opt_in: false,
-        wants_more_work: false,
-        capacity_status: "OPEN",
-        capacity_note: null,
-        target_service_keys: [],
-        target_category_keys: [],
-        marketing_note: null,
-        activated_at: null,
-        plan_started_at: null,
-        plan_ends_at: null,
-      },
-    })),
+    providers: memberships.map((membership) => {
+      const commercial = membership.provider.commercial_profile;
+      return {
+        id: membership.provider.id,
+        name: membership.provider.name,
+        slug: membership.provider.slug,
+        legalName: membership.provider.legal_name,
+        website: membership.provider.website,
+        email: membership.provider.email,
+        phone: membership.provider.phone,
+        description: membership.provider.description,
+        profileStatus: membership.provider.profile_status,
+        role: membership.role,
+        reviews: membership.provider.reviews,
+        visibility: membership.provider.public_settings ?? DEFAULT_VISIBILITY,
+        commercial: commercial
+          ? { ...commercial, plan: effectiveWorksProviderPlan(commercial, now) }
+          : {
+              plan: "FREE",
+              marketing_opt_in: false,
+              wants_more_work: false,
+              capacity_status: "OPEN",
+              capacity_note: null,
+              target_service_keys: [],
+              target_category_keys: [],
+              marketing_note: null,
+              activated_at: null,
+              plan_started_at: null,
+              plan_ends_at: null,
+            },
+      };
+    }),
   });
 }
 

@@ -32,7 +32,9 @@ export const OREMEA_OPERATOR = {
   name: "Michelle Fourie",
   tradingName: "Oremea",
   legalForm: "sole proprietor",
+  website: "https://www.oremea.com",
   email: "support@oremea.com",
   telephone: "061 537 5188",
-  address: "South Africa",
+  address: "20 Price Road, Illiondale, Edenvale, Gauteng, 1609, South Africa",
+  serviceAddress: "20 Price Road, Illiondale, Edenvale, Gauteng, 1609, South Africa",
 } as const;

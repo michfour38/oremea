@@ -1,7 +1,5 @@
-import {
-  LegalDocument,
-  type LegalSection,
-} from "@/components/legal/legal-document";
+import { LegalDocument, type LegalSection } from "@/components/legal/legal-document";
+import { OREMEA_OPERATOR } from "@/src/lib/legal/legal-links";
 
 const sections: readonly LegalSection[] = [
   {
@@ -15,8 +13,8 @@ const sections: readonly LegalSection[] = [
   {
     title: "2. Operator and supplier information",
     paragraphs: [
-      "Oremea is operated by Michelle Fourie, a sole proprietor trading as Oremea.",
-      "Website: www.oremea.com\nEmail: support@oremea.com\nTelephone: 061 537 5188\nBusiness location: South Africa.\nAddress for legal service: available through support@oremea.com on a valid request.",
+      `Oremea is operated by ${OREMEA_OPERATOR.name}, a ${OREMEA_OPERATOR.legalForm} trading as ${OREMEA_OPERATOR.tradingName}.`,
+      `Website: ${OREMEA_OPERATOR.website}\nEmail: ${OREMEA_OPERATOR.email}\nTelephone: ${OREMEA_OPERATOR.telephone}\nPhysical business address: ${OREMEA_OPERATOR.address}.\nAddress for legal service: ${OREMEA_OPERATOR.serviceAddress}.`,
     ],
   },
   {
@@ -39,7 +37,7 @@ const sections: readonly LegalSection[] = [
     title: "5. Oremea services",
     paragraphs: [
       "Recognition provides an ongoing private recursive accountability conversation grounded in the participant's own words. Resonance provides contained seven-day reflection, while Compass provides structured direction, Map and movement tools. Mirror and other AI-supported features generate material in response to information supplied through the platform.",
-      "WORKS provides business discovery, matching, lead-generation, introduction and referral services for customers, manufacturers, suppliers and independent business-service providers.",
+      "WORKS provides business discovery, production routing, matching, lead-generation, introduction and referral services for customers, manufacturers, suppliers and independent business-service providers.",
       "Product descriptions, included features, access periods and prices are presented on the relevant product, plan or checkout page.",
     ],
   },
@@ -62,8 +60,8 @@ const sections: readonly LegalSection[] = [
     title: "8. WORKS matching and introductions",
     paragraphs: [
       "WORKS may help users discover, compare and contact manufacturers, suppliers, production providers, logistics providers and independent business-support services.",
-      "WORKS may receive customer requirements, create or maintain provider profiles, identify possible matches, route enquiries, facilitate contact, display reviews and credentials, and support commercial introductions.",
-      "A match or qualified lead indicates possible alignment based on available information. It does not guarantee acceptance, approval, capacity, performance, payment, certification, revenue or a concluded contract.",
+      "WORKS may receive customer requirements, create or maintain provider profiles, identify possible matches, route enquiries, facilitate contact, display reviews and evidence states, and support commercial introductions.",
+      "A match or qualified lead indicates possible alignment based on available information. It does not guarantee acceptance, approval, capacity, performance, payment, certification, revenue or a concluded contract. Commercial payment to Oremea does not convert a possible fit into a stronger suitability or evidence match.",
     ],
   },
   {
@@ -79,15 +77,16 @@ const sections: readonly LegalSection[] = [
     paragraphs: [
       "Provider information may be supplied by the provider, an authorised representative, customers, public sources or Oremea's research. An unclaimed listing does not mean that the business has subscribed to, endorsed or entered into a commercial partnership with Oremea.",
       "A person claiming or managing a provider profile must have authority to represent that business and must keep material capability, capacity, location, contact and credential information reasonably accurate and current.",
-      "A credential, document review or trust indicator confirms only the specific fact described by that indicator. It is not a complete legal, financial, technical, regulatory or operational audit of the provider.",
+      "A credential, document review or trust indicator confirms only the specific current fact described by that indicator. It is not a complete legal, financial, technical, regulatory or operational audit of the provider.",
     ],
   },
   {
-    title: "11. Referrals, affiliates and commercial relationships",
+    title: "11. Referrals, intermediary services and commercial relationships",
     paragraphs: [
-      "Oremea may connect users with independent business services and may receive a referral fee, introduction fee, commission, recurring commission, revenue share, affiliate payment or sponsored-placement revenue.",
-      "Where appropriate, Oremea will identify the commercial nature of the relationship. Compensation does not make Oremea the supplier of the independent service or guarantee that the provider is suitable or will accept the user.",
-      "Oremea will not publicly describe a business as a formal, exclusive, approved or preferred partner unless that relationship has been agreed and can be substantiated.",
+      "Oremea may connect users with independent business services and may receive a plan fee, referral fee, introduction fee, commission, recurring commission, revenue share, affiliate payment or sponsored-placement revenue.",
+      "Where compensation, sponsorship or a conflict is relevant to a particular WORKS recommendation, introduction or placement, Oremea will disclose the commercial relationship clearly and in writing in time for the affected user to make an informed decision. Where reasonably determinable, the amount is stated; otherwise the calculation basis is described.",
+      "Where Consumer Protection Act intermediary rules apply, Oremea provides the affected consumer with the prescribed intermediary information applicable to that relationship and retains the prescribed records for at least three years. Sensitive identity particulars required for a specific consumer are provided directly rather than published indiscriminately.",
+      "Oremea will not publicly describe a business as formal, exclusive, approved or preferred unless that relationship has been agreed and can be substantiated.",
     ],
   },
   {
@@ -110,8 +109,8 @@ const sections: readonly LegalSection[] = [
     title: "14. Subscriptions, cancellation and refunds",
     paragraphs: [
       "A recurring subscription renews for the displayed billing period until cancelled, unless the checkout states another arrangement. Before subscribing, the recurring price, billing frequency, included features and available cancellation method will be displayed.",
-      "Cancellation, cooling-off rights, failed supply, refunds and billing disputes are governed by the Payments, Subscriptions, Cancellation and Refund Policy and applicable South African law.",
-      "Nothing in these Terms removes a statutory cancellation, cooling-off, refund or consumer remedy that cannot lawfully be excluded.",
+      "For WORKS monthly provider plans, cancellation stops future renewal. Paid plan access ordinarily continues through the end of the current paid billing period and then returns to Free, unless a refund, reversal, failed payment or mandatory law requires another result.",
+      "Cancellation, cooling-off rights, failed supply, refunds and billing disputes are governed by the Payments, Subscriptions, Cancellation and Refund Policy and applicable South African law. Nothing removes a statutory cancellation, cooling-off, refund or consumer remedy that cannot lawfully be excluded.",
     ],
   },
   {
@@ -127,7 +126,7 @@ const sections: readonly LegalSection[] = [
     paragraphs: [
       "You must use Oremea lawfully, honestly and in accordance with the Community and Acceptable Use Policy.",
       "Prohibited conduct includes fraud, impersonation, harassment, threats, unlawful discrimination, privacy violations, malware, unauthorised access, scraping, spam, fabricated reviews, false credentials, intellectual-property infringement and bypassing access, payment, security or moderation controls.",
-      "Reviews must reflect genuine interactions and honest experience and comply with the WORKS Reviews Policy. Contact information received for a specific enquiry may be used to assess and respond to that enquiry, but may not automatically be added to unrelated bulk-marketing databases without a lawful basis.",
+      "Reviews must reflect genuine eligible interactions and honest experience and comply with the WORKS Reviews Policy. Contact information received for a specific enquiry may be used to assess and respond to that enquiry, but may not automatically be added to unrelated bulk-marketing databases without a lawful basis.",
     ],
   },
   {
@@ -175,7 +174,7 @@ const sections: readonly LegalSection[] = [
     paragraphs: [
       "These Terms are governed by the laws of the Republic of South Africa. Where applicable consumer law grants access to a tribunal, ombud, commission or court, that right remains. Otherwise, disputes may be heard by a court with jurisdiction in South Africa.",
       "Oremea may update these Terms when services, laws, commercial arrangements or the legal operator change. Material changes will be communicated reasonably, and renewed acceptance will be requested where required.",
-      "Questions may be sent to support@oremea.com or directed by telephone to 061 537 5188.",
+      `Questions may be sent to ${OREMEA_OPERATOR.email} or directed by telephone to ${OREMEA_OPERATOR.telephone}. Physical and legal-service address: ${OREMEA_OPERATOR.serviceAddress}.`,
     ],
   },
 ];
@@ -186,17 +185,11 @@ export default function TermsPage() {
       activePath="/terms"
       title="Terms of Service"
       summary="The terms governing Oremea's reflective products, AI-supported features, accounts, payments and WORKS business services."
-      updated="10 August 2026"
+      updated="24 August 2026"
       sections={sections}
       references={[
-        {
-          label: "Consumer Protection Act 68 of 2008",
-          href: "https://www.gov.za/documents/consumer-protection-act",
-        },
-        {
-          label: "Electronic Communications and Transactions Act 25 of 2002",
-          href: "https://www.gov.za/documents/electronic-communications-and-transactions-act",
-        },
+        { label: "Consumer Protection Act 68 of 2008", href: "https://www.gov.za/sites/default/files/32186_467.pdf" },
+        { label: "Electronic Communications and Transactions Act 25 of 2002", href: "https://www.gov.za/documents/electronic-communications-and-transactions-act" },
       ]}
     />
   );

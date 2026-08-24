@@ -1,9 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
-import { WorksProviderPlan } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { cancelPayfastSubscription } from "@/lib/works/billing/payfast";
+import { worksPaidThroughEnd } from "@/lib/works/billing/period";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -50,7 +50,16 @@ export async function GET(request: Request) {
     },
   });
 
-  return NextResponse.json({ subscription });
+  const commercial = await prisma.works_provider_commercial_profiles.findUnique({
+    where: { provider_id: providerId },
+    select: { plan_ends_at: true },
+  });
+
+  return NextResponse.json({
+    subscription: subscription
+      ? { ...subscription, access_ends_at: commercial?.plan_ends_at ?? null }
+      : null,
+  });
 }
 
 export async function DELETE(request: Request) {
@@ -93,6 +102,12 @@ export async function DELETE(request: Request) {
     }
 
     const now = new Date();
+    const accessEndsAt = worksPaidThroughEnd({
+      lastPaymentAt: subscription.last_payment_at,
+      startedAt: subscription.started_at,
+      now,
+    });
+
     await prisma.$transaction([
       prisma.works_provider_payfast_subscriptions.update({
         where: { id: subscription.id },
@@ -100,11 +115,14 @@ export async function DELETE(request: Request) {
       }),
       prisma.works_provider_commercial_profiles.updateMany({
         where: { provider_id: providerId, plan: subscription.plan },
-        data: { plan: WorksProviderPlan.FREE, plan_ends_at: now },
+        data: { plan_ends_at: accessEndsAt },
       }),
     ]);
 
-    return NextResponse.json({ cancelled: true });
+    return NextResponse.json({
+      cancelled: true,
+      accessEndsAt: accessEndsAt.toISOString(),
+    });
   } catch (error) {
     console.error("WORKS PayFast subscription cancellation failed:", error);
     return NextResponse.json(

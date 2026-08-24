@@ -90,10 +90,7 @@ export function LegalDocument({
             <p className="text-[11px] uppercase tracking-[0.22em] text-zinc-500">
               In this document
             </p>
-            <nav
-              className="mt-4 flex flex-col gap-3"
-              aria-label={`${title} contents`}
-            >
+            <nav className="mt-4 flex flex-col gap-3" aria-label={`${title} contents`}>
               {sections.map((section) => (
                 <a
                   key={section.title}
@@ -109,19 +106,10 @@ export function LegalDocument({
 
         <article className="min-w-0">
           <details className="mb-8 rounded-2xl border border-white/10 bg-white/[0.025] p-5 lg:hidden">
-            <summary className="cursor-pointer text-sm text-zinc-200">
-              In this document
-            </summary>
-            <nav
-              className="mt-4 flex flex-col gap-3"
-              aria-label={`${title} mobile contents`}
-            >
+            <summary className="cursor-pointer text-sm text-zinc-200">In this document</summary>
+            <nav className="mt-4 flex flex-col gap-3" aria-label={`${title} mobile contents`}>
               {sections.map((section) => (
-                <a
-                  key={section.title}
-                  href={`#${sectionId(section.title)}`}
-                  className="text-sm leading-6 text-zinc-400"
-                >
+                <a key={section.title} href={`#${sectionId(section.title)}`} className="text-sm leading-6 text-zinc-400">
                   {section.title}
                 </a>
               ))}
@@ -130,27 +118,16 @@ export function LegalDocument({
 
           <div className="divide-y divide-white/10 overflow-hidden rounded-[2rem] border border-white/10 bg-black/25">
             {sections.map((section) => (
-              <section
-                key={section.title}
-                id={sectionId(section.title)}
-                className="scroll-mt-8 p-6 md:p-8"
-              >
-                <h2 className="text-xl font-medium leading-8 text-white">
-                  {section.title}
-                </h2>
+              <section key={section.title} id={sectionId(section.title)} className="scroll-mt-8 p-6 md:p-8">
+                <h2 className="text-xl font-medium leading-8 text-white">{section.title}</h2>
                 {section.paragraphs?.map((paragraph) => (
-                  <p
-                    key={paragraph}
-                    className="mt-4 whitespace-pre-line text-sm leading-7 text-zinc-300 md:text-base"
-                  >
+                  <p key={paragraph} className="mt-4 whitespace-pre-line text-sm leading-7 text-zinc-300 md:text-base">
                     {paragraph}
                   </p>
                 ))}
                 {section.items?.length ? (
                   <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-zinc-300 md:text-base">
-                    {section.items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
+                    {section.items.map((item) => <li key={item}>{item}</li>)}
                   </ul>
                 ) : null}
               </section>
@@ -161,9 +138,7 @@ export function LegalDocument({
 
           {references.length ? (
             <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.025] p-6 md:p-8">
-              <h2 className="text-lg font-medium text-white">
-                Official references
-              </h2>
+              <h2 className="text-lg font-medium text-white">Official references</h2>
               <div className="mt-4 flex flex-col gap-3">
                 {references.map((reference) => (
                   <a
@@ -182,16 +157,19 @@ export function LegalDocument({
 
           <LegalDirectory activePath={activePath} />
 
-          <div className="mt-8 flex flex-col gap-4 rounded-[2rem] border border-amber-100/15 bg-amber-100/[0.04] p-6 sm:flex-row sm:items-center sm:justify-between md:p-8">
-            <div>
+          <div className="mt-8 flex flex-col gap-4 rounded-[2rem] border border-amber-100/15 bg-amber-100/[0.04] p-6 sm:flex-row sm:items-end sm:justify-between md:p-8">
+            <div className="max-w-2xl">
               <p className="text-sm text-zinc-200">
-                Operated by {OREMEA_OPERATOR.name}, {OREMEA_OPERATOR.legalForm}
+                Operated by {OREMEA_OPERATOR.name}, {OREMEA_OPERATOR.legalForm} trading as {OREMEA_OPERATOR.tradingName}
               </p>
-              <Link
-                href="/contact#contact-form"
-                className="mt-2 inline-block text-sm text-amber-100/80 transition hover:text-amber-100"
-              >
-                {OREMEA_OPERATOR.email}
+              <p className="mt-2 text-sm leading-6 text-zinc-400">
+                Physical and legal-service address: {OREMEA_OPERATOR.serviceAddress}
+              </p>
+              <p className="mt-2 text-sm text-zinc-400">
+                {OREMEA_OPERATOR.telephone} · {OREMEA_OPERATOR.email}
+              </p>
+              <Link href="/contact#contact-form" className="mt-2 inline-block text-sm text-amber-100/80 transition hover:text-amber-100">
+                Contact Oremea
               </Link>
             </div>
             <Link
@@ -210,20 +188,10 @@ export function LegalDocument({
 function LegalDirectory({ activePath }: { activePath: string }) {
   return (
     <section className="mt-8 rounded-[2rem] border border-white/10 bg-black/25 p-6 md:p-8">
-      <p className="text-[11px] uppercase tracking-[0.22em] text-zinc-500">
-        Legal directory
-      </p>
+      <p className="text-[11px] uppercase tracking-[0.22em] text-zinc-500">Legal directory</p>
       <div className="mt-5 grid gap-8 md:grid-cols-2">
-        <LegalGroup
-          title="Oremea"
-          links={LEGAL_LINKS}
-          activePath={activePath}
-        />
-        <LegalGroup
-          title="WORKS"
-          links={WORKS_LEGAL_LINKS}
-          activePath={activePath}
-        />
+        <LegalGroup title="Oremea" links={LEGAL_LINKS} activePath={activePath} />
+        <LegalGroup title="WORKS" links={WORKS_LEGAL_LINKS} activePath={activePath} />
       </div>
     </section>
   );
@@ -241,21 +209,12 @@ function LegalGroup({
   return (
     <div>
       <h2 className="text-sm font-medium text-zinc-200">{title}</h2>
-      <nav
-        className="mt-3 flex flex-col gap-2"
-        aria-label={`${title} legal documents`}
-      >
+      <nav className="mt-3 flex flex-col gap-2" aria-label={`${title} legal documents`}>
         {links.map((link) =>
           link.href === activePath ? (
-            <span key={link.href} className="text-sm text-amber-100/60">
-              {link.label}
-            </span>
+            <span key={link.href} className="text-sm text-amber-100/60">{link.label}</span>
           ) : (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-sm text-zinc-400 transition hover:text-amber-100"
-            >
+            <Link key={link.href} href={link.href} className="text-sm text-zinc-400 transition hover:text-amber-100">
               {link.label}
             </Link>
           ),

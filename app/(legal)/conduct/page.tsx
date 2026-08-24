@@ -1,7 +1,4 @@
-import {
-  LegalDocument,
-  type LegalSection,
-} from "@/components/legal/legal-document";
+import { LegalDocument, type LegalSection } from "@/components/legal/legal-document";
 
 const sections: readonly LegalSection[] = [
   {
@@ -49,28 +46,27 @@ const sections: readonly LegalSection[] = [
     title: "6. WORKS customers and briefs",
     paragraphs: [
       "A customer must submit genuine enquiries and must not use a brief to gather confidential pricing, specifications or provider information for deceptive, anticompetitive or abusive purposes.",
+      "A WORKS fit or capacity enquiry is not a demand for unpaid formulation, engineering, design, samples, specifications, prototypes or other substantial technical development. Where detailed development work is needed, the customer and provider should scope and price that work directly.",
       "Customers must communicate material requirements honestly and treat independent providers fairly. WORKS may limit repeated, speculative, abusive or bad-faith enquiries.",
     ],
   },
   {
     title: "7. WORKS providers and profiles",
     paragraphs: [
-      "Providers must keep material identity, ownership, capability, capacity, location, availability, credential and contact information reasonably accurate. Paid participation does not permit a provider to buy verification, ranking, favourable reviews or a false trust indicator.",
+      "Providers must keep material identity, ownership, capability, capacity, location, availability, credential and contact information reasonably accurate. Paid participation does not permit a provider to buy verification, suitability ranking, favourable reviews or a false trust indicator.",
       "A provider may not misuse customer briefs, disclose confidential requirements, divert contact information for unrelated marketing or represent an introduction as an Oremea endorsement.",
     ],
   },
   {
     title: "8. Reviews and public content",
     paragraphs: [
-      "Reviews must reflect a genuine WORKS-linked interaction and the reviewer's honestly held experience. Fabricated, incentivised without disclosure, retaliatory, duplicate, extortionate, irrelevant or defamatory content is prohibited.",
+      "Reviews must reflect a genuine eligible WORKS-linked interaction and the reviewer's honestly held experience. Fabricated, incentivised without disclosure, retaliatory, duplicate, extortionate, irrelevant or defamatory content is prohibited.",
       "Providers may respond professionally but may not pressure a reviewer to change an honest review or expose private customer information. The full Reviews Policy applies to WORKS reviews.",
     ],
   },
   {
     title: "9. Intellectual property",
-    paragraphs: [
-      "Do not upload or distribute material that infringes copyright, trade marks, privacy, confidentiality or other rights. Do not present another person's work, product, business or credential as your own.",
-    ],
+    paragraphs: ["Do not upload or distribute material that infringes copyright, trade marks, privacy, confidentiality or other rights. Do not present another person's work, product, business or credential as your own."],
   },
   {
     title: "10. Enforcement",
@@ -94,7 +90,7 @@ export default function ConductPage() {
       activePath="/conduct"
       title="Community and Acceptable Use Policy"
       summary="The conduct, content, privacy and platform-integrity standards that apply across Oremea and WORKS."
-      updated="9 August 2026"
+      updated="24 August 2026"
       sections={sections}
     />
   );

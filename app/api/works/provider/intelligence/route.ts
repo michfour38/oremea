@@ -3,6 +3,7 @@ import { WorksMatchStatus, WorksProviderPlan } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { effectiveWorksProviderPlan } from "@/lib/works/billing/period";
 
 const DETAIL_PLANS = new Set<WorksProviderPlan>([WorksProviderPlan.GROWTH, WorksProviderPlan.ENTERPRISE]);
 
@@ -39,7 +40,7 @@ export async function GET(request: Request) {
 
   if (!membership) return NextResponse.json({ error: "This provider profile is not available to this account." }, { status: 403 });
 
-  const plan = membership.provider.commercial_profile?.plan ?? WorksProviderPlan.FREE;
+  const plan = effectiveWorksProviderPlan(membership.provider.commercial_profile);
   const hasDetailedIntelligence = DETAIL_PLANS.has(plan);
   const offeringIds = membership.provider.markets.flatMap((market) => market.offerings.map((offering) => offering.id));
   const since = new Date();
