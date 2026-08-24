@@ -1,0 +1,26 @@
+CLERK_COMPATIBLE_SECURITY=PASS
+targets=@clerk/nextjs@5.7.6,@clerk/clerk-react@5.61.6,js-cookie@3.0.8
+critical=0
+high=6
+moderate=3
+low=6
+total=15
+clerk_or_cookie_high_or_critical=0
+--- resolved packages ---
+oremea@0.1.0 /home/runner/work/oremea/oremea
+└─┬ @clerk/nextjs@5.7.6
+  ├─┬ @clerk/backend@1.14.1
+  │ ├─┬ @clerk/shared@2.9.2
+  │ │ ├── @clerk/types@4.26.0 deduped
+  │ │ └── js-cookie@3.0.8 deduped
+  │ └── @clerk/types@4.26.0 deduped
+  ├─┬ @clerk/clerk-react@5.61.6 overridden
+  │ └─┬ @clerk/shared@3.47.8
+  │   └── js-cookie@3.0.8 deduped
+  ├─┬ @clerk/shared@2.9.2
+  │ ├── @clerk/types@4.26.0 deduped
+  │ └── js-cookie@3.0.8 overridden
+  └── @clerk/types@4.26.0
+
+validation=full-launch-contracts+typecheck+next-build
+independent_pr_trigger=2026-08-24
