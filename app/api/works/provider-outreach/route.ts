@@ -8,6 +8,9 @@ import { buildProviderBrief } from "@/lib/works/outreach/build-provider-brief";
 import { getRouteSummary } from "@/lib/works/routes/get-route-summary";
 import { ownsWorksAnonymousSearch } from "@/lib/works/searches/anonymous-search-ownership";
 
+const MAX_DISTINCT_PROVIDER_CONTACTS_PER_BRIEF = 5;
+const CONTACTED_STATUSES = new Set(["SENT", "RESPONDED", "DECLINED"]);
+
 function stringValue(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -202,9 +205,10 @@ function buildEditableBody({
     "",
     snapshot.product,
     "",
-    `WORKS matched your business to part of a production route for ${requesterName}.`,
+    `WORKS identified your business as a possible fit for part of a production route for ${requesterName}.`,
+    "Please confirm what is actually possible now. This enquiry is not a statement that WORKS has verified your current capacity, final specification, price or timing.",
     "",
-    "Your part of the route",
+    "Your possible part of the route",
     ...snapshot.relevantSteps.map((step) => `- ${step}`),
     "",
     "Production quantity",
@@ -314,6 +318,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (providerIds.length > MAX_DISTINCT_PROVIDER_CONTACTS_PER_BRIEF) {
+      return NextResponse.json(
+        {
+          error: `WORKS limits one brief to ${MAX_DISTINCT_PROVIDER_CONTACTS_PER_BRIEF} distinct provider contacts. Refine the route instead of broadcasting the brief.`,
+        },
+        { status: 400 }
+      );
+    }
+
     const searchSession = await prisma.works_search_sessions.findUnique({
       where: { id: searchSessionId },
       select: {
@@ -353,6 +366,53 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const routeSummary = await getRouteSummary(briefId);
+    if (!routeSummary) {
+      return NextResponse.json(
+        { error: "WORKS needs a current production route before contacting providers." },
+        { status: 409 }
+      );
+    }
+
+    const allowedRouteProviderIds = new Set(
+      routeSummary.providers.map((provider) => provider.id)
+    );
+    const outsideRoute = providerIds.filter(
+      (providerId) => !allowedRouteProviderIds.has(providerId)
+    );
+    if (outsideRoute.length > 0) {
+      return NextResponse.json(
+        {
+          error: "WORKS only contacts providers assigned to the current production route. Rebuild or refine the route before adding a different provider.",
+        },
+        { status: 409 }
+      );
+    }
+
+    const priorOutreach = await prisma.works_provider_outreach.findMany({
+      where: { procurement_request_id: procurement.id },
+      select: { provider_id: true, status: true },
+    });
+    const alreadyContacted = new Set(
+      priorOutreach
+        .filter((row) => CONTACTED_STATUSES.has(row.status))
+        .map((row) => row.provider_id)
+    );
+    const newDistinctContacts = providerIds.filter(
+      (providerId) => !alreadyContacted.has(providerId)
+    );
+    if (
+      alreadyContacted.size + newDistinctContacts.length >
+      MAX_DISTINCT_PROVIDER_CONTACTS_PER_BRIEF
+    ) {
+      return NextResponse.json(
+        {
+          error: `This brief has reached WORKS's ${MAX_DISTINCT_PROVIDER_CONTACTS_PER_BRIEF}-provider contact limit. Refine the existing conversations or ask WORKS to continue sourcing rather than spraying more enquiries.`,
+        },
+        { status: 409 }
+      );
+    }
+
     const providers = await prisma.works_providers.findMany({
       where: {
         id: { in: providerIds },
@@ -363,8 +423,7 @@ export async function POST(req: NextRequest) {
     const providerById = new Map(
       providers.map((provider) => [provider.id, provider])
     );
-    const routeSummary = await getRouteSummary(briefId);
-    const routeQuestions = routeSummary?.nextQuestions ?? [];
+    const routeQuestions = routeSummary.nextQuestions ?? [];
 
     if (previewOnly) {
       const previews = [];
@@ -452,7 +511,7 @@ export async function POST(req: NextRequest) {
 
         if (
           existingOutreach &&
-          ["SENT", "RESPONDED", "DECLINED"].includes(existingOutreach.status)
+          CONTACTED_STATUSES.has(existingOutreach.status)
         ) {
           results.push({
             providerId,
