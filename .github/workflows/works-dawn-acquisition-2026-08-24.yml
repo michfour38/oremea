@@ -1,0 +1,484 @@
+name: One-time WORKS DAWN acquisition optimization
+
+on:
+  push:
+    branches:
+      - dawn/works-acquisition-2026-08-24
+    paths:
+      - .github/workflows/works-dawn-acquisition-2026-08-24.yml
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply DAWN visibility and lead-capture optimization
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str):
+              p = Path(path)
+              text = p.read_text()
+              if text.count(old) != 1:
+                  raise SystemExit(f"Expected exactly one match in {path}: {old[:120]!r}; found {text.count(old)}")
+              p.write_text(text.replace(old, new, 1))
+
+          # 1) First-touch acquisition attribution + conversion point storage.
+          replace_once(
+              "prisma/works/searches.prisma",
+              """  browser_session_id String?\n  clerk_user_id      String?\n  answers            Json                     @default(\"{}\")\n""",
+              """  browser_session_id String?\n  clerk_user_id      String?\n  landing_path       String?                  @db.VarChar(1024)\n  referrer_host      String?                  @db.VarChar(255)\n  utm_source         String?                  @db.VarChar(255)\n  utm_medium         String?                  @db.VarChar(255)\n  utm_campaign       String?                  @db.VarChar(255)\n  utm_term           String?                  @db.VarChar(255)\n  utm_content        String?                  @db.VarChar(255)\n  answers            Json                     @default(\"{}\")\n""",
+          )
+          replace_once(
+              "prisma/works/searches.prisma",
+              """  @@index([clerk_user_id, updated_at])\n  @@index([updated_at])\n}\n""",
+              """  @@index([clerk_user_id, updated_at])\n  @@index([utm_source, created_at])\n  @@index([utm_campaign, created_at])\n  @@index([updated_at])\n}\n""",
+          )
+          replace_once(
+              "prisma/works/searches.prisma",
+              """  preferred_contact_method String?\n  status                   WorksProcurementRequestStatus @default(REQUESTED)\n""",
+              """  preferred_contact_method String?\n  capture_point            String?                        @db.VarChar(80)\n  status                   WorksProcurementRequestStatus @default(REQUESTED)\n""",
+          )
+          replace_once(
+              "prisma/works/searches.prisma",
+              """  @@index([status])\n  @@index([email])\n  @@index([created_at])\n}\n""",
+              """  @@index([status])\n  @@index([email])\n  @@index([capture_point, created_at])\n  @@index([created_at])\n}\n""",
+          )
+
+          migration = Path("prisma/migrations/20260824074500_add_works_acquisition_attribution/migration.sql")
+          migration.parent.mkdir(parents=True, exist_ok=True)
+          migration.write_text('''-- DAWN acquisition attribution for WORKS anonymous search and lead conversion.\nALTER TABLE "works_search_sessions"\n  ADD COLUMN "landing_path" VARCHAR(1024),\n  ADD COLUMN "referrer_host" VARCHAR(255),\n  ADD COLUMN "utm_source" VARCHAR(255),\n  ADD COLUMN "utm_medium" VARCHAR(255),\n  ADD COLUMN "utm_campaign" VARCHAR(255),\n  ADD COLUMN "utm_term" VARCHAR(255),\n  ADD COLUMN "utm_content" VARCHAR(255);\n\nALTER TABLE "works_procurement_requests"\n  ADD COLUMN "capture_point" VARCHAR(80);\n\nCREATE INDEX "works_search_sessions_utm_source_created_at_idx"\n  ON "works_search_sessions"("utm_source", "created_at");\nCREATE INDEX "works_search_sessions_utm_campaign_created_at_idx"\n  ON "works_search_sessions"("utm_campaign", "created_at");\nCREATE INDEX "works_procurement_requests_capture_point_created_at_idx"\n  ON "works_procurement_requests"("capture_point", "created_at");\n''')
+
+          # 2) Store the first-touch attribution when an anonymous search begins.
+          replace_once(
+              "app/api/works/search-sessions/route.ts",
+              """function stringValue(value: unknown) {\n  return typeof value === \"string\" ? value.trim() : \"\";\n}\n\n""",
+              """function stringValue(value: unknown) {\n  return typeof value === \"string\" ? value.trim() : \"\";\n}\n\nfunction limitedString(value: unknown, maxLength: number) {\n  return stringValue(value).slice(0, maxLength);\n}\n\n""",
+          )
+          replace_once(
+              "app/api/works/search-sessions/route.ts",
+              """    const currentStep = stringValue(body?.currentStep) || undefined;\n    const answers = answerObject(body?.answers);\n\n""",
+              """    const currentStep = stringValue(body?.currentStep) || undefined;\n    const answers = answerObject(body?.answers);\n    const attribution =\n      body?.attribution && typeof body.attribution === \"object\" && !Array.isArray(body.attribution)\n        ? body.attribution\n        : {};\n    const landingPath = limitedString(attribution?.landingPath, 1024);\n    const referrerHost = limitedString(attribution?.referrerHost, 255).toLowerCase();\n    const utmSource = limitedString(attribution?.utmSource, 255);\n    const utmMedium = limitedString(attribution?.utmMedium, 255);\n    const utmCampaign = limitedString(attribution?.utmCampaign, 255);\n    const utmTerm = limitedString(attribution?.utmTerm, 255);\n    const utmContent = limitedString(attribution?.utmContent, 255);\n\n""",
+          )
+          replace_once(
+              "app/api/works/search-sessions/route.ts",
+              """        browser_session_id: browserSessionId,\n        answers,\n        current_step: currentStep,\n""",
+              """        browser_session_id: browserSessionId,\n        landing_path: landingPath || undefined,\n        referrer_host: referrerHost || undefined,\n        utm_source: utmSource || undefined,\n        utm_medium: utmMedium || undefined,\n        utm_campaign: utmCampaign || undefined,\n        utm_term: utmTerm || undefined,\n        utm_content: utmContent || undefined,\n        answers,\n        current_step: currentStep,\n""",
+          )
+
+          # 3) Capture attribution in the browser and preserve the conversion surface.
+          replace_once(
+              "components/works/intake/founder-conversation-v2.tsx",
+              """function browserKey(marketSlug: string) {\n  return `oremea:works:${marketSlug}:browser-session`;\n}\n\n""",
+              """function browserKey(marketSlug: string) {\n  return `oremea:works:${marketSlug}:browser-session`;\n}\n\nfunction acquisitionAttribution() {\n  const params = new URLSearchParams(window.location.search);\n  let referrerHost = \"\";\n  try {\n    referrerHost = document.referrer ? new URL(document.referrer).hostname.toLowerCase() : \"\";\n  } catch {\n    referrerHost = \"\";\n  }\n\n  return {\n    landingPath: window.location.pathname,\n    referrerHost,\n    utmSource: params.get(\"utm_source\") ?? \"\",\n    utmMedium: params.get(\"utm_medium\") ?? \"\",\n    utmCampaign: params.get(\"utm_campaign\") ?? \"\",\n    utmTerm: params.get(\"utm_term\") ?? \"\",\n    utmContent: params.get(\"utm_content\") ?? \"\",\n  };\n}\n\n""",
+          )
+          replace_once(
+              "components/works/intake/founder-conversation-v2.tsx",
+              """export function FounderConversationV2({\n  market,\n  categories,\n  embedded = false,\n}: {\n  market: MarketView;\n  categories: WorksMarketCategory[];\n  embedded?: boolean;\n}) {\n  const [form, setForm] = useState<IntakeState>(INITIAL_STATE);\n""",
+              """export function FounderConversationV2({\n  market,\n  categories,\n  embedded = false,\n  initialCategoryKey = \"\",\n}: {\n  market: MarketView;\n  categories: WorksMarketCategory[];\n  embedded?: boolean;\n  initialCategoryKey?: string;\n}) {\n  const [form, setForm] = useState<IntakeState>(() => ({\n    ...INITIAL_STATE,\n    categoryKey: initialCategoryKey,\n  }));\n""",
+          )
+          replace_once(
+              "components/works/intake/founder-conversation-v2.tsx",
+              """        browserSessionId: browserSessionId(),\n        answers: form,\n        currentStep,\n""",
+              """        browserSessionId: browserSessionId(),\n        attribution: acquisitionAttribution(),\n        answers: form,\n        currentStep,\n""",
+          )
+          replace_once(
+              "components/works/intake/founder-conversation-v2.tsx",
+              """          searchSessionId,\n          briefId,\n          ...lead,\n""",
+              """          searchSessionId,\n          briefId,\n          capturePoint: \"route-sourcing-fallback\",\n          ...lead,\n""",
+          )
+          replace_once(
+              "components/works/intake/founder-conversation-v2.tsx",
+              """    setForm(INITIAL_STATE);\n""",
+              """    setForm({ ...INITIAL_STATE, categoryKey: initialCategoryKey });\n""",
+          )
+
+          replace_once(
+              "components/works/outreach/provider-outreach-panel.tsx",
+              """      body: JSON.stringify({ searchSessionId, briefId, ...current }),\n""",
+              """      body: JSON.stringify({\n        searchSessionId,\n        briefId,\n        capturePoint: \"provider-outreach\",\n        ...current,\n      }),\n""",
+          )
+
+          # 4) Persist the first conversion point and alert Oremea once per new lead.
+          procurement = Path("app/api/works/procurement-requests/route.ts")
+          text = procurement.read_text()
+          text = text.replace(
+              'import { NextRequest, NextResponse } from "next/server";\n',
+              'import { NextRequest, NextResponse } from "next/server";\nimport { Resend } from "resend";\n',
+              1,
+          )
+          if 'import { Resend } from "resend";' not in text:
+              raise SystemExit("Could not add Resend import to procurement route")
+          text = text.replace(
+              '''function emailValue(value: unknown) {\n  const email = stringValue(value).toLowerCase();\n  return email.includes("@") ? email : "";\n}\n\n''',
+              '''function emailValue(value: unknown) {\n  const email = stringValue(value).toLowerCase();\n  return email.includes("@") ? email : "";\n}\n\nconst WORKS_CAPTURE_POINTS = new Set([\n  "provider-outreach",\n  "route-sourcing-fallback",\n]);\n\nfunction capturePointValue(value: unknown) {\n  const point = stringValue(value).slice(0, 80);\n  return WORKS_CAPTURE_POINTS.has(point) ? point : undefined;\n}\n\nfunction sourceSummary(session: {\n  landing_path: string | null;\n  referrer_host: string | null;\n  utm_source: string | null;\n  utm_medium: string | null;\n  utm_campaign: string | null;\n  utm_term: string | null;\n  utm_content: string | null;\n}) {\n  const parts = [\n    session.utm_source ? `source=${session.utm_source}` : "",\n    session.utm_medium ? `medium=${session.utm_medium}` : "",\n    session.utm_campaign ? `campaign=${session.utm_campaign}` : "",\n    session.utm_term ? `term=${session.utm_term}` : "",\n    session.utm_content ? `content=${session.utm_content}` : "",\n    session.referrer_host ? `referrer=${session.referrer_host}` : "",\n    session.landing_path ? `landing=${session.landing_path}` : "",\n  ].filter(Boolean);\n  return parts.length ? parts.join(" · ") : "Direct / unattributed";\n}\n\nasync function notifyOremeaOfSourcingLead({\n  session,\n  briefId,\n  requestId,\n  name,\n  email,\n  phone,\n  preferredContactMethod,\n  capturePoint,\n}: {\n  session: NonNullable<Awaited<ReturnType<typeof ownedSession>>>;\n  briefId: string;\n  requestId: string;\n  name: string;\n  email: string;\n  phone?: string;\n  preferredContactMethod?: string;\n  capturePoint?: string;\n}) {\n  const apiKey = process.env.RESEND_API_KEY?.trim();\n  const from =\n    process.env.WORKS_OUTREACH_FROM?.trim() ||\n    process.env.RESEND_FROM_EMAIL?.trim();\n  const to = process.env.WORKS_LEAD_NOTIFY_TO?.trim() || "support@oremea.com";\n  if (!apiKey || !from || !to) {\n    console.warn("WORKS sourcing lead notification is not configured.");\n    return;\n  }\n\n  const brief = await prisma.works_product_briefs.findUnique({\n    where: { id: briefId },\n    select: {\n      product_description: true,\n      stage: true,\n      target_quantity: true,\n      quantity_unit: true,\n      administrative_area: true,\n    },\n  });\n  const product = brief?.product_description?.replace(/\\s+/g, " ").trim() || "New sourcing request";\n  const resend = new Resend(apiKey);\n  await resend.emails.send({\n    from,\n    to,\n    replyTo: email,\n    subject: `WORKS sourcing lead: ${product.slice(0, 90)}`,\n    text: [\n      "A new WORKS buyer has asked to continue sourcing.",\n      "",\n      `Product / need: ${product}`,\n      brief?.stage ? `Stage: ${brief.stage}` : "",\n      brief?.target_quantity != null\n        ? `Quantity: ${String(brief.target_quantity)} ${brief.quantity_unit ?? ""}`.trim()\n        : "",\n      brief?.administrative_area ? `Area: ${brief.administrative_area}` : "",\n      `Name: ${name}`,\n      `Email: ${email}`,\n      phone ? `Phone: ${phone}` : "",\n      preferredContactMethod ? `Preferred contact: ${preferredContactMethod}` : "",\n      `Conversion point: ${capturePoint ?? "unknown"}`,\n      `Acquisition: ${sourceSummary(session)}`,\n      `Request ID: ${requestId}`,\n      `Brief ID: ${briefId}`,\n    ]\n      .filter(Boolean)\n      .join("\\n"),\n  });\n}\n\n''',
+              1,
+          )
+          if 'notifyOremeaOfSourcingLead' not in text:
+              raise SystemExit("Could not add lead notification helper")
+          text = text.replace(
+              '''      browser_session_id: true,\n      market: { select: { slug: true } },\n''',
+              '''      browser_session_id: true,\n      landing_path: true,\n      referrer_host: true,\n      utm_source: true,\n      utm_medium: true,\n      utm_campaign: true,\n      utm_term: true,\n      utm_content: true,\n      market: { select: { slug: true } },\n''',
+              1,
+          )
+          text = text.replace(
+              '''    const preferredContactMethod = stringValue(body?.preferredContactMethod) || undefined;\n\n''',
+              '''    const preferredContactMethod = stringValue(body?.preferredContactMethod) || undefined;\n    const capturePoint = capturePointValue(body?.capturePoint);\n\n''',
+              1,
+          )
+          text = text.replace(
+              '''    const request = await prisma.$transaction(async (tx) => {\n      const procurementRequest = await tx.works_procurement_requests.upsert({\n''',
+              '''    const request = await prisma.$transaction(async (tx) => {\n      const existingRequest = await tx.works_procurement_requests.findUnique({\n        where: { search_session_id: searchSessionId },\n        select: { id: true },\n      });\n      const procurementRequest = await tx.works_procurement_requests.upsert({\n''',
+              1,
+          )
+          text = text.replace(
+              '''          preferred_contact_method: preferredContactMethod,\n          status: "REQUESTED",\n        },\n        select: { id: true, status: true },\n''',
+              '''          preferred_contact_method: preferredContactMethod,\n          capture_point: capturePoint,\n          status: "REQUESTED",\n        },\n        select: { id: true, status: true },\n''',
+              1,
+          )
+          text = text.replace(
+              '''      return procurementRequest;\n    });\n\n    return NextResponse.json({\n''',
+              '''      return { ...procurementRequest, newlyCreated: !existingRequest };\n    });\n\n    if (request.newlyCreated) {\n      try {\n        await notifyOremeaOfSourcingLead({\n          session,\n          briefId,\n          requestId: request.id,\n          name,\n          email,\n          phone,\n          preferredContactMethod,\n          capturePoint,\n        });\n      } catch (notificationError) {\n        console.error("WORKS sourcing lead notification failed:", notificationError);\n      }\n    }\n\n    return NextResponse.json({\n''',
+              1,
+          )
+          procurement.write_text(text)
+
+          # 5) High-intent, indexable category landing pages that convert into the same brief flow.
+          category_page = Path("app/works/manufacturers/[category]/page.tsx")
+          category_page.parent.mkdir(parents=True, exist_ok=True)
+          category_page.write_text(r'''import type { Metadata } from "next";
+          import { notFound } from "next/navigation";
+
+          import { FounderConversationV2 } from "@/components/works/intake/founder-conversation-v2";
+          import { WorksPageHeader } from "@/components/works/works-brand";
+          import { prisma } from "@/lib/prisma";
+          import { listMarketCategories } from "@/lib/works/categories/list-market-categories";
+          import { resolveWorksMarket } from "@/lib/works/markets/resolve-market";
+          import {
+            WORKS_ORGANIZATION_ID,
+            WORKS_WEBSITE_ID,
+            worksUrl,
+          } from "@/lib/works/seo";
+
+          export const dynamic = "force-dynamic";
+
+          async function categoryForSlug(slug: string) {
+            const categories = await listMarketCategories("za", "en-ZA");
+            return {
+              categories,
+              category: categories.find((item) => item.slug === slug.toLowerCase()) ?? null,
+            };
+          }
+
+          export async function generateMetadata({
+            params,
+          }: {
+            params: { category: string };
+          }): Promise<Metadata> {
+            const { category } = await categoryForSlug(params.category);
+            if (!category) return { title: "Manufacturers in South Africa | WORKS" };
+
+            const canonical = worksUrl(`/manufacturers/${category.slug}`);
+            const title = `${category.name} manufacturers in South Africa | WORKS`;
+            const description = `Find South African ${category.name.toLowerCase()} manufacturers and specialist providers. Describe the product, formula, packaging or service you need and WORKS maps the production route.`;
+            return {
+              title,
+              description,
+              alternates: { canonical },
+              openGraph: {
+                title,
+                description,
+                url: canonical,
+                type: "website",
+              },
+            };
+          }
+
+          function evidenceLabel(status: string) {
+            if (status === "VERIFIED") return "Verified offering";
+            if (status === "SOURCE_REVIEWED") return "Source reviewed";
+            return "Provider supplied · review pending";
+          }
+
+          export default async function WorksCategoryLandingPage({
+            params,
+          }: {
+            params: { category: string };
+          }) {
+            const market = resolveWorksMarket("za");
+            if (!market?.active) notFound();
+
+            const { categories, category } = await categoryForSlug(params.category);
+            if (!category) notFound();
+
+            const categoryRecord = await prisma.works_categories.findUnique({
+              where: { slug: category.slug },
+              select: { id: true },
+            });
+            if (!categoryRecord) notFound();
+
+            const providerMarkets = await prisma.works_provider_markets.findMany({
+              where: {
+                active: true,
+                market: { slug: market.slug, active: true },
+                provider: {
+                  profile_status: { not: "ARCHIVED" },
+                  slug: { not: "works-qa-supplier" },
+                },
+                offerings: {
+                  some: {
+                    active: true,
+                    categories: { some: { category_id: categoryRecord.id } },
+                  },
+                },
+              },
+              select: {
+                provider: {
+                  select: {
+                    name: true,
+                    slug: true,
+                    description: true,
+                  },
+                },
+                offerings: {
+                  where: {
+                    active: true,
+                    categories: { some: { category_id: categoryRecord.id } },
+                  },
+                  select: { name: true, evidence_status: true },
+                  orderBy: { name: "asc" },
+                  take: 4,
+                },
+              },
+              take: 16,
+            });
+            const providers = providerMarkets
+              .sort((a, b) => a.provider.name.localeCompare(b.provider.name))
+              .slice(0, 12);
+            const canonical = worksUrl(`/manufacturers/${category.slug}`);
+            const structuredData = {
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "CollectionPage",
+                  "@id": `${canonical}#page`,
+                  name: `${category.name} manufacturers in South Africa`,
+                  description: category.description,
+                  url: canonical,
+                  isPartOf: { "@id": WORKS_WEBSITE_ID },
+                },
+                {
+                  "@type": "Service",
+                  "@id": `${canonical}#service`,
+                  name: `${category.name} production matching in South Africa`,
+                  serviceType: `${category.name} manufacturing and production provider matching`,
+                  provider: { "@id": WORKS_ORGANIZATION_ID },
+                  areaServed: { "@type": "Country", name: "South Africa" },
+                  url: canonical,
+                },
+                {
+                  "@type": "ItemList",
+                  name: `Current WORKS ${category.name} providers`,
+                  itemListElement: providers.map((item, index) => ({
+                    "@type": "ListItem",
+                    position: index + 1,
+                    item: {
+                      "@type": "Organization",
+                      name: item.provider.name,
+                      url: worksUrl(`/providers/${item.provider.slug}`),
+                    },
+                  })),
+                },
+              ],
+            };
+
+            return (
+              <main className="min-h-screen bg-[#f3eee4] text-[#1f1c17]">
+                <script
+                  type="application/ld+json"
+                  dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+                />
+
+                <div className="mx-auto w-full max-w-5xl px-5 pt-6 md:px-8 md:pt-9">
+                  <WorksPageHeader
+                    context={`${market.localName} · ${category.name}`}
+                    action={
+                      <a
+                        href={worksUrl("/")}
+                        className="rounded-full border border-black/15 bg-white/70 px-4 py-2 text-sm"
+                      >
+                        Start any brief →
+                      </a>
+                    }
+                  />
+
+                  <section className="py-10 md:py-14">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">
+                      Find a production partner
+                    </p>
+                    <h1 className="mt-3 max-w-4xl font-serif text-4xl leading-tight md:text-6xl">
+                      {category.name} manufacturers in South Africa
+                    </h1>
+                    <p className="mt-5 max-w-3xl text-base leading-8 text-black/60">
+                      {category.description}
+                    </p>
+                    <p className="mt-3 max-w-3xl text-sm leading-7 text-black/50">
+                      Need formulation, manufacturing, filling, packaging, testing or another specialist production step? Describe the product, component, formula, packaging or service you need. WORKS maps the route and keeps unknowns visible instead of inventing certainty.
+                    </p>
+                  </section>
+
+                  <section className="border-t border-black/10 py-8">
+                    <div className="flex flex-wrap items-end justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-[0.16em] text-black/40">
+                          Current public profiles
+                        </p>
+                        <h2 className="mt-2 font-serif text-3xl">
+                          {providers.length > 0
+                            ? `${providers.length} ${category.name.toLowerCase()} provider${providers.length === 1 ? "" : "s"} to explore`
+                            : `WORKS is still building this ${category.name.toLowerCase()} directory`}
+                        </h2>
+                      </div>
+                    </div>
+
+                    {providers.length > 0 ? (
+                      <div className="mt-6 grid gap-4 md:grid-cols-2">
+                        {providers.map((item) => (
+                          <article key={item.provider.slug} className="rounded-3xl border border-black/10 bg-white/70 p-5">
+                            <a
+                              href={worksUrl(`/providers/${item.provider.slug}`)}
+                              className="font-serif text-2xl underline-offset-4 hover:underline"
+                            >
+                              {item.provider.name}
+                            </a>
+                            {item.provider.description ? (
+                              <p className="mt-3 line-clamp-3 text-sm leading-6 text-black/55">
+                                {item.provider.description}
+                              </p>
+                            ) : null}
+                            <div className="mt-4 space-y-2 border-t border-black/8 pt-4">
+                              {item.offerings.map((offering) => (
+                                <div key={offering.name} className="flex items-start justify-between gap-3 text-xs">
+                                  <span className="text-black/65">{offering.name}</span>
+                                  <span className="shrink-0 text-black/40">{evidenceLabel(offering.evidence_status)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-5 max-w-2xl text-sm leading-7 text-black/55">
+                        No public provider profile is strong enough to list here yet. The route builder below can still record the brief and let WORKS continue sourcing without pretending a match already exists.
+                      </p>
+                    )}
+                    <p className="mt-5 text-xs leading-5 text-black/40">
+                      A public listing is a possible fit, not a guarantee of current capacity, specification, price or timing. Confirm those directly before appointing a provider.
+                    </p>
+                  </section>
+                </div>
+
+                <div className="border-t border-black/10 bg-white/25">
+                  <div className="mx-auto w-full max-w-3xl px-5 pt-8 md:px-8 md:pt-10">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">
+                      Build a {category.name.toLowerCase()} brief
+                    </p>
+                    <h2 className="mt-2 font-serif text-3xl md:text-4xl">
+                      Start with what you actually need.
+                    </h2>
+                  </div>
+                  <FounderConversationV2
+                    market={{
+                      slug: market.slug,
+                      name: market.localName,
+                      geographyLabel: market.geography.level1Name,
+                      geographyValues: market.geography.values,
+                    }}
+                    categories={categories}
+                    embedded
+                    initialCategoryKey={category.key}
+                  />
+                </div>
+              </main>
+            );
+          }
+          '''.replace("          ", ""))
+
+          # 6) Put high-intent category pages into the public sitemap.
+          replace_once(
+              "app/works/sitemap.ts",
+              """    const providers = await prisma.works_providers.findMany({\n""",
+              """    const categories = await prisma.works_market_categories.findMany({\n      where: {\n        enabled: true,\n        market: { slug: \"za\", active: true },\n        category: { active: true },\n      },\n      select: {\n        category: { select: { slug: true, updated_at: true } },\n      },\n      orderBy: { sort_order: \"asc\" },\n    });\n\n    const providers = await prisma.works_providers.findMany({\n""",
+          )
+          replace_once(
+              "app/works/sitemap.ts",
+              """      ...STATIC_ROUTES,\n      ...providers.map((provider) => ({\n""",
+              """      ...STATIC_ROUTES,\n      ...categories.map((category) => ({\n        url: worksUrl(`/manufacturers/${category.category.slug}`),\n        lastModified: category.category.updated_at,\n        changeFrequency: \"weekly\" as const,\n        priority: 0.9,\n      })),\n      ...providers.map((provider) => ({\n""",
+          )
+
+          # 7) Broaden search snippets so odd/specialist needs recognise themselves.
+          replace_once(
+              "lib/works/seo.ts",
+              '  "Describe what you need made. WORKS maps the production route and finds South African manufacturers, suppliers and specialist providers that fit the brief.";\n',
+              '  "Describe the product, component, formula, packaging or production service you need. WORKS maps the route and finds South African manufacturers, suppliers and specialist providers that fit the brief.";\n',
+          )
+          replace_once(
+              "lib/works/seo.ts",
+              '  "WORKS helps buyers turn a product brief into a production route and find suitable South African manufacturers, suppliers and specialist providers while keeping unconfirmed requirements visible.";\n',
+              '  "WORKS turns a product, component, formula, packaging or production-service need into a production route and suitable South African provider matches while keeping unconfirmed requirements visible.";\n',
+          )
+
+          # 8) Make lead notification destination explicit in deployment configuration.
+          replace_once(
+              ".env.example",
+              'WORKS_OUTREACH_FROM="WORKS <hello@yourdomain.com>"\n',
+              'WORKS_OUTREACH_FROM="WORKS <hello@yourdomain.com>"\nWORKS_LEAD_NOTIFY_TO=support@oremea.com\n',
+          )
+
+          # 9) Expand the DAWN contract so visibility without attraction/capture can never pass as green.
+          dawn = Path("scripts/verify-works-dawn-seo-contract.ts")
+          text = dawn.read_text()
+          text = text.replace(
+              'const middleware = read("middleware.ts");\n',
+              '''const middleware = read("middleware.ts");\nconst categoryLanding = read("app/works/manufacturers/[category]/page.tsx");\nconst searchesSchema = read("prisma/works/searches.prisma");\nconst searchSessions = read("app/api/works/search-sessions/route.ts");\nconst conversation = read("components/works/intake/founder-conversation-v2.tsx");\nconst procurement = read("app/api/works/procurement-requests/route.ts");\nconst outreach = read("components/works/outreach/provider-outreach-panel.tsx");\nconst attributionMigration = read("prisma/migrations/20260824074500_add_works_acquisition_attribution/migration.sql");\nconst env = read(".env.example");\n''',
+              1,
+          )
+          text = text.replace(
+              'assert.match(middleware, /"\\/sitemap\\.xml"/);\n\nconsole.log("✓ WORKS DAWN SEO authority and discovery contract");\n',
+              '''assert.match(middleware, /"\\/sitemap\\.xml"/);\n\nassert.match(seo, /product, component, formula, packaging or production service/);\nassert.match(categoryLanding, /manufacturers in South Africa/);\nassert.match(categoryLanding, /"@type": "CollectionPage"/);\nassert.match(categoryLanding, /initialCategoryKey={category.key}/);\nassert.match(categoryLanding, /possible fit, not a guarantee/);\nassert.match(sitemap, /works_market_categories\\.findMany/);\nassert.match(sitemap, /`\\/manufacturers\\/\\$\\{category\\.category\\.slug\\}`/);\n\nfor (const field of [\n  "landing_path",\n  "referrer_host",\n  "utm_source",\n  "utm_medium",\n  "utm_campaign",\n  "utm_term",\n  "utm_content",\n]) {\n  assert.match(searchesSchema, new RegExp(field));\n  assert.match(attributionMigration, new RegExp(field));\n}\nassert.match(searchesSchema, /capture_point/);\nassert.match(searchSessions, /landing_path: landingPath/);\nassert.match(searchSessions, /utm_campaign: utmCampaign/);\nassert.match(conversation, /function acquisitionAttribution/);\nassert.match(conversation, /attribution: acquisitionAttribution\\(\\)/);\nassert.match(conversation, /capturePoint: "route-sourcing-fallback"/);\nassert.match(outreach, /capturePoint: "provider-outreach"/);\nassert.match(procurement, /capture_point: capturePoint/);\nassert.match(procurement, /notifyOremeaOfSourcingLead/);\nassert.match(procurement, /WORKS_LEAD_NOTIFY_TO/);\nassert.match(env, /WORKS_LEAD_NOTIFY_TO=support@oremea\\.com/);\n\nconsole.log("✓ WORKS DAWN visibility, attraction, attribution and lead-capture contract");\n''',
+              1,
+          )
+          if 'WORKS DAWN visibility, attraction, attribution and lead-capture contract' not in text:
+              raise SystemExit("Could not expand DAWN contract")
+          dawn.write_text(text)
+          PY
+
+          rm .github/workflows/works-dawn-acquisition-2026-08-24.yml
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            prisma/works/searches.prisma \
+            prisma/migrations/20260824074500_add_works_acquisition_attribution/migration.sql \
+            app/api/works/search-sessions/route.ts \
+            app/api/works/procurement-requests/route.ts \
+            components/works/intake/founder-conversation-v2.tsx \
+            components/works/outreach/provider-outreach-panel.tsx \
+            app/works/manufacturers/[category]/page.tsx \
+            app/works/sitemap.ts \
+            lib/works/seo.ts \
+            scripts/verify-works-dawn-seo-contract.ts \
+            .env.example \
+            .github/workflows/works-dawn-acquisition-2026-08-24.yml
+          git commit -m "dawn: optimize WORKS acquisition and lead capture"
+          git push origin HEAD:dawn/works-acquisition-2026-08-24
