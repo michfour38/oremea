@@ -29,6 +29,12 @@ jobs:
       - name: Install current dependencies
         run: npm ci
 
+      - name: Apply official Next 15 async request API codemod
+        if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
+        run: |
+          npx -y @next/codemod@latest next-async-request-api .
+          git diff -- . ':!package.json' ':!package-lock.json' > /tmp/next15-async-request-api.patch
+
       - name: Install supported Next 15 stack for security migration
         if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
         run: |
@@ -41,14 +47,15 @@ jobs:
             @types/react-dom@19 \
             @clerk/nextjs@6.39.6
 
-      - name: Capture resolved dependency files
+      - name: Capture migration inputs
         if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
         uses: actions/upload-artifact@v4
         with:
-          name: next15-dependency-files
+          name: next15-migration-files
           path: |
             package.json
             package-lock.json
+            /tmp/next15-async-request-api.patch
           if-no-files-found: error
 
       - name: Build application
