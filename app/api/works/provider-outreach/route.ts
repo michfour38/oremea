@@ -604,6 +604,7 @@ export async function POST(req: NextRequest) {
             <div style="font-family:Arial,sans-serif;line-height:1.65;color:#1f1c17;max-width:680px;margin:auto">
               <p style="letter-spacing:.18em;font-size:12px">WORKS · by Oremea</p>
               <div>${bodyTextToHtml(draft.bodyText)}</div>
+              <div style="margin-top:24px;padding:14px 16px;border:1px solid #ddd6c7;border-radius:14px;background:#f8f5ee;font-size:12px;color:#625d54"><strong>WORKS enquiry boundary:</strong> This is a fit and current-capability enquiry, not a request for unpaid formulation, design, samples, engineering or other detailed technical development. Any detailed development work, samples, testing or paid scoping should be agreed directly between the buyer and provider before that work begins.</div>
               <p style="margin-top:28px"><a href="${responseUrl}" style="display:inline-block;background:#1f1c17;color:white;text-decoration:none;padding:12px 20px;border-radius:999px">Respond to this brief</a></p>
               <p style="font-size:12px;color:#6b665e;margin-top:28px">Your response is attached to this specific WORKS production brief. Broader changes to your WORKS provider profile are handled separately.</p>
             </div>

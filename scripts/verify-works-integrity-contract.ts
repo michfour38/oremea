@@ -71,6 +71,7 @@ assert.match(outreach, /identified your business as a possible fit/);
 assert.match(outreach, /not a statement that WORKS has verified your current capacity/);
 assert.doesNotMatch(outreach, /WORKS matched your business to part of a production route/);
 assert.match(outreach, /This provider has already been contacted for this brief/);
+assert.match(outreach, /not a request for unpaid formulation, design, samples, engineering or other detailed technical development/);
 
 // Contact disclosure follows the buyer's explicit preference; a phone number is not leaked just because it exists.
 assert.match(outreach, /preferred_contact_method: true/);
