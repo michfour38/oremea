@@ -21,6 +21,8 @@ import MemberNav from "../../member-nav";
 export const dynamic = "force-dynamic";
 
 const RESONANCE_TESTER_USER_ID = "user_3CLGEx3xqgXY6DsIHPyV3yOd1xi";
+const HAS_RESONANCE_LAUNCH_DISCOUNT =
+  RESONANCE_LAUNCH_PRICE !== RESONANCE_REGULAR_PRICE;
 
 type Props = {
   searchParams?: { week?: string };
@@ -206,12 +208,16 @@ export default async function ResonancePurchasePage({ searchParams }: Props) {
 
               <div className="text-right">
                 <p className="text-xs uppercase tracking-[0.18em] text-[#c8a96a]/70">
-                  {RESONANCE_LAUNCH_LABEL}
+                  {HAS_RESONANCE_LAUNCH_DISCOUNT
+                    ? RESONANCE_LAUNCH_LABEL
+                    : "Seven-day room"}
                 </p>
                 <div className="mt-1 flex items-baseline justify-end gap-3">
-                  <span className="text-sm text-zinc-500 line-through">
-                    {RESONANCE_REGULAR_PRICE}
-                  </span>
+                  {HAS_RESONANCE_LAUNCH_DISCOUNT ? (
+                    <span className="text-sm text-zinc-500 line-through">
+                      {RESONANCE_REGULAR_PRICE}
+                    </span>
+                  ) : null}
                   <span className="text-3xl text-[#c8a96a]">
                     {RESONANCE_LAUNCH_PRICE}
                   </span>
