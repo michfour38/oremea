@@ -3,6 +3,10 @@ import { notFound } from "next/navigation";
 
 import { WorksPageHeader } from "@/components/works/works-brand";
 import { prisma } from "@/lib/prisma";
+import {
+  isWorksEvidenceFresh,
+  worksEvidencePublicLabel,
+} from "@/lib/works/evidence/freshness";
 import { worksUrl } from "@/lib/works/seo";
 
 const DEFAULT_VISIBILITY = {
@@ -41,6 +45,7 @@ async function getProvider(slug: string) {
               lead_time_max_days: true,
               lead_time_basis: true,
               evidence_status: true,
+              updated_at: true,
               categories: {
                 select: {
                   category: {
@@ -124,6 +129,7 @@ export default async function WorksProviderPublicProfile({ params }: { params: {
   const reviews = provider.reviews;
   const average = reviews.length ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : null;
   const canonical = worksUrl(`/providers/${provider.slug}`);
+  const now = new Date();
   const offerings = provider.markets.flatMap((providerMarket) =>
     providerMarket.offerings.map((offering) => ({
       ...offering,
@@ -146,7 +152,11 @@ export default async function WorksProviderPublicProfile({ params }: { params: {
   if (visibility.show_website && provider.website) structuredData.sameAs = [provider.website];
   if (visibility.show_email && provider.email) structuredData.email = provider.email;
   if (visibility.show_phone && provider.phone) structuredData.telephone = provider.phone;
-  const reviewedOffers = offerings.filter((offering) => offering.evidence_status !== "SELF_REPORTED");
+  const reviewedOffers = offerings.filter(
+    (offering) =>
+      offering.evidence_status !== "SELF_REPORTED" &&
+      isWorksEvidenceFresh(offering.updated_at, now)
+  );
   if (reviewedOffers.length) {
     structuredData.makesOffer = reviewedOffers.map((offering) => ({
       "@type": "Offer",
@@ -162,7 +172,11 @@ export default async function WorksProviderPublicProfile({ params }: { params: {
           {
             "@type": "PropertyValue",
             name: "WORKS evidence status",
-            value: offering.evidence_status === "VERIFIED" ? "Verified evidence" : "Source reviewed",
+            value: worksEvidencePublicLabel(
+              offering.evidence_status,
+              offering.updated_at,
+              now,
+            ),
           },
         ],
       },
@@ -218,14 +232,14 @@ export default async function WorksProviderPublicProfile({ params }: { params: {
           <section className="mt-10 border-t border-black/10 pt-9" aria-labelledby="provider-offerings">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Current offerings</p>
             <h2 id="provider-offerings" className="mt-2 font-serif text-3xl text-[#1f1c17]">What {provider.name} can help with</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-black/50">Each offering shows where its information came from. Final specifications, capacity, timing and price still need direct confirmation.</p>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-black/50">Each offering shows where its information came from and whether reviewed evidence is still current enough for WORKS to rely on. Final specifications, capacity, timing and price still need direct confirmation.</p>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {offerings.map((offering) => {
-                const evidenceLabel = offering.evidence_status === "VERIFIED"
-                  ? "Verified evidence"
-                  : offering.evidence_status === "SOURCE_REVIEWED"
-                    ? "Source reviewed"
-                    : "Provider supplied · review pending";
+                const evidenceLabel = worksEvidencePublicLabel(
+                  offering.evidence_status,
+                  offering.updated_at,
+                  now,
+                );
                 const minimumOrder = offering.moq_value == null
                   ? null
                   : `${Number(offering.moq_value).toLocaleString("en-ZA")} ${offering.moq_unit?.toLowerCase() ?? "units"}`;
@@ -282,7 +296,7 @@ export default async function WorksProviderPublicProfile({ params }: { params: {
 
       <section className="border-t border-black/10 py-10 text-center">
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#16834f]">Ready to source?</p>
-        <h2 className="mx-auto mt-3 max-w-2xl font-serif text-3xl leading-tight md:text-4xl">Describe the product. Let WORKS build the route.</h2>
+        <h2 className="mx-auto mt-3 max-w-2xl font-serif text-3xl leading-tight md:text-4xl">Describe what you need. Let WORKS build the route.</h2>
         <a href="/works/za" className="mt-6 inline-flex rounded-full bg-[#1f1c17] px-6 py-3 text-sm font-medium text-white">Start my brief →</a>
       </section>
     </main>
