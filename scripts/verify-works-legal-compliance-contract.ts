@@ -59,7 +59,7 @@ assert.match(worksTerms, /Commercial plan, commission or sponsorship status does
 assert.match(partner, /Consumer Protection Act intermediary/);
 assert.match(partner, /three years/);
 assert.match(partner, /conflict of interest/);
-assert.match(partner, /calculation basis/);
+assert.match(partner, /basis[^.]*calculate/i);
 assert.match(partner, /Sensitive identity particulars/);
 assert.match(worksTerms, /at least three years/);
 
