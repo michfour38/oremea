@@ -81,7 +81,7 @@ export default async function RecognitionPurchasePage({ searchParams }: Props) {
             Recognition
           </p>
           <h1 className="mt-4 font-serif text-4xl font-light tracking-tight md:text-6xl">
-            An accountability partner for staying in contact with your own words
+            A private AI discussion journal for thoughts that need more than a journal page
           </h1>
           <p className="mt-6 text-base leading-8 text-zinc-300">
             Bring whatever has your attention. Recognition stays with what you
@@ -103,16 +103,18 @@ export default async function RecognitionPurchasePage({ searchParams }: Props) {
             <div className="flex flex-wrap items-end justify-between gap-5">
               <div>
                 <p className="text-xs uppercase tracking-[0.22em] text-[#c8a96a]">
-                  Launch offer
+                  Monthly access
                 </p>
                 <h2 className="mt-2 font-serif text-2xl text-zinc-100">
                   Ongoing Recognition
                 </h2>
               </div>
               <div className="text-right">
-                <p className="text-sm text-zinc-500 line-through">
-                  {regularPrice}/month
-                </p>
+                {regularPrice !== launchPrice ? (
+                  <p className="text-sm text-zinc-500 line-through">
+                    {regularPrice}/month
+                  </p>
+                ) : null}
                 <p className="mt-1 text-3xl text-[#f1dfb4]">
                   {launchPrice}<span className="ml-1 text-sm text-zinc-500">/month</span>
                 </p>
@@ -122,7 +124,7 @@ export default async function RecognitionPurchasePage({ searchParams }: Props) {
             <p className="mt-5 text-sm leading-7 text-zinc-300">
               There is no fixed question sequence and no required destination.
               Recognition is one continuing private conversation: return whenever
-              something needs to be seen clearly, and the conversation can bring
+              something needs somewhere to continue, and the conversation can bring
               forward your own earlier evidence without treating old AI output as
               truth.
             </p>
