@@ -5,7 +5,7 @@ import {
 
 import { prisma } from "@/lib/prisma";
 
-const ALGORITHM_VERSION = "v1";
+const ALGORITHM_VERSION = "v2-integrity";
 const MAX_CANDIDATES_PER_STEP = 5;
 const BEAM_WIDTH = 20;
 const ROUTE_LIMIT = 3;
@@ -100,15 +100,18 @@ function extendRoute(
   );
   const previousProvider = previousProviderId(route);
 
+  // Provider consolidation is a convenience tie-breaker, never a substitute for fit.
+  // A materially better specialist must outrank an all-in-one provider simply because
+  // the latter reduces handoffs.
   let transitionScore = 0;
   if (previousProvider === candidate.providerId) {
-    transitionScore += 12;
+    transitionScore += 2;
   } else if (previousProvider) {
-    transitionScore -= 8;
+    transitionScore -= 1;
   }
 
   if (existingProviders.has(candidate.providerId)) {
-    transitionScore += 5;
+    transitionScore += 1;
   }
 
   return {
@@ -157,7 +160,7 @@ function routeMetrics(route: RouteDraft) {
       ? WorksRouteStatus.POTENTIAL
       : WorksRouteStatus.VIABLE;
 
-  const consolidationPenalty = Math.max(0, distinctProviders.size - 1) * 5;
+  const consolidationPenalty = Math.max(0, distinctProviders.size - 1);
 
   return {
     status,
@@ -274,9 +277,9 @@ export async function planBriefRoutes(briefId: string) {
           outcome.status === WorksMatchStatus.MATCH &&
           Boolean(outcome.source_claim_id)
       ).length;
-      const geographyMatch = match.outcomes.some(
+      const locationMatch = match.outcomes.some(
         (outcome) =>
-          outcome.criterion_type === "GEOGRAPHY" &&
+          outcome.criterion_type === "LOCATION" &&
           outcome.status === WorksMatchStatus.MATCH
       );
       const candidateStatus: Candidate["status"] =
@@ -288,7 +291,7 @@ export async function planBriefRoutes(briefId: string) {
       const candidateScore =
         (candidateStatus === "MATCH" ? 42 : 22) +
         fitContribution +
-        (geographyMatch ? 5 : 0) +
+        (locationMatch ? 5 : 0) +
         Math.min(evidenceBackedMatches * 2, 8) -
         hardUnknownOutcomes.length * 10 -
         match.failed_count * 10;
@@ -365,12 +368,7 @@ export async function planBriefRoutes(briefId: string) {
       const statusDifference =
         statusPriority(b.metrics.status) - statusPriority(a.metrics.status);
       if (statusDifference !== 0) return statusDifference;
-      if (a.metrics.handoffCount !== b.metrics.handoffCount) {
-        return a.metrics.handoffCount - b.metrics.handoffCount;
-      }
-      if (a.metrics.providerCount !== b.metrics.providerCount) {
-        return a.metrics.providerCount - b.metrics.providerCount;
-      }
+
       if (
         a.metrics.unresolvedRequirementCount !==
         b.metrics.unresolvedRequirementCount
@@ -380,7 +378,17 @@ export async function planBriefRoutes(briefId: string) {
           b.metrics.unresolvedRequirementCount
         );
       }
-      return b.metrics.routeScore - a.metrics.routeScore;
+
+      if (a.metrics.routeScore !== b.metrics.routeScore) {
+        return b.metrics.routeScore - a.metrics.routeScore;
+      }
+
+      // Handoffs/provider count are final tie-breakers only. WORKS may prefer a
+      // simpler route when fit is equivalent; it may not trade away fit for simplicity.
+      if (a.metrics.handoffCount !== b.metrics.handoffCount) {
+        return a.metrics.handoffCount - b.metrics.handoffCount;
+      }
+      return a.metrics.providerCount - b.metrics.providerCount;
     })
     .slice(0, ROUTE_LIMIT);
 
