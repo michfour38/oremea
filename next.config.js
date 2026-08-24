@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ["@prisma/client"],
   experimental: {
-    serverComponentsExternalPackages: ["@prisma/client"],
     serverActions: {
       allowedOrigins: ["oremea.com", "*.oremea.com"],
     },
