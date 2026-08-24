@@ -12,7 +12,8 @@ import {
 } from "@/lib/works/matching/eligibility";
 import { compareWorksMatches } from "@/lib/works/matching/ranking";
 
-const ALGORITHM_VERSION = "v1";
+const ALGORITHM_VERSION = "v2-integrity";
+const DAY_MS = 24 * 60 * 60 * 1_000;
 
 function toMatchStatus(status: WorksMatchStatusValue): WorksMatchStatus {
   return WorksMatchStatus[status];
@@ -108,6 +109,7 @@ export async function calculateBriefMatches(briefId: string) {
                       credential_name: true,
                       designation: true,
                       scope: true,
+                      expires_at: true,
                     },
                   },
                 },
@@ -154,23 +156,39 @@ export async function calculateBriefMatches(briefId: string) {
     })),
   };
 
+  const calculatedAt = new Date();
+
   const evaluations = offerings.map((offering) => {
     const claims: MatchClaim[] = offering.provider_market.provider.claims
       .filter(
         (claim) => claim.offering_id == null || claim.offering_id === offering.id
       )
-      .map((claim) => ({
-        id: claim.id,
-        field: claim.field,
-        value: claim.value,
-        status: claim.status as MatchClaim["status"],
-        credentialName: claim.credential_detail?.credential_name,
-        designation: claim.credential_detail?.designation,
-        scope: claim.credential_detail?.scope ?? claim.scope,
-      }));
+      .map((claim) => {
+        const credentialExpired = Boolean(
+          claim.credential_detail?.expires_at &&
+          claim.credential_detail.expires_at.getTime() <= calculatedAt.getTime()
+        );
+        return {
+          id: claim.id,
+          field: claim.field,
+          value: claim.value,
+          status: credentialExpired
+            ? "EXPIRED"
+            : claim.status as MatchClaim["status"],
+          credentialName: claim.credential_detail?.credential_name,
+          designation: claim.credential_detail?.designation,
+          scope: claim.credential_detail?.scope ?? claim.scope,
+        } satisfies MatchClaim;
+      });
+
+    const evidenceAgeDays = Math.max(
+      0,
+      (calculatedAt.getTime() - offering.updated_at.getTime()) / DAY_MS
+    );
 
     const result = evaluateOfferingFit(normalizedBrief, {
       evidenceStatus: offering.evidence_status,
+      evidenceAgeDays,
       categoryKeys: offering.categories.map((row) => row.category.key),
       serviceKeys: offering.services.map((row) => row.service.key),
       capabilityKeys: offering.capabilities.map((row) => row.capability.key),
@@ -191,8 +209,6 @@ export async function calculateBriefMatches(briefId: string) {
 
     return { offering, result };
   });
-
-  const calculatedAt = new Date();
 
   await prisma.$transaction(async (tx) => {
     await tx.works_matches.updateMany({

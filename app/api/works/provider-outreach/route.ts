@@ -8,6 +8,9 @@ import { buildProviderBrief } from "@/lib/works/outreach/build-provider-brief";
 import { getRouteSummary } from "@/lib/works/routes/get-route-summary";
 import { ownsWorksAnonymousSearch } from "@/lib/works/searches/anonymous-search-ownership";
 
+const MAX_DISTINCT_PROVIDER_CONTACTS_PER_BRIEF = 5;
+const CONTACTED_STATUSES = new Set(["SENT", "RESPONDED", "DECLINED"]);
+
 function stringValue(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -202,9 +205,10 @@ function buildEditableBody({
     "",
     snapshot.product,
     "",
-    `WORKS matched your business to part of a production route for ${requesterName}.`,
+    `WORKS identified your business as a possible fit for part of a production route for ${requesterName}.`,
+    "Please confirm what is actually possible now. This enquiry is not a statement that WORKS has verified your current capacity, final specification, price or timing.",
     "",
-    "Your part of the route",
+    "Your possible part of the route",
     ...snapshot.relevantSteps.map((step) => `- ${step}`),
     "",
     "Production quantity",
@@ -314,6 +318,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (providerIds.length > MAX_DISTINCT_PROVIDER_CONTACTS_PER_BRIEF) {
+      return NextResponse.json(
+        {
+          error: `WORKS limits one brief to ${MAX_DISTINCT_PROVIDER_CONTACTS_PER_BRIEF} distinct provider contacts. Refine the route instead of broadcasting the brief.`,
+        },
+        { status: 400 }
+      );
+    }
+
     const searchSession = await prisma.works_search_sessions.findUnique({
       where: { id: searchSessionId },
       select: {
@@ -343,12 +356,71 @@ export async function POST(req: NextRequest) {
         brief_id: briefId,
         search_session_id: searchSessionId,
       },
-      select: { id: true, name: true, email: true, phone: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        preferred_contact_method: true,
+      },
     });
 
     if (!procurement) {
       return NextResponse.json(
         { error: "Add your contact details before WORKS prepares provider emails" },
+        { status: 409 }
+      );
+    }
+
+    const requesterPhoneForProvider =
+      procurement.preferred_contact_method &&
+      procurement.preferred_contact_method !== "EMAIL"
+        ? procurement.phone
+        : null;
+
+    const routeSummary = await getRouteSummary(briefId);
+    if (!routeSummary) {
+      return NextResponse.json(
+        { error: "WORKS needs a current production route before contacting providers." },
+        { status: 409 }
+      );
+    }
+
+    const allowedRouteProviderIds = new Set(
+      routeSummary.providers.map((provider) => provider.id)
+    );
+    const outsideRoute = providerIds.filter(
+      (providerId) => !allowedRouteProviderIds.has(providerId)
+    );
+    if (outsideRoute.length > 0) {
+      return NextResponse.json(
+        {
+          error: "WORKS only contacts providers assigned to the current production route. Rebuild or refine the route before adding a different provider.",
+        },
+        { status: 409 }
+      );
+    }
+
+    const priorOutreach = await prisma.works_provider_outreach.findMany({
+      where: { procurement_request_id: procurement.id },
+      select: { provider_id: true, status: true },
+    });
+    const alreadyContacted = new Set(
+      priorOutreach
+        .filter((row) => CONTACTED_STATUSES.has(row.status))
+        .map((row) => row.provider_id)
+    );
+    const newDistinctContacts = providerIds.filter(
+      (providerId) => !alreadyContacted.has(providerId)
+    );
+    if (
+      alreadyContacted.size + newDistinctContacts.length >
+      MAX_DISTINCT_PROVIDER_CONTACTS_PER_BRIEF
+    ) {
+      return NextResponse.json(
+        {
+          error: `This brief has reached WORKS's ${MAX_DISTINCT_PROVIDER_CONTACTS_PER_BRIEF}-provider contact limit. Refine the existing conversations or ask WORKS to continue sourcing rather than spraying more enquiries.`,
+        },
         { status: 409 }
       );
     }
@@ -363,8 +435,7 @@ export async function POST(req: NextRequest) {
     const providerById = new Map(
       providers.map((provider) => [provider.id, provider])
     );
-    const routeSummary = await getRouteSummary(briefId);
-    const routeQuestions = routeSummary?.nextQuestions ?? [];
+    const routeQuestions = routeSummary.nextQuestions ?? [];
 
     if (previewOnly) {
       const previews = [];
@@ -391,7 +462,7 @@ export async function POST(req: NextRequest) {
             providerName: provider.name,
             requesterName: procurement.name,
             requesterEmail: procurement.email,
-            requesterPhone: procurement.phone,
+            requesterPhone: requesterPhoneForProvider,
             questions,
           }),
           questionCount: questions.length,
@@ -452,7 +523,7 @@ export async function POST(req: NextRequest) {
 
         if (
           existingOutreach &&
-          ["SENT", "RESPONDED", "DECLINED"].includes(existingOutreach.status)
+          CONTACTED_STATUSES.has(existingOutreach.status)
         ) {
           results.push({
             providerId,
@@ -476,7 +547,7 @@ export async function POST(req: NextRequest) {
             providerName: provider.name,
             requesterName: procurement.name,
             requesterEmail: procurement.email,
-            requesterPhone: procurement.phone,
+            requesterPhone: requesterPhoneForProvider,
             questions,
           }),
         };
@@ -533,6 +604,7 @@ export async function POST(req: NextRequest) {
             <div style="font-family:Arial,sans-serif;line-height:1.65;color:#1f1c17;max-width:680px;margin:auto">
               <p style="letter-spacing:.18em;font-size:12px">WORKS · by Oremea</p>
               <div>${bodyTextToHtml(draft.bodyText)}</div>
+              <div style="margin-top:24px;padding:14px 16px;border:1px solid #ddd6c7;border-radius:14px;background:#f8f5ee;font-size:12px;color:#625d54"><strong>WORKS enquiry boundary:</strong> This is a fit and current-capability enquiry, not a request for unpaid formulation, design, samples, engineering or other detailed technical development. Any detailed development work, samples, testing or paid scoping should be agreed directly between the buyer and provider before that work begins.</div>
               <p style="margin-top:28px"><a href="${responseUrl}" style="display:inline-block;background:#1f1c17;color:white;text-decoration:none;padding:12px 20px;border-radius:999px">Respond to this brief</a></p>
               <p style="font-size:12px;color:#6b665e;margin-top:28px">Your response is attached to this specific WORKS production brief. Broader changes to your WORKS provider profile are handled separately.</p>
             </div>

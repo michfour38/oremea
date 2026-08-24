@@ -4,8 +4,8 @@ import {
   LegalDocument,
   type LegalSection,
 } from "@/components/legal/legal-document";
-import { WORKS_RETURN_LINK } from "@/src/lib/legal/legal-links";
 import { worksUrl } from "@/lib/works/seo";
+import { WORKS_RETURN_LINK } from "@/src/lib/legal/legal-links";
 
 export const metadata: Metadata = {
   title: "Customer review policy | WORKS",
@@ -23,7 +23,8 @@ const sections: readonly LegalSection[] = [
   {
     title: "2. Who can leave a review",
     paragraphs: [
-      "A review is available only through an eligible WORKS-linked interaction. The current product flow opens review access after a provider has responded to the relevant WORKS brief.",
+      "A review is available only through an eligible WORKS-linked interaction. The current product flow opens review access after a provider gives a substantive response to the relevant WORKS brief.",
+      "A provider declining a brief because the work is outside its capability does not, by itself, create review eligibility. WORKS does not treat an honest decision not to take unsuitable work as a negative service event.",
       "WORKS may limit one active review per eligible provider interaction and may require the reviewer to use the account associated with the brief.",
     ],
   },
@@ -109,7 +110,7 @@ export default function WorksReviewsPolicyPage() {
       activePath="/works/reviews-policy"
       title="WORKS Reviews Policy"
       summary="How genuine brief-linked reviews, reviewer privacy, provider responses and moderation work on WORKS."
-      updated="9 August 2026"
+      updated="24 August 2026"
       sections={sections}
       returnLink={WORKS_RETURN_LINK}
     />

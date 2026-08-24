@@ -102,7 +102,12 @@ assert.match(
 );
 assert.match(
   outreachRoute,
-  /\["SENT", "RESPONDED", "DECLINED"\]\.includes\(existingOutreach\.status\)/,
+  /const CONTACTED_STATUSES = new Set\(\["SENT", "RESPONDED", "DECLINED"\]\)/,
+  "Provider outreach must define the terminal contacted states centrally."
+);
+assert.match(
+  outreachRoute,
+  /CONTACTED_STATUSES\.has\(existingOutreach\.status\)/,
   "Provider outreach must prevent accidental repeat sends after a provider was contacted."
 );
 
