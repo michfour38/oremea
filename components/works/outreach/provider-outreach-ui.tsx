@@ -45,9 +45,13 @@ function responsePreviewPayload(preview: EmailPreview) {
     productHeading >= 0
       ? lines.slice(productHeading + 1).find((line) => Boolean(line.trim()))?.trim()
       : "";
-  const routeHeading = lines.findIndex(
-    (line) => normalize(line) === normalize("Your part of the route")
-  );
+  const routeHeading = lines.findIndex((line) => {
+    const heading = normalize(line);
+    return (
+      heading === normalize("Your part of the route") ||
+      heading === normalize("Your possible part of the route")
+    );
+  });
   const relevantSteps: string[] = [];
 
   if (routeHeading >= 0) {
