@@ -1,0 +1,7 @@
+LIVE_WORKS_CLERK_SECURITY=PASS
+home_status=200
+provider_status=200
+anonymous_provider_api_status=401
+served_bundle_marker=clerk-react-5.61.x-fingerprint
+expected_tree=@clerk/nextjs@5.7.6,@clerk/clerk-react@5.61.6,js-cookie@3.0.8
+verified_at=2026-08-24T11:44:07Z
