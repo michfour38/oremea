@@ -16,6 +16,10 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # CI-only placeholder. Production and development Clerk credentials remain
+      # environment-owned and are never copied into the repository.
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
