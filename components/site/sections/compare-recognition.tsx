@@ -56,7 +56,7 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
-                    Like being held accountable to your own words while interpretation,
+                    Like having your own words kept in view while interpretation,
                     authority, responsibility, and next movement remain yours.
                   </p>
 
@@ -88,7 +88,7 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
                     Recognition is one continuing private conversation. It follows
                     the participant’s newest words while preserving earlier
                     participant-written evidence for recurrence, correction,
-                    contrast, responsibility, and accountability over time.
+                    contrast, responsibility, and continuity over time.
                   </p>
                 </div>
 
