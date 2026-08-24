@@ -6,10 +6,7 @@ import {
   formatCompassPrice,
 } from "@/src/lib/compass/compass-pricing";
 import { getCompassAccessState } from "@/src/lib/compass/compass-access";
-import {
-  isCompassPassFulfillmentConfigured,
-  isCompassSubscriptionFulfillmentConfigured,
-} from "@/src/lib/compass/compass-commerce";
+import { isCompassSubscriptionFulfillmentConfigured } from "@/src/lib/compass/compass-commerce";
 
 export const dynamic = "force-dynamic";
 
@@ -41,24 +38,16 @@ function CheckoutAction({
 export default async function CompassAccessPage() {
   const { userId } = auth();
   const access = userId ? await getCompassAccessState(userId) : null;
-  const compassPassCheckout = process.env.COMPASS_CHECKOUT_URL?.trim() || null;
-  const compassSubscriptionCheckout =
+  const subscriptionCheckout =
     process.env.COMPASS_SUBSCRIPTION_CHECKOUT_URL?.trim() || null;
-  const passFulfillmentConfigured = isCompassPassFulfillmentConfigured();
   const subscriptionFulfillmentConfigured =
     isCompassSubscriptionFulfillmentConfigured();
-  const passCheckoutHref = !userId
-    ? "/sign-in?redirect_url=%2F"
-    : passFulfillmentConfigured
-      ? compassPassCheckout
-      : null;
   const subscriptionCheckoutHref = !userId
     ? "/sign-in?redirect_url=%2F"
     : subscriptionFulfillmentConfigured
-      ? compassSubscriptionCheckout
+      ? subscriptionCheckout
       : null;
-  const launchPrice = formatCompassPrice(COMPASS_PRICING.launchPriceCents);
-  const standardPrice = formatCompassPrice(COMPASS_PRICING.standardPriceCents);
+  const price = formatCompassPrice(COMPASS_PRICING.launchPriceCents);
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-zinc-950 text-white">
@@ -72,7 +61,7 @@ export default async function CompassAccessPage() {
       />
       <div className="fixed inset-0 z-10 bg-black/70" />
 
-      <section className="relative z-20 mx-auto max-w-4xl px-6 py-12 md:py-16">
+      <section className="relative z-20 mx-auto max-w-3xl px-6 py-12 md:py-16">
         <Link
           href="https://www.oremea.com"
           className="text-sm text-zinc-400 underline underline-offset-4 transition hover:text-[#f1dfb4]"
@@ -82,7 +71,7 @@ export default async function CompassAccessPage() {
 
         <header className="mt-12 max-w-2xl">
           <p className="text-xs uppercase tracking-[0.3em] text-[#f1dfb4]/70">
-            The Compass
+            Compass
           </p>
           <h1 className="mt-4 font-serif text-4xl font-light tracking-tight md:text-6xl">
             Enter Compass
@@ -105,10 +94,10 @@ export default async function CompassAccessPage() {
               <p className="mt-5 text-sm leading-7 text-zinc-300">
                 {access.source === "membership"
                   ? access.expiresAt
-                    ? `Monthly Compass is active through ${access.expiresAt.toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}.`
-                    : "Your monthly Compass membership is active."
+                    ? `Compass membership is active through ${access.expiresAt.toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}.`
+                    : "Your Compass membership is active."
                   : access.expiresAt
-                    ? `${access.daysRemaining} ${access.daysRemaining === 1 ? "day" : "days"} remaining. Access ends ${access.expiresAt.toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}.`
+                    ? `Your earlier Compass pass remains honoured through ${access.expiresAt.toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}.`
                     : "Your Oremea owner access is active."}
               </p>
               <Link
@@ -119,74 +108,38 @@ export default async function CompassAccessPage() {
               </Link>
             </section>
           ) : (
-            <div className="grid gap-5 md:grid-cols-2">
-              <section className="rounded-3xl border border-[#c8a96a]/35 bg-black/45 p-6 md:p-8">
-                <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
-                  Launch offer
-                </p>
-                <h2 className="mt-2 font-serif text-2xl text-zinc-100">
-                  {COMPASS_PRICING.accessDays}-day pass
-                </h2>
-                <div className="mt-5">
-                  <p className="text-sm text-zinc-500 line-through">{standardPrice}</p>
-                  <p className="mt-1 text-3xl text-[#f1dfb4]">{launchPrice}</p>
-                </div>
-                <p className="mt-5 text-sm leading-7 text-zinc-300">
-                  One complete 30-day Compass period, including Map changes and
-                  ongoing discussions. Your saved Compass Archive remains available
-                  afterward. The pass does not renew automatically.
-                </p>
-                <div className="mt-7">
-                  <CheckoutAction
-                    href={passCheckoutHref}
-                    label={
-                      userId
-                        ? `Choose 30-day pass · ${launchPrice}`
-                        : "Sign in to enter Compass"
-                    }
-                  />
-                </div>
-              </section>
-
-              <section className="rounded-3xl border border-[#c8a96a]/35 bg-black/45 p-6 md:p-8">
-                <p className="text-xs uppercase tracking-[0.22em] text-[#c8a96a]">
-                  Monthly option
-                </p>
-                <h2 className="mt-2 font-serif text-2xl text-zinc-100">
-                  Ongoing Compass
-                </h2>
-                <div className="mt-5">
-                  <p className="text-sm text-zinc-500 line-through">
-                    {standardPrice}/month
-                  </p>
-                  <p className="mt-1 text-3xl text-[#f1dfb4]">
-                    {launchPrice}<span className="ml-1 text-sm text-zinc-500">/month</span>
-                  </p>
-                </div>
-                <p className="mt-5 text-sm leading-7 text-zinc-300">
-                  Keep Compass available month to month without repurchasing a new
-                  30-day pass. Access follows the active subscription and your saved
-                  Compass Archive remains available if the subscription ends.
-                </p>
-                <div className="mt-7">
-                  <CheckoutAction
-                    href={subscriptionCheckoutHref}
-                    label={
-                      userId
-                        ? `Choose monthly · ${launchPrice}/month`
-                        : "Sign in to enter Compass"
-                    }
-                  />
-                </div>
-              </section>
-            </div>
+            <section className="rounded-3xl border border-[#c8a96a]/35 bg-black/45 p-6 md:p-8">
+              <p className="text-xs uppercase tracking-[0.22em] text-[#c8a96a]">
+                Monthly membership
+              </p>
+              <h2 className="mt-2 font-serif text-2xl text-zinc-100">
+                Keep Compass available while you need it
+              </h2>
+              <p className="mt-5 text-3xl text-[#f1dfb4]">
+                {price}<span className="ml-1 text-sm text-zinc-500">/month</span>
+              </p>
+              <p className="mt-5 text-sm leading-7 text-zinc-300">
+                Ongoing discussions and Map changes remain available while the
+                membership is active. Cancel anytime. Your saved Compass Archive
+                remains available after cancellation.
+              </p>
+              <div className="mt-7">
+                <CheckoutAction
+                  href={subscriptionCheckoutHref}
+                  label={
+                    userId
+                      ? `Enter Compass · ${price}/month`
+                      : "Sign in to enter Compass"
+                  }
+                />
+              </div>
+            </section>
           )}
         </div>
 
         <p className="mt-8 text-sm leading-7 text-zinc-500">
-          Prices are shown and charged in US dollars. Choose a 30-day pass when you
-          want a defined Compass period, or monthly access when you want Compass to
-          remain available continuously.
+          Prices are shown and charged in US dollars. Compass renews monthly until
+          cancelled. Cancel anytime; your saved Archive remains yours.
         </p>
       </section>
     </main>
