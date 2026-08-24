@@ -46,6 +46,60 @@ jobs:
             --ignore-pattern='**/.next/**' \
             app src components lib middleware.ts
 
+      - name: Migrate legacy Clerk client object access
+        if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
+        run: |
+          cat > /tmp/clerk-client-factory.cjs <<'EOF'
+          module.exports = function transformClerkClientFactory({ source }, { jscodeshift: j }) {
+            const root = j(source);
+            const hasClerkServerImport = root.find(j.ImportDeclaration, {
+              source: { value: '@clerk/nextjs/server' },
+            }).some(path => path.node.specifiers?.some(specifier =>
+              j.ImportSpecifier.check(specifier) && specifier.imported.name === 'clerkClient'
+            ));
+
+            if (!hasClerkServerImport) return undefined;
+
+            let dirty = false;
+
+            function makeEnclosingFunctionAsync(path) {
+              let current = path.parent;
+              while (current) {
+                const node = current.node;
+                if (
+                  j.FunctionDeclaration.check(node) ||
+                  j.FunctionExpression.check(node) ||
+                  j.ArrowFunctionExpression.check(node)
+                ) {
+                  if (!node.async) node.async = true;
+                  return;
+                }
+                current = current.parent;
+              }
+            }
+
+            root.find(j.MemberExpression, {
+              object: { type: 'Identifier', name: 'clerkClient' },
+            }).forEach(path => {
+              path.node.object = j.awaitExpression(
+                j.callExpression(j.identifier('clerkClient'), []),
+              );
+              makeEnclosingFunctionAsync(path);
+              dirty = true;
+            });
+
+            return dirty ? root.toSource() : undefined;
+          };
+
+          module.exports.parser = 'tsx';
+          EOF
+          npx -y jscodeshift@17.3.0 \
+            --transform /tmp/clerk-client-factory.cjs \
+            --extensions=ts,tsx,js,jsx \
+            --ignore-pattern='**/node_modules/**' \
+            --ignore-pattern='**/.next/**' \
+            app src components lib middleware.ts
+
       - name: Audit remaining Clerk async call sites
         if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
         run: |
@@ -55,7 +109,8 @@ jobs:
 
           roots = [Path('app'), Path('src'), Path('components'), Path('lib')]
           unawaited_auth = []
-          clerk_client = []
+          unawaited_clerk_client = []
+          legacy_clerk_client = []
           for root in roots:
               if not root.exists():
                   continue
@@ -70,15 +125,20 @@ jobs:
                       if re.search(r'(?<!await )\bauth\(\)', code):
                           unawaited_auth.append(f'{path}:{line_no}:{line.strip()}')
                       if re.search(r'\bclerkClient\(\)', code) and not re.search(r'await\s+clerkClient\(\)', code):
-                          clerk_client.append(f'{path}:{line_no}:{line.strip()}')
+                          unawaited_clerk_client.append(f'{path}:{line_no}:{line.strip()}')
+                      if re.search(r'\bclerkClient\.', code):
+                          legacy_clerk_client.append(f'{path}:{line_no}:{line.strip()}')
 
           print(f'Unawaited auth() sites: {len(unawaited_auth)}')
           for item in unawaited_auth:
               print(item)
-          print(f'Unawaited clerkClient() sites: {len(clerk_client)}')
-          for item in clerk_client:
+          print(f'Unawaited clerkClient() sites: {len(unawaited_clerk_client)}')
+          for item in unawaited_clerk_client:
               print(item)
-          if unawaited_auth or clerk_client:
+          print(f'Legacy clerkClient.property sites: {len(legacy_clerk_client)}')
+          for item in legacy_clerk_client:
+              print(item)
+          if unawaited_auth or unawaited_clerk_client or legacy_clerk_client:
               raise SystemExit(1)
           PY
 
