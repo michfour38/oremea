@@ -35,6 +35,9 @@ assert.match(market, /"@type": "Service"/);
 assert.match(market, /Before you describe it/);
 assert.match(market, /possible fits—not guarantees/);
 assert.match(market, /Confirm those directly before appointing a provider/);
+assert.match(market, /Browse by category/);
+assert.match(market, /href={`\/manufacturers\/\$\{category\.slug\}`}/);
+assert.match(market, /Describe what you need once/);
 
 assert.match(plans, /"@type": "OfferCatalog"/);
 assert.match(plans, /WORKS_PROVIDER_PLANS\.map/);
@@ -57,6 +60,7 @@ assert.match(categoryLanding, /manufacturers in South Africa/);
 assert.match(categoryLanding, /"@type": "CollectionPage"/);
 assert.match(categoryLanding, /initialCategoryKey={category.key}/);
 assert.match(categoryLanding, /possible fit, not a guarantee/);
+assert.match(categoryLanding, /href={worksUrl\(`\/providers\/\$\{item\.provider\.slug\}`\)}/);
 assert.match(sitemap, /works_market_categories\.findMany/);
 assert.match(sitemap, /`\/manufacturers\/\$\{category\.category\.slug\}`/);
 
