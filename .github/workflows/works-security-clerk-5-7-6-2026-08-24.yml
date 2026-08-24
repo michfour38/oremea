@@ -13,7 +13,7 @@ permissions:
 jobs:
   patch:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,16 +22,49 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - name: Install patched Clerk v5 release
+      - name: Install and audit patched Clerk v5 release
         shell: bash
         run: |
           set -euo pipefail
           npm ci
           npm install --save-exact @clerk/nextjs@5.7.6
-          echo "--- resolved Clerk packages ---"
-          npm ls @clerk/nextjs @clerk/clerk-react @clerk/backend @clerk/shared || true
-          echo "--- production critical audit ---"
-          npm audit --omit=dev --audit-level=critical
+
+          npm ls @clerk/nextjs @clerk/clerk-react @clerk/backend @clerk/shared > /tmp/clerk-ls.txt 2>&1 || true
+          audit_exit=0
+          npm audit --omit=dev --json > /tmp/audit.json || audit_exit=$?
+
+          node <<'NODE' > /tmp/audit-summary.txt
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('/tmp/audit.json', 'utf8'));
+          const v = data.metadata?.vulnerabilities ?? {};
+          console.log(`critical=${v.critical ?? 0}`);
+          console.log(`high=${v.high ?? 0}`);
+          console.log(`moderate=${v.moderate ?? 0}`);
+          console.log(`low=${v.low ?? 0}`);
+          console.log(`total=${v.total ?? 0}`);
+          NODE
+
+          critical=$(sed -n 's/^critical=//p' /tmp/audit-summary.txt)
+          {
+            echo "CLERK_SECURITY_PATCH=$([ "${critical:-99}" = "0" ] && echo PASS || echo FAIL)"
+            echo "target=@clerk/nextjs@5.7.6"
+            cat /tmp/audit-summary.txt
+            echo "--- resolved packages ---"
+            cat /tmp/clerk-ls.txt
+          } > .works-clerk-security-result
+
+          echo "Audit exit=${audit_exit}; critical=${critical}"
+          cat .works-clerk-security-result
+
+          if [ "${critical:-99}" != "0" ]; then
+            rm .github/workflows/works-security-clerk-5-7-6-2026-08-24.yml
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package.json package-lock.json .works-clerk-security-result .github/workflows/works-security-clerk-5-7-6-2026-08-24.yml
+            git commit -m "security: record unresolved Clerk audit"
+            git push origin HEAD:works/security-clerk-5.7.6-2026-08-24
+            exit 1
+          fi
       - name: Validate full launch surface
         shell: bash
         run: |
@@ -45,8 +78,9 @@ jobs:
         run: |
           set -euo pipefail
           rm .github/workflows/works-security-clerk-5-7-6-2026-08-24.yml
+          printf '\nvalidation=full-launch-contracts+typecheck+next-build\n' >> .works-clerk-security-result
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package.json package-lock.json .github/workflows/works-security-clerk-5-7-6-2026-08-24.yml
+          git add package.json package-lock.json .works-clerk-security-result .github/workflows/works-security-clerk-5-7-6-2026-08-24.yml
           git commit -m "security: patch Clerk middleware bypass"
           git push origin HEAD:works/security-clerk-5.7.6-2026-08-24
