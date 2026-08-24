@@ -230,7 +230,12 @@ function evaluateRequirement(
     (claim) => claim.field === requirement.field || claimMatchesExpected(claim, requirement.value)
   );
 
-  const explicitNo = matchingClaims.find((claim) => claimSaysNo(claim.value));
+  const explicitNo = matchingClaims.find(
+    (claim) =>
+      claim.status !== "UNKNOWN" &&
+      !NON_CURRENT_CLAIM_STATUSES.has(claim.status) &&
+      claimSaysNo(claim.value)
+  );
   if (explicitNo) {
     return {
       requirementId: requirement.id,
