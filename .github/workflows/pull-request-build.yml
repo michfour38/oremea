@@ -44,7 +44,7 @@ jobs:
             --extensions=ts,tsx,js,jsx \
             --ignore-pattern='**/node_modules/**' \
             --ignore-pattern='**/.next/**' \
-            app src components lib middleware.ts
+            .
 
       - name: Migrate legacy Clerk client object access
         if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
@@ -98,7 +98,7 @@ jobs:
             --extensions=ts,tsx,js,jsx \
             --ignore-pattern='**/node_modules/**' \
             --ignore-pattern='**/.next/**' \
-            app src components lib middleware.ts
+            .
 
       - name: Audit remaining Clerk async call sites
         if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
@@ -107,27 +107,26 @@ jobs:
           from pathlib import Path
           import re
 
-          roots = [Path('app'), Path('src'), Path('components'), Path('lib')]
+          root = Path('.')
           unawaited_auth = []
           unawaited_clerk_client = []
           legacy_clerk_client = []
-          for root in roots:
-              if not root.exists():
+          for path in root.rglob('*'):
+              if any(part in {'.git', '.next', 'node_modules'} for part in path.parts):
                   continue
-              for path in root.rglob('*'):
-                  if path.suffix not in {'.ts', '.tsx', '.js', '.jsx'}:
-                      continue
-                  text = path.read_text(encoding='utf-8')
-                  if '@clerk/nextjs/server' not in text:
-                      continue
-                  for line_no, line in enumerate(text.splitlines(), 1):
-                      code = line.split('//', 1)[0]
-                      if re.search(r'(?<!await )\bauth\(\)', code):
-                          unawaited_auth.append(f'{path}:{line_no}:{line.strip()}')
-                      if re.search(r'\bclerkClient\(\)', code) and not re.search(r'await\s+clerkClient\(\)', code):
-                          unawaited_clerk_client.append(f'{path}:{line_no}:{line.strip()}')
-                      if re.search(r'\bclerkClient\.', code):
-                          legacy_clerk_client.append(f'{path}:{line_no}:{line.strip()}')
+              if path.suffix not in {'.ts', '.tsx', '.js', '.jsx'}:
+                  continue
+              text = path.read_text(encoding='utf-8')
+              if '@clerk/nextjs/server' not in text:
+                  continue
+              for line_no, line in enumerate(text.splitlines(), 1):
+                  code = line.split('//', 1)[0]
+                  if re.search(r'(?<!await )\bauth\(\)', code):
+                      unawaited_auth.append(f'{path}:{line_no}:{line.strip()}')
+                  if re.search(r'\bclerkClient\(\)', code) and not re.search(r'await\s+clerkClient\(\)', code):
+                      unawaited_clerk_client.append(f'{path}:{line_no}:{line.strip()}')
+                  if re.search(r'\bclerkClient\.', code):
+                      legacy_clerk_client.append(f'{path}:{line_no}:{line.strip()}')
 
           print(f'Unawaited auth() sites: {len(unawaited_auth)}')
           for item in unawaited_auth:
