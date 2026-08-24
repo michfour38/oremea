@@ -33,35 +33,9 @@ jobs:
         if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
         run: npx -y @next/codemod@latest next-async-request-api .
 
-      - name: Apply Clerk v6 documented async server API migration
+      - name: Apply official Clerk v6 codemod
         if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-
-          roots = [Path('app'), Path('src'), Path('components'), Path('lib')]
-          changed = []
-          for root in roots:
-              if not root.exists():
-                  continue
-              for path in root.rglob('*'):
-                  if path.suffix not in {'.ts', '.tsx', '.js', '.jsx'}:
-                      continue
-                  text = path.read_text(encoding='utf-8')
-                  if '@clerk/nextjs/server' not in text:
-                      continue
-                  original = text
-                  text = re.sub(r'auth\(\)\.protect\(\)', 'await auth.protect()', text)
-                  text = re.sub(r'(?<!await )\bauth\(\)', '(await auth())', text)
-                  text = re.sub(r'(?<!await )\bclerkClient\(\)', '(await clerkClient())', text)
-                  if text != original:
-                      path.write_text(text, encoding='utf-8')
-                      changed.append(str(path))
-          print(f'Migrated Clerk async APIs in {len(changed)} files')
-          for path in changed:
-              print(path)
-          PY
+        run: npx -y @clerk/upgrade --sdk nextjs --skip-upgrade
 
       - name: Install supported Next 15 stack for security migration
         if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
