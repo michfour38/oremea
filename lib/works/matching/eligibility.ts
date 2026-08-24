@@ -103,8 +103,23 @@ const POSITIVE_CLAIM_STATUSES = new Set([
   "SOURCE_CONFIRMED",
   "AUTHORITY_VERIFIED",
 ]);
+const REGULATED_CLAIM_STATUSES = new Set([
+  "SOURCE_CONFIRMED",
+  "AUTHORITY_VERIFIED",
+]);
 
 const NON_CURRENT_CLAIM_STATUSES = new Set(["STALE", "CONFLICTING", "EXPIRED"]);
+
+function regulatedRequirement(requirement: MatchBriefRequirement) {
+  return (
+    requirement.requirementType === "CREDENTIAL" ||
+    requirement.field.startsWith("credential.") ||
+    requirement.field.startsWith("licence.") ||
+    requirement.field.startsWith("license.") ||
+    requirement.field.startsWith("compliance.") ||
+    requirement.field.startsWith("certification.")
+  );
+}
 
 function normalise(value: unknown): string {
   return String(value ?? "").trim().toUpperCase();
@@ -259,8 +274,11 @@ function evaluateRequirement(
     };
   }
 
+  const acceptedStatuses = regulatedRequirement(requirement)
+    ? REGULATED_CLAIM_STATUSES
+    : POSITIVE_CLAIM_STATUSES;
   const confirmed = matchingClaims.find(
-    (claim) => POSITIVE_CLAIM_STATUSES.has(claim.status) && claimMatchesExpected(claim, requirement.value)
+    (claim) => acceptedStatuses.has(claim.status) && claimMatchesExpected(claim, requirement.value)
   );
   if (confirmed) {
     return {
@@ -275,6 +293,28 @@ function evaluateRequirement(
       expectedValue: requirement.value,
       actualValue: confirmed.value,
       explanation: `A current evidence-backed provider claim supports this requirement.`,
+    };
+  }
+
+  const evidenceAwaitingConfirmation = matchingClaims.find(
+    (claim) =>
+      regulatedRequirement(requirement) &&
+      claim.status === "EVIDENCE_SUPPLIED" &&
+      claimMatchesExpected(claim, requirement.value)
+  );
+  if (evidenceAwaitingConfirmation) {
+    return {
+      requirementId: requirement.id,
+      sourceClaimId: evidenceAwaitingConfirmation.id,
+      criterionType: "REQUIREMENT",
+      criterionKey: requirement.field,
+      status: "UNKNOWN",
+      priority: requirement.priority,
+      hardConstraint,
+      scoreDelta: 0,
+      expectedValue: requirement.value,
+      actualValue: evidenceAwaitingConfirmation.value,
+      explanation: "Evidence has been supplied for this regulated requirement, but WORKS still needs source or authority confirmation before treating it as satisfied.",
     };
   }
 
