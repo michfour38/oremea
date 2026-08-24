@@ -12,7 +12,7 @@ export function calculateCompassExpiry(
       : grantedAt;
 
   return new Date(
-    startsAt.getTime() + COMPASS_PRICING.accessDays * DAY_MS,
+    startsAt.getTime() + COMPASS_PRICING.legacyPassAccessDays * DAY_MS,
   );
 }
 
