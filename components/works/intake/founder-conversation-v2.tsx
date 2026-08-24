@@ -395,7 +395,7 @@ export function FounderConversationV2({
   const serviceLabels = SERVICES.filter(([key]) => form.requestedServiceKeys.includes(key)).map(([, label]) => label);
 
   const answers: Record<string, { question: string; answer: string }> = {
-    product: { question: "What are you making?", answer: form.productDescription },
+    product: { question: "What do you need help producing?", answer: form.productDescription },
     category: { question: "Which category fits best?", answer: categoryName ?? "" },
     stage: { question: "Where are you with it now?", answer: stageName ?? "" },
     assets: {
@@ -788,7 +788,7 @@ export function FounderConversationV2({
               return (
                 <section key={key} className="rounded-3xl border border-black/10 bg-white/55 p-5 shadow-[0_12px_40px_rgba(44,35,20,0.04)] md:p-7">
                   {current === "product" ? (
-                    <><h1 className="font-serif text-3xl text-[#1f1c17] md:text-4xl">What are you making?</h1><textarea autoFocus rows={3} value={form.productDescription} onChange={(event) => setForm((value) => ({ ...value, productDescription: event.target.value }))} placeholder="A chilli sauce from my family recipe…" className="mt-5 w-full resize-none rounded-2xl border border-black/12 bg-white px-4 py-4 text-lg leading-7 outline-none placeholder:text-black/20 focus:border-[#8b6a31]" /></>
+                    <><h1 className="font-serif text-3xl text-[#1f1c17] md:text-4xl">What do you need help producing?</h1><textarea autoFocus rows={3} value={form.productDescription} onChange={(event) => setForm((value) => ({ ...value, productDescription: event.target.value }))} placeholder="Describe the product, component, formula, packaging or service you need…" className="mt-5 w-full resize-none rounded-2xl border border-black/12 bg-white px-4 py-4 text-lg leading-7 outline-none placeholder:text-black/20 focus:border-[#8b6a31]" /></>
                   ) : null}
 
                   {current === "category" ? (
