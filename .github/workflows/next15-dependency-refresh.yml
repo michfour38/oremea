@@ -1,0 +1,45 @@
+name: Next 15 dependency refresh
+
+on:
+  push:
+    branches:
+      - security-next15-20260824
+    paths:
+      - .github/workflows/next15-dependency-refresh.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out upgrade branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Refresh supported framework dependencies
+        run: |
+          npm install \
+            next@15.5.21 \
+            eslint-config-next@15.5.21 \
+            react@19 \
+            react-dom@19 \
+            @types/react@19 \
+            @types/react-dom@19 \
+            @clerk/nextjs@latest-v6
+
+      - name: Upload resolved dependency files
+        uses: actions/upload-artifact@v4
+        with:
+          name: next15-dependency-files
+          path: |
+            package.json
+            package-lock.json
+          if-no-files-found: error
