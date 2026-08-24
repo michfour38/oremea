@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { FounderConversationV2 } from "@/components/works/intake/founder-conversation-v2";
+import { FounderConversationResumeBoundary } from "@/components/works/intake/founder-conversation-resume";
 import { WorksPageHeader } from "@/components/works/works-brand";
 import { listMarketCategories } from "@/lib/works/categories/list-market-categories";
 import { resolveWorksMarket } from "@/lib/works/markets/resolve-market";
@@ -147,7 +147,7 @@ export default async function WorksMarketPage({
       </div>
 
       <div className="works-market-conversation">
-        <FounderConversationV2
+        <FounderConversationResumeBoundary
           market={{
             slug: market.slug,
             name: market.localName,
