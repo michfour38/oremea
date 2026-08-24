@@ -32,6 +32,7 @@ assert.match(doctrine, /WORKS is not a lead-spray system/);
 assert.match(eligibility, /"STALE"/);
 assert.match(eligibility, /"CONFLICTING"/);
 assert.match(eligibility, /"EXPIRED"/);
+assert.match(eligibility, /WORKS_EVIDENCE_FRESHNESS_DAYS = 180/);
 assert.match(eligibility, /criterionKey: "offering\.stale"/);
 assert.match(eligibility, /The provider supplied this offering information/);
 assert.match(eligibility, /status: "UNKNOWN"/);
@@ -70,6 +71,12 @@ assert.match(outreach, /identified your business as a possible fit/);
 assert.match(outreach, /not a statement that WORKS has verified your current capacity/);
 assert.doesNotMatch(outreach, /WORKS matched your business to part of a production route/);
 assert.match(outreach, /This provider has already been contacted for this brief/);
+
+// Contact disclosure follows the buyer's explicit preference; a phone number is not leaked just because it exists.
+assert.match(outreach, /preferred_contact_method: true/);
+assert.match(outreach, /preferred_contact_method !== "EMAIL"/);
+assert.match(outreach, /requesterPhone: requesterPhoneForProvider/);
+assert.doesNotMatch(outreach, /requesterPhone: procurement\.phone/);
 
 // WORKS must hand the commercial relationship to buyer/provider rather than trap it.
 assert.match(outreach, /replyTo: procurement\.email/);
