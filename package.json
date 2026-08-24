@@ -78,6 +78,6 @@
   },
   "overrides": {
     "@clerk/clerk-react": "5.61.6",
-    "@clerk/shared": "2.22.1"
+    "js-cookie": "3.0.8"
   }
 }
