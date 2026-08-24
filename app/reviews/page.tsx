@@ -151,6 +151,13 @@ export default function ReviewsPage() {
             Private reflections from people who have used Oremea to see
             themselves, their patterns, or their next step more clearly.
           </p>
+
+          <Link
+            href="/reviews/share"
+            className="mt-7 inline-flex rounded-full border border-[#c6a96b]/40 bg-[#c6a96b]/10 px-5 py-3 text-sm text-[#e5d4a6] transition hover:border-[#c6a96b]/70 hover:bg-[#c6a96b]/15"
+          >
+            Share your experience
+          </Link>
         </div>
 
         <div className="mt-12 rounded-3xl border border-[#c6a96b]/20 bg-[#181713] p-6 md:p-8">
@@ -161,7 +168,8 @@ export default function ReviewsPage() {
           <p className="mt-4 max-w-4xl leading-7 text-[#bfbfbf]">
             Every reflection shared here comes from an Oremea experience.
             Some words may be obscured to protect community standards. Reviews
-            are otherwise displayed as submitted.
+            are otherwise displayed as submitted. New submissions are reviewed
+            by a person and are never published automatically.
           </p>
         </div>
 
@@ -275,24 +283,32 @@ export default function ReviewsPage() {
 
         <section className="mt-16 rounded-3xl border border-[#c6a96b]/20 bg-[#181713] p-8 md:p-10">
           <p className="text-sm uppercase tracking-[0.28em] text-[#c6a96b]">
-            Begin privately
+            Your experience belongs to you
           </p>
 
           <h2 className="mt-4 text-3xl font-light md:text-4xl">
-            Explore Oremea when you are ready.
+            Share only what you choose to make public.
           </h2>
 
           <p className="mt-4 max-w-2xl leading-7 text-[#bfbfbf]">
-            Recognition, Resonance, and Compass each create a different doorway
-            into clearer participation.
+            Oremea never pulls material from private conversations or archives into
+            a review. A submitted reflection is reviewed before anything appears here.
           </p>
 
-          <Link
-            href="/explore"
-            className="mt-7 inline-flex rounded-full border border-[#c6a96b]/30 px-5 py-3 text-sm text-[#c6a96b] transition hover:border-[#c6a96b]/60"
-          >
-            Explore Oremea
-          </Link>
+          <div className="mt-7 flex flex-wrap gap-4">
+            <Link
+              href="/reviews/share"
+              className="inline-flex rounded-full border border-[#c6a96b]/40 bg-[#c6a96b]/10 px-5 py-3 text-sm text-[#e5d4a6] transition hover:border-[#c6a96b]/70"
+            >
+              Share your experience
+            </Link>
+            <Link
+              href="/explore"
+              className="inline-flex rounded-full border border-white/10 px-5 py-3 text-sm text-[#bfbfbf] transition hover:border-[#c6a96b]/40 hover:text-[#c6a96b]"
+            >
+              Explore Oremea
+            </Link>
+          </div>
         </section>
       </section>
     </main>
