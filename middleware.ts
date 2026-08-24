@@ -281,7 +281,9 @@ function compassDomainResponse(req: NextRequest) {
     if (
       pathname === "/profile" ||
       pathname === "/compare" ||
-      pathname === "/contact"
+      pathname === "/contact" ||
+      pathname === "/reviews" ||
+      pathname.startsWith("/reviews/")
     ) {
       return redirectToHost(req, "www.oremea.com", pathname);
     }
@@ -328,6 +330,8 @@ const isPublicRoute = createRouteMatcher([
   "/compare(.*)",
   "/contact(.*)",
   "/api/contact",
+  "/reviews(.*)",
+  "/api/reviews/submit",
   "/terms(.*)",
   "/privacy(.*)",
   "/disclaimer(.*)",
