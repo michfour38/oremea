@@ -1,0 +1,208 @@
+critical=0
+high=6
+moderate=3
+low=6
+total=15
+=== HIGH_OR_CRITICAL ===
+PACKAGE=devalue
+severity=high
+range=<=5.8.0
+nodes=node_modules/devalue
+fixAvailable=true
+via_source=1114438
+via_title=devalue has prototype pollution in devalue.parse and devalue.unflatten
+via_url=https://github.com/advisories/GHSA-cfw5-2vxh-hr84
+via_range=<5.6.4
+via_severity=moderate
+via_source=1120448
+via_title=Svelte devalue: DoS via sparse array deserialization
+via_url=https://github.com/advisories/GHSA-77vg-94rm-hx3p
+via_range=>=5.6.3 <=5.8.0
+via_severity=high
+via_source=1121800
+via_title=Sveltejs devalue's `devalue.parse` and `devalue.unflatten` emit objects with `__proto__` own properties
+via_url=https://github.com/advisories/GHSA-mwv9-gp5h-frr4
+via_range=>=4.0.0 <5.6.4
+via_severity=low
+---
+PACKAGE=form-data
+severity=high
+range=4.0.0 - 4.0.5
+nodes=node_modules/form-data
+fixAvailable=true
+via_source=1120743
+via_title=form-data: CRLF injection in form-data via unescaped multipart field names and filenames
+via_url=https://github.com/advisories/GHSA-hmw2-7cc7-3qxx
+via_range=>=4.0.0 <4.0.6
+via_severity=high
+---
+PACKAGE=nanoid
+severity=high
+range=<=3.3.17
+nodes=node_modules/nanoid
+fixAvailable=true
+via_source=1138811
+via_title=nanoid: non-secure generators can loop indefinitely with negative size
+via_url=https://github.com/advisories/GHSA-28wg-ghj8-5hjv
+via_range=<3.3.16
+via_severity=high
+via_source=1139427
+via_title=nanoid: custom generators can loop indefinitely when size is zero
+via_url=https://github.com/advisories/GHSA-2v37-7h3g-55p8
+via_range=<3.3.18
+via_severity=high
+---
+PACKAGE=next
+severity=high
+range=9.3.4-canary.0 - 16.3.0-preview.10
+nodes=node_modules/next
+fixAvailable={"name":"next","version":"16.3.2","isSemVerMajor":true}
+via_source=1112593
+via_title=Next.js self-hosted applications vulnerable to DoS via Image Optimizer remotePatterns configuration
+via_url=https://github.com/advisories/GHSA-9g9p-9gw9-jx7f
+via_range=>=10.0.0 <15.5.10
+via_severity=moderate
+via_source=1112653
+via_title=Next.js HTTP request deserialization can lead to DoS when using insecure React Server Components
+via_url=https://github.com/advisories/GHSA-h25m-26qc-wcjf
+via_range=>=13.0.0 <15.0.8
+via_severity=high
+via_source=1114897
+via_title=Next.js: HTTP request smuggling in rewrites
+via_url=https://github.com/advisories/GHSA-ggv3-7p47-pfv8
+via_range=>=9.5.0 <15.5.13
+via_severity=moderate
+via_source=1114940
+via_title=Next.js: Unbounded next/image disk cache growth can exhaust storage
+via_url=https://github.com/advisories/GHSA-3x4c-7xq6-9pq8
+via_range=>=10.0.0 <15.5.14
+via_severity=moderate
+via_source=1116376
+via_title=Next.js has a Denial of Service with Server Components
+via_url=https://github.com/advisories/GHSA-q4gf-8mx6-v5v3
+via_range=>=13.0.0 <15.5.15
+via_severity=high
+via_source=1117931
+via_title=Next.js Vulnerable to Denial of Service with Server Components
+via_url=https://github.com/advisories/GHSA-8h8q-6873-q5fj
+via_range=>=13.0.0 <15.5.16
+via_severity=high
+via_source=1118942
+via_title=Next.js's Middleware / Proxy redirects can be cache-poisoned
+via_url=https://github.com/advisories/GHSA-3g8h-86w9-wvmq
+via_range=>=12.2.0 <15.5.16
+via_severity=low
+via_source=1118944
+via_title=Next.js vulnerable to cross-site scripting in App Router applications using CSP nonces
+via_url=https://github.com/advisories/GHSA-ffhc-5mcf-pf4q
+via_range=>=13.4.0 <15.5.16
+via_severity=moderate
+via_source=1118946
+via_title=Next.js vulnerable to cache poisoning via collisions in React Server Component cache-busting
+via_url=https://github.com/advisories/GHSA-vfv6-92ff-j949
+via_range=>=13.4.6 <15.5.16
+via_severity=low
+via_source=1118948
+via_title=Next.js has cross-site scripting in beforeInteractive scripts with untrusted input
+via_url=https://github.com/advisories/GHSA-gx5p-jg67-6x7h
+via_range=>=13.0.0 <15.5.16
+via_severity=moderate
+via_source=1118952
+via_title=Next.js has a Denial of Service in the Image Optimization API
+via_url=https://github.com/advisories/GHSA-h64f-5h5j-jqjh
+via_range=>=10.0.0 <15.5.16
+via_severity=moderate
+via_source=1118954
+via_title=Next.js vulnerable to server-side request forgery in applications using WebSocket upgrades
+via_url=https://github.com/advisories/GHSA-c4j6-fc7j-m34r
+via_range=>=13.4.13 <15.5.16
+via_severity=high
+via_source=1118958
+via_title=Next.js vulnerable to cache poisoning in React Server Component responses
+via_url=https://github.com/advisories/GHSA-wfc6-r584-vfw7
+via_range=>=14.2.0 <15.5.16
+via_severity=moderate
+via_source=1118962
+via_title=Next.js has a Middleware / Proxy bypass in Pages Router applications using i18n
+via_url=https://github.com/advisories/GHSA-36qx-fr4f-26g5
+via_range=>=12.2.0 <15.5.16
+via_severity=high
+via_source=1124172
+via_title=Next.js: Denial of Service in App Router using Server Actions
+via_url=https://github.com/advisories/GHSA-m99w-x7hq-7vfj
+via_range=>=13.0.0 <15.5.21
+via_severity=high
+via_source=1124185
+via_title=Next.js: Server-Side Request Forgery in Server Actions on custom servers
+via_url=https://github.com/advisories/GHSA-89xv-2m56-2m9x
+via_range=>=14.1.1 <15.5.21
+via_severity=high
+via_source=1124187
+via_title=Next.js: Cache confusion of response bodies for requests with bodies
+via_url=https://github.com/advisories/GHSA-68g3-v927-f742
+via_range=>=13.0.0 <15.5.21
+via_severity=moderate
+via_source=1124189
+via_title=Next.js: Cache confusion of response bodies for requests with bodies containing invalid UTF-8 byte sequences
+via_url=https://github.com/advisories/GHSA-4633-3j49-mh5q
+via_range=>=13.0.0 <15.5.21
+via_severity=moderate
+via_source=1124191
+via_title=Next.js: Unbounded Server Action payload in Edge runtime
+via_url=https://github.com/advisories/GHSA-4c39-4ccg-62r3
+via_range=>=13.0.0 <15.5.21
+via_severity=moderate
+via_source=1124193
+via_title=Next.js: Server-Side Request Forgery in rewrites via attacker-controlled destination hostname
+via_url=https://github.com/advisories/GHSA-p9j2-gv94-2wf4
+via_range=>=12.0.0 <15.5.21
+via_severity=high
+via_source=1124197
+via_title=Next.js: Unauthenticated disclosure of internal Server Function endpoints
+via_url=https://github.com/advisories/GHSA-955p-x3mx-jcvp
+via_range=>=13.0.0 <15.5.21
+via_severity=moderate
+via_package=postcss
+---
+PACKAGE=postcss
+severity=high
+range=<=8.5.22
+nodes=node_modules/next/node_modules/postcss,node_modules/postcss
+fixAvailable={"name":"next","version":"16.3.2","isSemVerMajor":true}
+via_source=1117015
+via_title=PostCSS has XSS via Unescaped </style> in its CSS Stringify Output
+via_url=https://github.com/advisories/GHSA-qx2v-qp2m-jg93
+via_range=<8.5.10
+via_severity=moderate
+via_source=1124252
+via_title=PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments
+via_url=https://github.com/advisories/GHSA-6g55-p6wh-862q
+via_range=<=8.5.11
+via_severity=high
+via_source=1130709
+via_title=PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset
+via_url=https://github.com/advisories/GHSA-fxqj-rqcc-2cmp
+via_range=<=8.5.22
+via_severity=moderate
+via_source=1139510
+via_title=PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure
+via_url=https://github.com/advisories/GHSA-r28c-9q8g-f849
+via_range=<=8.5.17
+via_severity=high
+---
+PACKAGE=ws
+severity=high
+range=8.0.0 - 8.20.1
+nodes=node_modules/ws
+fixAvailable=true
+via_source=1119108
+via_title=ws: Uninitialized memory disclosure
+via_url=https://github.com/advisories/GHSA-58qx-3vcg-4xpx
+via_range=>=8.0.0 <8.20.1
+via_severity=moderate
+via_source=1123259
+via_title=ws: Memory exhaustion DoS from tiny fragments and data chunks
+via_url=https://github.com/advisories/GHSA-96hv-2xvq-fx4p
+via_range=>=8.0.0 <8.21.0
+via_severity=high
+---
