@@ -66,9 +66,10 @@ jobs:
                   if '@clerk/nextjs/server' not in text:
                       continue
                   for line_no, line in enumerate(text.splitlines(), 1):
-                      if re.search(r'(?<!await )\bauth\(\)', line):
+                      code = line.split('//', 1)[0]
+                      if re.search(r'(?<!await )\bauth\(\)', code):
                           unawaited_auth.append(f'{path}:{line_no}:{line.strip()}')
-                      if re.search(r'\bclerkClient\(\)', line) and not re.search(r'await\s+clerkClient\(\)', line):
+                      if re.search(r'\bclerkClient\(\)', code) and not re.search(r'await\s+clerkClient\(\)', code):
                           clerk_client.append(f'{path}:{line_no}:{line.strip()}')
 
           print(f'Unawaited auth() sites: {len(unawaited_auth)}')
