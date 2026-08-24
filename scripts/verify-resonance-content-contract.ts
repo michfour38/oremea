@@ -4,15 +4,15 @@ import { RESONANCE_CONTENT } from "../prisma/seeds/resonance-content";
 
 const CURRENT_TEACHERS = [
   "The Hearth",
-  "Mirror",
-  "Garden",
-  "Bearing",
-  "Pulse",
-  "Shadow",
-  "Forge",
-  "Vision",
-  "Gathering",
-  "Becoming",
+  "The Mirror",
+  "The Garden",
+  "The Bearing",
+  "The Pulse",
+  "The Shadow",
+  "The Forge",
+  "The Vision",
+  "The Gathering",
+  "The Becoming",
 ] as const;
 
 assert.equal(
