@@ -3,7 +3,7 @@
 import { cycleStatusMessage } from "@/lib/harmonize/cycle-status"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react";
 
 type AccountabilityRung =
   | "observation"
@@ -71,14 +71,15 @@ function protectedTruthLabels(
   return labels
 }
 
-export default function HarmonizeSharedPage({
-  params,
-}: {
-  params: {
-    systemId: string
-    cycleId: string
+export default function HarmonizeSharedPage(
+  props: {
+    params: Promise<{
+      systemId: string
+      cycleId: string
+    }>
   }
-}) {
+) {
+  const params = use(props.params);
   const router = useRouter()
 
   const [content, setContent] = useState("")

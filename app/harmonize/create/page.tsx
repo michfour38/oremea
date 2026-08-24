@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 
 const allowedModes = [
   "couple",
@@ -32,7 +32,7 @@ const modeExamples: Record<string, string> = {
   parallel_parenting_adults: "Parallel Parenting",
 }
 
-export default function HarmonizeCreatePage() {
+function HarmonizeCreateContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const mode = searchParams.get("mode")
@@ -108,13 +108,13 @@ export default function HarmonizeCreatePage() {
       const data = await response.json()
 
       if (data.paymentRequired) {
-  router.push("/harmonize/upgrade")
-  return
-}
+        router.push("/harmonize/upgrade")
+        return
+      }
 
-if (!response.ok || !data.success) {
-  throw new Error(data.error || "Unable to create relationship space")
-}
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Unable to create relationship space")
+      }
 
       router.push(`/harmonize/system/${data.system.id}`)
     } catch (err) {
@@ -231,5 +231,13 @@ if (!response.ok || !data.success) {
         </div>
       </section>
     </main>
+  )
+}
+
+export default function HarmonizeCreatePage() {
+  return (
+    <Suspense fallback={null}>
+      <HarmonizeCreateContent />
+    </Suspense>
   )
 }

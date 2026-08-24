@@ -1,13 +1,14 @@
 import { SignIn } from "@clerk/nextjs";
 
 type SignInPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     redirect_url?: string;
-  };
+  }>;
 };
 
-export default function SignInPage({ searchParams }: SignInPageProps) {
-  const redirectUrl = searchParams?.redirect_url || "/";
+export default async function SignInPage({ searchParams }: SignInPageProps) {
+  const params = await searchParams;
+  const redirectUrl = params?.redirect_url || "/";
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-10">

@@ -351,9 +351,9 @@ const isPublicRoute = createRouteMatcher([
   "/api/works(.*)",
 ]);
 
-export default clerkMiddleware((auth, req) => {
+export default clerkMiddleware(async (auth, req) => {
   if (isCompassProtectedPath(req)) {
-    auth().protect();
+    await auth.protect();
   }
 
   const worksResponse = worksDomainResponse(req);
@@ -363,7 +363,7 @@ export default clerkMiddleware((auth, req) => {
   const { pathname } = req.nextUrl;
 
   if (host === RESONANCE_HOST && pathname === "/") {
-    auth().protect();
+    await auth.protect();
     return rewriteResonancePath(req, "/entry");
   }
 
@@ -377,7 +377,7 @@ export default clerkMiddleware((auth, req) => {
   if (compassResponse) return compassResponse;
 
   if (!isPublicRoute(req)) {
-    auth().protect();
+    await auth.protect();
   }
 });
 

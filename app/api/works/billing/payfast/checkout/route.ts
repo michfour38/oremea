@@ -13,7 +13,7 @@ export const runtime = "nodejs";
 const PAID_PLANS = new Set(["VERIFIED", "GROWTH"]);
 
 export async function POST(request: Request) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     return NextResponse.json(
       { error: "Sign in to choose a WORKS provider plan." },

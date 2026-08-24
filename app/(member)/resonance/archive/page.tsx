@@ -11,10 +11,10 @@ import {
 import MemberNav from "../../member-nav";
 
 type Props = {
-  searchParams?: {
+  searchParams?: Promise<{
     view?: string;
     q?: string;
-  };
+  }>;
 };
 
 type ReflectionRow = {
@@ -273,7 +273,8 @@ function RunArchiveCard({ group }: { group: RunGroup }) {
   );
 }
 
-export default async function ArchivePage({ searchParams }: Props) {
+export default async function ArchivePage(props: Props) {
+  const searchParams = await props.searchParams;
   const { userId } = await auth();
   if (!userId) redirect("/sign-in?redirect_url=%2Fresonance%2Farchive");
 

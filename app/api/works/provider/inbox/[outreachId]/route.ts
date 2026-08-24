@@ -16,8 +16,9 @@ function optionalPositiveNumber(value: unknown) {
   return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
 }
 
-export async function PATCH(request: Request, { params }: { params: { outreachId: string } }) {
-  const { userId } = auth();
+export async function PATCH(request: Request, props: { params: Promise<{ outreachId: string }> }) {
+  const params = await props.params;
+  const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Sign in to respond to this WORKS brief." }, { status: 401 });
 
   const outreach = await prisma.works_provider_outreach.findUnique({

@@ -1,10 +1,11 @@
 import Link from "next/link"
 
-export default function HarmonizeShareReviewPage({
-  params,
-}: {
-  params: { systemId: string; cycleId: string }
-}) {
+export default async function HarmonizeShareReviewPage(
+  props: {
+    params: Promise<{ systemId: string; cycleId: string }>
+  }
+) {
+  const params = await props.params;
   return (
     <main className="min-h-screen bg-[#0b0b0b] text-[#f4f1ea]">
       <section className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6 py-20">

@@ -3,7 +3,7 @@
 import { SignOutButton, useUser } from "@clerk/nextjs"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react";
 
 type InvitationState =
   | "signed_out"
@@ -42,17 +42,18 @@ function modeLabel(mode?: string) {
   return "Relationship"
 }
 
-export default function HarmonizeJoinPage({
-  params,
-  searchParams,
-}: {
-  params: {
-    systemId: string
+export default function HarmonizeJoinPage(
+  props: {
+    params: Promise<{
+      systemId: string
+    }>
+    searchParams: Promise<{
+      invite?: string
+    }>
   }
-  searchParams: {
-    invite?: string
-  }
-}) {
+) {
+  const searchParams = use(props.searchParams);
+  const params = use(props.params);
   const { isLoaded, isSignedIn } = useUser()
   const router = useRouter()
 

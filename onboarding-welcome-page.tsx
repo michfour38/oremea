@@ -10,8 +10,8 @@
 
 import { auth } from '@clerk/nextjs/server';
 
-export default function OnboardingWelcomePage() {
-  const { userId } = auth();
+export default async function OnboardingWelcomePage() {
+  const { userId } = await auth();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-stone-50 px-4">

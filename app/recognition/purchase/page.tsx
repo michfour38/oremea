@@ -11,9 +11,9 @@ import {
 export const dynamic = "force-dynamic";
 
 type Props = {
-  searchParams?: {
+  searchParams?: Promise<{
     access?: string;
-  };
+  }>;
 };
 
 function CheckoutAction({
@@ -41,7 +41,8 @@ function CheckoutAction({
   );
 }
 
-export default async function RecognitionPurchasePage({ searchParams }: Props) {
+export default async function RecognitionPurchasePage(props: Props) {
+  const searchParams = await props.searchParams;
   const user = await currentUser();
   if (user) {
     const emails = user.emailAddresses

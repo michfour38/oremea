@@ -65,10 +65,8 @@ function cleanValue(field: string, value: unknown): Prisma.InputJsonValue | null
   return null;
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { briefId: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ briefId: string }> }) {
+  const params = await props.params;
   try {
     const session = await prisma.works_search_sessions.findUnique({
       where: { brief_id: params.briefId },

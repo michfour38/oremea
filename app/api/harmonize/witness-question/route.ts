@@ -45,7 +45,7 @@ function buildWitnessFailureQuestion(latestAnswer: string): string {
 
 export async function POST(request: Request) {
   try {
-    const { userId } = auth()
+    const { userId } = await auth()
 
     if (!userId) {
       return NextResponse.json(

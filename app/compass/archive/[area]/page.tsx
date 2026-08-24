@@ -6,9 +6,9 @@ import { prisma } from "@/lib/prisma";
 import MemberNav from "@/app/(member)/member-nav";
 
 type Props = {
-  params: {
+  params: Promise<{
     area: string;
-  };
+  }>;
 };
 
 const areaLabels: Record<string, string> = {
@@ -131,7 +131,8 @@ function getMapCounts(value: unknown) {
   );
 }
 
-export default async function CompassAreaArchivePage({ params }: Props) {
+export default async function CompassAreaArchivePage(props: Props) {
+  const params = await props.params;
   const { userId } = await auth();
 
   if (!userId) {

@@ -7,11 +7,9 @@ function clean(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { sessionId: string } }
-) {
-  const { userId } = auth();
+export async function POST(request: NextRequest, props: { params: Promise<{ sessionId: string }> }) {
+  const params = await props.params;
+  const { userId } = await auth();
   if (!userId) {
     return NextResponse.json({ error: "Sign in to save this search to My WORKS." }, { status: 401 });
   }

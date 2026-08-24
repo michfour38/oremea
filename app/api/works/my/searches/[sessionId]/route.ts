@@ -3,8 +3,9 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 
-export async function GET(_request: Request, { params }: { params: { sessionId: string } }) {
-  const { userId } = auth();
+export async function GET(_request: Request, props: { params: Promise<{ sessionId: string }> }) {
+  const params = await props.params;
+  const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Sign in to open this WORKS search." }, { status: 401 });
 
   const search = await prisma.works_search_sessions.findFirst({

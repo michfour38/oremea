@@ -23,15 +23,16 @@ function preview(value: string | undefined | null) {
 }
 
 type Props = {
-  searchParams?: {
+  searchParams?: Promise<{
     before?: string;
     thread?: string;
-  };
+  }>;
 };
 
 const MESSAGE_PAGE_SIZE = 100;
 
-export default async function RecognitionArchivePage({ searchParams }: Props) {
+export default async function RecognitionArchivePage(props: Props) {
+  const searchParams = await props.searchParams;
   const user = await currentUser();
 
   if (!user) {

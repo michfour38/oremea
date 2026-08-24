@@ -36,7 +36,7 @@ function CheckoutAction({
 }
 
 export default async function CompassAccessPage() {
-  const { userId } = auth();
+  const { userId } = await auth();
   const access = userId ? await getCompassAccessState(userId) : null;
   const subscriptionCheckout =
     process.env.COMPASS_SUBSCRIPTION_CHECKOUT_URL?.trim() || null;

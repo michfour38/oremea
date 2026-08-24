@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic"
 
 export async function GET() {
   try {
-    const { userId } = auth()
+    const { userId } = await auth()
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -57,7 +57,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { userId } = auth()
+    const { userId } = await auth()
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -638,7 +638,7 @@ function normalize(value: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, " ")
     .replace(/\s+/g, " ")
-    .trim()
+    .trim();
 }
 
 function countDiscussionMessages(value: unknown): number {

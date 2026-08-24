@@ -128,7 +128,7 @@ function readMembership(event: WhopMembershipEvent) {
 }
 
 async function findExactlyOneOremeaUser(email: string) {
-  const matchingUsers = await clerkClient.users.getUserList({
+  const matchingUsers = await (await clerkClient()).users.getUserList({
     emailAddress: [email],
     limit: 2,
   });
