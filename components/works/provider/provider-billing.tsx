@@ -3,15 +3,16 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { WorksRecurringCardMethods } from "@/components/works/works-recurring-card-methods";
-import {
-  WORKS_PROVIDER_PLANS,
-  type WorksProviderPlanKey,
-} from "@/lib/works/providers/public-plans";
+import { WORKS_PROVIDER_PLANS, type WorksProviderPlanKey } from "@/lib/works/providers/public-plans";
+import { OREMEA_OPERATOR } from "@/src/lib/legal/legal-links";
 
 type Provider = {
   id: string;
   name: string;
-  commercial: { plan: "FREE" | "VERIFIED" | "GROWTH" | "ENTERPRISE" };
+  commercial: {
+    plan: "FREE" | "VERIFIED" | "GROWTH" | "ENTERPRISE";
+    plan_ends_at: string | null;
+  };
 };
 
 type Subscription = {
@@ -23,8 +24,16 @@ type Subscription = {
   started_at: string | null;
   cancelled_at: string | null;
   last_payment_at: string | null;
+  access_ends_at: string | null;
   created_at: string;
 } | null;
+
+function formatAccessDate(value: string | null | undefined) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return null;
+  return date.toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" });
+}
 
 export function WorksProviderBilling() {
   const [providers, setProviders] = useState<Provider[]>([]);
@@ -58,9 +67,7 @@ export function WorksProviderBilling() {
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -83,9 +90,7 @@ export function WorksProviderBilling() {
         if (!cancelled) setError(err instanceof Error ? err.message : "WORKS could not load this subscription.");
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [selectedId]);
 
   useEffect(() => {
@@ -100,7 +105,7 @@ export function WorksProviderBilling() {
   async function startCheckout(plan: WorksProviderPlanKey) {
     if (!selected || plan === "FREE") return;
     if (acceptedPlan !== plan) {
-      setError("Accept the recurring payment, cancellation and refund arrangement for this plan before continuing to PayFast.");
+      setError("Accept the recurring payment, immediate service start, cancellation and refund arrangement before continuing to PayFast.");
       return;
     }
     setBillingLoading(true);
@@ -110,11 +115,7 @@ export function WorksProviderBilling() {
       const response = await fetch("/api/works/billing/payfast/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          providerId: selected.id,
-          plan,
-          acceptRecurringTerms: true,
-        }),
+        body: JSON.stringify({ providerId: selected.id, plan, acceptRecurringTerms: true }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error ?? "WORKS could not open PayFast.");
@@ -138,7 +139,7 @@ export function WorksProviderBilling() {
   }
 
   async function cancelSubscription() {
-    if (!selected || !window.confirm("Cancel this WORKS subscription now and return the business to Free?")) return;
+    if (!selected || !window.confirm("Cancel future WORKS renewals? Your paid plan will remain available through the current paid billing period, then return to Free.")) return;
     setBillingLoading(true);
     setError("");
     setMessage("");
@@ -150,9 +151,17 @@ export function WorksProviderBilling() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error ?? "WORKS could not cancel this plan.");
-      setMessage("Subscription cancelled. This business is back on the Free plan and future PayFast renewals are stopped.");
-      setSubscription((current) => current ? { ...current, status: "CANCELLED", cancelled_at: new Date().toISOString() } : current);
-      setProviders((current) => current.map((provider) => provider.id === selected.id ? { ...provider, commercial: { plan: "FREE" } } : provider));
+      const accessEndsAt = typeof data.accessEndsAt === "string" ? data.accessEndsAt : null;
+      const formattedEnd = formatAccessDate(accessEndsAt);
+      setMessage(
+        formattedEnd
+          ? `Future renewals are cancelled. Paid WORKS access continues through ${formattedEnd}, then this business returns to Free.`
+          : "Future renewals are cancelled. The business will return to Free when the current paid period ends.",
+      );
+      setSubscription((current) => current ? { ...current, status: "CANCELLED", cancelled_at: new Date().toISOString(), access_ends_at: accessEndsAt } : current);
+      setProviders((current) => current.map((provider) => provider.id === selected.id
+        ? { ...provider, commercial: { ...provider.commercial, plan_ends_at: accessEndsAt } }
+        : provider));
       setAcceptedPlan(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "WORKS could not cancel this plan.");
@@ -172,6 +181,10 @@ export function WorksProviderBilling() {
       </div>
     );
   }
+
+  const cancelledAccessEnd = subscription?.status === "CANCELLED"
+    ? formatAccessDate(subscription.access_ends_at ?? selected?.commercial.plan_ends_at)
+    : null;
 
   return (
     <div className="py-8">
@@ -202,10 +215,13 @@ export function WorksProviderBilling() {
             <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
               <div>
                 <h2 className="font-serif text-3xl">{selected.name}</h2>
-                <p className="mt-2 text-sm text-black/55">{selected.commercial.plan === "VERIFIED" ? "Active" : selected.commercial.plan.charAt(0) + selected.commercial.plan.slice(1).toLowerCase()}</p>
+                <p className="mt-2 text-sm text-black/55">
+                  {selected.commercial.plan === "VERIFIED" ? "Active" : selected.commercial.plan.charAt(0) + selected.commercial.plan.slice(1).toLowerCase()}
+                  {cancelledAccessEnd ? ` · renewal cancelled · access through ${cancelledAccessEnd}` : ""}
+                </p>
               </div>
               {subscription?.status === "ACTIVE" ? (
-                <button disabled={billingLoading} onClick={cancelSubscription} className="rounded-full border border-black/15 bg-white px-4 py-2 text-sm disabled:opacity-50">Cancel subscription</button>
+                <button disabled={billingLoading} onClick={cancelSubscription} className="rounded-full border border-black/15 bg-white px-4 py-2 text-sm disabled:opacity-50">Cancel future renewals</button>
               ) : null}
             </div>
           </div>
@@ -235,20 +251,21 @@ export function WorksProviderBilling() {
                         <strong>{plan.priceLabel} in ZAR</strong> is charged for the initial successful payment, then the same amount is charged approximately monthly on the same calendar day as that first successful payment, until cancelled.
                       </p>
                       <p className="mt-2">
-                        Service delivery is digital: paid WORKS access begins after WORKS receives and verifies PayFast&apos;s successful server notification.
+                        Service delivery is digital: paid WORKS access begins immediately after WORKS receives and verifies PayFast&apos;s successful server notification.
                       </p>
                       <p className="mt-2">
-                        Cancel any time from WORKS Billing. Cancellation stops future PayFast renewals and returns the business to Free. Charges already validly incurred, billing errors, failed supply and mandatory consumer rights are handled under Oremea&apos;s Payments, Subscriptions, Cancellation &amp; Refund Policy.
+                        By requesting that immediate start, the subscriber understands that beginning the service during an applicable statutory cooling-off period may affect that cooling-off right where the law permits. Other mandatory consumer rights remain.
                       </p>
                       <p className="mt-2">
-                        Oremea is domiciled in South Africa. Customer service: support@oremea.com.
+                        Cancel any time from WORKS Billing. Cancellation stops future PayFast renewals; paid access ordinarily continues through the current paid billing period and then the business returns to Free. Billing errors, failed supply, refunds and mandatory consumer rights are handled under Oremea&apos;s Payments, Subscriptions, Cancellation &amp; Refund Policy.
                       </p>
                       <p className="mt-2">
-                        Full policies: <a className="underline underline-offset-2" href="/terms" target="_blank" rel="noreferrer">WORKS Terms</a> · <a className="underline underline-offset-2" href="https://www.oremea.com/refunds" target="_blank" rel="noreferrer">Payments &amp; Refunds</a> · <a className="underline underline-offset-2" href="https://www.oremea.com/privacy" target="_blank" rel="noreferrer">Privacy &amp; POPIA</a>
+                        Supplier: {OREMEA_OPERATOR.name}, {OREMEA_OPERATOR.legalForm} trading as {OREMEA_OPERATOR.tradingName}. Physical and legal-service address: {OREMEA_OPERATOR.serviceAddress}. Customer service: {OREMEA_OPERATOR.email} · {OREMEA_OPERATOR.telephone}.
                       </p>
-                      <div className="mt-4">
-                        <WorksRecurringCardMethods compact />
-                      </div>
+                      <p className="mt-2">
+                        Full policies: <a className="underline underline-offset-2" href="/works/terms" target="_blank" rel="noreferrer">WORKS Terms</a> · <a className="underline underline-offset-2" href="https://www.oremea.com/refunds" target="_blank" rel="noreferrer">Payments &amp; Refunds</a> · <a className="underline underline-offset-2" href="https://www.oremea.com/privacy" target="_blank" rel="noreferrer">Privacy &amp; POPIA</a>
+                      </p>
+                      <div className="mt-4"><WorksRecurringCardMethods compact /></div>
                       <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-black/10 bg-white p-3 text-[#1f1c17]">
                         <input
                           type="checkbox"
@@ -259,9 +276,7 @@ export function WorksProviderBilling() {
                           }}
                           className="mt-0.5 h-4 w-4 shrink-0"
                         />
-                        <span>
-                          I accept this recurring payment, service delivery, cancellation and refund arrangement and authorise the monthly PayFast subscription described above.
-                        </span>
+                        <span>I accept this recurring payment, immediate service delivery, cancellation and refund arrangement, request paid WORKS access to begin immediately after verified payment, and authorise the monthly PayFast subscription described above.</span>
                       </label>
                     </div>
                   ) : null}
@@ -283,7 +298,7 @@ export function WorksProviderBilling() {
             })}
           </div>
 
-          <p className="mt-6 max-w-3xl text-xs leading-5 text-black/45">Paid WORKS plans renew monthly through PayFast. WORKS changes plan access only after a verified PayFast server notification. Each checkout stores the account&apos;s dated acceptance of the recurring amount, frequency, timing, duration, cancellation and refund arrangement shown immediately before PayFast.</p>
+          <p className="mt-6 max-w-3xl text-xs leading-5 text-black/45">Paid WORKS plans renew monthly through PayFast. WORKS changes plan access only after a verified PayFast server notification. Each checkout stores the account&apos;s dated acceptance of the recurring amount, frequency, timing, duration, immediate service start, cancellation and refund arrangement shown immediately before PayFast.</p>
         </>
       ) : null}
     </div>

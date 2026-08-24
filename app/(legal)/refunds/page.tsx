@@ -1,7 +1,5 @@
-import {
-  LegalDocument,
-  type LegalSection,
-} from "@/components/legal/legal-document";
+import { LegalDocument, type LegalSection } from "@/components/legal/legal-document";
+import { OREMEA_OPERATOR } from "@/src/lib/legal/legal-links";
 
 const sections: readonly LegalSection[] = [
   {
@@ -14,7 +12,7 @@ const sections: readonly LegalSection[] = [
   {
     title: "2. Supplier information",
     paragraphs: [
-      "Oremea is operated by Michelle Fourie, a sole proprietor trading as Oremea. Contact: support@oremea.com, 061 537 5188, South Africa.",
+      `Oremea is operated by ${OREMEA_OPERATOR.name}, a ${OREMEA_OPERATOR.legalForm} trading as ${OREMEA_OPERATOR.tradingName}. Physical and legal-service address: ${OREMEA_OPERATOR.serviceAddress}. Contact: ${OREMEA_OPERATOR.email}, ${OREMEA_OPERATOR.telephone}.`,
     ],
   },
   {
@@ -28,15 +26,15 @@ const sections: readonly LegalSection[] = [
     title: "4. Statutory cooling-off rights",
     paragraphs: [
       "Where section 44 of the Electronic Communications and Transactions Act 25 of 2002 applies to an electronic transaction with a consumer, the consumer may cancel a services agreement without reason and without penalty within seven days after the agreement was concluded, and a qualifying refund must be made within the period required by law.",
-      "Statutory exclusions may apply, including where services began with the consumer's consent before the end of that seven-day period or where another exclusion in the Act applies.",
-      "Where a transaction results from direct marketing and the Consumer Protection Act 68 of 2008 applies instead, the statutory direct-marketing cooling-off right remains available. This policy does not remove a mandatory consumer right or remedy.",
+      "Section 44 does not apply in circumstances excluded by section 42, including services that began with the consumer's consent before the end of that seven-day period. Oremea relies on an immediate-start request only where the law allows and does not use it to remove another mandatory consumer remedy.",
+      "Where a transaction results from direct marketing and the Consumer Protection Act 68 of 2008 applies, the statutory direct-marketing cooling-off right remains available. This policy does not remove a mandatory consumer right or remedy.",
     ],
   },
   {
     title: "5. Immediate digital supply",
     paragraphs: [
       "Many Oremea products begin immediately when access is opened, an AI-supported output is generated, a course is entered, a digital record is created or a WORKS service starts processing a requirement.",
-      "Where the checkout asks a consumer to request immediate performance and acknowledge the effect on an available cooling-off right, Oremea will rely on that request only to the extent permitted by law.",
+      "Where checkout offers immediate performance, the consumer is asked to request that immediate start expressly. For paid WORKS provider plans, the recurring checkout asks the subscriber to request paid access to begin immediately after verified payment and acknowledges that beginning the service during an applicable cooling-off period may affect that cooling-off right where the law permits.",
     ],
   },
   {
@@ -49,9 +47,9 @@ const sections: readonly LegalSection[] = [
   {
     title: "7. Subscriptions and cancellation",
     paragraphs: [
-      "A recurring subscription renews at the displayed frequency until cancelled. Cancellation ordinarily stops the next renewal and access continues until the end of the paid billing period unless the product terms or law require another result.",
-      "The available cancellation method will be shown before subscription and within the account or service information. A customer remains responsible for charges validly incurred before cancellation takes effect.",
-      "Material changes to a recurring price or billing arrangement will be communicated in advance, allowing cancellation before the change takes effect.",
+      "A recurring subscription renews at the displayed frequency until cancelled. Cancellation stops the next renewal and access ordinarily continues until the end of the current paid billing period unless the product terms or law require another result.",
+      "For a WORKS monthly provider plan, cancelling from WORKS Billing instructs PayFast to stop future renewals. The paid plan remains available through the paid-through date calculated from the most recent successful monthly payment, then the business returns to Free. A refund, reversal, failed payment or mandatory legal remedy may change that access period.",
+      "The available cancellation method is shown before subscription and within WORKS Billing. A customer remains responsible for charges validly incurred before cancellation takes effect. Material changes to a recurring price or billing arrangement will be communicated in advance, allowing cancellation before the change takes effect.",
     ],
   },
   {
@@ -71,14 +69,14 @@ const sections: readonly LegalSection[] = [
   {
     title: "10. WORKS services",
     paragraphs: [
-      "Fees for a WORKS profile, plan, lead, introduction, placement or intelligence service purchase access to the specific platform service described at checkout. They do not purchase a guaranteed customer, provider, quotation, contract, approval, verification result or commercial outcome.",
+      "Fees for a paid WORKS plan or another separately disclosed WORKS service purchase access to the specific platform service described at checkout. They do not purchase a guaranteed customer, provider, quotation, contract, approval, verification result, suitability ranking or commercial outcome.",
       "Where a paid WORKS service was not supplied as described, Oremea will assess the request against the service record, checkout description, mandatory consumer law and this policy.",
     ],
   },
   {
     title: "11. Requesting a cancellation or refund",
     paragraphs: [
-      "Email support@oremea.com with the subject 'Cancellation' or 'Refund request'. Include the account email, product, purchase date, amount, transaction reference, requested remedy and a clear description of the issue.",
+      "For an active WORKS subscription, use the cancellation control in WORKS Billing where available. For a refund, billing dispute or other cancellation request, email support@oremea.com with the subject 'Cancellation' or 'Refund request'. Include the account email, product, purchase date, amount, transaction reference, requested remedy and a clear description of the issue.",
       "Requests should be submitted promptly. Oremea may request proportionate information needed to verify the transaction, diagnose an access problem or prevent fraud.",
     ],
   },
@@ -100,7 +98,7 @@ const sections: readonly LegalSection[] = [
     title: "14. Changes and contact",
     paragraphs: [
       "Oremea may update this policy when products, payment channels or legal requirements change. The policy applying at the time of purchase remains part of that transaction, subject to mandatory law.",
-      "Questions and requests: support@oremea.com, 061 537 5188.",
+      `Questions and requests: ${OREMEA_OPERATOR.email}, ${OREMEA_OPERATOR.telephone}. Physical and legal-service address: ${OREMEA_OPERATOR.serviceAddress}.`,
     ],
   },
 ];
@@ -111,17 +109,11 @@ export default function RefundsPage() {
       activePath="/refunds"
       title="Payments, Subscriptions, Cancellation & Refund Policy"
       summary="What happens before and after payment, how recurring access ends, and how cancellations, failed supply and refund requests are handled."
-      updated="9 August 2026"
+      updated="24 August 2026"
       sections={sections}
       references={[
-        {
-          label: "Electronic Communications and Transactions Act 25 of 2002",
-          href: "https://www.gov.za/documents/electronic-communications-and-transactions-act",
-        },
-        {
-          label: "Consumer Protection Act 68 of 2008",
-          href: "https://www.gov.za/documents/consumer-protection-act",
-        },
+        { label: "Electronic Communications and Transactions Act 25 of 2002", href: "https://www.gov.za/documents/electronic-communications-and-transactions-act" },
+        { label: "Consumer Protection Act 68 of 2008", href: "https://www.gov.za/sites/default/files/32186_467.pdf" },
       ]}
     />
   );
