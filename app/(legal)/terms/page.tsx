@@ -8,7 +8,7 @@ const sections: readonly LegalSection[] = [
     title: "1. About these Terms",
     paragraphs: [
       "These Terms govern access to and use of Oremea, www.oremea.com, Oremea accounts, and the products and services made available through the platform.",
-      "They apply to Recognition, Resonance, Compass, Mirror and other AI-supported features, WORKS, paid access, subscriptions, messages, reviews, referrals and related platform functions.",
+      "They apply to Recognition, Resonance, Compass and other Oremea products and AI-supported features, WORKS, paid access, subscriptions, messages, reviews, referrals and related platform functions.",
       "These Terms should be read with the Privacy and POPIA Policy, Payments, Subscriptions, Cancellation and Refund Policy, AI and Service Disclaimer, Community and Acceptable Use Policy, Cookie Policy, PAIA Manual and any product-specific terms shown before use or purchase.",
     ],
   },
@@ -38,7 +38,7 @@ const sections: readonly LegalSection[] = [
   {
     title: "5. Oremea services",
     paragraphs: [
-      "Recognition provides an ongoing private recursive accountability conversation grounded in the participant's own words. Resonance provides contained seven-day reflection, while Compass provides structured direction, Map and movement tools. Mirror and other AI-supported features generate material in response to information supplied through the platform.",
+      "Recognition is a private AI discussion journal that follows the participant's own words recursively while meaning and choices remain theirs. Resonance provides private seven-day teacher rooms for relational reflection. Compass provides structured direction, a working Map and participant-owned movement through a monthly membership. AI-supported Mirror and other platform capabilities generate material only within the active product's defined role and evidence boundaries.",
       "WORKS provides business discovery, matching, lead-generation, introduction and referral services for customers, manufacturers, suppliers and independent business-service providers.",
       "Product descriptions, included features, access periods and prices are presented on the relevant product, plan or checkout page.",
     ],
@@ -127,7 +127,7 @@ const sections: readonly LegalSection[] = [
     paragraphs: [
       "You must use Oremea lawfully, honestly and in accordance with the Community and Acceptable Use Policy.",
       "Prohibited conduct includes fraud, impersonation, harassment, threats, unlawful discrimination, privacy violations, malware, unauthorised access, scraping, spam, fabricated reviews, false credentials, intellectual-property infringement and bypassing access, payment, security or moderation controls.",
-      "Reviews must reflect genuine interactions and honest experience and comply with the WORKS Reviews Policy. Contact information received for a specific enquiry may be used to assess and respond to that enquiry, but may not automatically be added to unrelated bulk-marketing databases without a lawful basis.",
+      "Reviews must reflect genuine interactions and honest experience. Oremea review submissions require explicit publication permission and are subject to human review before publication. Private reflective content does not become a review merely because it exists inside an Oremea product. Contact information received for a specific enquiry may be used to assess and respond to that enquiry, but may not automatically be added to unrelated bulk-marketing databases without a lawful basis.",
     ],
   },
   {
@@ -186,7 +186,7 @@ export default function TermsPage() {
       activePath="/terms"
       title="Terms of Service"
       summary="The terms governing Oremea's reflective products, AI-supported features, accounts, payments and WORKS business services."
-      updated="10 August 2026"
+      updated="24 August 2026"
       sections={sections}
       references={[
         {
