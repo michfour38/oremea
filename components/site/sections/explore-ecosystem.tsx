@@ -16,7 +16,7 @@ const products = [
     category: "Help me stay with myself",
     description:
       "A private seven-day room with daily reflections, Daily Mirrors, and a Closing Mirror that reads across the full visit.",
-    bestFor: "Relational awareness and patterns that need time to deepen.",
+    bestFor: "One relational territory you want to stay with across seven days.",
     href: "/resonance",
     action: "Enter Resonance",
   },
@@ -25,7 +25,7 @@ const products = [
     category: "Help me move",
     description:
       "A structured process that turns what matters into clear direction, a working Map, and the next movement you can actually make.",
-    bestFor: "Direction, decisions, and participant-owned movement after awareness.",
+    bestFor: "Direction, decisions, and participant-owned movement when something needs to move.",
     href: "https://compass.oremea.com",
     action: "Enter Compass",
   },
