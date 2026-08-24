@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 
 const publicProductFiles = [
   "app/page.tsx",
+  "app/compass/layout.tsx",
   "components/site/sections/compare-hero.tsx",
   "components/site/sections/compare-recognition.tsx",
   "components/site/sections/compare-resonance.tsx",
@@ -25,6 +26,7 @@ const forbiddenPublicHierarchy = [
   /strongly recommended before progressing/i,
   /strongest foundation/i,
   /participant-owned movement after awareness/i,
+  /Turn awareness into/i,
 ];
 
 for (const pattern of forbiddenPublicHierarchy) {
@@ -54,6 +56,11 @@ assert.match(
   source,
   /no room is a[\s\S]*prerequisite for another Oremea product/i,
   "Resonance must not be positioned as a prerequisite for another product.",
+);
+assert.match(
+  readFileSync("app/compass/layout.tsx", "utf8"),
+  /Turn what matters into clear direction/i,
+  "Compass metadata must describe its standalone movement job rather than a prerequisite sequence.",
 );
 
 console.log("Public product routing contract checks passed.");
