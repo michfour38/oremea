@@ -3,17 +3,17 @@ import Link from "next/link";
 const products = [
   {
     name: "Recognition",
-    category: "See yourself clearly",
+    category: "Help me see myself",
     description:
-      "An ongoing private recursive conversation that keeps you accountable to your own words while meaning and direction remain yours.",
+      "A private AI discussion journal for thoughts that need more than a journal page. It stays close to your words without deciding what they mean for you.",
     bestFor:
-      "Anything that needs accurate witness, distinction, recurrence, or accountability without being pushed toward action.",
+      "Unfinished thought, recurrence, contradiction, or something that needs somewhere to continue without being pushed toward action.",
     href: "https://recognition.oremea.com",
     action: "Enter Recognition",
   },
   {
     name: "Resonance",
-    category: "Stay with what emerges",
+    category: "Help me stay with myself",
     description:
       "A private seven-day room with daily reflections, Daily Mirrors, and a Closing Mirror that reads across the full visit.",
     bestFor: "Relational awareness and patterns that need time to deepen.",
@@ -22,10 +22,10 @@ const products = [
   },
   {
     name: "Compass",
-    category: "Turn clarity into movement",
+    category: "Help me move",
     description:
-      "A structured process that narrows competing priorities into one honest, executable next step you can realistically sustain.",
-    bestFor: "Direction, decisions, and movement after awareness.",
+      "A structured process that turns what matters into clear direction, a working Map, and the next movement you can actually make.",
+    bestFor: "Direction, decisions, and participant-owned movement after awareness.",
     href: "https://compass.oremea.com",
     action: "Enter Compass",
   },
@@ -45,9 +45,9 @@ export function ExploreEcosystem() {
             </h2>
           </div>
           <p className="max-w-md text-sm leading-7 text-zinc-500 md:text-right">
-            Each product stands on its own. Recognition stays available as an
-            ongoing conversation. Resonance gives a relational question time.
-            Compass helps turn clarity into deliberate movement.
+            Each product stands on its own. Recognition gives a thought somewhere
+            to continue. Resonance gives relational material time. Compass helps
+            turn what matters into participant-owned movement.
           </p>
         </div>
 
