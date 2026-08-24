@@ -14,6 +14,9 @@ permissions:
 jobs:
   rehearsal:
     runs-on: ubuntu-22.04
+    env:
+      # CI-only placeholder. No live or development Clerk credential is stored here.
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
     steps:
       - name: Check out migration branch
         uses: actions/checkout@v4
