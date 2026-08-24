@@ -7,7 +7,10 @@ function read(path: string) {
 
 const reviewsPage = read("app/reviews/page.tsx");
 const sharePage = read("app/reviews/share/page.tsx");
+const shareLayout = read("app/reviews/share/layout.tsx");
+const legacySubmitPage = read("app/reviews/submit/page.tsx");
 const submitRoute = read("app/api/reviews/submit/route.ts");
+const sitemap = read("app/sitemap.xml/route.ts");
 const middleware = read("middleware.ts");
 const memberNav = read("app/(member)/member-nav.tsx");
 
@@ -37,6 +40,22 @@ assert.match(
   /Anonymous[\s\S]*First name[\s\S]*Initial/,
   "Participants must control public attribution.",
 );
+assert.match(
+  shareLayout,
+  /index: false[\s\S]*follow: false/,
+  "The public review submission form must remain out of search indexes.",
+);
+
+assert.match(
+  legacySubmitPage,
+  /redirect\("\/reviews\/share"\)/,
+  "The original /reviews/submit URL must route into the real moderated submission flow.",
+);
+assert.doesNotMatch(
+  legacySubmitPage,
+  /localStorage|Reflection received/,
+  "The legacy URL must never simulate a successful review submission locally.",
+);
 
 assert.match(
   submitRoute,
@@ -57,6 +76,17 @@ assert.doesNotMatch(
   submitRoute,
   /prisma\.|create\([^)]*review|insert[^\n]*review/i,
   "The launch review flow must not silently auto-publish or create a public review record.",
+);
+
+assert.match(
+  sitemap,
+  /"\/reviews"/,
+  "The public Reviews page must be included in Oremea's sitemap.",
+);
+assert.doesNotMatch(
+  sitemap,
+  /"\/reviews\/share"|"\/reviews\/submit"/,
+  "Review submission forms must not be promoted as public discovery pages in the sitemap.",
 );
 
 assert.match(
