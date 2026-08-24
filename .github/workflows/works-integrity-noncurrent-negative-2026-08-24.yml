@@ -1,0 +1,42 @@
+name: One-time WORKS non-current negative guard
+
+on:
+  push:
+    branches:
+      - works/integrity-guardrails-2026-08-24
+    paths:
+      - .github/workflows/works-integrity-noncurrent-negative-2026-08-24.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Keep non-current negative evidence provisional
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+
+          path = Path("lib/works/matching/eligibility.ts")
+          text = path.read_text()
+          old = '''  const explicitNo = matchingClaims.find((claim) => claimSaysNo(claim.value));\n'''
+          new = '''  const explicitNo = matchingClaims.find(\n    (claim) =>\n      claim.status !== "UNKNOWN" &&\n      !NON_CURRENT_CLAIM_STATUSES.has(claim.status) &&\n      claimSaysNo(claim.value)\n  );\n'''
+          if text.count(old) != 1:
+              raise SystemExit("Could not find explicit negative-claim matcher")
+          path.write_text(text.replace(old, new, 1))
+          PY
+
+          rm .github/workflows/works-integrity-noncurrent-negative-2026-08-24.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/works/matching/eligibility.ts .github/workflows/works-integrity-noncurrent-negative-2026-08-24.yml
+          git commit -m "integrity: keep non-current negative evidence provisional"
+          git push origin HEAD:works/integrity-guardrails-2026-08-24
