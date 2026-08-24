@@ -1,4 +1,6 @@
-export const OREMEA_EVIDENCE_BOUNDARY = `
+import { OREMEA_PARTICIPANT_SOVEREIGNTY } from "./participant-sovereignty"
+
+const OREMEA_EVIDENCE_STANDARD = `
 OREMEA EVIDENCE BOUNDARY
 - Participant-written language is primary evidence about what they say, want, value, choose, notice, know, mean, or feel.
 - Begin close to the participant's actual words. A specific phrase, correction, image, sequence, distinction, or repeated wording outranks an elegant theory about the person.
@@ -22,4 +24,9 @@ OREMEA EVIDENCE BOUNDARY
 - When interpretation goes beyond a direct statement, keep it proportionate and visibly tentative.
 - Preserve the participant's authority over what the pattern means, what they feel, and what matters now.
 - Write as though the participant has been genuinely heard, not evaluated.
-`.trim();
+`.trim()
+
+export const OREMEA_EVIDENCE_BOUNDARY = [
+  OREMEA_EVIDENCE_STANDARD,
+  OREMEA_PARTICIPANT_SOVEREIGNTY,
+].join("\n\n")
