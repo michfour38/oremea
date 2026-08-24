@@ -11,6 +11,10 @@ function stringValue(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function limitedString(value: unknown, maxLength: number) {
+  return stringValue(value).slice(0, maxLength);
+}
+
 function answerObject(value: unknown): Prisma.InputJsonObject {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   return value as Prisma.InputJsonObject;
@@ -23,6 +27,17 @@ export async function POST(req: NextRequest) {
     const browserSessionId = normalizeWorksBrowserSessionId(body?.browserSessionId);
     const currentStep = stringValue(body?.currentStep) || undefined;
     const answers = answerObject(body?.answers);
+    const attribution =
+      body?.attribution && typeof body.attribution === "object" && !Array.isArray(body.attribution)
+        ? body.attribution
+        : {};
+    const landingPath = limitedString(attribution?.landingPath, 1024);
+    const referrerHost = limitedString(attribution?.referrerHost, 255).toLowerCase();
+    const utmSource = limitedString(attribution?.utmSource, 255);
+    const utmMedium = limitedString(attribution?.utmMedium, 255);
+    const utmCampaign = limitedString(attribution?.utmCampaign, 255);
+    const utmTerm = limitedString(attribution?.utmTerm, 255);
+    const utmContent = limitedString(attribution?.utmContent, 255);
 
     if (!marketSlug) {
       return NextResponse.json({ error: "Market is required." }, { status: 400 });
@@ -48,6 +63,13 @@ export async function POST(req: NextRequest) {
       data: {
         market_id: market.id,
         browser_session_id: browserSessionId,
+        landing_path: landingPath || undefined,
+        referrer_host: referrerHost || undefined,
+        utm_source: utmSource || undefined,
+        utm_medium: utmMedium || undefined,
+        utm_campaign: utmCampaign || undefined,
+        utm_term: utmTerm || undefined,
+        utm_content: utmContent || undefined,
         answers,
         current_step: currentStep,
       },

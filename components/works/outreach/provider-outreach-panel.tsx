@@ -323,7 +323,12 @@ export function ProviderOutreachPanel({
     const response = await fetch("/api/works/procurement-requests", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ searchSessionId, briefId, ...current }),
+      body: JSON.stringify({
+        searchSessionId,
+        briefId,
+        capturePoint: "provider-outreach",
+        ...current,
+      }),
     });
     const data = await response.json();
     if (!response.ok) {

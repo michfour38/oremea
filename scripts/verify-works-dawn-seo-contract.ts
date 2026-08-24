@@ -16,6 +16,14 @@ const profile = read("app/works/providers/[slug]/page.tsx");
 const robots = read("app/works/robots.txt/route.ts");
 const sitemap = read("app/works/sitemap.ts");
 const middleware = read("middleware.ts");
+const categoryLanding = read("app/works/manufacturers/[category]/page.tsx");
+const searchesSchema = read("prisma/works/searches.prisma");
+const searchSessions = read("app/api/works/search-sessions/route.ts");
+const conversation = read("components/works/intake/founder-conversation-v2.tsx");
+const procurement = read("app/api/works/procurement-requests/route.ts");
+const outreach = read("components/works/outreach/provider-outreach-panel.tsx");
+const attributionMigration = read("prisma/migrations/20260824074500_add_works_acquisition_attribution/migration.sql");
+const env = read(".env.example");
 
 assert.equal(packageJson.devDependencies?.prisma, "^5.22.0", "Prisma CLI must be declared for clean installs and postinstall.");
 assert.match(seo, /WORKS_ORIGIN = "https:\/\/works\.oremea\.com"/);
@@ -44,4 +52,36 @@ assert.match(sitemap, /offerings: \{ some: \{ active: true \} \}/);
 assert.match(middleware, /"\/robots\.txt"/);
 assert.match(middleware, /"\/sitemap\.xml"/);
 
-console.log("✓ WORKS DAWN SEO authority and discovery contract");
+assert.match(seo, /product, component, formula, packaging or production service/);
+assert.match(categoryLanding, /manufacturers in South Africa/);
+assert.match(categoryLanding, /"@type": "CollectionPage"/);
+assert.match(categoryLanding, /initialCategoryKey={category.key}/);
+assert.match(categoryLanding, /possible fit, not a guarantee/);
+assert.match(sitemap, /works_market_categories\.findMany/);
+assert.match(sitemap, /`\/manufacturers\/\$\{category\.category\.slug\}`/);
+
+for (const field of [
+  "landing_path",
+  "referrer_host",
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_term",
+  "utm_content",
+]) {
+  assert.match(searchesSchema, new RegExp(field));
+  assert.match(attributionMigration, new RegExp(field));
+}
+assert.match(searchesSchema, /capture_point/);
+assert.match(searchSessions, /landing_path: landingPath/);
+assert.match(searchSessions, /utm_campaign: utmCampaign/);
+assert.match(conversation, /function acquisitionAttribution/);
+assert.match(conversation, /attribution: acquisitionAttribution\(\)/);
+assert.match(conversation, /capturePoint: "route-sourcing-fallback"/);
+assert.match(outreach, /capturePoint: "provider-outreach"/);
+assert.match(procurement, /capture_point: capturePoint/);
+assert.match(procurement, /notifyOremeaOfSourcingLead/);
+assert.match(procurement, /WORKS_LEAD_NOTIFY_TO/);
+assert.match(env, /WORKS_LEAD_NOTIFY_TO=support@oremea\.com/);
+
+console.log("✓ WORKS DAWN visibility, attraction, attribution and lead-capture contract");

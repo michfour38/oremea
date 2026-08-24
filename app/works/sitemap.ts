@@ -17,6 +17,18 @@ const STATIC_ROUTES: MetadataRoute.Sitemap = [
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
+    const categories = await prisma.works_market_categories.findMany({
+      where: {
+        enabled: true,
+        market: { slug: "za", active: true },
+        category: { active: true },
+      },
+      select: {
+        category: { select: { slug: true, updated_at: true } },
+      },
+      orderBy: { sort_order: "asc" },
+    });
+
     const providers = await prisma.works_providers.findMany({
       where: {
         profile_status: { not: "ARCHIVED" },
@@ -34,6 +46,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     return [
       ...STATIC_ROUTES,
+      ...categories.map((category) => ({
+        url: worksUrl(`/manufacturers/${category.category.slug}`),
+        lastModified: category.category.updated_at,
+        changeFrequency: "weekly" as const,
+        priority: 0.9,
+      })),
       ...providers.map((provider) => ({
         url: worksUrl(`/providers/${provider.slug}`),
         lastModified: provider.updated_at,
