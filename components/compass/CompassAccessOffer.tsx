@@ -10,11 +10,8 @@ type CompassAccessOfferProps = {
 export function CompassAccessOffer({
   onFirstMonth,
 }: CompassAccessOfferProps) {
-  const launchPrice = formatCompassPrice(
+  const monthlyPrice = formatCompassPrice(
     COMPASS_PRICING.launchPriceCents,
-  );
-  const standardPrice = formatCompassPrice(
-    COMPASS_PRICING.standardPriceCents,
   );
 
   return (
@@ -24,28 +21,27 @@ export function CompassAccessOffer({
       </p>
 
       <h1 className="text-2xl font-semibold">
-        Enter Compass for one month.
+        Enter Compass month to month.
       </h1>
 
       <p className="mt-4 text-sm leading-relaxed text-zinc-400">
-        Start with one full month of Compass access. No automatic renewal.
-        Return, continue discussions, begin new sessions, and review previous
-        sessions during your access period.
+        Compass is {monthlyPrice} per month and can be cancelled anytime. Return,
+        continue discussions, begin new sessions, and keep what you complete in
+        your Archive after cancellation.
       </p>
 
       <button onClick={onFirstMonth} className="primary-button mt-6">
-        Enter Compass · {launchPrice}
+        Enter Compass · {monthlyPrice}/month
       </button>
 
       <div className="mt-8 border-t border-[#2a2418] pt-6">
         <p className="text-sm font-medium text-stone-200">
-          Launch offer
+          Monthly membership
         </p>
 
         <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-          Your first {COMPASS_PRICING.accessDays} days are {launchPrice}.
-          Standard {COMPASS_PRICING.accessDays}-day access will be {standardPrice}.
-          Nothing renews automatically.
+          {monthlyPrice} per month. Cancel anytime. Your saved Compass Archive
+          remains yours after the membership ends.
         </p>
       </div>
     </div>
