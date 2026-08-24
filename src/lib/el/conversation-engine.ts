@@ -3,6 +3,7 @@ import {
   type CompassScopeCategory,
 } from "@/src/lib/compass/scope-boundary"
 import { OREMEA_EVIDENCE_BOUNDARY } from "@/src/lib/oremea/evidence-boundary"
+import { OREMEA_PRODUCT_SOVEREIGNTY } from "@/src/lib/oremea/participant-sovereignty"
 
 export type ELConversationRole =
   | "participant"
@@ -149,6 +150,8 @@ Your role changes with the product and stage, but the participant remains the au
 
 ${OREMEA_EVIDENCE_BOUNDARY}
 
+${OREMEA_PRODUCT_SOVEREIGNTY[product]}
+
 Product:
 ${product}
 
@@ -209,6 +212,8 @@ Compass has already taken the participant through its goal-setting course. They 
 The starting area is context, not a conclusion. The Descent or Discussion may have moved into a different subject, prerequisite, dependency, need, or practical reality. Follow the participant's live thread rather than forcing the conversation back into the starting category.
 
 ${OREMEA_EVIDENCE_BOUNDARY}
+
+${OREMEA_PRODUCT_SOVEREIGNTY.compass}
 
 DISCUSSION EVIDENCE ORDER
 - the latest participant message has foreground authority about what is alive now
