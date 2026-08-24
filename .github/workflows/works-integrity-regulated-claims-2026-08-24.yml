@@ -1,0 +1,54 @@
+name: One-time WORKS regulated-claim hardening
+
+on:
+  push:
+    branches:
+      - works/integrity-guardrails-2026-08-24
+    paths:
+      - .github/workflows/works-integrity-regulated-claims-2026-08-24.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Require source confirmation for regulated claims
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+
+          path = Path("lib/works/matching/eligibility.ts")
+          text = path.read_text()
+          old = '''const POSITIVE_CLAIM_STATUSES = new Set([\n  "EVIDENCE_SUPPLIED",\n  "SOURCE_CONFIRMED",\n  "AUTHORITY_VERIFIED",\n]);\n\nconst NON_CURRENT_CLAIM_STATUSES = new Set(["STALE", "CONFLICTING", "EXPIRED"]);\n'''
+          new = '''const POSITIVE_CLAIM_STATUSES = new Set([\n  "EVIDENCE_SUPPLIED",\n  "SOURCE_CONFIRMED",\n  "AUTHORITY_VERIFIED",\n]);\nconst REGULATED_CLAIM_STATUSES = new Set([\n  "SOURCE_CONFIRMED",\n  "AUTHORITY_VERIFIED",\n]);\n\nconst NON_CURRENT_CLAIM_STATUSES = new Set(["STALE", "CONFLICTING", "EXPIRED"]);\n\nfunction regulatedRequirement(requirement: MatchBriefRequirement) {\n  return (\n    requirement.requirementType === "CREDENTIAL" ||\n    requirement.field.startsWith("credential.") ||\n    requirement.field.startsWith("licence.") ||\n    requirement.field.startsWith("license.") ||\n    requirement.field.startsWith("compliance.") ||\n    requirement.field.startsWith("certification.")\n  );\n}\n'''
+          if text.count(old) != 1:
+              raise SystemExit("Could not find positive claim status block")
+          text = text.replace(old, new, 1)
+
+          old = '''  const confirmed = matchingClaims.find(\n    (claim) => POSITIVE_CLAIM_STATUSES.has(claim.status) && claimMatchesExpected(claim, requirement.value)\n  );\n'''
+          new = '''  const acceptedStatuses = regulatedRequirement(requirement)\n    ? REGULATED_CLAIM_STATUSES\n    : POSITIVE_CLAIM_STATUSES;\n  const confirmed = matchingClaims.find(\n    (claim) => acceptedStatuses.has(claim.status) && claimMatchesExpected(claim, requirement.value)\n  );\n'''
+          if text.count(old) != 1:
+              raise SystemExit("Could not find generic confirmed-claim matcher")
+          text = text.replace(old, new, 1)
+
+          old = '''  const reported = matchingClaims.find(\n    (claim) => claim.status === "SELF_REPORTED" && claimMatchesExpected(claim, requirement.value)\n  );\n'''
+          new = '''  const evidenceAwaitingConfirmation = matchingClaims.find(\n    (claim) =>\n      regulatedRequirement(requirement) &&\n      claim.status === "EVIDENCE_SUPPLIED" &&\n      claimMatchesExpected(claim, requirement.value)\n  );\n  if (evidenceAwaitingConfirmation) {\n    return {\n      requirementId: requirement.id,\n      sourceClaimId: evidenceAwaitingConfirmation.id,\n      criterionType: "REQUIREMENT",\n      criterionKey: requirement.field,\n      status: "UNKNOWN",\n      priority: requirement.priority,\n      hardConstraint,\n      scoreDelta: 0,\n      expectedValue: requirement.value,\n      actualValue: evidenceAwaitingConfirmation.value,\n      explanation: "Evidence has been supplied for this regulated requirement, but WORKS still needs source or authority confirmation before treating it as satisfied.",\n    };\n  }\n\n  const reported = matchingClaims.find(\n    (claim) => claim.status === "SELF_REPORTED" && claimMatchesExpected(claim, requirement.value)\n  );\n'''
+          if text.count(old) != 1:
+              raise SystemExit("Could not insert regulated evidence-awaiting-confirmation boundary")
+          path.write_text(text.replace(old, new, 1))
+          PY
+
+          rm .github/workflows/works-integrity-regulated-claims-2026-08-24.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/works/matching/eligibility.ts .github/workflows/works-integrity-regulated-claims-2026-08-24.yml
+          git commit -m "integrity: require confirmed regulated evidence"
+          git push origin HEAD:works/integrity-guardrails-2026-08-24
