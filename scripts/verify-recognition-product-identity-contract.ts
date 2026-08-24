@@ -50,13 +50,23 @@ const publicRecognitionSources = [
 
 assert.match(
   publicRecognitionSources,
-  /accountability partner|accountability conversation|accountability to your own words|accountable to your own words/i,
-  "Recognition public copy must communicate ongoing accountability to the participant's own words.",
+  /private AI discussion journal/i,
+  "Recognition public copy must identify the current private AI discussion-journal product.",
 );
 assert.match(
   publicRecognitionSources,
-  /ongoing|return to|over time/i,
+  /ongoing|continuing|return whenever|over time/i,
   "Recognition public copy must communicate continuity over time.",
+);
+assert.match(
+  publicRecognitionSources,
+  /meaning and choices remain yours|without deciding what it means for you|meaning and direction remain yours/i,
+  "Recognition public copy must preserve participant authority over meaning and choice.",
+);
+assert.doesNotMatch(
+  publicRecognitionSources,
+  /accountability partner|accountability service|accountability conversation|stay accountable to your own words/i,
+  "Recognition must not regress into accountability-service positioning.",
 );
 assert.doesNotMatch(
   publicRecognitionSources,
@@ -77,8 +87,8 @@ assert.doesNotMatch(
 const recognitionMetadata = read("app/recognition/layout.tsx");
 assert.match(
   recognitionMetadata,
-  /ongoing private recursive accountability conversation/i,
-  "Recognition metadata must describe the current ongoing product rather than generic Oremea copy.",
+  /private AI discussion journal/i,
+  "Recognition metadata must describe the current discussion-journal product rather than the superseded accountability framing.",
 );
 assert.doesNotMatch(
   recognitionMetadata,
