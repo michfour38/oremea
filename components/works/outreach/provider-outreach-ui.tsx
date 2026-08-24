@@ -228,10 +228,10 @@ export function ContactFields({
   contact: Contact;
   error: string;
   refs: {
-    name: RefObject<HTMLInputElement>;
-    email: RefObject<HTMLInputElement>;
-    phone: RefObject<HTMLInputElement>;
-    method: RefObject<HTMLSelectElement>;
+    name: RefObject<HTMLInputElement | null>;
+    email: RefObject<HTMLInputElement | null>;
+    phone: RefObject<HTMLInputElement | null>;
+    method: RefObject<HTMLSelectElement | null>;
   };
   onChange: (contact: Contact) => void;
 }) {
