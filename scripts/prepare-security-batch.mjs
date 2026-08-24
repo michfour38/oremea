@@ -8,13 +8,14 @@ function run(command, args = []) {
 const packagePath = "package.json";
 const packageJson = JSON.parse(readFileSync(packagePath, "utf8"));
 packageJson.scripts.prebuild = "npm run test:launch";
+packageJson.devDependencies.postcss = "^8.5.23";
 packageJson.overrides = {
   ...(packageJson.overrides ?? {}),
   devalue: ">=5.8.1 <6",
   "form-data": ">=4.0.6 <5",
   nanoid: ">=3.3.18 <4",
   ws: ">=8.21.0 <9",
-  postcss: ">=8.5.23 <9",
+  postcss: "$postcss",
 };
 writeFileSync(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
 
@@ -33,9 +34,14 @@ for (const [name, version] of Object.entries(exact)) {
 }
 
 const exactPackage = JSON.parse(readFileSync(packagePath, "utf8"));
+exactPackage.devDependencies.postcss = exact.postcss;
 exactPackage.overrides = {
   ...(exactPackage.overrides ?? {}),
-  ...exact,
+  devalue: exact.devalue,
+  "form-data": exact["form-data"],
+  nanoid: exact.nanoid,
+  ws: exact.ws,
+  postcss: "$postcss",
 };
 writeFileSync(packagePath, `${JSON.stringify(exactPackage, null, 2)}\n`);
 run("npm", ["install"]);
