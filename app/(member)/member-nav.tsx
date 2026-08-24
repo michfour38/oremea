@@ -183,6 +183,13 @@ export default function MemberNav() {
                 </a>
 
                 <a
+                  href="https://www.oremea.com/reviews/share"
+                  className="mt-1 block rounded-xl px-4 py-3 text-center text-sm text-zinc-300 transition hover:bg-zinc-900 hover:text-white"
+                >
+                  Share Your Experience
+                </a>
+
+                <a
                   href="https://www.oremea.com/contact"
                   className="mt-1 block rounded-xl px-4 py-3 text-center text-sm text-zinc-300 transition hover:bg-zinc-900 hover:text-white"
                 >
