@@ -49,6 +49,7 @@ export type MatchBrief = {
 
 export type MatchOffering = {
   evidenceStatus?: "SELF_REPORTED" | "SOURCE_REVIEWED" | "VERIFIED";
+  evidenceAgeDays?: number | null;
   categoryKeys: string[];
   serviceKeys: string[];
   capabilityKeys: string[];
@@ -87,6 +88,8 @@ export type OfferingFitResult = {
   outcomes: MatchOutcomeDraft[];
 };
 
+export const WORKS_EVIDENCE_FRESHNESS_DAYS = 180;
+
 const QUANTITY_BEARING_SERVICES = new Set([
   "MANUFACTURING",
   "PACKAGING",
@@ -100,6 +103,8 @@ const POSITIVE_CLAIM_STATUSES = new Set([
   "SOURCE_CONFIRMED",
   "AUTHORITY_VERIFIED",
 ]);
+
+const NON_CURRENT_CLAIM_STATUSES = new Set(["STALE", "CONFLICTING", "EXPIRED"]);
 
 function normalise(value: unknown): string {
   return String(value ?? "").trim().toUpperCase();
@@ -227,6 +232,33 @@ function evaluateRequirement(
     };
   }
 
+  const nonCurrent = matchingClaims.find(
+    (claim) =>
+      NON_CURRENT_CLAIM_STATUSES.has(claim.status) &&
+      claimMatchesExpected(claim, requirement.value)
+  );
+  if (nonCurrent) {
+    const explanation =
+      nonCurrent.status === "EXPIRED"
+        ? "The evidence previously supporting this requirement has expired and must be renewed before WORKS can treat it as current."
+        : nonCurrent.status === "CONFLICTING"
+          ? "WORKS has conflicting evidence for this requirement, so it remains unresolved until the conflict is cleared."
+          : "The evidence previously supporting this requirement is stale and must be reconfirmed.";
+    return {
+      requirementId: requirement.id,
+      sourceClaimId: nonCurrent.id,
+      criterionType: "REQUIREMENT",
+      criterionKey: requirement.field,
+      status: "UNKNOWN",
+      priority: requirement.priority,
+      hardConstraint,
+      scoreDelta: 0,
+      expectedValue: requirement.value,
+      actualValue: nonCurrent.value,
+      explanation,
+    };
+  }
+
   const confirmed = matchingClaims.find(
     (claim) => POSITIVE_CLAIM_STATUSES.has(claim.status) && claimMatchesExpected(claim, requirement.value)
   );
@@ -293,6 +325,23 @@ export function evaluateOfferingFit(
       scoreDelta: 0,
       actualValue: "SELF_REPORTED",
       explanation: "The provider supplied this offering information. WORKS still needs supporting evidence before presenting it as a confirmed fit.",
+    });
+  }
+
+  if (
+    offering.evidenceStatus !== "SELF_REPORTED" &&
+    offering.evidenceAgeDays != null &&
+    offering.evidenceAgeDays > WORKS_EVIDENCE_FRESHNESS_DAYS
+  ) {
+    outcomes.push({
+      criterionType: "EVIDENCE_BOUNDARY",
+      criterionKey: "offering.stale",
+      status: "UNKNOWN",
+      hardConstraint: true,
+      scoreDelta: 0,
+      expectedValue: { maxAgeDays: WORKS_EVIDENCE_FRESHNESS_DAYS },
+      actualValue: { ageDays: Math.floor(offering.evidenceAgeDays) },
+      explanation: `This offering was last refreshed more than ${WORKS_EVIDENCE_FRESHNESS_DAYS} days ago. WORKS keeps the fit provisional until the provider information is reconfirmed.`,
     });
   }
 
