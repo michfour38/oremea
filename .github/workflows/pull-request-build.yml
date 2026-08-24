@@ -31,9 +31,13 @@ jobs:
 
       - name: Apply official Next 15 async request API codemod
         if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
-        run: |
-          npx -y @next/codemod@latest next-async-request-api .
-          git diff -- . ':!package.json' ':!package-lock.json' > /tmp/next15-async-request-api.patch
+        run: npx -y @next/codemod@latest next-async-request-api .
+
+      - name: Apply official Clerk v6 upgrade codemods
+        if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
+        env:
+          CI: "1"
+        run: npx -y @clerk/upgrade --sdk nextjs --dir . --skip-upgrade
 
       - name: Install supported Next 15 stack for security migration
         if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
@@ -47,15 +51,22 @@ jobs:
             @types/react-dom@19 \
             @clerk/nextjs@6.39.6
 
+      - name: Capture migration diff and production audit
+        if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
+        run: |
+          git diff -- . ':!package.json' ':!package-lock.json' > /tmp/next15-clerk6-migration.patch
+          npm audit --omit=dev --json > /tmp/npm-audit-production.json || true
+
       - name: Capture migration inputs
         if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
         uses: actions/upload-artifact@v4
         with:
-          name: next15-migration-files
+          name: next15-clerk6-migration-files
           path: |
             package.json
             package-lock.json
-            /tmp/next15-async-request-api.patch
+            /tmp/next15-clerk6-migration.patch
+            /tmp/npm-audit-production.json
           if-no-files-found: error
 
       - name: Build application
