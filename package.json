@@ -75,5 +75,9 @@
     "tailwindcss": "^3.4.3",
     "tsx": "^4.21.0",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@clerk/clerk-react": "5.61.6",
+    "@clerk/shared": "2.22.1"
   }
 }

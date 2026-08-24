@@ -1,18 +1,24 @@
-CLERK_SECURITY_PATCH=PASS
-target=@clerk/nextjs@5.7.6
+CLERK_TRANSITIVE_SECURITY=FAIL
+targets=@clerk/nextjs@5.7.6,@clerk/clerk-react@5.61.6,@clerk/shared@2.22.1
 critical=0
-high=11
+high=12
 moderate=3
 low=6
-total=20
+total=21
+clerk_high_or_critical=5
+clerk_vulnerability=@clerk/backend:high
+clerk_vulnerability=@clerk/clerk-react:high
+clerk_vulnerability=@clerk/nextjs:high
+clerk_vulnerability=@clerk/shared:high
+clerk_vulnerability=@clerk/types:high
 --- resolved packages ---
 oremea@0.1.0 /home/runner/work/oremea/oremea
 └─┬ @clerk/nextjs@5.7.6
   ├─┬ @clerk/backend@1.14.1
-  │ └── @clerk/shared@2.9.2 deduped
-  ├─┬ @clerk/clerk-react@5.12.0
-  │ └── @clerk/shared@2.9.2 deduped
-  └── @clerk/shared@2.9.2
+  │ └── @clerk/shared@2.22.1 deduped
+  ├─┬ @clerk/clerk-react@5.61.6 overridden
+  │ └── @clerk/shared@2.22.1 deduped
+  └─┬ @clerk/shared@2.22.1 overridden
+    └─┬ @clerk/types@4.101.26
+      └── @clerk/shared@2.22.1 deduped
 
-
-validation=full-launch-contracts+typecheck+next-build
