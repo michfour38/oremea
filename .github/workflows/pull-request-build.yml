@@ -35,7 +35,7 @@ jobs:
 
       - name: Apply official Clerk v6 codemod
         if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
-        run: npx -y @clerk/upgrade --sdk nextjs --skip-upgrade
+        run: npx -y @clerk/upgrade@1.2.4 --from=core-1
 
       - name: Install supported Next 15 stack for security migration
         if: github.event_name == 'pull_request' && github.head_ref == 'security-next15-20260824'
