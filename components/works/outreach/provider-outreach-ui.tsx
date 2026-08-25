@@ -32,90 +32,6 @@ export type EmailPreview = {
   questionCount: number;
 };
 
-function normalize(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-}
-
-function responsePreviewPayload(preview: EmailPreview) {
-  const lines = preview.bodyText.replaceAll("\r\n", "\n").split("\n");
-  const productHeading = lines.findIndex(
-    (line) => normalize(line) === normalize("Can you help make this?")
-  );
-  const product =
-    productHeading >= 0
-      ? lines.slice(productHeading + 1).find((line) => Boolean(line.trim()))?.trim()
-      : "";
-  const routeHeading = lines.findIndex((line) => {
-    const heading = normalize(line);
-    return (
-      heading === normalize("Your part of the route") ||
-      heading === normalize("Your possible part of the route")
-    );
-  });
-  const relevantSteps: string[] = [];
-
-  if (routeHeading >= 0) {
-    for (let index = routeHeading + 1; index < lines.length; index += 1) {
-      const line = lines[index].trim();
-      if (!line) {
-        if (relevantSteps.length) break;
-        continue;
-      }
-      if (!line.startsWith("-")) break;
-      relevantSteps.push(line.replace(/^-\s*/, ""));
-    }
-  }
-
-  const questionsHeading = lines.findIndex(
-    (line) => normalize(line) === normalize("Questions to confirm")
-  );
-  const questions: string[] = [];
-
-  if (questionsHeading >= 0) {
-    for (let index = questionsHeading + 1; index < lines.length; index += 1) {
-      const line = lines[index].trim();
-      if (!line) {
-        if (questions.length) break;
-        continue;
-      }
-      if (!line.startsWith("-")) break;
-      questions.push(line.replace(/^-\s*/, ""));
-    }
-  }
-
-  return {
-    providerName: preview.providerName,
-    requesterName: preview.requesterName,
-    product:
-      product || preview.subject.replace(/^WORKS production enquiry:\s*/i, "").trim() || "Production brief",
-    category: null,
-    relevantSteps,
-    questions,
-  };
-}
-
-function openProviderResponsePreview(preview: EmailPreview) {
-  const key =
-    typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const storageKey = `oremea:works:provider-response-preview:${key}`;
-
-  window.localStorage.setItem(
-    storageKey,
-    JSON.stringify({
-      ...responsePreviewPayload(preview),
-      createdAt: Date.now(),
-    })
-  );
-
-  window.open(
-    `/works/respond/preview?key=${encodeURIComponent(key)}`,
-    "_blank",
-    "noopener,noreferrer"
-  );
-}
-
 export function ContextSummary({
   founderAnswers: _founderAnswers,
   providerQuestions,
@@ -377,21 +293,6 @@ export function DraftEditor({
           WORKS inserted {preview.questionCount} provider question{preview.questionCount === 1 ? "" : "s"}. Edit or delete any line above.
         </p>
       ) : null}
-
-      <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-black/10 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-          <span className="shrink-0 rounded-full bg-[#1f1c17] px-5 py-2.5 text-sm text-white">
-            Respond to this brief
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={() => openProviderResponsePreview(preview)}
-          className="shrink-0 rounded-full border border-black/15 bg-white px-4 py-2.5 text-sm font-medium"
-        >
-          Preview provider response →
-        </button>
-      </div>
 
       <div className="mt-5 flex justify-end">
         <button
