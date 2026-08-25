@@ -32,18 +32,18 @@ export function WorksLegalFooter({ currentYear }: { currentYear: number }) {
       <div className="mx-auto grid max-w-6xl gap-x-6 gap-y-8 px-5 py-8 min-[420px]:grid-cols-2 md:px-8 lg:grid-cols-[1.2fr_1fr_1fr] lg:gap-10 lg:py-10">
         <div className="min-[420px]:col-span-2 lg:col-span-1">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#8b6a31]">
-            WORKS by Oremea
+            WORKS by{" "}
+            <Link
+              href={OREMEA_SITE_ORIGIN}
+              className="text-inherit transition hover:opacity-70 focus-visible:outline-none focus-visible:underline focus-visible:underline-offset-4"
+              aria-label="Oremea"
+            >
+              Oremea
+            </Link>
           </p>
-          <p className="mt-4 max-w-sm text-sm leading-7 text-black/55">
-            South African business discovery, production routing and provider
-            introductions with clear evidence boundaries
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-black/55 lg:max-w-none">
+            South African business discovery, production routing and provider introductions with clear evidence boundaries
           </p>
-          <Link
-            href={OREMEA_SITE_ORIGIN}
-            className="mt-5 inline-flex text-sm text-black/65 underline decoration-black/20 underline-offset-4 transition hover:text-black"
-          >
-            Return to Oremea
-          </Link>
         </div>
 
         <FooterGroup title="WORKS legal" links={WORKS_LEGAL_LINKS} />
