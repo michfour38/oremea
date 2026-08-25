@@ -383,9 +383,6 @@ export function DraftEditor({
           <span className="shrink-0 rounded-full bg-[#1f1c17] px-5 py-2.5 text-sm text-white">
             Respond to this brief
           </span>
-          <span className="text-xs text-black/45">
-            Provider response button · active only in the sent email
-          </span>
         </div>
         <button
           type="button"
