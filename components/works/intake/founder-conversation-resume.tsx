@@ -23,6 +23,10 @@ function searchStorageKey(marketSlug: string) {
   return `oremea:works:${marketSlug}:search-session`;
 }
 
+function draftStorageKey(marketSlug: string) {
+  return `oremea:works:${marketSlug}:intake-draft-v1`;
+}
+
 function dismissedStorageKey(marketSlug: string) {
   return `oremea:works:${marketSlug}:dismissed-resume-session`;
 }
@@ -157,6 +161,7 @@ export function FounderConversationResumeBoundary({
               type="button"
               onClick={() => {
                 window.localStorage.removeItem(searchStorageKey(market.slug));
+                window.localStorage.removeItem(draftStorageKey(market.slug));
                 window.localStorage.setItem(dismissedStorageKey(market.slug), candidate.sessionId);
                 setCandidate(null);
                 setMode("READY");
