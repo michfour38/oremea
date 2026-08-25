@@ -30,12 +30,6 @@ export function ProviderResponseView({
         <WorksPageHeader context="Provider response" />
 
         <section className="py-10">
-          {preview ? (
-            <div className="mb-8 rounded-2xl border border-[#8b6a31]/25 bg-[#f8f0df] px-5 py-4 text-sm leading-6 text-black/60">
-              <strong className="text-[#1f1c17]">Preview only.</strong> This is the provider response page. You can test the fields below, but nothing entered here can be submitted.
-            </div>
-          ) : null}
-
           <p className="text-sm text-black/45">Production enquiry for {providerName}</p>
           <h1 className="mt-2 font-serif text-4xl leading-tight md:text-5xl">{product}</h1>
           {category ? <p className="mt-3 text-sm text-black/50">{category}</p> : null}
