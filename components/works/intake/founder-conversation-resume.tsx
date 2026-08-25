@@ -23,6 +23,10 @@ function searchStorageKey(marketSlug: string) {
   return `oremea:works:${marketSlug}:search-session`;
 }
 
+function browserStorageKey(marketSlug: string) {
+  return `oremea:works:${marketSlug}:browser-session`;
+}
+
 function draftStorageKey(marketSlug: string) {
   return `oremea:works:${marketSlug}:intake-draft-v1`;
 }
@@ -50,6 +54,36 @@ export function FounderConversationResumeBoundary({
 
   useEffect(() => {
     let cancelled = false;
+
+    async function recoverFromBrowserIdentity() {
+      const browserSessionId = window.localStorage.getItem(browserStorageKey(market.slug));
+      if (!browserSessionId) return null;
+
+      const response = await fetch("/api/works/search-sessions/recover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          marketSlug: market.slug,
+          browserSessionId,
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 400 || response.status === 404) return null;
+        throw new Error("browser recovery failed");
+      }
+
+      const data = await response.json();
+      const recovered = data?.candidate as ResumeCandidate | null | undefined;
+      if (!recovered?.sessionId) return null;
+
+      const dismissed = window.localStorage.getItem(dismissedStorageKey(market.slug));
+      if (dismissed === recovered.sessionId) return null;
+
+      window.localStorage.setItem(searchStorageKey(market.slug), recovered.sessionId);
+      window.localStorage.removeItem(dismissedStorageKey(market.slug));
+      return recovered;
+    }
 
     async function checkSavedProgress() {
       setMode("CHECKING");
@@ -85,6 +119,20 @@ export function FounderConversationResumeBoundary({
 
           if (lastStatus !== 404) {
             throw new Error("temporary restore failure");
+          }
+
+          const recovered = await recoverFromBrowserIdentity();
+          if (recovered?.sessionId) {
+            if (!cancelled) setMode("READY");
+            return;
+          }
+
+          window.localStorage.removeItem(key);
+        } else {
+          const recovered = await recoverFromBrowserIdentity();
+          if (recovered?.sessionId) {
+            if (!cancelled) setMode("READY");
+            return;
           }
         }
 
