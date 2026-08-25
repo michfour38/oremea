@@ -105,6 +105,23 @@ type IntakeState = {
   administrativeArea: string;
 };
 
+type LeadState = {
+  name: string;
+  email: string;
+  phone: string;
+  preferredContactMethod: string;
+};
+
+type IntakeDraft = {
+  version: 1;
+  form: Partial<IntakeState>;
+  panel: number;
+  furthestPanel: number;
+  bridgeAnswers: Record<string, string | boolean>;
+  lead: LeadState;
+  savedAt: string;
+};
+
 const INITIAL_STATE: IntakeState = {
   productDescription: "",
   categoryKey: "",
@@ -122,6 +139,13 @@ const INITIAL_STATE: IntakeState = {
   halaalRequired: null,
   locationPreference: "PREFER_AREA",
   administrativeArea: "",
+};
+
+const INITIAL_LEAD: LeadState = {
+  name: "",
+  email: "",
+  phone: "",
+  preferredContactMethod: "EMAIL",
 };
 
 const STAGES = [
@@ -266,6 +290,66 @@ function browserKey(marketSlug: string) {
   return `oremea:works:${marketSlug}:browser-session`;
 }
 
+function draftStorageKey(marketSlug: string) {
+  return `oremea:works:${marketSlug}:intake-draft-v1`;
+}
+
+function readDraft(marketSlug: string): IntakeDraft | null {
+  try {
+    const raw = window.localStorage.getItem(draftStorageKey(marketSlug));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<IntakeDraft>;
+    if (!parsed || parsed.version !== 1 || !parsed.form || typeof parsed.form !== "object") {
+      return null;
+    }
+    return {
+      version: 1,
+      form: parsed.form,
+      panel: Number.isFinite(parsed.panel) ? Number(parsed.panel) : 0,
+      furthestPanel: Number.isFinite(parsed.furthestPanel) ? Number(parsed.furthestPanel) : 0,
+      bridgeAnswers:
+        parsed.bridgeAnswers && typeof parsed.bridgeAnswers === "object"
+          ? parsed.bridgeAnswers
+          : {},
+      lead:
+        parsed.lead && typeof parsed.lead === "object"
+          ? { ...INITIAL_LEAD, ...parsed.lead }
+          : { ...INITIAL_LEAD },
+      savedAt: typeof parsed.savedAt === "string" ? parsed.savedAt : "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+function hasDraftProgress(
+  form: IntakeState,
+  panel: number,
+  furthestPanel: number,
+  bridgeAnswers: Record<string, string | boolean>,
+  lead: LeadState
+) {
+  return (
+    panel > 0 ||
+    furthestPanel > 0 ||
+    form.productDescription.trim().length > 0 ||
+    Boolean(form.categoryKey) ||
+    Boolean(form.stage) ||
+    form.existingAssets.length > 0 ||
+    form.requestedServiceKeys.length > 0 ||
+    Boolean(form.quantityMinimum) ||
+    Boolean(form.quantityPreferred) ||
+    Boolean(form.quantityMaximum) ||
+    Boolean(form.quantityBasisAmount) ||
+    Boolean(form.packagingFormat) ||
+    Boolean(form.packagingOther.trim()) ||
+    form.halaalRequired !== null ||
+    Boolean(form.administrativeArea) ||
+    Object.keys(bridgeAnswers).length > 0 ||
+    Boolean(lead.name.trim() || lead.email.trim() || lead.phone.trim())
+  );
+}
+
 function acquisitionAttribution() {
   const params = new URLSearchParams(window.location.search);
   let referrerHost = "";
@@ -336,12 +420,7 @@ export function FounderConversationV2({
   const [answeringKey, setAnsweringKey] = useState<string | null>(null);
   const [bridgeAnswers, setBridgeAnswers] = useState<Record<string, string | boolean>>({});
   const [restoring, setRestoring] = useState(true);
-  const [lead, setLead] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    preferredContactMethod: "EMAIL",
-  });
+  const [lead, setLead] = useState<LeadState>({ ...INITIAL_LEAD });
   const [leadStatus, setLeadStatus] = useState<"IDLE" | "SAVING" | "SAVED">("IDLE");
 
   const panels = useMemo(() => buildPanels(form.categoryKey), [form.categoryKey]);
@@ -360,21 +439,49 @@ export function FounderConversationV2({
     let cancelled = false;
 
     async function restore() {
+      const localDraft = readDraft(market.slug);
+
+      if (localDraft) {
+        const restored = { ...INITIAL_STATE, ...localDraft.form } as IntakeState;
+        const restoredPanels = buildPanels(restored.categoryKey);
+        const maxIndex = Math.max(restoredPanels.length - 1, 0);
+        const restoredPanel = Math.min(Math.max(localDraft.panel, 0), maxIndex);
+        const restoredFurthest = Math.min(
+          Math.max(localDraft.furthestPanel, restoredPanel),
+          maxIndex
+        );
+        setForm(restored);
+        setPanel(restoredPanel);
+        setFurthestPanel(restoredFurthest);
+        setBridgeAnswers(localDraft.bridgeAnswers);
+        setLead(localDraft.lead);
+      }
+
       try {
         const savedSessionId = window.localStorage.getItem(storageKey(market.slug));
         if (!savedSessionId) return;
 
-        const response = await fetch(`/api/works/search-sessions/${savedSessionId}`);
+        const response = await fetch(`/api/works/search-sessions/${savedSessionId}`, {
+          cache: "no-store",
+        });
         if (!response.ok) {
-          window.localStorage.removeItem(storageKey(market.slug));
-          return;
+          if (response.status === 404) {
+            window.localStorage.removeItem(storageKey(market.slug));
+            return;
+          }
+          throw new Error("WORKS could not reconnect to the saved search yet.");
         }
 
         const data = await response.json();
         if (cancelled) return;
 
         const answers = data?.answers;
-        if (answers && typeof answers === "object" && !Array.isArray(answers)) {
+        if (
+          answers &&
+          typeof answers === "object" &&
+          !Array.isArray(answers) &&
+          (!localDraft || data?.briefId)
+        ) {
           const restored = { ...INITIAL_STATE, ...answers } as IntakeState;
           setForm(restored);
           const restoredPanels = buildPanels(restored.categoryKey);
@@ -390,7 +497,8 @@ export function FounderConversationV2({
 
         if (data?.briefId) {
           const routeResponse = await fetch(
-            `/api/works/briefs/${data.briefId}?searchSessionId=${encodeURIComponent(savedSessionId)}`
+            `/api/works/briefs/${data.briefId}?searchSessionId=${encodeURIComponent(savedSessionId)}`,
+            { cache: "no-store" }
           );
           if (routeResponse.ok) {
             const routeData = await routeResponse.json();
@@ -402,7 +510,8 @@ export function FounderConversationV2({
           }
         }
       } catch {
-        // A failed restore should never block a fresh anonymous search.
+        // Keep the local draft and session pointer. A temporary restore problem
+        // must never turn a refresh into lost customer work.
       } finally {
         if (!cancelled) setRestoring(false);
       }
@@ -413,6 +522,41 @@ export function FounderConversationV2({
       cancelled = true;
     };
   }, [market.slug]);
+
+  useEffect(() => {
+    if (restoring) return;
+
+    const key = draftStorageKey(market.slug);
+    const writeDraft = () => {
+      try {
+        if (!hasDraftProgress(form, safePanel, safeFurthest, bridgeAnswers, lead)) {
+          window.localStorage.removeItem(key);
+          return;
+        }
+
+        const draft: IntakeDraft = {
+          version: 1,
+          form,
+          panel: safePanel,
+          furthestPanel: safeFurthest,
+          bridgeAnswers,
+          lead,
+          savedAt: new Date().toISOString(),
+        };
+        window.localStorage.setItem(key, JSON.stringify(draft));
+      } catch {
+        // The normal server save still remains available if browser storage is blocked.
+      }
+    };
+
+    writeDraft();
+    window.addEventListener("pagehide", writeDraft);
+    window.addEventListener("beforeunload", writeDraft);
+    return () => {
+      window.removeEventListener("pagehide", writeDraft);
+      window.removeEventListener("beforeunload", writeDraft);
+    };
+  }, [restoring, market.slug, form, safePanel, safeFurthest, bridgeAnswers, lead]);
 
   const categoryName = categories.find((category) => category.key === form.categoryKey)?.name;
   const stageName = STAGES.find(([key]) => key === form.stage)?.[1];
@@ -658,6 +802,7 @@ export function FounderConversationV2({
 
   function reset() {
     window.localStorage.removeItem(storageKey(market.slug));
+    window.localStorage.removeItem(draftStorageKey(market.slug));
     setForm({ ...INITIAL_STATE, categoryKey: initialCategoryKey });
     setPanel(0);
     setFurthestPanel(0);
@@ -667,6 +812,7 @@ export function FounderConversationV2({
     setRouteError(null);
     setError("");
     setBridgeAnswers({});
+    setLead({ ...INITIAL_LEAD });
     setLeadStatus("IDLE");
   }
 
@@ -851,7 +997,7 @@ export function FounderConversationV2({
                   ) : null}
 
                   {error ? <p className="mt-5 text-sm text-red-700">{error}</p> : null}
-                  <div className="mt-6 flex justify-end"><button type="button" onClick={continueFlow} disabled={loading} className="rounded-full bg-[#1f1c17] px-6 py-3 text-sm font-medium text-white disabled:opacity-50">{loading ? "Saving…" : safePanel === panels.length - 1 && safePanel === safeFurthest ? "Build my route →" : safePanel < safeFurthest ? "Save →" : "Continue →"}</button></div>
+                  <div className="mt-6 flex items-center justify-between gap-4"><span className="text-xs text-black/35">Progress is saved on this device as you go.</span><button type="button" onClick={continueFlow} disabled={loading} className="rounded-full bg-[#1f1c17] px-6 py-3 text-sm font-medium text-white disabled:opacity-50">{loading ? "Saving…" : safePanel === panels.length - 1 && safePanel === safeFurthest ? "Build my route →" : safePanel < safeFurthest ? "Save →" : "Continue →"}</button></div>
                 </section>
               );
             }
