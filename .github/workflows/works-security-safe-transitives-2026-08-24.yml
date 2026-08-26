@@ -1,0 +1,83 @@
+name: Batch WORKS safe dependency security fixes
+
+on:
+  push:
+    branches:
+      - works/security-production-audit-2026-08-24
+    paths:
+      - .github/workflows/works-security-safe-transitives-2026-08-24.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Apply all non-framework security patches as one batch
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          npm pkg set 'overrides.devalue=>=5.8.1 <6'
+          npm pkg set 'overrides.form-data=>=4.0.6 <5'
+          npm pkg set 'overrides.nanoid=>=3.3.18 <4'
+          npm pkg set 'overrides.ws=>=8.21.0 <9'
+          npm pkg set 'overrides.postcss=>=8.5.23 <9'
+          npm install
+
+          npm audit --omit=dev --json > /tmp/audit.json || true
+          node <<'NODE'
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('/tmp/audit.json','utf8'));
+          const counts = data.metadata?.vulnerabilities ?? {};
+          const bad = Object.entries(data.vulnerabilities ?? {})
+            .filter(([name, value]) => ['high','critical'].includes(value.severity) && name !== 'next')
+            .map(([name, value]) => `${name}:${value.severity}`);
+          const next = data.vulnerabilities?.next;
+          console.log(JSON.stringify({ counts, remainingNonFramework: bad, next: next ? { severity: next.severity, range: next.range } : null }, null, 2));
+          if ((counts.critical ?? 0) !== 0) throw new Error(`Critical vulnerabilities remain: ${counts.critical}`);
+          if (bad.length) throw new Error(`High/critical non-framework vulnerabilities remain: ${bad.join(', ')}`);
+          NODE
+
+          rm -f .works-production-audit-detail
+          rm .github/workflows/works-security-safe-transitives-2026-08-24.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json .works-production-audit-detail .github/workflows/works-security-safe-transitives-2026-08-24.yml
+          git commit -m "security: patch non-framework production dependencies"
+
+      - name: Validate exact batched commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run test:launch
+          npm run typecheck
+          npx prisma generate
+          npx next build
+          npm audit --omit=dev --json > /tmp/final-audit.json || true
+          node <<'NODE'
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('/tmp/final-audit.json','utf8'));
+          const bad = Object.entries(data.vulnerabilities ?? {})
+            .filter(([name, value]) => ['high','critical'].includes(value.severity) && name !== 'next')
+            .map(([name, value]) => `${name}:${value.severity}`);
+          if ((data.metadata?.vulnerabilities?.critical ?? 0) !== 0 || bad.length) {
+            throw new Error(`Final security gate failed: critical=${data.metadata?.vulnerabilities?.critical ?? 0}; non-framework=${bad.join(',')}`);
+          }
+          console.log('BATCH_SECURITY_BUILD=PASS');
+          console.log('remaining_high_or_critical_package=next');
+          NODE
+          test -z "$(git status --porcelain)" || { git status --short; exit 1; }
+
+      - name: Push one validated batch commit
+        shell: bash
+        run: git push origin HEAD:works/security-production-audit-2026-08-24
