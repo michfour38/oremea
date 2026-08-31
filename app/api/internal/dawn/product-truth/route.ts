@@ -6,6 +6,8 @@ import { oremeaProductTruthSnapshot } from "@/src/lib/oremea/product-truth";
 
 export const dynamic = "force-dynamic";
 
+const ROUTE_HEADER = { "X-Oremea-Dawn-Truth": "v1" } as const;
+
 function sameSecret(left: string, right: string) {
   const a = Buffer.from(left);
   const b = Buffer.from(right);
@@ -17,7 +19,7 @@ export async function GET(request: Request) {
   if (!configuredToken) {
     return NextResponse.json(
       { error: "DAWN_TRUTH_EXPORT_NOT_CONFIGURED" },
-      { status: 503, headers: { "Cache-Control": "no-store" } },
+      { status: 503, headers: { "Cache-Control": "no-store", ...ROUTE_HEADER } },
     );
   }
 
@@ -30,7 +32,7 @@ export async function GET(request: Request) {
   if (!suppliedToken || !sameSecret(suppliedToken, configuredToken)) {
     return NextResponse.json(
       { error: "NOT_FOUND" },
-      { status: 404, headers: { "Cache-Control": "no-store" } },
+      { status: 404, headers: { "Cache-Control": "no-store", ...ROUTE_HEADER } },
     );
   }
 
@@ -39,6 +41,7 @@ export async function GET(request: Request) {
     headers: {
       "Cache-Control": "no-store, max-age=0",
       "X-Robots-Tag": "noindex, nofollow, noarchive, nosnippet",
+      ...ROUTE_HEADER,
     },
   });
 }
