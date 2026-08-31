@@ -38,7 +38,8 @@
     "test:commerce-routing": "tsx scripts/verify-commerce-routing-contract.ts",
     "test:public-pricing": "tsx scripts/verify-public-pricing-contract.ts",
     "test:current": "tsx scripts/verify-current-invitation-contract.ts",
-    "test:launch": "npm run test:central-pricing && npm run test:production-migrations && npm run test:backend-hygiene && npm run test:superseded-boundary && npm run test:participant-sovereignty && npm run test:resonance-content && npm run test:reviews && npm run test:public-product-routing && npm run test:recognition-pricing && npm run test:recognition-conversation && npm run test:commerce-routing && npm run test:public-pricing && npm run test:compass && npm run test:current"
+    "test:dawn-truth": "tsx scripts/verify-dawn-truth-export-contract.ts",
+    "test:launch": "npm run test:central-pricing && npm run test:production-migrations && npm run test:backend-hygiene && npm run test:superseded-boundary && npm run test:participant-sovereignty && npm run test:resonance-content && npm run test:reviews && npm run test:public-product-routing && npm run test:recognition-pricing && npm run test:recognition-conversation && npm run test:commerce-routing && npm run test:public-pricing && npm run test:compass && npm run test:current && npm run test:dawn-truth"
   },
   "prisma": {
     "schema": "./prisma",
