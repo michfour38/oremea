@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 const routeHeaders = {
   "Cache-Control": "no-store",
-  "X-Oremea-Dawn-Truth": "v1",
+  "X-Oremea-Dawn-Truth": "v2",
 };
 
 function sameSecret(left: string, right: string) {
