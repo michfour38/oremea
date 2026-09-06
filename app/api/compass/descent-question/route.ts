@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
+import { COMPASS_DESCENT_LAYER_COUNT } from "@/src/lib/compass/session/compass-flow-contract"
 import {
   evaluateCompassDescentAnswer,
   generateCompassDescentQuestion,
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
     const layer = Number(body.layer)
     const selectedArea = body.selectedArea as CompassGoalArea | undefined
 
-    if (!Number.isInteger(layer) || layer < 1 || layer > 7 || !selectedArea) {
+    if (!Number.isInteger(layer) || layer < 1 || layer > COMPASS_DESCENT_LAYER_COUNT || !selectedArea) {
       return NextResponse.json(
         { ok: false, error: "Invalid Compass Descent request." },
         { status: 400 },
