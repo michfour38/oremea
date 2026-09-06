@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 
 import {
+  COMPASS_DESCENT_LAYER_COUNT,
   clearRememberedCompassDescentAttempts,
   getRememberedAdaptiveRecursiveQuestion,
   getRememberedCompassDescentAttempts,
@@ -61,7 +62,10 @@ export function CompassDepthFlow({
   onAnswerChange: (value: string) => void
   onSubmitAnswer: (resolution: CompassDescentResolution) => void
 }) {
-  const layerNumber = Math.min(recursiveLayers.length + 1, 7)
+  const layerNumber = Math.min(
+    recursiveLayers.length + 1,
+    COMPASS_DESCENT_LAYER_COUNT,
+  )
   const firstAnswer = useMemo(
     () =>
       areaResponses.find((response) => response.area === selectedArea)?.answer ?? "",
@@ -287,7 +291,7 @@ export function CompassDepthFlow({
         })
 
         if (
-          layerNumber < 7 &&
+          layerNumber < COMPASS_DESCENT_LAYER_COUNT &&
           decision.question &&
           decision.substantiveAnswer
         ) {
@@ -325,7 +329,7 @@ export function CompassDepthFlow({
   if (isAnswerSubmitting) {
     return (
       <CompassCard
-        eyebrow={`The Descent · Layer ${layerNumber} of 7`}
+        eyebrow={`The Descent · Layer ${layerNumber} of ${COMPASS_DESCENT_LAYER_COUNT}`}
         title=""
         description=""
       >
@@ -338,7 +342,7 @@ export function CompassDepthFlow({
 
   return (
     <CompassCard
-      eyebrow={`The Descent · Layer ${layerNumber} of 7`}
+      eyebrow={`The Descent · Layer ${layerNumber} of ${COMPASS_DESCENT_LAYER_COUNT}`}
       title=""
       description=""
     >
