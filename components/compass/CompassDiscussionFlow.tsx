@@ -94,8 +94,6 @@ export function CompassDiscussionFlow({
   discussionInput: string;
   onDiscussionInputChange: (value: string) => void;
   onSend: () => void;
-  onReady: (movementInstruction?: string) => void;
-  onAppendCompassMessage?: (content: string) => void;
 }) {
   const [view, setView] = useState<"discussion" | "map">("discussion");
   const [endingState, setEndingState] = useState<CompassEndingState | null>(null);
@@ -486,11 +484,15 @@ export function CompassDiscussionFlow({
     boundaryMessage && endingState?.scopeCategory !== "in_scope",
   );
 
+  const discussionSending =
+    discussionMessages[discussionMessages.length - 1]?.content === "...";
+
   const canMakeWorkable = Boolean(
     !discussionBlocked &&
       endingState?.movementReady &&
       !discussionInput.trim() &&
-      !endingBusy,
+      !endingBusy &&
+      !discussionSending,
   );
 
   if (finalizationStage === "resolution") {
@@ -512,7 +514,7 @@ export function CompassDiscussionFlow({
           disabled={!resolutionDraft.trim() || endingBusy}
           className="primary-button disabled:cursor-wait disabled:opacity-60"
         >
-          {endingBusy ? "Saving resolution..." : "Yes, this is the resolution"}
+          {endingBusy ? "Saving resolution..." : "Yes, this is my resolution"}
         </button>
 
         <button
@@ -589,7 +591,7 @@ export function CompassDiscussionFlow({
           disabled={endingBusy}
           className="primary-button disabled:cursor-wait disabled:opacity-60"
         >
-          {endingBusy ? "Saving movement..." : "Choose and save this movement"}
+          {endingBusy ? "Saving movement..." : "Choose and save my movement"}
         </button>
 
         <button
@@ -611,8 +613,8 @@ export function CompassDiscussionFlow({
   if (finalizationStage === "saved") {
     return (
       <CompassCard
-        title="Compass is complete"
-        description="The resolution and chosen movement are saved."
+        title="Movement chosen and saved"
+        description="This Compass run is complete. The resolution and participant-chosen movement are saved."
       >
         <section className="rounded-[1.5rem] border border-zinc-800 bg-[#121212] p-5">
           <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
@@ -648,8 +650,8 @@ export function CompassDiscussionFlow({
       title={view === "discussion" ? "Discussion" : "Map"}
       description={
         view === "discussion"
-          ? "Stay with what has become visible. Compass will hold what you have already named while you clarify what has your attention now."
-          : "Compass is holding the goals, dependencies, decisions, and other things already asking for your attention. You only need to carry the movement in front of you."
+          ? "Describe the completed reality, resolve any meaningful objection, and use the Map to choose one movement that is actually yours."
+          : "Your working Map holds the goals, dependencies, decisions, and waiting items you named. Review it before turning the current reality into movement."
       }
     >
       <div
@@ -724,13 +726,19 @@ export function CompassDiscussionFlow({
               <textarea
                 value={discussionInput}
                 onChange={(event) => onDiscussionInputChange(event.target.value)}
-                placeholder="Reply naturally. Add context, disagree, correct Compass, or explain what actually happens."
+                placeholder="Reply naturally. Add context, disagree, correct Compass, or explain what is true in observable terms."
                 rows={7}
-                className="compass-textarea mt-5"
+                disabled={discussionSending}
+                className="compass-textarea mt-5 disabled:cursor-wait disabled:opacity-60"
               />
 
-              <button onClick={onSend} className="primary-button">
-                Continue discussion
+              <button
+                type="button"
+                onClick={onSend}
+                disabled={!discussionInput.trim() || discussionSending}
+                className="primary-button disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {discussionSending ? "Compass is reading..." : "Continue discussion"}
               </button>
 
               <button
@@ -815,7 +823,7 @@ export function CompassDiscussionFlow({
                 disabled={endingBusy}
                 className="secondary-button disabled:cursor-wait disabled:opacity-60"
               >
-                I already did this
+                Mark this movement complete
               </button>
               <button
                 type="button"
