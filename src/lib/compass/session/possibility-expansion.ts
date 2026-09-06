@@ -1,3 +1,5 @@
+import { COMPASS_POSSIBILITY_STEP_COUNT } from "./compass-flow-contract"
+
 type CompassGoalArea =
   | "relationships"
   | "income"
@@ -6,11 +8,11 @@ type CompassGoalArea =
   | "investments"
   | "network"
   | "knowledge"
-  | "lifestyle";
+  | "lifestyle"
 
 export type PossibilityQuestion = {
-  question: string;
-};
+  question: string
+}
 
 const AREA_LABELS: Record<CompassGoalArea, string> = {
   relationships: "relationships",
@@ -21,56 +23,70 @@ const AREA_LABELS: Record<CompassGoalArea, string> = {
   network: "network",
   knowledge: "knowledge",
   lifestyle: "lifestyle",
-};
+}
+
+export const COMPASS_POSSIBILITY_QUESTIONS = [
+  (area: string) =>
+    `What resource would make movement in ${area} easier?`,
+  () =>
+    "What strength, ability, or support do you already have that can help?",
+  () =>
+    "From here, what real possibilities can you see?",
+  () =>
+    "Which possibility are you choosing to build?",
+] as const
+
+if (COMPASS_POSSIBILITY_QUESTIONS.length !== COMPASS_POSSIBILITY_STEP_COUNT) {
+  throw new Error("Compass possibility steps do not match the flow contract.")
+}
 
 export function getPossibilityQuestion({
   selectedArea,
   index,
 }: {
-  selectedArea: CompassGoalArea | null;
-  index: number;
+  selectedArea: CompassGoalArea | null
+  index: number
 }): PossibilityQuestion {
-  const area = selectedArea ? AREA_LABELS[selectedArea] : "this area";
-
-  const questions = [
-  `From a stronger and more reliable position in ${area}, what opens up that feels difficult, restricted, or unavailable today?`,
-  `From that stronger position, what are you able to build, create, protect, or support?`,
-  `Beyond yourself, who or what benefits most from that change?`,
-  `Of everything you just named, which change creates the most meaningful movement right now?`,
-];
+  const area = selectedArea ? AREA_LABELS[selectedArea] : "this direction"
+  const question =
+    COMPASS_POSSIBILITY_QUESTIONS[index] ??
+    COMPASS_POSSIBILITY_QUESTIONS[COMPASS_POSSIBILITY_QUESTIONS.length - 1]
 
   return {
-    question: questions[index] ?? questions[questions.length - 1],
-  };
+    question: question(area),
+  }
 }
 
 export function buildPossibilityMirror({
   selectedArea,
   possibilityAnswers,
 }: {
-  selectedArea: CompassGoalArea | null;
-  possibilityAnswers: string[];
+  selectedArea: CompassGoalArea | null
+  possibilityAnswers: string[]
 }): string {
-  const area = selectedArea ? AREA_LABELS[selectedArea] : "this area";
+  const area = selectedArea ? AREA_LABELS[selectedArea] : "this direction"
+  const labels = [
+    "Resource",
+    "Strength or support already available",
+    "Possibilities",
+    "Chosen possibility",
+  ]
 
-  const joined = possibilityAnswers
-    .filter(Boolean)
-    .map((answer) => answer.trim())
-    .join(" ");
+  const lines = possibilityAnswers
+    .slice(0, COMPASS_POSSIBILITY_STEP_COUNT)
+    .map((answer, index) => {
+      const value = answer.trim()
+      return value ? `${labels[index]}: ${value}` : null
+    })
+    .filter((line): line is string => Boolean(line))
 
-  if (!joined) {
-    return `Compass is beginning to map what becomes possible around ${area}.`;
+  if (lines.length !== COMPASS_POSSIBILITY_STEP_COUNT) {
+    return `Compass needs all four participant-written answers before reflecting the chosen direction in ${area}.`
   }
 
-  return `
-Across your answers, Compass is beginning to see what ${area} may represent beneath the surface.
-
-This does not appear to be only about achieving a goal.
-
-It appears connected to what you want to create, protect, experience, or make more possible in your life.
-
-Before we move into what interrupts this, pause here:
-
-How would you like to move forward with this valued goal of more stable ${area}?
-`.trim();
+  return [
+    `You chose to move in ${area}.`,
+    ...lines,
+    "If this says what you mean, describe the completed reality next. If it does not, go back and change it.",
+  ].join("\n\n")
 }
