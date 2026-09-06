@@ -1,24 +1,16 @@
 "use client";
 
 import { CompassPromptFlow } from "@/components/compass/CompassPromptFlow";
-import { evaluatePriorityRedirect } from "@/src/lib/compass/session/priority-redirect";
 import MemberNav from "@/app/(member)/member-nav";
 import { CompassAreaFlow } from "@/components/compass/CompassAreaFlow";
 import { CompassCard } from "@/components/compass/CompassCard";
-import {
-  CompassComplete,
-  CompassDiscussionFlow,
-  CompassExecutionCheck,
-} from "@/components/compass/CompassDiscussionFlow";
+import { CompassDiscussionFlow } from "@/components/compass/CompassDiscussionFlow";
 import {
   CompassDepthFlow,
   CompassDepthIntro,
 } from "@/components/compass/CompassDepthFlow";
 import { CompassPriorityFlow } from "@/components/compass/CompassPriorityFlow";
-import {
-  CompassCoreReflection,
-  CompassResistanceFlow,
-} from "@/components/compass/CompassResistanceFlow";
+import { CompassCoreReflection } from "@/components/compass/CompassResistanceFlow";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -27,13 +19,11 @@ import {
 } from "@/src/lib/compass/session/possibility-expansion";
 import {
   COMPASS_AREA_QUESTIONS,
+  COMPASS_DESCENT_LAYER_COUNT,
+  COMPASS_POSSIBILITY_STEP_COUNT,
   analyzeAreaResponse,
   buildAreaMirrorReflection,
-  calibrateExecutionStep,
   createRecursiveLayer,
-  evaluateResonanceBridge,
-  generateNextStep,
-  mapResistance,
   reflectCoreValues,
   reflectPrimaryArea,
   type CompassAreaResponse,
@@ -41,13 +31,10 @@ import {
   type CompassDiscussionMessage,
   type CompassGoalArea,
   type CompassRecursiveLayer,
-  type CompassResistanceMap,
 } from "@/src/lib/compass/session";
 
 type CompassPhase =
   | "loading"
-| "possibility"
-| "possibility_mirror"
   | "resume"
   | "intro"
   | "area"
@@ -57,21 +44,17 @@ type CompassPhase =
   | "depth_intro"
   | "depth"
   | "core_reflection"
-  | "resistance"
-  | "discussion"
-  | "execution_check"
-  | "complete";
+  | "possibility"
+  | "possibility_mirror"
+  | "discussion";
 
 type StoredCompassSession = {
   phase?: string | null;
   selected_area?: string | null;
   area_responses?: unknown;
   recursive_layers?: unknown;
-possibility_answers?: unknown;
-  resistance_map?: unknown;
+  possibility_answers?: unknown;
   discussion_messages?: unknown;
-  proposed_step?: string | null;
-  final_step?: string | null;
 };
 
 const AREA_LABELS: Record<CompassGoalArea, string> = {
@@ -101,19 +84,12 @@ export default function CompassPage() {
   const [selectedArea, setSelectedArea] = useState<CompassGoalArea | null>(null);
   const [recursiveLayers, setRecursiveLayers] = useState<CompassRecursiveLayer[]>([]);
   const [recursiveAnswer, setRecursiveAnswer] = useState("");
-  const [extraReflection, setExtraReflection] = useState("");
 const [compassMirrorOutput, setCompassMirrorOutput] = useState("");
 const [areaMirrorOutput, setAreaMirrorOutput] = useState("");
 
 const [possibilityAnswers, setPossibilityAnswers] = useState<string[]>([]);
 const [possibilityAnswer, setPossibilityAnswer] = useState("");
 
-  const [resistanceAnswer, setResistanceAnswer] = useState("");
-  const [resistanceMap, setResistanceMap] =
-    useState<CompassResistanceMap | null>(null);
-  const [proposedStep, setProposedStep] = useState("");
-  const [executionFeeling, setExecutionFeeling] = useState("");
-  const [finalStep, setFinalStep] = useState("");
   const [discussionInput, setDiscussionInput] = useState("");
   const [discussionMessages, setDiscussionMessages] =
     useState<CompassDiscussionMessage[]>([]);
@@ -159,10 +135,6 @@ const possibilityMirror = useMemo(
   [selectedArea, possibilityAnswers],
 );
 
-  const resonanceBridge = useMemo(
-    () => evaluateResonanceBridge(areaResponses),
-    [areaResponses],
-  );
 
   const selectedAreaLabel = selectedArea
     ? AREA_LABELS[selectedArea]
@@ -287,10 +259,7 @@ const possibilityMirror = useMemo(
           areaResponses,
           recursiveLayers,
           possibilityAnswers,
-          resistanceMap,
           discussionMessages,
-          proposedStep,
-          finalStep,
         }),
       }).catch(() => {});
     }, 700);
@@ -304,10 +273,7 @@ const possibilityMirror = useMemo(
     areaResponses,
     recursiveLayers,
     possibilityAnswers,
-    resistanceMap,
     discussionMessages,
-    proposedStep,
-    finalStep,
   ]);
 
   function pauseThen(
@@ -383,29 +349,13 @@ const possibilityMirror = useMemo(
   }
 
   if (phase === "possibility_mirror") {
+    const previousAnswer = possibilityAnswers[possibilityAnswers.length - 1] ?? "";
+    setPossibilityAnswers((current) => current.slice(0, -1));
+    setPossibilityAnswer(previousAnswer);
     setPhase("possibility");
     return;
   }
 
-  if (phase === "resistance") {
-    setPhase("possibility_mirror");
-    return;
-  }
-
-  if (phase === "discussion") {
-    // Discussion owns its Map as a nested view. Leaving the Map must never
-    // rewind the completed reflection or regenerate earlier Compass stages.
-    return;
-  }
-
-  if (phase === "execution_check") {
-    setPhase("discussion");
-    return;
-  }
-
-  if (phase === "complete") {
-    setPhase("execution_check");
-  }
 }
 
   function beginNewSession() {
@@ -430,14 +380,8 @@ fetch("/api/compass/session", {
     setSelectedArea(null);
     setRecursiveLayers([]);
     setRecursiveAnswer("");
-    setExtraReflection("");
 setPossibilityAnswers([]);
 setPossibilityAnswer("");
-setResistanceAnswer("");
-    setResistanceMap(null);
-    setProposedStep("");
-    setExecutionFeeling("");
-    setFinalStep("");
     setDiscussionInput("");
     setDiscussionMessages([]);
     setPhase("intro");
@@ -463,9 +407,6 @@ setResistanceAnswer("");
     setRecursiveLayers(restoredRecursiveLayers);
 setPossibilityAnswers(toArray<string>(savedSession.possibility_answers));
     setDiscussionMessages(restoredMessages);
-    setResistanceMap(toObject<CompassResistanceMap>(savedSession.resistance_map));
-    setProposedStep(savedSession.proposed_step ?? "");
-    setFinalStep(savedSession.final_step ?? "");
 
     const restoredArea = isCompassGoalArea(savedSession.selected_area)
       ? savedSession.selected_area
@@ -605,7 +546,7 @@ async function generateCompassMirror(
 
     if (!decision.advanceLayer || !decision.substantiveAnswer) return;
 
-    if (recursiveLayers.length >= 7) {
+    if (recursiveLayers.length >= COMPASS_DESCENT_LAYER_COUNT) {
       setPhase("core_reflection");
       return;
     }
@@ -620,7 +561,7 @@ async function generateCompassMirror(
 
     setRecursiveLayers(updated);
 
-    if (updated.length < 7) {
+    if (updated.length < COMPASS_DESCENT_LAYER_COUNT) {
       pauseThen(() => setPhase("depth"), {
         showAnalyzing: false,
       });
@@ -634,77 +575,44 @@ async function generateCompassMirror(
   }
 
 function submitPossibilityAnswer() {
-  if (!possibilityAnswer.trim()) return;
+  const participantAnswer = possibilityAnswer.trim();
+  if (!participantAnswer) return;
 
   setHasStarted(true);
 
-  const updated = [
-    ...possibilityAnswers,
-    possibilityAnswer,
-  ];
+  const updated = [...possibilityAnswers, participantAnswer];
 
   setPossibilityAnswers(updated);
   setPossibilityAnswer("");
 
-  if (updated.length < 4) {
-  pauseThen(() => setPhase("possibility"));
-  return;
-}
-
-setDiscussionMessages([
-  {
-    role: "compass",
-    content: possibilityMirror,
-  },
-  {
-    role: "compass",
-    content: "What tends to interrupt movement toward this most often?",
-  },
-]);
-
-pauseThen(() => setPhase("discussion"));
-}
-
-  function submitResistance() {
-    if (!resistanceAnswer.trim()) return;
-
-    setHasStarted(true);
-
-    const mapped = mapResistance({ answer: resistanceAnswer });
-    setResistanceMap(mapped);
-
-const redirect = evaluatePriorityRedirect({
-  selectedArea,
-  areaResponses,
-  recursiveAnswers: recursiveLayers.map((layer) => layer.answer),
-  resistanceAnswer,
-});
-
-if (redirect.shouldRedirect && redirect.suggestedArea) {
-  setSelectedArea(redirect.suggestedArea);
-}
-
-    const step = generateNextStep({
-      goal: selectedAreaLabel,
-      resistance: mapped,
-      execution: null,
+  if (updated.length < COMPASS_POSSIBILITY_STEP_COUNT) {
+    pauseThen(() => setPhase("possibility"), {
+      showAnalyzing: false,
     });
-
-    setProposedStep(step);
-
-    setDiscussionMessages([
-  {
-    role: "compass",
-    content: possibilityMirror,
-  },
-  {
-    role: "compass",
-    content: `What tends to interrupt movement toward this most often?`,
-  },
-]);
-
-pauseThen(() => setPhase("discussion"));
+    return;
   }
+
+  pauseThen(() => setPhase("possibility_mirror"), {
+    showAnalyzing: false,
+  });
+}
+
+function beginCompletedReality() {
+  setDiscussionMessages([
+    {
+      role: "compass",
+      content: "This has already happened. What is now true in observable terms?",
+    },
+  ]);
+  setPhase("discussion");
+}
+
+function revisePossibilityChoice() {
+  const previousAnswer = possibilityAnswers[possibilityAnswers.length - 1] ?? "";
+  setPossibilityAnswers((current) => current.slice(0, -1));
+  setPossibilityAnswer(previousAnswer);
+  setPhase("possibility");
+}
 
   async function submitDiscussionMessage() {
   if (!discussionInput.trim()) return;
@@ -781,6 +689,15 @@ pauseThen(() => setPhase("discussion"));
                 .join("\n\n"),
             },
             {
+              label: "Possibility course",
+              content: possibilityAnswers
+                .map(
+                  (item, index) =>
+                    `Step ${index + 1}\n${item}`,
+                )
+                .join("\n\n"),
+            },
+            {
               label: "Compass Mirror",
               content:
                 compassMirrorOutput ||
@@ -797,7 +714,7 @@ pauseThen(() => setPhase("discussion"));
       data?.ok &&
       typeof data?.result?.reply === "string"
         ? data.result.reply
-        : "Compass could not clearly identify the next thing to examine. Say the most important part again.";
+        : "Compass hit a processing pause. Your words are saved; continue when you are ready.";
 
     setDiscussionMessages([
       ...nextMessages,
@@ -817,72 +734,10 @@ pauseThen(() => setPhase("discussion"));
       {
         role: "compass",
         content:
-          "Compass could not clearly identify the next thing to examine. Say the most important part again.",
+          "Compass hit a processing pause. Your words are saved; continue when you are ready.",
       },
     ]);
   }
-}
-
-async function completeCompassProcess() {
-  setHasStarted(true);
-
-  try {
-    const response = await fetch("/api/compass/session", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        phase: "complete",
-        selectedArea,
-        areaResponses,
-        recursiveLayers,
-        possibilityAnswers,
-        resistanceMap,
-        discussionMessages,
-        proposedStep,
-        finalStep,
-      }),
-    });
-
-    return response.ok;
-  } catch {
-    return false;
-  }
-}
-
-  function moveToExecutionCheck() {
-  setHasStarted(true);
-
-  const lastParticipantMessage = [...discussionMessages]
-    .reverse()
-    .find((message) => message.role === "participant");
-
-  setProposedStep(
-    lastParticipantMessage?.content ||
-      proposedStep ||
-      "Choose one small movement that can be completed next.",
-  );
-
-  setExecutionFeeling(
-    lastParticipantMessage?.content ||
-      proposedStep ||
-      "",
-  );
-
-  pauseThen(() => setPhase("execution_check"), {
-    showAnalyzing: false,
-  });
-}     
-
-  function submitExecutionFeeling() {
-  if (!executionFeeling.trim()) return;
-
-  setHasStarted(true);
-
-  setFinalStep(executionFeeling.trim());
-
-  pauseThen(() => setPhase("complete"));
 }
 
   if (isRestoring) {
@@ -1086,48 +941,38 @@ description=""
 
           {phase === "possibility_mirror" && (
             <CompassCard
-              title="Compass reflection"
+              title="Your chosen direction"
               description={possibilityMirror}
             >
               <button
-                onClick={() => pauseThen(() => setPhase("resistance"))}
+                type="button"
+                onClick={beginCompletedReality}
                 className="primary-button"
               >
-                Continue
+                Yes — describe the completed reality
+              </button>
+              <button
+                type="button"
+                onClick={revisePossibilityChoice}
+                className="secondary-button"
+              >
+                Change my chosen possibility
               </button>
             </CompassCard>
           )}
 
           {phase === "core_reflection" && (
             <CompassCoreReflection
-  reflection={compassMirrorOutput || coreReflection.reflection}
-  areaResponses={areaResponses}
-  selectedArea={selectedArea}
-  recursiveLayers={recursiveLayers}
-  extraReflection={extraReflection}
-  onExtraReflectionChange={setExtraReflection}
-  onContinue={(savedMirror) => {
-    const mirrorText =
-      savedMirror || compassMirrorOutput || coreReflection.reflection;
-
-    setDiscussionMessages([
-      {
-        role: "compass",
-        content: mirrorText,
-      },
-    ]);
-
-    setPhase("discussion");
-  }}
-/>
-          )}
-
-          {phase === "resistance" && (
-            <CompassResistanceFlow
-              selectedAreaLabel={selectedAreaLabel}
-              resistanceAnswer={resistanceAnswer}
-              onResistanceChange={setResistanceAnswer}
-              onSubmitResistance={submitResistance}
+              reflection={compassMirrorOutput || coreReflection.reflection}
+              areaResponses={areaResponses}
+              selectedArea={selectedArea}
+              recursiveLayers={recursiveLayers}
+              onContinue={(savedMirror) => {
+                setCompassMirrorOutput(
+                  savedMirror || compassMirrorOutput || coreReflection.reflection,
+                );
+                setPhase("possibility");
+              }}
             />
           )}
 
@@ -1137,29 +982,10 @@ description=""
               discussionInput={discussionInput}
               onDiscussionInputChange={setDiscussionInput}
               onSend={submitDiscussionMessage}
-              onReady={moveToExecutionCheck}
             />
           )}
 
-          {phase === "execution_check" && (
-            <CompassExecutionCheck
-              executionFeeling={executionFeeling}
-              onExecutionFeelingChange={setExecutionFeeling}
-              onFinalize={submitExecutionFeeling}
-            />
-          )}
 
-          {phase === "complete" && (
-            <CompassComplete
-  finalStep={finalStep}
-  resonanceReflection={
-    resonanceBridge.eligible ? resonanceBridge.reflection : null
-  }
-  resonanceCtaHref={resonanceBridge.ctaHref}
-  resonanceCtaLabel={resonanceBridge.ctaLabel}
-  onComplete={completeCompassProcess}
-/>
-          )}
           </div>
         </div>
       </section>
@@ -1278,26 +1104,6 @@ description=""
   );
 }
 
-function calculateTypingDelay(
-  response: string,
-): number {
-  const length = response.length
-
-  if (length < 120) {
-    return 1800
-  }
-
-  if (length < 260) {
-    return 2600
-  }
-
-  if (length < 420) {
-    return 3400
-  }
-
-  return 4200
-}
-
 function normalizePhase(value: string | null | undefined): CompassPhase {
   const allowed: CompassPhase[] = [
     "intro",
@@ -1307,13 +1113,16 @@ function normalizePhase(value: string | null | undefined): CompassPhase {
     "depth_intro",
     "depth",
     "core_reflection",
-"possibility",
-"possibility_mirror",
-    "resistance",
+    "possibility",
+    "possibility_mirror",
     "discussion",
   ];
 
-  if (value === "execution_check" || value === "complete") {
+  if (
+    value === "resistance" ||
+    value === "execution_check" ||
+    value === "complete"
+  ) {
     return "discussion";
   }
 
@@ -1341,10 +1150,3 @@ function toArray<T>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
 }
 
-function toObject<T>(value: unknown): T | null {
-  if (value && typeof value === "object" && !Array.isArray(value)) {
-    return value as T;
-  }
-
-  return null;
-}
