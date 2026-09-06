@@ -19,16 +19,12 @@ export function CompassCoreReflection({
   areaResponses,
   selectedArea,
   recursiveLayers,
-  extraReflection,
-  onExtraReflectionChange,
   onContinue,
 }: {
   reflection: string;
   areaResponses: CompassAreaResponse[];
   selectedArea: CompassGoalArea | null;
   recursiveLayers: CompassRecursiveLayer[];
-  extraReflection: string;
-  onExtraReflectionChange: (value: string) => void;
   onContinue: (savedMirror: string) => void;
 }) {
   const [savedCoreMirror, setSavedCoreMirror] = useState<string | null>(null);
