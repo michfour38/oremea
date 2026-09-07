@@ -17,8 +17,8 @@ const products = [
     description:
       "A private seven-day room with daily reflections, Daily Mirrors, and a Closing Mirror that reads across the full visit.",
     bestFor: "One relational territory you want to stay with across seven days.",
-    href: "/resonance",
-    action: "Enter Resonance",
+    href: "/resonance-rooms",
+    action: "Choose a Resonance room",
   },
   {
     name: "Compass",
