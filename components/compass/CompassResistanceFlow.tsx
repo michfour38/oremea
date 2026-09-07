@@ -28,7 +28,6 @@ export function CompassCoreReflection({
   onContinue: (savedMirror: string) => void;
 }) {
   const [savedCoreMirror, setSavedCoreMirror] = useState<string | null>(null);
-  const [mirrorChecked, setMirrorChecked] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,7 +75,7 @@ export function CompassCoreReflection({
       } catch (error) {
         console.error("Compass Core Mirror regeneration failed:", error);
       } finally {
-        if (!cancelled) setMirrorChecked(true);
+        // The participant-written fallback remains available if generation fails.
       }
     }
 
