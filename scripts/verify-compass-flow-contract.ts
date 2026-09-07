@@ -257,7 +257,7 @@ assert.match(
 for (const [path, required] of [
   ["middleware.ts", "rewriteCompassPath"],
   ["app/compass/access/page.tsx", 'href="/begin"'],
-  ["src/lib/compass/compass-commerce.ts", "COMPASS_SUBSCRIPTION_CHECKOUT_URL"],
+  ["src/lib/compass/compass-commerce.ts", "isCompassSubscriptionFulfillmentConfigured"],
   ["app/compass/archive/page.tsx", "CompassArchiveWheel"],
   ["app/compass/archive/session/[id]/page.tsx", "canRestoreToMap={access.active}"],
   ["app/compass/map/page.tsx", "CompassMapWorkspace"],
