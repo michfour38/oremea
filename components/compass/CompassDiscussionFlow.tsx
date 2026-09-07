@@ -635,8 +635,9 @@ export function CompassDiscussionFlow({
         </section>
 
         <p className="text-sm leading-7 text-zinc-400">
-          No check-in is required. If reality changes and you choose to return,
-          Compass will begin with what actually happened.
+          No check-in is scheduled or required. If reality changes and you choose
+          to return, this resolution and movement will sit beside what actually
+          happened — as evidence, not an obligation.
         </p>
 
         <button
