@@ -11,9 +11,6 @@ import {
 import { CompassCard } from "./CompassCard";
 
 const BODY_TEXT = "text-zinc-400";
-const MIRROR_UNAVAILABLE =
-  "Compass could not complete this reflection yet. Return to your answers and try again.";
-
 const AREA_LABELS: Record<CompassGoalArea, string> = {
   relationships: "Relationships",
   income: "Income",
@@ -44,7 +41,6 @@ export function CompassPriorityFlow({
 }) {
   const isAreaMirror = !showAreaChoices && title === "What stands out";
   const [savedAreaMirror, setSavedAreaMirror] = useState<string | null>(null);
-  const [mirrorChecked, setMirrorChecked] = useState(!isAreaMirror);
 
   useEffect(() => {
     if (!isAreaMirror) return;
@@ -64,10 +60,7 @@ export function CompassPriorityFlow({
             : null,
         );
       })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setMirrorChecked(true);
-      });
+      .catch(() => {});
 
     return () => {
       cancelled = true;
@@ -78,7 +71,7 @@ export function CompassPriorityFlow({
   const displayDescription = showAreaChoices
     ? "You have named several things that matter. Choose the area you want Compass to follow more deeply."
     : isAreaMirror
-      ? savedAreaMirror ?? (mirrorChecked ? MIRROR_UNAVAILABLE : "Restoring your reflection...")
+      ? savedAreaMirror ?? description
       : description;
 
   return (
@@ -111,6 +104,7 @@ export function CompassPriorityFlow({
           {COMPASS_AREA_QUESTIONS.map((item) => (
             <button
               key={item.area}
+              type="button"
               onClick={() => onChooseArea(item.area)}
               className="selection-button"
             >
@@ -121,7 +115,7 @@ export function CompassPriorityFlow({
       ) : null}
 
       {onContinue ? (
-        <button onClick={onContinue} className="primary-button">
+        <button type="button" onClick={onContinue} className="primary-button">
           Continue
         </button>
       ) : null}
