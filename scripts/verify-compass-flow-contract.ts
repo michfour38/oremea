@@ -174,6 +174,11 @@ assert.match(
   /savedCoreMirror \|\| fallbackReflection \|\| MIRROR_UNAVAILABLE/,
   "Core Reflection must preserve a participant-evidence fallback instead of trapping the participant in a generation retry.",
 )
+assert.match(
+  read("components/compass/CompassResistanceFlow.tsx"),
+  /const acceptedMirror = savedCoreMirror \|\| fallbackReflection;[\s\S]*onContinue\(acceptedMirror\)/,
+  "Core Reflection Continue must accept the participant-grounded fallback instead of becoming an enabled no-op.",
+)
 
 assert.match(
   stageCopy,
