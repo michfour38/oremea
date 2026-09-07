@@ -262,7 +262,9 @@ export const RESONANCE_ROOM_MARKETING = Object.values(
   )
   .sort((left, right) => left.weekNumber - right.weekNumber);
 
-export function getOremeaMarketingProduct(id: OremeaProductTruthId) {
+export function getOremeaMarketingProduct<Id extends OremeaProductTruthId>(
+  id: Id,
+) {
   return {
     ...OREMEA_PRODUCT_TRUTH[id],
     marketing: OREMEA_PUBLIC_PRODUCT_MARKETING[id],
