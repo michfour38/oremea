@@ -96,7 +96,7 @@ export function CurrentPanel() {
           The Current
         </h1>
         <p className="mt-5 max-w-2xl text-base leading-8 text-zinc-300 md:text-lg">
-          The shared Oremea member space. Entry is offered through participation in Oremea and remains a separate choice.
+          Private self-witnessing while a new one-to-one relationship is forming. Entry is invitation-led through genuine Oremea participation and remains a separate choice.
         </p>
 
         {loading ? (
@@ -112,7 +112,7 @@ export function CurrentPanel() {
               You are in The Current.
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-7 text-zinc-300">
-              Your Current membership is active. Private Oremea product conversations remain private unless you deliberately choose to share something yourself.
+              Your Current membership is active. This remains private self-witnessing: it does not judge the connection, rank compatibility or decide what the relationship means.
             </p>
             {status.current.accessUrl ? (
               <a
