@@ -28,11 +28,11 @@ const AREA_LABELS: Record<CompassGoalArea, string> = {
 export const COMPASS_POSSIBILITY_QUESTIONS = [
   (area: string) =>
     `What resource would make movement in ${area} easier?`,
-  () =>
+  (_area: string) =>
     "What strength, ability, or support do you already have that can help?",
-  () =>
+  (_area: string) =>
     "From here, what real possibilities can you see?",
-  () =>
+  (_area: string) =>
     "Which possibility are you choosing to build?",
 ] as const
 
