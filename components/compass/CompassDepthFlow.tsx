@@ -35,7 +35,8 @@ export function CompassDepthIntro({
     >
       <p className={`text-sm leading-relaxed ${BODY_TEXT}`}>
         Across seven layers, Compass keeps asking why to follow what matters
-        beneath your first answer.
+        beneath your first answer. Possibility, planning, and action wait until
+        all seven layers are complete.
       </p>
 
       <button onClick={onBegin} className="primary-button">
