@@ -158,6 +158,22 @@ assert.doesNotMatch(
   "The live flow must not auto-label resistance, redirect the participant's chosen area, or auto-promote another product.",
 )
 
+assert.doesNotMatch(
+  discussion,
+  /export function CompassComplete|resonanceCtaHref|Explore Resonance/,
+  "Dead automatic promotion UI must not remain available to re-enter the Compass flow.",
+)
+assert.doesNotMatch(
+  read("components/compass/CompassResistanceFlow.tsx"),
+  /export function CompassResistanceFlow/,
+  "The removed resistance phase must not remain as a callable legacy component.",
+)
+assert.match(
+  read("components/compass/CompassResistanceFlow.tsx"),
+  /savedCoreMirror \|\| fallbackReflection \|\| MIRROR_UNAVAILABLE/,
+  "Core Reflection must preserve a participant-evidence fallback instead of trapping the participant in a generation retry.",
+)
+
 assert.match(
   stageCopy,
   /all seven Why layers[\s\S]*Possibility, planning, and action wait/,
