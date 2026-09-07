@@ -3,7 +3,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import MemberNav from "@/app/(member)/member-nav";
-import { CompassDailyGoals } from "./CompassDailyGoals";
 import { CompassMapWorkspace } from "./CompassMapWorkspace";
 import { getCompassAccessState } from "@/src/lib/compass/compass-access";
 
@@ -34,13 +33,12 @@ export default async function CompassMapPage() {
             What is asking for attention
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-400">
-            Today holds the goals you choose for yourself. The Map below holds
-            what your Compass conversations bring into view. Completed items
-            remain available and can return whenever they become current again.
+            This Map holds what your Compass conversations brought into view.
+            It remains available for review and revision when reality changes;
+            it is not a daily checklist, streak, or accountability routine.
           </p>
         </header>
 
-        <CompassDailyGoals />
         <CompassMapWorkspace />
       </section>
     </main>
