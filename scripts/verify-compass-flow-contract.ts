@@ -103,6 +103,7 @@ for (const participantPhrase of [
 const page = read("app/compass/page.tsx")
 const depth = read("components/compass/CompassDepthFlow.tsx")
 const discussion = read("components/compass/CompassDiscussionFlow.tsx")
+const promptFlow = read("components/compass/CompassPromptFlow.tsx")
 const stageCopy = read("src/lib/compass/session/session-stage-copy.ts")
 const conversationEngine = read("src/lib/el/conversation-engine.ts")
 const endingEngine = read("src/lib/compass/ending/ending-engine.ts")
@@ -230,6 +231,16 @@ assert.match(
   discussion,
   /disabled=\{!discussionInput\.trim\(\) \|\| discussionSending\}/,
   "Continue discussion must not present an enabled no-op button.",
+)
+assert.match(
+  promptFlow,
+  /disabled=\{!value\.trim\(\)\}/,
+  "Every open Compass prompt must disable blank no-op submissions.",
+)
+assert.match(
+  discussion,
+  /disabled=\{!executionFeeling\.trim\(\)\}/,
+  "Movement review must disable blank no-op submissions.",
 )
 assert.match(
   discussion,
