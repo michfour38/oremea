@@ -29,7 +29,12 @@ export function CompassPromptFlow({
         className="compass-textarea"
       />
 
-      <button onClick={onSubmit} className="primary-button">
+      <button
+        type="button"
+        onClick={onSubmit}
+        disabled={!value.trim()}
+        className="primary-button disabled:cursor-not-allowed disabled:opacity-60"
+      >
         {buttonLabel}
       </button>
     </CompassCard>
