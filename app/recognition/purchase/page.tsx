@@ -16,6 +16,29 @@ type Props = {
   }>;
 };
 
+const faq = [
+  {
+    question: "Is Recognition therapy or coaching?",
+    answer:
+      "No. Recognition is a private AI discussion journal. It does not diagnose, treat, coach, provide crisis support or turn the conversation into an action plan.",
+  },
+  {
+    question: "Does Recognition tell me what my thoughts mean?",
+    answer:
+      "No. It can place your own words and distinctions beside one another, but meaning and choices remain yours.",
+  },
+  {
+    question: "Is there a fixed prompt sequence?",
+    answer:
+      "No. You bring whatever has your attention, and Recognition follows one live thread from what you actually say.",
+  },
+  {
+    question: "What happens to my conversation?",
+    answer:
+      "Your continuing private conversation remains available while you have access. You can inspect or remove carried-forward memory, clear remembered excerpts, or delete the conversation and begin again.",
+  },
+] as const;
+
 function CheckoutAction({
   href,
   label,
@@ -63,9 +86,43 @@ export default async function RecognitionPurchasePage(props: Props) {
   const launchPrice = formatRecognitionPrice(RECOGNITION_PRICING.launchPriceCents);
   const regularPrice = formatRecognitionPrice(RECOGNITION_PRICING.regularPriceCents);
   const accessRequired = searchParams?.access === "required";
+  const structuredData = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: "Recognition",
+      description:
+        "A private AI discussion journal for thoughts that need more than a journal page.",
+      url: "https://recognition.oremea.com/",
+      brand: { "@type": "Brand", name: "Oremea" },
+      offers: {
+        "@type": "Offer",
+        url: "https://whop.com/oremea/recognition/",
+        priceCurrency: RECOGNITION_PRICING.currency,
+        price: (RECOGNITION_PRICING.standardPriceCents / 100).toFixed(2),
+        availability: "https://schema.org/InStock",
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faq.map((item) => ({
+        "@type": "Question",
+        name: item.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: item.answer,
+        },
+      })),
+    },
+  ];
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-zinc-950 text-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <div
         className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-40 md:hidden"
         style={{ backgroundImage: "url(/images/mobile/bg-entry.webp)" }}
@@ -76,18 +133,20 @@ export default async function RecognitionPurchasePage(props: Props) {
       />
       <div className="fixed inset-0 z-10 bg-black/70" />
 
-      <section className="relative z-20 mx-auto max-w-3xl px-6 py-12 md:py-16">
-        <header className="mt-12 max-w-2xl">
+      <section className="relative z-20 mx-auto max-w-4xl px-6 py-12 md:py-16">
+        <header className="mt-12 max-w-3xl">
           <p className="text-xs uppercase tracking-[0.3em] text-[#f1dfb4]/70">
-            Recognition
+            Recognition · Help me see myself
           </p>
           <h1 className="mt-4 font-serif text-4xl font-light tracking-tight md:text-6xl">
-            A private AI discussion journal for thoughts that need more than a journal page
+            A private AI discussion journal for thoughts that need more than a
+            journal page
           </h1>
-          <p className="mt-6 text-base leading-8 text-zinc-300">
-            Bring whatever has your attention. Recognition stays with what you
-            actually say, notices distinctions and recurrence, and can bring your
-            own earlier words back when they matter.
+          <p className="mt-6 max-w-2xl text-base leading-8 text-zinc-300">
+            Bring whatever has your attention. Recognition stays close to your
+            own words and one live thread. It can notice distinctions,
+            recurrence and unfinished thought without deciding what any of it
+            means for you.
           </p>
         </header>
 
@@ -99,63 +158,130 @@ export default async function RecognitionPurchasePage(props: Props) {
           </div>
         ) : null}
 
-        <div className="mt-10">
-          <section className="rounded-3xl border border-[#c8a96a]/35 bg-black/45 p-6 md:p-8">
-            <div className="flex flex-wrap items-end justify-between gap-5">
-              <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-[#c8a96a]">
-                  Monthly access
-                </p>
-                <h2 className="mt-2 font-serif text-2xl text-zinc-100">
-                  Ongoing Recognition
-                </h2>
-              </div>
-              <div className="text-right">
-                {regularPrice !== launchPrice ? (
-                  <p className="text-sm text-zinc-500 line-through">
-                    {regularPrice}/month
-                  </p>
-                ) : null}
-                <p className="mt-1 text-3xl text-[#f1dfb4]">
-                  {launchPrice}<span className="ml-1 text-sm text-zinc-500">/month</span>
-                </p>
-              </div>
+        <section className="mt-10 rounded-3xl border border-[#c8a96a]/35 bg-black/45 p-6 md:p-8">
+          <div className="flex flex-wrap items-end justify-between gap-5">
+            <div>
+              <p className="text-xs uppercase tracking-[0.22em] text-[#c8a96a]">
+                Monthly access
+              </p>
+              <h2 className="mt-2 font-serif text-2xl text-zinc-100">
+                Ongoing Recognition
+              </h2>
             </div>
+            <div className="text-right">
+              {regularPrice !== launchPrice ? (
+                <p className="text-sm text-zinc-500 line-through">
+                  {regularPrice}/month
+                </p>
+              ) : null}
+              <p className="mt-1 text-3xl text-[#f1dfb4]">
+                {launchPrice}
+                <span className="ml-1 text-sm text-zinc-500">/month</span>
+              </p>
+            </div>
+          </div>
 
-            <p className="mt-5 text-sm leading-7 text-zinc-300">
-              There is no fixed question sequence and no required destination.
-              Recognition is one continuing private conversation: return whenever
-              something needs somewhere to continue, and the conversation can bring
-              forward your own earlier evidence without treating old AI output as
-              truth.
-            </p>
-            <p className="mt-4 text-sm leading-7 text-zinc-400">
-              Your full private conversation remains available to you. You can
-              inspect or remove carried-forward memory, clear remembered excerpts,
-              or delete the ongoing conversation and start fresh without affecting
-              your access.
-            </p>
-            <p className="mt-4 text-sm leading-7 text-zinc-400">
-              Subscribe with an email on the Oremea account you will use for
-              Recognition. Active membership keeps the ongoing conversation available.
-            </p>
+          <p className="mt-5 text-sm leading-7 text-zinc-300">
+            There is no fixed question sequence and no required destination.
+            Return whenever a thought needs somewhere to continue. Earlier
+            participant-written evidence can return when it materially clarifies
+            recurrence, correction, contrast or a distinction you are holding.
+          </p>
+          <p className="mt-4 text-sm leading-7 text-zinc-400">
+            Your full private conversation remains available to you. You can
+            inspect or remove carried-forward memory, clear remembered excerpts,
+            or delete the conversation and start fresh without affecting access.
+          </p>
 
-            <div className="mt-7 flex flex-wrap items-center gap-4">
-              <CheckoutAction
-                href={subscriptionCheckout}
-                label={`Open Recognition · ${launchPrice}/month`}
-              />
-              <Link
-                href="/sign-in?redirect_url=%2Fbegin"
-                className="text-sm text-zinc-400 underline underline-offset-4 transition hover:text-[#f1dfb4]"
+          <div className="mt-7 flex flex-wrap items-center gap-4">
+            <CheckoutAction
+              href={subscriptionCheckout}
+              label={`Open Recognition · ${launchPrice}/month`}
+            />
+            <Link
+              href="/sign-in?redirect_url=%2Fbegin"
+              className="text-sm text-zinc-400 underline underline-offset-4 transition hover:text-[#f1dfb4]"
+            >
+              Already have access? Sign in
+            </Link>
+          </div>
+        </section>
+
+        <section className="mt-12">
+          <h2 className="font-serif text-3xl text-white">
+            How Recognition works
+          </h2>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {[
+              [
+                "Bring one live thought",
+                "Begin with whatever has your attention, in your own language.",
+              ],
+              [
+                "Stay with the evidence",
+                "Recognition can question an absolute or place two of your statements beside one another.",
+              ],
+              [
+                "Keep authorship",
+                "A conversation may end with one thing becoming visible. Meaning, choice and action remain yours.",
+              ],
+            ].map(([heading, copy]) => (
+              <article
+                key={heading}
+                className="rounded-2xl border border-white/10 bg-black/35 p-5"
               >
-                Already have access? Sign in
-              </Link>
-            </div>
-          </section>
-        </div>
+                <h3 className="text-base text-[#f1dfb4]">{heading}</h3>
+                <p className="mt-3 text-sm leading-7 text-zinc-400">{copy}</p>
+              </article>
+            ))}
+          </div>
+        </section>
 
-        <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+        <section className="mt-12 grid gap-5 md:grid-cols-2">
+          <div className="rounded-3xl border border-white/10 bg-black/35 p-6">
+            <h2 className="font-serif text-2xl text-white">
+              Recognition may fit when
+            </h2>
+            <ul className="mt-5 space-y-3 text-sm leading-7 text-zinc-300">
+              <li>— Writing alone keeps circling the same thought.</li>
+              <li>— A distinction is present but not yet clear.</li>
+              <li>— You want reflection without advice or a prescribed route.</li>
+            </ul>
+          </div>
+          <div className="rounded-3xl border border-white/10 bg-black/35 p-6">
+            <h2 className="font-serif text-2xl text-white">
+              What it will not become
+            </h2>
+            <ul className="mt-5 space-y-3 text-sm leading-7 text-zinc-300">
+              <li>— Therapy, coaching or crisis support.</li>
+              <li>— A fixed prompt sequence or personality verdict.</li>
+              <li>— An action plan, streak or accountability loop.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section className="mt-12">
+          <h2 className="font-serif text-3xl text-white">
+            Recognition questions
+          </h2>
+          <div className="mt-6 space-y-4">
+            {faq.map((item) => (
+              <details
+                key={item.question}
+                className="rounded-2xl border border-white/10 bg-black/35 p-5"
+              >
+                <summary className="cursor-pointer text-sm text-[#f1dfb4]">
+                  {item.question}
+                </summary>
+                <p className="mt-4 text-sm leading-7 text-zinc-400">
+                  {item.answer}
+                </p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
           <p className="leading-7 text-zinc-500">
             Prices are shown and charged in US dollars
           </p>
