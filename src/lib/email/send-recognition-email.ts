@@ -62,11 +62,11 @@ export async function sendRecognitionEmail({
 
             <div style="margin-top:48px;padding:32px;border:1px solid #3A2F1C;background:#14110B;border-radius:24px;">
               <p style="font-size:30px;color:#EAEAEA;margin:0;">
-                You already recognise the pattern.
+                One thing became visible.
               </p>
 
               <p style="margin-top:20px;font-size:22px;line-height:1.8;color:#BFBFBF;">
-                What you haven’t done yet… is stay with it long enough to change it.
+                You do not have to turn it into anything today. Meaning and choices remain yours.
               </p>
 
               <p style="margin-top:24px;font-size:18px;line-height:1.8;color:#BFBFBF;">
@@ -75,12 +75,6 @@ export async function sendRecognitionEmail({
 
               <a href="${archiveLink}" style="display:inline-block;margin-top:18px;padding:12px 22px;border:1px solid #3A2F1C;border-radius:999px;color:#BFBFBF;text-decoration:none;font-size:16px;">
                 Open your Recognition Archive
-              </a>
-
-              <br />
-
-              <a href="https://resonance.oremea.com" style="display:inline-block;margin-top:28px;padding:14px 26px;border:1px solid #C6A96B;border-radius:999px;color:#C6A96B;text-decoration:none;font-size:18px;">
-                Continue to Resonance
               </a>
             </div>
           </div>
