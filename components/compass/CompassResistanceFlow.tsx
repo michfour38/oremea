@@ -90,8 +90,9 @@ export function CompassCoreReflection({
   const mirrorAvailable = Boolean(savedCoreMirror || fallbackReflection);
 
   function continueWithSavedMirror() {
-    if (!savedCoreMirror) return;
-    onContinue(savedCoreMirror);
+    const acceptedMirror = savedCoreMirror || fallbackReflection;
+    if (!acceptedMirror) return;
+    onContinue(acceptedMirror);
   }
 
   return (
