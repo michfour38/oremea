@@ -7,6 +7,10 @@ import { createEmptyCompassEndingState } from "@/src/lib/compass/ending/ending-t
 import { getCompassAccessState } from "@/src/lib/compass/compass-access";
 import { validateCompassCompletion } from "@/src/lib/compass/session/completion-contract";
 import {
+  buildCompassReturnOpening,
+  carryCompassEndingStateForReturn,
+} from "@/src/lib/compass/session/return-contract";
+import {
   getActiveCompassSession,
   saveCompassSession,
 } from "@/src/lib/compass/session/session-persistence";
@@ -112,12 +116,31 @@ export async function POST(request: Request) {
         );
       }
 
+      const returningFromCompletedRun = sourceSession.status === "complete";
+      const previousResolution = returningFromCompletedRun
+        ? sourceSession.resolution_text
+        : null;
+      const previousMovement = returningFromCompletedRun
+        ? sourceSession.final_step
+        : null;
       const discussionMessages = [
         {
           role: "compass",
-          content: "What has your attention now?",
+          content: buildCompassReturnOpening({
+            resolutionText: previousResolution,
+            chosenMovement: previousMovement,
+          }),
         },
       ];
+      const now = new Date();
+      const carriedEnding = returningFromCompletedRun
+        ? carryCompassEndingStateForReturn({
+            storedState: sourceSession.detected_patterns,
+            chosenMovement: previousMovement,
+            movementId: crypto.randomUUID(),
+            now: now.toISOString(),
+          })
+        : createEmptyCompassEndingState(null);
 
       const session = await prisma.$transaction(async (transaction) => {
         if (sourceSession.status === "active") {
@@ -140,9 +163,7 @@ export async function POST(request: Request) {
             discussion_messages: discussionMessages,
             proposed_step: null,
             final_step: null,
-            detected_patterns: createEmptyCompassEndingState(
-              null,
-            ) as Prisma.InputJsonValue,
+            detected_patterns: carriedEnding as Prisma.InputJsonValue,
           },
         });
       });
