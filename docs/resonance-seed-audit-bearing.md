@@ -6,10 +6,10 @@ Internal working record for later cross-room comparison. This file does not driv
 
 - Room: The Bearing
 - Theme: Values, priorities, trade-offs, and integrity
-- Seed job: collect what the participant's choices, allocations, trade-offs, decision boundaries, and corrections show about what matters now; do not tell them what they value or what the right hierarchy should be
+- Seed job: collect what the participant's choices, allocations, trade-offs, decision boundaries, and words/actions show about what matters now; do not tell them what they value or what the right hierarchy should be
 - Voice: plain, human, concrete, first-read clear
-- Movement: notice what choices show → see what gets priority → observe pressure decisions → locate decision ownership → compare words and actions → correct drift → name a present direction
-- Evidence preference: recent choices, actual allocations of time/attention/resources, explicit trade-offs, decision examples, participant-stated priorities, observable follow-through, chosen corrections
+- Movement: notice what choices show → see what gets priority → observe pressure decisions → locate decision ownership → compare words and actions → observe shifting priorities → name a present bearing
+- Evidence preference: recent choices, actual allocations of time/attention/resources, explicit trade-offs, decision examples, participant-stated priorities, observable follow-through, and accepted costs
 - Answer tolerance: a useful seed must still work with short answers, uncertainty, `nothing`, `both`, `depends`, humour, contradiction, correction, or rejection of the premise
 - Interpretation boundary: do not treat one choice as proof of identity, moral character, true values, hidden motive, selfishness, virtue, courage, fear, integrity, or lack of integrity
 - First-read clarity boundary: values language must stay attached to an ordinary choice, cost, priority, rule, decision, or action. If a participant has to decode `authority`, `alignment`, `congruence`, `orientation`, or `trade-off` before answering, rewrite it in lived speech.
@@ -36,8 +36,8 @@ Potential overlap is intentional only when the evidence target differs:
 | 2 | Priority in real allocation | spare capacity destination, what gets less, deliberate delay, named costs, priority/evidence comparison |
 | 3 | Choices under pressure | fast-choice priority, short-term/long-term contrast, slowing conditions, accepted cost, pressured-decision review |
 | 4 | Decision ownership | own decisions, approval-seeking if present, influence without final say, mutual authority, live decision map |
-| 5 | Words and actions | existing match, repeated exceptions, protecting standard, smallest correction, current mismatch map |
-| 6 | Drift and realignment | early drift cue, repair, unrealistic commitment, visible next action, review plan |
+| 5 | Words and actions | existing match, repeated exceptions, protecting standard, lived priority, current mismatch map |
+| 6 | Shifting priorities | early shift cue, accepted cost, unrealistic commitment, current action evidence, priority-shift map |
 | 7 | Integration | clearer priority, deliberate reduction elsewhere, available decision, future priority check, participant-authored bearing |
 
 ## Prompt-level audit
@@ -67,13 +67,13 @@ Potential overlap is intentional only when the evidence target differs:
 | D5.1 | Thread | Where in your life are you already doing what you say matters to you? | existing words/actions match | stated value / actual behaviour | `integrity`, `evidence`, `match` |
 | D5.2 | Thread | Is there a promise, rule, or agreement you keep making exceptions to? What keeps happening? | repeated exception against stated commitment if present | rule / exception | `commitment`, `exception`, `recurrence` |
 | D5.3 | Thread | What simple rule or standard helps you protect something that matters to you? | participant-used protective standard | important thing / supporting rule | `standard`, `priority`, `structure` |
-| D5.4 | Thread | Where your words and actions do not match right now, what is the smallest real correction you could make? | participant-chosen correction | mismatch / correction | `integrity`, `correction`, `choice` |
-| D5.5 | Deeper | Choose one place where what you say matters and what you are doing do not quite match. Write: what matters to me → what I am doing now → what that is producing → what I will do next. | value-behaviour-outcome-correction sequence | stated / lived | `integrity`, `sequence`, `outcome`, `correction` |
+| D5.4 | Thread | Where your words and actions do not match right now, what does the mismatch show is receiving priority in practice? | lived priority visible in mismatch | stated / lived | `integrity`, `priority`, `evidence` |
+| D5.5 | Deeper | Choose one place where what you say matters and what you are doing do not quite match. Write: what I say matters → what I am doing now → what that is producing → what appears to be receiving priority in practice. | stated-action-outcome-priority sequence | stated / lived | `integrity`, `sequence`, `outcome`, `priority` |
 | D6.1 | Thread | What is the first sign that you are starting to move away from something you meant to keep important? | early drift cue | intended direction / drift | `drift`, `cue`, `priority` |
-| D6.2 | Thread | When you act against something that matters to you, what usually needs to be put right afterward? | participant-defined repair after misalignment | action / repair | `repair`, `integrity`, `consequence` |
+| D6.2 | Thread | When a choice costs something that matters to you, how do you tell whether it was a trade-off you accept or a priority you want to reconsider? | participant-owned trade-off evaluation | accepted cost / reconsidered priority | `tradeoff`, `priority`, `consequence` |
 | D6.3 | Thread | Is there a commitment you keep breaking that may need to be changed instead of promised again? | possible mismatch between commitment and realistic follow-through | repeat promise / revise commitment | `commitment`, `revision`, `premise_tolerant` |
-| D6.4 | Thread | What is one action you could take next that would make your actual direction obvious? | visible next action | intention / evidence | `direction`, `action`, `evidence` |
-| D6.5 | Deeper | Choose one area where you keep getting off track. Write: the first sign → what I will do when I notice it → what needs to be repaired if I miss it → when I will check again. | drift-response-repair-review plan | drift / correction | `realignment`, `cue`, `repair`, `review` |
+| D6.4 | Thread | What current action already makes your actual direction visible, even if your stated intention points somewhere else? | present behaviour as direction evidence | stated intention / current action | `direction`, `action`, `evidence` |
+| D6.5 | Deeper | Choose one area where your priorities keep shifting. Write: what I said mattered → the first sign it received less → what received more → the cost → what this shows about my priority now. | priority-shift evidence chain | stated / allocated | `priority`, `sequence`, `tradeoff`, `evidence` |
 | D7.1 | Thread | Looking across this week, which things matter more clearly to you now? | participant-selected clearer priorities | earlier uncertainty / present clarity | `integration`, `priority`, `participant_selection` |
 | D7.2 | Thread | What are you now willing to give less time, energy, attention, or resources to so something more important can get more? | deliberate reallocation | less / more | `tradeoff`, `allocation`, `priority` |
 | D7.3 | Thread | What decision feels easier to make now than it did at the start of the week? | newly available decision | before / now | `integration`, `decision`, `change` |
@@ -86,7 +86,7 @@ Potential overlap is intentional only when the evidence target differs:
 - **Mirror / Bearing overlap:** both can examine repeated actions. Mirror asks what pattern repeats and what interaction follows. Bearing asks whether repeated action supports or contradicts what the participant says matters.
 - **Garden / Bearing overlap:** both use time, energy, attention, money/resources, responsibility, and structure. Garden asks whether care/support is workable and how capacity circulates. Bearing asks what receives priority and what gets less as a result.
 - **Bearing centre of gravity:** choices reveal current priority only as evidence for inquiry, not as proof of the participant's identity or `true values`.
-- **Distinct Bearing evidence forms introduced:** competing-priority maps, opportunity cost, short-term/long-term choice contrast, accepted consequence, decision-authority maps, words/actions comparison, repeated-exception review, drift/repair/review plans.
+- **Distinct Bearing evidence forms introduced:** competing-priority maps, opportunity cost, short-term/long-term choice contrast, accepted consequence, decision-authority maps, words/actions comparison, repeated-exception review, and priority-shift evidence.
 - **Watch in later rooms:** attraction, triggers, conflict, and future-design rooms should not use `what matters`, `priority`, or `alignment` as generic depth language. If the real target is what gets chosen, deferred, protected, or given final authority, it probably belongs here.
 
 ## Cross-room comparison fields to retain
