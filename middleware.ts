@@ -303,6 +303,7 @@ const isPublicRoute = createRouteMatcher([
   "/explore(.*)",
   "/oremea(.*)",
   "/compare(.*)",
+  "/resonance-rooms(.*)",
   "/contact(.*)",
   "/api/contact",
   "/reviews(.*)",

@@ -106,6 +106,29 @@ const resonanceRooms = [
   },
 ] as const;
 
+type ResonanceProductTruthId = (typeof resonanceRooms)[number]["id"];
+
+type ResonanceProductTruth = {
+  [Id in ResonanceProductTruthId]: {
+    id: Id;
+    name: string;
+    canonicalUrl: null;
+    canonicalStatus: "unresolved";
+    websiteVisibility: "member_only";
+    releaseStatus: "live";
+    description: string;
+    commercial: typeof resonanceCommercial;
+    commerce: {
+      productId: null;
+      url: string;
+      visibility: "visible";
+      discoverStatus: "live";
+      affiliateStatus: "off";
+    };
+    sourceRefs: readonly string[];
+  };
+};
+
 const resonanceProductTruth = Object.fromEntries(
   resonanceRooms.map((room) => [
     room.id,
@@ -128,7 +151,7 @@ const resonanceProductTruth = Object.fromEntries(
       sourceRefs: ["src/lib/oremea/pricing.ts", room.sourceRef],
     },
   ]),
-);
+) as unknown as ResonanceProductTruth;
 
 export const OREMEA_PRODUCT_TRUTH = {
   recognition: {

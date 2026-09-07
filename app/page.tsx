@@ -46,11 +46,11 @@ const products = [
   },
   {
     name: "Resonance",
-    href: "/resonance",
+    href: "/resonance-rooms",
     active: true,
     short:
       "A private seven-day reflection room that helps you stay with yourself inside one relational territory.",
-    action: "Enter Resonance",
+    action: "Choose a Resonance room",
     full: [
       "Resonance gives you a structured place to notice what happens inside connection across seven days, one teacher at a time.",
       "Each day you respond to the room's current seed questions in your own words. Guiding questions stay inside that teacher and that day's material rather than turning the experience into advice or diagnosis.",

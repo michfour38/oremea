@@ -64,10 +64,10 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
 
                   <div className="mt-4 flex flex-wrap gap-4">
                     <Link
-                      href="https://resonance.oremea.com"
+                      href="/resonance-rooms"
                       className="rounded-full border border-[#b79a63]/25 bg-[#b79a63]/[0.05] px-5 py-2 text-sm text-[#b79a63] transition hover:border-[#b79a63]/55 hover:bg-[#b79a63]/10"
                     >
-                      Enter Resonance
+                      Choose a Resonance room
                     </Link>
                   </div>
                 </div>
@@ -131,10 +131,10 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
 
                 <div className="flex flex-wrap gap-4 pt-2">
                   <Link
-                    href="https://resonance.oremea.com"
+                    href="/resonance-rooms"
                     className="rounded-full border border-[#b79a63]/25 bg-[#b79a63]/[0.05] px-5 py-2 text-sm text-[#b79a63] transition hover:border-[#b79a63]/55 hover:bg-[#b79a63]/10"
                   >
-                    Enter Resonance
+                    Choose a Resonance room
                   </Link>
                 </div>
               </div>
