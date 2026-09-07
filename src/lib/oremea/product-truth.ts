@@ -37,70 +37,80 @@ const resonanceRooms = [
   {
     id: "resonance-hearth",
     name: "Resonance · The Hearth",
-    description: "Begin connection through safety, presence and belonging.",
+    description:
+      "Notice the concrete cues and participation that make belonging more or less available.",
     whopUrl: "https://whop.com/oremea/resonance-hearth/",
     sourceRef: "docs/resonance-seed-audit-hearth.md",
   },
   {
     id: "resonance-mirror",
     name: "Resonance · Mirror",
-    description: "Sharpen relational self-awareness through reflection.",
+    description:
+      "Observe recurring roles, responses and participation without turning recurrence into one explanation.",
     whopUrl: "https://whop.com/oremea/resonance-mirror/",
     sourceRef: "docs/resonance-seed-audit-mirror.md",
   },
   {
     id: "resonance-garden",
     name: "Resonance · Garden",
-    description: "Explore care, reciprocity and emotional tending.",
+    description:
+      "Examine care, capacity, labour, resources, receiving and what remains sustainable.",
     whopUrl: "https://whop.com/oremea/resonance-garden/",
     sourceRef: "docs/resonance-seed-audit-garden.md",
   },
   {
     id: "resonance-bearing",
     name: "Resonance · Bearing",
-    description: "Make values, direction and deeper alignment visible.",
+    description:
+      "Make current priorities visible through choices, allocations and trade-offs without turning orientation into an execution plan.",
     whopUrl: "https://whop.com/oremea/resonance-d7/",
     sourceRef: "docs/resonance-seed-audit-bearing.md",
   },
   {
     id: "resonance-pulse",
     name: "Resonance · Pulse",
-    description: "Explore attraction, aliveness, chemistry and relational rhythm.",
+    description:
+      "Stay close to desire, attraction, interest and relational rhythm without converting feeling into a verdict.",
     whopUrl: "https://whop.com/oremea/resonance-pulse/",
     sourceRef: "docs/resonance-seed-audit-pulse.md",
   },
   {
     id: "resonance-shadow",
     name: "Resonance · Shadow",
-    description: "Bring fear and trigger patterns beneath connection into view.",
+    description:
+      "Notice strong reactions and familiar moves under pressure using participant-supplied evidence.",
     whopUrl: "https://whop.com/oremea/resonance-shadow/",
     sourceRef: "docs/resonance-seed-audit-shadow.md",
   },
   {
     id: "resonance-forge",
     name: "Resonance · Forge",
-    description: "Explore conflict, rupture, honesty, repair and restoration.",
+    description:
+      "Examine conflict, rupture, responsibility, repair and relational distance without inventing another person's motives.",
     whopUrl: "https://whop.com/oremea/resonance-forge/",
     sourceRef: "docs/resonance-seed-audit-forge.md",
   },
   {
     id: "resonance-vision",
     name: "Resonance · Vision",
-    description: "Imagine the future shape of connection consciously and clearly.",
+    description:
+      "Make a possible shared life concrete through rhythms, responsibilities, decisions, resources and real-world tests.",
     whopUrl: "https://whop.com/oremea/resonance-vision/",
     sourceRef: "docs/resonance-seed-audit-vision.md",
   },
   {
     id: "resonance-gathering",
     name: "Resonance · Gathering",
-    description: "Reflect, gather and make meaning of what has emerged.",
+    description:
+      "Test what genuinely connects while allowing unresolved or separate material to remain separate.",
     whopUrl: "https://whop.com/oremea/resonance-gathering/",
     sourceRef: "docs/resonance-seed-audit-gathering.md",
   },
   {
     id: "resonance-becoming",
     name: "Resonance · Becoming",
-    description: "Embody what emerged and carry the movement forward.",
+    description:
+      "Turn chosen understanding into repeatable lived practice, including low-capacity versions and return after a lapse.",
     whopUrl: "https://whop.com/oremea/resonance-becoming/",
     sourceRef: "docs/resonance-seed-audit-becoming.md",
   },

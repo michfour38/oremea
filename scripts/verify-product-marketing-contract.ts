@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 import {
   OREMEA_PUBLIC_PRODUCT_MARKETING,
@@ -90,6 +90,32 @@ assert.match(roomById["resonance-forge"].description, /conflict, rupture, honest
 assert.match(roomById["resonance-vision"].description, /rhythms, responsibilities, decisions, resources and tests/i);
 assert.match(roomById["resonance-gathering"].description, /allowing unresolved or separate material/i);
 assert.match(roomById["resonance-becoming"].description, /low-capacity versions and return after a lapse/i);
+
+const productTruthDescriptions = Object.fromEntries(
+  Object.entries(OREMEA_PRODUCT_TRUTH).map(([id, product]) => [
+    id,
+    product.description,
+  ]),
+);
+assert.match(productTruthDescriptions["resonance-hearth"], /concrete cues and participation/i);
+assert.match(productTruthDescriptions["resonance-mirror"], /recurring roles, responses and participation/i);
+assert.match(productTruthDescriptions["resonance-garden"], /care, capacity, labour, resources/i);
+assert.match(productTruthDescriptions["resonance-bearing"], /choices, allocations and trade-offs/i);
+assert.doesNotMatch(productTruthDescriptions["resonance-bearing"], /deeper alignment/i);
+assert.match(productTruthDescriptions["resonance-pulse"], /desire, attraction, interest/i);
+assert.match(productTruthDescriptions["resonance-shadow"], /strong reactions and familiar moves/i);
+assert.doesNotMatch(productTruthDescriptions["resonance-shadow"], /fear|trigger|beneath/i);
+assert.match(productTruthDescriptions["resonance-forge"], /conflict, rupture, responsibility, repair/i);
+assert.match(productTruthDescriptions["resonance-vision"], /rhythms, responsibilities, decisions, resources/i);
+assert.match(productTruthDescriptions["resonance-gathering"], /unresolved or separate material/i);
+assert.doesNotMatch(productTruthDescriptions["resonance-gathering"], /make meaning|emerged/i);
+assert.match(productTruthDescriptions["resonance-becoming"], /repeatable lived practice/i);
+
+assert.equal(
+  existsSync("components/site/sections/compare-current.tsx"),
+  false,
+  "The hidden Current must not regain the retired public dating/matching comparison surface.",
+);
 
 const publicFiles = [
   "app/page.tsx",
