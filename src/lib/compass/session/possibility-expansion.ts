@@ -12,6 +12,7 @@ type CompassGoalArea =
 
 export type PossibilityQuestion = {
   question: string
+  placeholder: string
 }
 
 const AREA_LABELS: Record<CompassGoalArea, string> = {
@@ -26,14 +27,27 @@ const AREA_LABELS: Record<CompassGoalArea, string> = {
 }
 
 export const COMPASS_POSSIBILITY_QUESTIONS = [
-  (area: string) =>
-    `What resource would make movement in ${area} easier?`,
-  (_area: string) =>
-    "What strength, ability, or support do you already have that can help?",
-  (_area: string) =>
-    "From here, what real possibilities can you see?",
-  (_area: string) =>
-    "Which possibility are you choosing to build?",
+  (area: string): PossibilityQuestion => ({
+    question: `What resource would make movement in ${area} easier?`,
+    placeholder:
+      "Name a real resource: time, money, information, access, equipment, or another concrete support.",
+  }),
+  (_area: string): PossibilityQuestion => ({
+    question:
+      "What strength, ability, or support do you already have that can help?",
+    placeholder:
+      "Name what is already available in you, around you, or through someone who has genuinely offered support.",
+  }),
+  (_area: string): PossibilityQuestion => ({
+    question: "From here, what real possibilities can you see?",
+    placeholder:
+      "List the possibilities you can actually see from your present reality. They do not need to be equal or perfect.",
+  }),
+  (_area: string): PossibilityQuestion => ({
+    question: "Which possibility are you choosing to build?",
+    placeholder:
+      "Choose the possibility that is yours. Say it in your own words.",
+  }),
 ] as const
 
 if (COMPASS_POSSIBILITY_QUESTIONS.length !== COMPASS_POSSIBILITY_STEP_COUNT) {
@@ -52,9 +66,7 @@ export function getPossibilityQuestion({
     COMPASS_POSSIBILITY_QUESTIONS[index] ??
     COMPASS_POSSIBILITY_QUESTIONS[COMPASS_POSSIBILITY_QUESTIONS.length - 1]
 
-  return {
-    question: question(area),
-  }
+  return question(area)
 }
 
 export function buildPossibilityMirror({
