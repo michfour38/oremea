@@ -258,9 +258,11 @@ export function CompassCard({
   }
 
   const previousRunComplete = sourceStatus === "complete";
+  const visibleTitle =
+    isResumeCard && previousRunComplete ? "Return to Compass?" : title;
   const visibleDescription = isResumeCard
     ? previousRunComplete
-      ? "Your previous Compass is complete. Begin a fresh conversation with those goals in mind, or set new goals."
+      ? "Your last run ended with a resolution and a movement you chose. Return only because reality changed; Compass will begin with what actually happened."
       : "Compass found an active session. Continue where you left off, begin a fresh conversation with your current goals, or set new goals."
     : description;
 
@@ -288,7 +290,7 @@ export function CompassCard({
 
         <div className="flex items-start justify-between gap-4">
           <h1 className="font-serif text-3xl text-[#d8b15f] sm:text-4xl">
-            {title}
+            {visibleTitle}
           </h1>
 
           {headerAction ? (
@@ -325,9 +327,11 @@ export function CompassCard({
                   className={previousRunComplete ? "primary-button disabled:cursor-wait disabled:opacity-60" : "secondary-button disabled:cursor-wait disabled:opacity-60"}
                 >
                   {startingConversation
-                    ? "Opening new conversation..."
+                    ? previousRunComplete
+                      ? "Opening your return..."
+                      : "Opening new conversation..."
                     : previousRunComplete
-                      ? "Start a new conversation with these goals"
+                      ? "Return with what actually happened"
                       : "Start a new conversation with my current goals"}
                 </button>
               ) : null}
