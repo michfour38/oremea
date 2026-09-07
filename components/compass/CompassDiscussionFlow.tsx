@@ -613,12 +613,12 @@ export function CompassDiscussionFlow({
   if (finalizationStage === "saved") {
     return (
       <CompassCard
-        title="Movement chosen and saved"
-        description="This Compass run is complete. The resolution and participant-chosen movement are saved."
+        title="Resolved. Movement chosen."
+        description="Compass stops here. The resolution is yours, and the next movement now belongs in reality rather than another conversation."
       >
         <section className="rounded-[1.5rem] border border-zinc-800 bg-[#121212] p-5">
           <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
-            Resolution saved
+            Resolved
           </p>
           <p className="mt-3 whitespace-pre-line text-sm leading-7 text-zinc-300">
             {resolutionDraft}
@@ -627,19 +627,24 @@ export function CompassDiscussionFlow({
 
         <section className="rounded-[1.5rem] border border-[#3A3224] bg-[#17130D] p-5">
           <p className="text-xs uppercase tracking-[0.18em] text-[#d8b15f]">
-            Movement saved
+            My next movement
           </p>
           <p className="mt-3 whitespace-pre-line text-sm leading-7 text-zinc-300">
             {finalDraft}
           </p>
         </section>
 
+        <p className="text-sm leading-7 text-zinc-400">
+          No check-in is required. If reality changes and you choose to return,
+          Compass will begin with what actually happened.
+        </p>
+
         <button
           type="button"
           onClick={() => window.location.assign("https://www.oremea.com")}
           className="primary-button"
         >
-          Return to Oremea
+          Leave Compass and move
         </button>
       </CompassCard>
     );
