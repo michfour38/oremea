@@ -9,7 +9,7 @@ Working comparison after the ten-room seed upgrade. This is an internal design r
 | The Hearth | Belonging, welcome, fit, relational participation | arrival cues, room-making, approach/distance, self-adjustment, belonging contrasts |
 | The Mirror | Recurring self-participation inside interaction | interaction loops, event/meaning separation, recurring roles, counterexamples, choice points |
 | The Garden | Care, support, capacity, labour and resource circulation | receiving effects, giving costs, invisible work, handover, requests, sustainable arrangements |
-| The Bearing | Priority, trade-off, decision ownership and integrity | allocation, opportunity cost, pressured choices, decision authority, words/actions, correction |
+| The Bearing | Priority, trade-off, decision ownership and integrity | allocation, opportunity cost, pressured choices, decision authority, words/actions, priority shifts |
 | The Pulse | Desire, attraction, interest and chosen movement | first pull, optional body cues, attraction over time, imagined gain, reversible tests, wanted-but-declined choices |
 | The Shadow | Strong reactions under pressure and updated choice | reaction onset, familiar pressure move, then/now comparison, participant-stated aim, usefulness/cost, alternative response |
 | The Forge | Conflict, responsibility, repair and distance | tension onset, listening, known/unknown accounts, responsibility split, repair request, repair evidence, thresholds |
@@ -29,6 +29,12 @@ Working comparison after the ten-room seed upgrade. This is an internal design r
 - **Pulse ↔ Shadow:** body/attention cues. Pulse = wanting; Shadow = marked reaction. Neither treats body sensation as proof.
 - **Shadow ↔ Forge:** pressure. Shadow = internal reaction and choice; Forge = relational conflict and repair.
 - **Gathering ↔ everything:** Gathering must integrate without quietly stealing another room's job or manufacturing one grand theme.
+
+## Regression locks
+
+- **Bearing is not Compass:** its prompts reveal current priorities, allocations, trade-offs and decision ownership from evidence already present. They do not manufacture a correction plan, next action or accountability check-in.
+- **Gathering is not Compass or Becoming:** it tests what connects, what remains separate and what the participant wants to carry forward. It does not require a decision, next step or new practice.
+- **Becoming is not an accountability product:** timing, review and return remain participant-chosen. The room may support repetition, low-capacity practice and resumption, but it must not impose a streak or arbitrary deadline.
 
 ## Global seed boundaries confirmed
 
