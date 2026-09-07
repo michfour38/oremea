@@ -934,7 +934,7 @@ description=""
     value={possibilityAnswer}
     onChange={setPossibilityAnswer}
     onSubmit={submitPossibilityAnswer}
-    placeholder="Answer with real-life details. What changes, who benefits, and what becomes possible?"
+    placeholder={possibilityQuestion.placeholder}
     buttonLabel="Continue"
   />
 )}
