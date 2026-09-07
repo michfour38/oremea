@@ -40,7 +40,7 @@ export const OREMEA_PUBLIC_PRODUCT_MARKETING = {
     headline: "Turn what matters into clear direction",
     buyerDecision: "I understand more, but what do I actually do next?",
     description:
-      "Compass helps you clarify current reality, keep what matters visible on a working Map and leave with one movement you chose. Its seven Why layers stay intact so the movement is grounded before planning begins.",
+      "Compass helps you clarify current reality, keep what matters visible on a working Map and leave with one movement you chose.",
     chooseWhen:
       "Choose Compass when understanding is present and something now needs movement.",
     limits: [
