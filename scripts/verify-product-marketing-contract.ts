@@ -99,6 +99,7 @@ const publicFiles = [
   "components/site/sections/explore-ecosystem.tsx",
   "components/site/sections/compare-resonance.tsx",
   "components/site/sections/current-panel.tsx",
+  "components/site/site-footer.tsx",
   "middleware.ts",
   "app/sitemap.xml/route.ts",
 ];
@@ -153,5 +154,19 @@ assert.match(
   readFileSync("components/site/sections/current-panel.tsx", "utf8"),
   /Private self-witnessing while a new one-to-one relationship is forming/,
 );
+
+const siteFooter = readFileSync("components/site/site-footer.tsx", "utf8");
+assert.match(siteFooter, /href="\/resonance-rooms"/);
+assert.doesNotMatch(siteFooter, /href="\/resonance"/);
+
+const recognitionEmail = readFileSync(
+  "src/lib/email/send-recognition-email.ts",
+  "utf8",
+);
+assert.doesNotMatch(
+  recognitionEmail,
+  /Continue to Resonance|stay with it long enough to change|resonance\.oremea\.com/i,
+);
+assert.match(recognitionEmail, /Meaning and choices remain yours/i);
 
 console.log("Product marketing authority contract checks passed.");
