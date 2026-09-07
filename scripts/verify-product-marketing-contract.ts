@@ -71,7 +71,17 @@ assert.match(recognition.limits.join(" "), /No fixed prompt sequence, action pla
 
 const compass = OREMEA_PUBLIC_PRODUCT_MARKETING.compass;
 assert.match(compass.category, /Help me move/);
-assert.match(compass.description, /seven Why layers stay intact/i);
+assert.doesNotMatch(
+  [
+    compass.category,
+    compass.headline,
+    compass.buyerDecision,
+    compass.description,
+    compass.chooseWhen,
+    ...compass.limits,
+  ].join(" "),
+  /seven Why layers|seven layers|7 layers|the Descent/i,
+);
 assert.match(compass.limits.join(" "), /Archive, Map, access, commerce and completion/i);
 assert.match(OREMEA_PRODUCT_TRUTH.compass.description, /next movement/i);
 
