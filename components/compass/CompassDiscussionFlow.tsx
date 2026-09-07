@@ -41,12 +41,12 @@ type FinalizationStage =
   | "confirm"
   | "saved";
 
-function ThinkingDots() {
-  const delays = ["0ms", "180ms", "360ms"];
+const THINKING_DOT_DELAYS = ["0ms", "180ms", "360ms"] as const;
 
+function ThinkingDots() {
   return (
     <span className="inline-flex h-7 items-center gap-2" aria-hidden="true">
-      {delays.map((delay) => (
+      {THINKING_DOT_DELAYS.map((delay) => (
         <span
           key={delay}
           className="h-3 w-3 animate-bounce rounded-full bg-[#d8b15f] motion-reduce:animate-pulse"
@@ -1007,7 +1007,12 @@ export function CompassExecutionCheck({
         className="compass-textarea"
       />
 
-      <button onClick={onFinalize} className="primary-button">
+      <button
+        type="button"
+        onClick={onFinalize}
+        disabled={!executionFeeling.trim()}
+        className="primary-button disabled:cursor-not-allowed disabled:opacity-60"
+      >
         Review this movement
       </button>
     </CompassCard>
