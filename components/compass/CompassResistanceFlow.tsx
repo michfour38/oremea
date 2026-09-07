@@ -19,20 +19,15 @@ export function CompassCoreReflection({
   areaResponses,
   selectedArea,
   recursiveLayers,
-  extraReflection,
-  onExtraReflectionChange,
   onContinue,
 }: {
   reflection: string;
   areaResponses: CompassAreaResponse[];
   selectedArea: CompassGoalArea | null;
   recursiveLayers: CompassRecursiveLayer[];
-  extraReflection: string;
-  onExtraReflectionChange: (value: string) => void;
   onContinue: (savedMirror: string) => void;
 }) {
   const [savedCoreMirror, setSavedCoreMirror] = useState<string | null>(null);
-  const [mirrorChecked, setMirrorChecked] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -79,8 +74,6 @@ export function CompassCoreReflection({
         }
       } catch (error) {
         console.error("Compass Core Mirror regeneration failed:", error);
-      } finally {
-        if (!cancelled) setMirrorChecked(true);
       }
     }
 
@@ -91,23 +84,15 @@ export function CompassCoreReflection({
     };
   }, [areaResponses, recursiveLayers, selectedArea]);
 
+  const fallbackReflection = reflection.trim();
   const displayedReflection =
-    savedCoreMirror ?? (mirrorChecked ? MIRROR_UNAVAILABLE : reflection);
-  const mirrorAvailable = Boolean(savedCoreMirror);
-
-  if (!mirrorChecked && !savedCoreMirror) {
-    return (
-      <CompassCard title="" description="">
-        <p className="font-serif text-3xl leading-tight text-[#d8b15f] sm:text-4xl">
-          Reading your response...
-        </p>
-      </CompassCard>
-    );
-  }
+    savedCoreMirror || fallbackReflection || MIRROR_UNAVAILABLE;
+  const mirrorAvailable = Boolean(savedCoreMirror || fallbackReflection);
 
   function continueWithSavedMirror() {
-    if (!savedCoreMirror) return;
-    onContinue(savedCoreMirror);
+    const acceptedMirror = savedCoreMirror || fallbackReflection;
+    if (!acceptedMirror) return;
+    onContinue(acceptedMirror);
   }
 
   return (
@@ -139,37 +124,6 @@ export function CompassCoreReflection({
         disabled={!mirrorAvailable}
         className="primary-button disabled:opacity-60"
       >
-        Continue
-      </button>
-    </CompassCard>
-  );
-}
-
-export function CompassResistanceFlow({
-  selectedAreaLabel,
-  resistanceAnswer,
-  onResistanceChange,
-  onSubmitResistance,
-}: {
-  selectedAreaLabel: string;
-  resistanceAnswer: string;
-  onResistanceChange: (value: string) => void;
-  onSubmitResistance: () => void;
-}) {
-  return (
-    <CompassCard
-      title="What tends to get in the way?"
-      description={`What usually interrupts, delays, or prevents movement toward ${selectedAreaLabel.toLowerCase()}?`}
-    >
-      <textarea
-        value={resistanceAnswer}
-        onChange={(event) => onResistanceChange(event.target.value)}
-        placeholder="Describe what most often gets in the way. Be specific about what actually happens."
-        rows={8}
-        className="compass-textarea"
-      />
-
-      <button onClick={onSubmitResistance} className="primary-button">
         Continue
       </button>
     </CompassCard>

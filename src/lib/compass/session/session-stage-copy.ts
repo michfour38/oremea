@@ -8,50 +8,50 @@ export const SESSION_STAGE_COPY: Record<
   }
 > = {
   area_discovery: {
-    title: "Goal Discovery",
+    title: "Direction Field",
     description:
-      "Compass will guide you through several core areas of life to better understand what currently matters most to you.",
+      "Name the realities you would like to build across the eight areas. The participant's words establish the field; Compass does not rank a life for them.",
   },
 
   area_confirmation: {
-    title: "Signal Reflection",
+    title: "Choose a Doorway",
     description:
-      "Compass may notice stronger emotional or cognitive weighting around certain areas. You are always free to agree, disagree, refine, or clarify.",
+      "Compass returns the named field. The participant chooses which area this run will follow.",
   },
 
   recursive_depth: {
-    title: "Deeper Clarification",
+    title: "The Descent",
     description:
-      "Compass will now take you multiple layers deeper into the goal itself. Some questions may feel repetitive. This is intentional. The purpose is to uncover the deeper values, motivations, and emotional structures beneath the goal.",
+      "Across all seven Why layers, Compass follows why the chosen direction matters. Possibility, planning, and action wait until the Descent is complete.",
   },
 
   core_value_reflection: {
-    title: "Core Value Reflection",
+    title: "Core Reflection",
     description:
-      "Your responses may point toward a deeper value or need beneath multiple goals. Compass will reflect possible patterns for your consideration, not as absolute truth.",
+      "Compass reflects the completed Descent from participant-written evidence. The participant may correct it before choosing to continue.",
   },
 
   resistance_mapping: {
-    title: "Resistance & Friction",
+    title: "Completed Reality and Objections",
     description:
-      "Execution often reveals emotional resistance, nervous-system friction, avoidance patterns, or conflicting behaviors. Compass helps make these visible without judgment.",
+      "The participant describes what is observably true when the chosen possibility exists and names any meaningful objection in their own words.",
   },
 
   execution_calibration: {
-    title: "Execution Calibration",
+    title: "Working Map",
     description:
-      "The goal is not fantasy intensity. The goal is embodied momentum. Compass will help identify a next step that feels psychologically and physically executable.",
+      "Compass organises participant-named goals, decisions, dependencies, and waiting items without taking ownership of the choice.",
   },
 
   next_step_commitment: {
-    title: "Next Executable Step",
+    title: "Participant-Chosen Movement",
     description:
-      "Compass will now help you define the clearest next physical action available to you right now.",
+      "The participant confirms the resolution and chooses one concrete movement they can recognise as complete.",
   },
 
   complete: {
-    title: "Compass Reflection Complete",
+    title: "Movement Chosen and Saved",
     description:
-      "You can return to Compass at any time to refine goals, explore resistance patterns, or continue building momentum through aligned execution.",
+      "This run can stop once the resolution and participant-chosen movement are saved. Return is useful when reality changes, not as a daily obligation.",
   },
 }
