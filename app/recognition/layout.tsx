@@ -5,10 +5,28 @@ import { ReturnToTop } from "@/components/site/return-to-top";
 import "./recognition-theme.css";
 import "./recognition-reading.css";
 
+const title = "Recognition — private AI discussion journal | Oremea";
+const description =
+  "Recognition stays close to your own words and one live thread, noticing distinctions, recurrence and unfinished thought without deciding what they mean for you.";
+
 export const metadata: Metadata = {
-  title: "Recognition | Oremea",
-  description:
-    "A private AI discussion journal for thoughts that need more than a journal page. One focused question at a time, with meaning and choices remaining yours.",
+  metadataBase: new URL("https://recognition.oremea.com"),
+  title,
+  description,
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    url: "https://recognition.oremea.com/",
+    siteName: "Oremea",
+    title,
+    description,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
+  robots: { index: true, follow: true },
   icons: {
     icon: [{ url: "/icons/recognition.svg", type: "image/svg+xml" }],
     shortcut: "/icons/recognition.svg",
