@@ -74,8 +74,6 @@ export function CompassCoreReflection({
         }
       } catch (error) {
         console.error("Compass Core Mirror regeneration failed:", error);
-      } finally {
-        // The participant-written fallback remains available if generation fails.
       }
     }
 
