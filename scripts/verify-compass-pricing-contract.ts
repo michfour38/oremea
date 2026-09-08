@@ -16,13 +16,13 @@ assert.equal(
 )
 assert.equal(
   COMPASS_PRICING.launchPriceCents,
-  1999,
-  "Compass current launch price must remain USD 19.99/month.",
+  5000,
+  "Compass current launch price must remain USD 50/month.",
 )
 assert.equal(
   COMPASS_PRICING.standardPriceCents,
-  1999,
-  "Compass current standard price must remain USD 19.99/month without comparison-price fiction.",
+  5000,
+  "Compass current standard price must remain USD 50/month without comparison-price fiction.",
 )
 assert.equal(
   COMPASS_PRICING.billingInterval,
