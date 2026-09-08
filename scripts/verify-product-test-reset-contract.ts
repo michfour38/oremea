@@ -11,12 +11,14 @@ const recognitionAccessPath = path.join(
   "src/lib/recognition/recognition-conversation-access.ts",
 );
 const compassAccessPath = path.join(root, "src/lib/compass/compass-access.ts");
+const currentAccessPath = path.join(root, "src/lib/current/current-access.ts");
 
 const helper = fs.readFileSync(helperPath, "utf8");
 const page = fs.readFileSync(pagePath, "utf8");
 const recovery = fs.readFileSync(recoveryPath, "utf8");
 const recognitionAccess = fs.readFileSync(recognitionAccessPath, "utf8");
 const compassAccess = fs.readFileSync(compassAccessPath, "utf8");
+const currentAccess = fs.readFileSync(currentAccessPath, "utf8");
 
 assert.match(helper, /isRecognitionOwner\(userId\) \|\| isCompassOwner\(userId\)/);
 assert.match(helper, /hasProductTestOwnerAccess/);
@@ -64,10 +66,17 @@ assert.match(recovery, /verifiedEmails/);
 assert.match(recovery, /primary_email/);
 assert.match(recovery, /isConfiguredOremeaOwnerUserId/);
 assert.match(recovery, /verified_legacy_owner_email/);
+assert.match(recovery, /verified_demo_owner_email/);
+assert.match(recovery, /APPROVED_DEMO_OWNER_EMAIL_SHA256/);
+assert.match(recovery, /createHash\("sha256"\)/);
 assert.doesNotMatch(recovery, /michellefourie38@/i);
+assert.doesNotMatch(recovery, /michellefourie@/i);
 assert.doesNotMatch(recovery, /clerkClient|deleteUser|users\.delete/i);
 
 assert.match(recognitionAccess, /hasOremeaOwnerAccess/);
 assert.match(compassAccess, /hasOremeaOwnerAccess/);
+assert.match(currentAccess, /hasOremeaOwnerAccess/);
+assert.match(currentAccess, /member: true/);
+assert.match(currentAccess, /active: true/);
 
-console.log("Product test reset and owner recovery contracts verified.");
+console.log("Product test reset and verified owner recovery contracts verified.");
