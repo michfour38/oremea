@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { hasOremeaOwnerAccess } from "@/src/lib/oremea/owner-recovery";
 
 const RECOGNITION_MEMBERSHIP_USER_PREFIX = "recognition-membership-email:";
 const CURRENT_LAUNCH_STATE_ID = "the_current";
@@ -103,6 +104,10 @@ export async function getOremeaMemberState({
   userId: string;
   emails: string[];
 }) {
+  if (await hasOremeaOwnerAccess(userId)) {
+    return { member: true };
+  }
+
   const normalizedEmails = Array.from(
     new Set(emails.map(normalizeEmail).filter((email) => email.includes("@"))),
   );
@@ -157,6 +162,14 @@ export async function getCurrentAccessState(
   userId: string,
   now = new Date(),
 ) {
+  if (await hasOremeaOwnerAccess(userId)) {
+    return {
+      active: true,
+      expiresAt: null,
+      accessUrl: process.env.CURRENT_ACCESS_URL?.trim() || null,
+    };
+  }
+
   const entitlement = await prisma.oremea_entitlements.findUnique({
     where: {
       user_id_product_key: {
