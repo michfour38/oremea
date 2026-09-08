@@ -114,13 +114,6 @@ export function SiteFooter() {
                 {OREMEA_OPERATOR.email}
               </Link>
 
-              <a
-                href={"tel:" + OREMEA_OPERATOR.telephone.replace(/\s/g, "")}
-                className="transition hover:text-[#b79a63]"
-              >
-                {OREMEA_OPERATOR.telephone}
-              </a>
-
               <p className="max-w-56 leading-6 text-zinc-500">
                 {OREMEA_OPERATOR.address}
               </p>
