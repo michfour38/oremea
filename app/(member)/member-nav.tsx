@@ -4,31 +4,34 @@ import { SignOutButton } from "@clerk/nextjs"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
+import {
+  resolveMemberNavProduct,
+  type MemberNavProduct,
+} from "@/src/lib/oremea/member-nav-product"
 
 type OpenMenu = "archive" | "profile" | null
 
 function ProductLink({
   href,
   label,
-  pathname,
-  activePath,
+  product,
+  activeProduct,
 }: {
   href: string
   label: string
-  pathname: string
-  activePath: string
+  product: MemberNavProduct
+  activeProduct: MemberNavProduct | null
 }) {
-  const active =
-    pathname === activePath ||
-    (activePath !== "/" && pathname.startsWith(activePath))
+  const active = activeProduct === product
 
   return (
     <a
       href={href}
-      className={`text-[11px] uppercase tracking-[0.18em] transition ${
+      aria-current={active ? "page" : undefined}
+      className={`rounded-full border px-3 py-2 text-[11px] uppercase tracking-[0.18em] transition ${
         active
-          ? "text-[#E7C98B]"
-          : "text-white/45 hover:text-white/80"
+          ? "border-[#C8A96A]/45 bg-[#C8A96A]/10 text-[#F1DFB4] shadow-[0_0_18px_rgba(200,169,106,0.12)]"
+          : "border-transparent text-white/45 hover:border-white/10 hover:text-white/80"
       }`}
     >
       {label}
@@ -42,9 +45,18 @@ export default function MemberNav() {
 
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const [activeProduct, setActiveProduct] = useState<MemberNavProduct | null>(
+    () => resolveMemberNavProduct({ pathname }),
+  )
 
   useEffect(() => {
     setOpenMenu(null)
+    setActiveProduct(
+      resolveMemberNavProduct({
+        hostname: window.location.hostname,
+        pathname,
+      }),
+    )
   }, [pathname, searchParams])
 
   useEffect(() => {
@@ -88,22 +100,22 @@ export default function MemberNav() {
           <div className="hidden items-center gap-5 md:flex">
             <ProductLink
               href="https://recognition.oremea.com/begin"
-              activePath="/recognition"
+              activeProduct={activeProduct}
               label="Recognition"
-              pathname={pathname}
+              product="recognition"
             />
             <ProductLink
               href="https://resonance.oremea.com/"
-              activePath="/resonance"
+              activeProduct={activeProduct}
               label="Resonance"
-              pathname={pathname}
+              product="resonance"
             />
             {hasCompassAccess ? (
               <ProductLink
                 href="https://compass.oremea.com/begin"
-                activePath="/compass"
+                activeProduct={activeProduct}
                 label="Compass"
-                pathname={pathname}
+                product="compass"
               />
             ) : null}
           </div>
