@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import { recoverOremeaOwnerAccess } from "@/src/lib/oremea/owner-recovery";
 import {
@@ -20,25 +20,98 @@ export const metadata: Metadata = {
   },
 };
 
-async function ensureProductTestOwner(userId: string) {
-  if (await hasProductTestOwnerAccess(userId)) return true;
+type ProductTestOwnerStatus = {
+  active: boolean;
+  reason:
+    | "active"
+    | "clerk_user_missing"
+    | "email_not_verified"
+    | "email_not_approved"
+    | "recovery_failed";
+  maskedEmail: string | null;
+};
 
-  const user = await currentUser();
-  if (!user || user.id !== userId) return false;
+function maskEmail(value: string | null | undefined) {
+  const email = value?.trim().toLowerCase() ?? "";
+  const at = email.indexOf("@");
+  if (at <= 0) return null;
 
-  const verifiedEmails = user.emailAddresses
-    .filter((item) => item.verification?.status === "verified")
-    .map((item) => item.emailAddress.trim().toLowerCase())
-    .filter(Boolean);
+  const local = email.slice(0, at);
+  const domain = email.slice(at + 1);
+  const visibleLocal = local.length <= 2 ? local[0] ?? "" : local.slice(0, 2);
+  return `${visibleLocal}${"•".repeat(Math.max(3, local.length - visibleLocal.length))}@${domain}`;
+}
 
-  if (verifiedEmails.length === 0) return false;
+async function getProductTestOwnerStatus(
+  userId: string,
+): Promise<ProductTestOwnerStatus> {
+  try {
+    if (await hasProductTestOwnerAccess(userId)) {
+      return { active: true, reason: "active", maskedEmail: null };
+    }
 
-  const recovery = await recoverOremeaOwnerAccess({
-    userId,
-    verifiedEmails,
-  });
+    const user = await currentUser();
+    if (!user || user.id !== userId) {
+      return {
+        active: false,
+        reason: "clerk_user_missing",
+        maskedEmail: null,
+      };
+    }
 
-  return recovery.active;
+    const verifiedEmails = user.emailAddresses
+      .filter((item) => item.verification?.status === "verified")
+      .map((item) => item.emailAddress.trim().toLowerCase())
+      .filter(Boolean);
+
+    const maskedEmail = maskEmail(
+      user.primaryEmailAddress?.emailAddress ?? user.emailAddresses[0]?.emailAddress,
+    );
+
+    if (verifiedEmails.length === 0) {
+      return {
+        active: false,
+        reason: "email_not_verified",
+        maskedEmail,
+      };
+    }
+
+    const recovery = await recoverOremeaOwnerAccess({
+      userId,
+      verifiedEmails,
+    });
+
+    return recovery.active
+      ? { active: true, reason: "active", maskedEmail }
+      : {
+          active: false,
+          reason: "email_not_approved",
+          maskedEmail,
+        };
+  } catch (error) {
+    console.error("Owner demo access recovery failed:", error);
+    return {
+      active: false,
+      reason: "recovery_failed",
+      maskedEmail: null,
+    };
+  }
+}
+
+function accessMessage(status: ProductTestOwnerStatus) {
+  if (status.reason === "email_not_verified") {
+    return "This Clerk account is signed in, but its email is not verified yet. Complete Clerk's email verification, then refresh this page.";
+  }
+
+  if (status.reason === "email_not_approved") {
+    return "This signed-in Clerk account does not match the owner-approved demo identity. Sign out, sign in with the demo email you approved for Oremea, verify it, then return here.";
+  }
+
+  if (status.reason === "clerk_user_missing") {
+    return "Oremea can see a session but Clerk did not return the matching user record. Sign out, sign back in, then return to this page.";
+  }
+
+  return "Oremea could not initialise owner demo access. Your product data has not been changed. Refresh once; if this remains, the server-side recovery path needs attention.";
 }
 
 async function resetAndOpen(formData: FormData) {
@@ -46,7 +119,9 @@ async function resetAndOpen(formData: FormData) {
 
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
-  if (!(await ensureProductTestOwner(userId))) notFound();
+
+  const status = await getProductTestOwnerStatus(userId);
+  if (!status.active) redirect("/internal/product-test?access=denied");
 
   const target = getProductTestTarget(formData.get("target"));
   if (!target) {
@@ -61,7 +136,49 @@ export default async function ProductTestPage() {
   const { userId } = await auth();
 
   if (!userId) redirect("/sign-in");
-  if (!(await ensureProductTestOwner(userId))) notFound();
+
+  const status = await getProductTestOwnerStatus(userId);
+
+  if (!status.active) {
+    return (
+      <main className="min-h-screen bg-[#070707] px-5 py-12 text-zinc-100 sm:px-8">
+        <div className="mx-auto max-w-2xl rounded-3xl border border-[#c8a96a]/25 bg-white/[0.035] p-7 sm:p-10">
+          <p className="text-xs uppercase tracking-[0.28em] text-[#c8a96a]">
+            Oremea · owner demo access
+          </p>
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+            The page is working. Access is not attached to this Clerk session yet.
+          </h1>
+          <p className="mt-5 text-base leading-7 text-zinc-300">
+            {accessMessage(status)}
+          </p>
+          {status.maskedEmail ? (
+            <p className="mt-5 rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-zinc-400">
+              Signed-in email: <span className="text-zinc-200">{status.maskedEmail}</span>
+            </p>
+          ) : null}
+          <div className="mt-7 flex flex-wrap gap-3">
+            <a
+              href="/internal/product-test"
+              className="rounded-full border border-[#c8a96a]/50 bg-[#c8a96a]/10 px-5 py-2.5 text-sm font-medium text-[#ead8ad]"
+            >
+              Retry access
+            </a>
+            <a
+              href="/"
+              className="rounded-full border border-white/15 px-5 py-2.5 text-sm text-zinc-300"
+            >
+              Return to Oremea
+            </a>
+          </div>
+          <p className="mt-7 text-sm leading-6 text-zinc-500">
+            No Clerk identity, Whop purchase, entitlement, product configuration
+            or participant history is deleted by this page.
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#070707] px-5 py-10 text-zinc-100 sm:px-8">
