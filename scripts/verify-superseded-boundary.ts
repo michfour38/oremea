@@ -78,7 +78,17 @@ assert.doesNotMatch(
   /Enter to send|Shift\s*\+\s*Enter\s+for\s+a\s+new\s+line/i,
   "Superseded Enter-to-send helper copy must never return to the active Recognition composer.",
 );
-assert.match(\n  chatSource,\n  /placeholder="Write in your own words…"/,\n  "Recognition must keep the composer invitation plain and participant-owned.",\n);\nassert.doesNotMatch(\n  chatSource,\n  /Say what is here/i,\n  "The vague superseded Recognition composer invitation must not return.",\n);\nassert.match(
+assert.match(
+  chatSource,
+  /placeholder="Write in your own words…"/,
+  "Recognition must keep the composer invitation plain and participant-owned.",
+);
+assert.doesNotMatch(
+  chatSource,
+  /Say what is here/i,
+  "The vague superseded Recognition composer invitation must not return.",
+);
+assert.match(
   chatSource,
   /isSending\s*\?\s*"Reflect"\s*:\s*pendingMessageId\s*\?\s*"Retry"\s*:\s*"Reflect"/,
   "The active Recognition composer must keep Reflect as its primary action while preserving Retry only for a failed send.",
