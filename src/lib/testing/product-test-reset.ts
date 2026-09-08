@@ -2,6 +2,10 @@ import { randomUUID } from "node:crypto";
 
 import { prisma } from "@/lib/prisma";
 import { isCompassOwner } from "@/src/lib/compass/compass-access";
+import {
+  getOremeaOwnerResetUserIds,
+  hasOremeaOwnerAccess,
+} from "@/src/lib/oremea/owner-recovery";
 import { isRecognitionOwner } from "@/src/lib/recognition/recognition-conversation-access";
 
 export const PRODUCT_TEST_TARGETS = [
@@ -102,26 +106,30 @@ export function isProductTestOwner(userId: string) {
   return isRecognitionOwner(userId) || isCompassOwner(userId);
 }
 
+export async function hasProductTestOwnerAccess(userId: string) {
+  return isProductTestOwner(userId) || (await hasOremeaOwnerAccess(userId));
+}
+
 export function getProductTestTarget(value: unknown): ProductTestTarget | null {
   if (typeof value !== "string") return null;
   return PRODUCT_TEST_TARGETS.find((target) => target.key === value) ?? null;
 }
 
-async function resetRecognition(userId: string) {
+async function resetRecognition(userIds: string[]) {
   const deleted = await prisma.recognition_threads.deleteMany({
-    where: { user_id: userId },
+    where: { user_id: { in: userIds } },
   });
 
   return { deletedThreads: deleted.count };
 }
 
-async function resetCompass(userId: string) {
+async function resetCompass(userIds: string[]) {
   return prisma.$transaction(async (transaction) => {
     const dailyGoals = await transaction.compass_daily_goals.deleteMany({
-      where: { user_id: userId },
+      where: { user_id: { in: userIds } },
     });
     const sessions = await transaction.compass_sessions.deleteMany({
-      where: { user_id: userId },
+      where: { user_id: { in: userIds } },
     });
 
     return {
@@ -131,13 +139,13 @@ async function resetCompass(userId: string) {
   });
 }
 
-async function resetCurrent(userId: string) {
+async function resetCurrent(userIds: string[]) {
   return prisma.$transaction(async (transaction) => {
     const invitations = await transaction.current_invitations.deleteMany({
-      where: { user_id: userId },
+      where: { user_id: { in: userIds } },
     });
     const qualifications = await transaction.current_qualifications.deleteMany({
-      where: { user_id: userId },
+      where: { user_id: { in: userIds } },
     });
 
     return {
@@ -288,21 +296,23 @@ export async function resetProductTestState({
   userId: string;
   target: ProductTestTarget;
 }) {
-  if (!isProductTestOwner(userId)) {
+  if (!(await hasProductTestOwnerAccess(userId))) {
     throw new Error("OWNER_TEST_RESET_FORBIDDEN");
   }
 
+  if (target.kind === "resonance") {
+    return resetResonance(userId, target.weekNumber);
+  }
+
+  const ownerUserIds = await getOremeaOwnerResetUserIds(userId);
+
   if (target.kind === "recognition") {
-    return resetRecognition(userId);
+    return resetRecognition(ownerUserIds);
   }
 
   if (target.kind === "compass") {
-    return resetCompass(userId);
+    return resetCompass(ownerUserIds);
   }
 
-  if (target.kind === "current") {
-    return resetCurrent(userId);
-  }
-
-  return resetResonance(userId, target.weekNumber);
+  return resetCurrent(ownerUserIds);
 }
