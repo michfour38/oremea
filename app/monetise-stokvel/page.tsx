@@ -13,8 +13,11 @@ export const metadata: Metadata = {
   },
 };
 
+const DEFAULT_WHATSAPP_GROUP_URL = "https://chat.whatsapp.com/H7ppGIhkVjH931ZzJlWwFF";
+
 export default function MonetiseStokvelPage() {
-  const whatsappGroupUrl = process.env.MONETISE_STOKVEL_WHATSAPP_URL ?? "";
+  const whatsappGroupUrl =
+    process.env.MONETISE_STOKVEL_WHATSAPP_URL ?? DEFAULT_WHATSAPP_GROUP_URL;
 
   return (
     <SiteShell>
