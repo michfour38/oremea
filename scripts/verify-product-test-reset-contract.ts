@@ -5,11 +5,22 @@ import path from "node:path";
 const root = process.cwd();
 const helperPath = path.join(root, "src/lib/testing/product-test-reset.ts");
 const pagePath = path.join(root, "app/internal/product-test/page.tsx");
+const recoveryPath = path.join(root, "src/lib/oremea/owner-recovery.ts");
+const recognitionAccessPath = path.join(
+  root,
+  "src/lib/recognition/recognition-conversation-access.ts",
+);
+const compassAccessPath = path.join(root, "src/lib/compass/compass-access.ts");
 
 const helper = fs.readFileSync(helperPath, "utf8");
 const page = fs.readFileSync(pagePath, "utf8");
+const recovery = fs.readFileSync(recoveryPath, "utf8");
+const recognitionAccess = fs.readFileSync(recognitionAccessPath, "utf8");
+const compassAccess = fs.readFileSync(compassAccessPath, "utf8");
 
 assert.match(helper, /isRecognitionOwner\(userId\) \|\| isCompassOwner\(userId\)/);
+assert.match(helper, /hasProductTestOwnerAccess/);
+assert.match(helper, /getOremeaOwnerResetUserIds/);
 assert.match(helper, /recognition_threads\.deleteMany/);
 assert.match(helper, /compass_daily_goals\.deleteMany/);
 assert.match(helper, /compass_sessions\.deleteMany/);
@@ -44,5 +55,19 @@ assert.match(page, /Your Clerk identity/);
 assert.match(page, /Whop records, entitlements, purchase references/);
 assert.match(page, /Transparency · Contrast · Curiosity/);
 assert.match(page, /Reset & open/);
+assert.match(page, /currentUser/);
+assert.match(page, /verification\?\.status === \"verified\"/);
+assert.match(page, /recoverOremeaOwnerAccess/);
 
-console.log("Product test reset contract verified.");
+assert.match(recovery, /OREMEA_OWNER_RECOVERY_PRODUCT_KEY/);
+assert.match(recovery, /verifiedEmails/);
+assert.match(recovery, /primary_email/);
+assert.match(recovery, /isConfiguredOremeaOwnerUserId/);
+assert.match(recovery, /verified_legacy_owner_email/);
+assert.doesNotMatch(recovery, /michellefourie38@/i);
+assert.doesNotMatch(recovery, /clerkClient|deleteUser|users\.delete/i);
+
+assert.match(recognitionAccess, /hasOremeaOwnerAccess/);
+assert.match(compassAccess, /hasOremeaOwnerAccess/);
+
+console.log("Product test reset and owner recovery contracts verified.");

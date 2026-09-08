@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { notFound, redirect } from "next/navigation";
 
+import { recoverOremeaOwnerAccess } from "@/src/lib/oremea/owner-recovery";
 import {
   PRODUCT_TEST_TARGETS,
   getProductTestTarget,
-  isProductTestOwner,
+  hasProductTestOwnerAccess,
   resetProductTestState,
 } from "@/src/lib/testing/product-test-reset";
 
@@ -19,12 +20,33 @@ export const metadata: Metadata = {
   },
 };
 
+async function ensureProductTestOwner(userId: string) {
+  if (await hasProductTestOwnerAccess(userId)) return true;
+
+  const user = await currentUser();
+  if (!user || user.id !== userId) return false;
+
+  const verifiedEmails = user.emailAddresses
+    .filter((item) => item.verification?.status === "verified")
+    .map((item) => item.emailAddress.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (verifiedEmails.length === 0) return false;
+
+  const recovery = await recoverOremeaOwnerAccess({
+    userId,
+    verifiedEmails,
+  });
+
+  return recovery.active;
+}
+
 async function resetAndOpen(formData: FormData) {
   "use server";
 
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
-  if (!isProductTestOwner(userId)) notFound();
+  if (!(await ensureProductTestOwner(userId))) notFound();
 
   const target = getProductTestTarget(formData.get("target"));
   if (!target) {
@@ -39,7 +61,7 @@ export default async function ProductTestPage() {
   const { userId } = await auth();
 
   if (!userId) redirect("/sign-in");
-  if (!isProductTestOwner(userId)) notFound();
+  if (!(await ensureProductTestOwner(userId))) notFound();
 
   return (
     <main className="min-h-screen bg-[#070707] px-5 py-10 text-zinc-100 sm:px-8">

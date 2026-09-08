@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { hasOremeaOwnerAccess } from "@/src/lib/oremea/owner-recovery";
 
 import {
   appendCompassPaymentReference,
@@ -67,7 +68,7 @@ export async function getCompassAccessState(
   userId: string,
   now = new Date(),
 ): Promise<CompassAccessState> {
-  if (isCompassOwner(userId)) {
+  if (isCompassOwner(userId) || (await hasOremeaOwnerAccess(userId))) {
     return {
       active: true,
       expiresAt: null,

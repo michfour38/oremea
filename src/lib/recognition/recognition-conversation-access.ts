@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { hasOremeaOwnerAccess } from "@/src/lib/oremea/owner-recovery";
 import { normalizeRecognitionEmail } from "./recognition-access";
 
 const MEMBERSHIP_USER_PREFIX = "recognition-membership-email:";
@@ -170,7 +171,7 @@ export async function getRecognitionConversationAccess({
   emails: string[];
   now?: Date;
 }): Promise<RecognitionConversationAccess> {
-  if (isRecognitionOwner(userId)) {
+  if (isRecognitionOwner(userId) || (await hasOremeaOwnerAccess(userId))) {
     return {
       active: true,
       source: "owner",
