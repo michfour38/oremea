@@ -80,6 +80,16 @@ assert.doesNotMatch(
 );
 assert.match(
   chatSource,
+  /placeholder="Write in your own words…"/,
+  "Recognition must keep the composer invitation plain and participant-owned.",
+);
+assert.doesNotMatch(
+  chatSource,
+  /Say what is here/i,
+  "The vague superseded Recognition composer invitation must not return.",
+);
+assert.match(
+  chatSource,
   /isSending\s*\?\s*"Reflect"\s*:\s*pendingMessageId\s*\?\s*"Retry"\s*:\s*"Reflect"/,
   "The active Recognition composer must keep Reflect as its primary action while preserving Retry only for a failed send.",
 );

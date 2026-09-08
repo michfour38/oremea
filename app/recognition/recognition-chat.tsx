@@ -423,7 +423,7 @@ export default function RecognitionChat({
                   rows={3}
                   maxLength={8000}
                   disabled={isSending || isStartingNewChat}
-                  placeholder="Say what is here…"
+                  placeholder="Write in your own words…"
                   style={{ backgroundColor: "transparent" }}
                   className="max-h-56 min-h-[84px] w-full appearance-none resize-none rounded-[1.35rem] border-0 bg-transparent px-4 py-3 font-serif text-lg leading-8 text-zinc-100 outline-none placeholder:text-zinc-600 disabled:opacity-60 md:text-xl"
                 />
