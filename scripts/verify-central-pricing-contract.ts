@@ -18,6 +18,34 @@ assert.deepEqual(
   "Every currently priced Oremea product must live in the central pricing registry",
 );
 
+assert.deepEqual(
+  {
+    recognition: {
+      launch: OREMEA_PRICING.recognition.launchPriceCents,
+      standard: OREMEA_PRICING.recognition.standardPriceCents,
+    },
+    resonance: {
+      launch: OREMEA_PRICING.resonance.launchPriceCents,
+      standard: OREMEA_PRICING.resonance.standardPriceCents,
+    },
+    compass: {
+      launch: OREMEA_PRICING.compass.launchPriceCents,
+      standard: OREMEA_PRICING.compass.standardPriceCents,
+    },
+    current: {
+      launch: OREMEA_PRICING.current.launchPriceCents,
+      standard: OREMEA_PRICING.current.standardPriceCents,
+    },
+  },
+  {
+    recognition: { launch: 1999, standard: 1999 },
+    resonance: { launch: 5000, standard: 5000 },
+    compass: { launch: 5000, standard: 5000 },
+    current: { launch: 2999, standard: 2999 },
+  },
+  "Visible products must use the USD 50 premium launch price while hidden products retain their approved prices",
+);
+
 for (const file of pricingAdapters) {
   const source = readFileSync(file, "utf8");
   assert.match(
