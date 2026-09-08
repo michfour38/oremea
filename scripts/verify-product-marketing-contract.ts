@@ -194,6 +194,15 @@ assert.match(
 const siteFooter = readFileSync("components/site/site-footer.tsx", "utf8");
 assert.match(siteFooter, /href="\/resonance-rooms"/);
 assert.doesNotMatch(siteFooter, /href="\/resonance"/);
+assert.doesNotMatch(siteFooter, /tel:/i);
+assert.doesNotMatch(siteFooter, /OREMEA_OPERATOR\.telephone/);
+
+const legalLinks = readFileSync("src/lib/legal/legal-links.ts", "utf8");
+assert.doesNotMatch(
+  legalLinks,
+  /telephone\s*:/i,
+  "The public Oremea operator record must not expose a personal phone number.",
+);
 
 const recognitionEmail = readFileSync(
   "src/lib/email/send-recognition-email.ts",
