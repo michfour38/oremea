@@ -171,7 +171,6 @@ export async function POST(request: Request) {
         selectedArea: session.selected_area,
         areaResponses: session.area_responses,
         recursiveLayers: session.recursive_layers,
-        possibilityAnswers: session.possibility_answers,
         discussionMessages: currentDiscussionMessages,
         existingMapItems: state.mapItems,
         movements: state.movements,

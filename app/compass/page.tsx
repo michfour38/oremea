@@ -1,6 +1,5 @@
 "use client";
 
-import { CompassPromptFlow } from "@/components/compass/CompassPromptFlow";
 import MemberNav from "@/app/(member)/member-nav";
 import { CompassAreaFlow } from "@/components/compass/CompassAreaFlow";
 import { CompassCard } from "@/components/compass/CompassCard";
@@ -14,13 +13,8 @@ import { CompassCoreReflection } from "@/components/compass/CompassResistanceFlo
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  buildPossibilityMirror,
-  getPossibilityQuestion,
-} from "@/src/lib/compass/session/possibility-expansion";
-import {
   COMPASS_AREA_QUESTIONS,
   COMPASS_DESCENT_LAYER_COUNT,
-  COMPASS_POSSIBILITY_STEP_COUNT,
   analyzeAreaResponse,
   buildAreaMirrorReflection,
   createRecursiveLayer,
@@ -44,8 +38,6 @@ type CompassPhase =
   | "depth_intro"
   | "depth"
   | "core_reflection"
-  | "possibility"
-  | "possibility_mirror"
   | "discussion";
 
 type StoredCompassSession = {
@@ -53,7 +45,6 @@ type StoredCompassSession = {
   selected_area?: string | null;
   area_responses?: unknown;
   recursive_layers?: unknown;
-  possibility_answers?: unknown;
   discussion_messages?: unknown;
 };
 
@@ -87,9 +78,6 @@ export default function CompassPage() {
 const [compassMirrorOutput, setCompassMirrorOutput] = useState("");
 const [areaMirrorOutput, setAreaMirrorOutput] = useState("");
 
-const [possibilityAnswers, setPossibilityAnswers] = useState<string[]>([]);
-const [possibilityAnswer, setPossibilityAnswer] = useState("");
-
   const [discussionInput, setDiscussionInput] = useState("");
   const [discussionMessages, setDiscussionMessages] =
     useState<CompassDiscussionMessage[]>([]);
@@ -116,25 +104,6 @@ const backLockRef = useRef(false);
     }),
   [areaResponses, selectedArea, recursiveLayers],
 );
-
-const possibilityQuestion = useMemo(
-  () =>
-    getPossibilityQuestion({
-      selectedArea,
-      index: possibilityAnswers.length,
-    }),
-  [selectedArea, possibilityAnswers.length],
-);
-
-const possibilityMirror = useMemo(
-  () =>
-    buildPossibilityMirror({
-      selectedArea,
-      possibilityAnswers,
-    }),
-  [selectedArea, possibilityAnswers],
-);
-
 
   const selectedAreaLabel = selectedArea
     ? AREA_LABELS[selectedArea]
@@ -234,7 +203,7 @@ const possibilityMirror = useMemo(
       window.removeEventListener("popstate", handleBrowserBack);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, areaIndex, recursiveLayers.length, possibilityAnswers.length]);
+  }, [phase, areaIndex, recursiveLayers.length]);
 
   useEffect(() => {
     if (
@@ -258,7 +227,6 @@ const possibilityMirror = useMemo(
           selectedArea,
           areaResponses,
           recursiveLayers,
-          possibilityAnswers,
           discussionMessages,
         }),
       }).catch(() => {});
@@ -272,7 +240,6 @@ const possibilityMirror = useMemo(
     selectedArea,
     areaResponses,
     recursiveLayers,
-    possibilityAnswers,
     discussionMessages,
   ]);
 
@@ -336,26 +303,6 @@ const possibilityMirror = useMemo(
     return;
   }
 
-  if (phase === "possibility") {
-    if (possibilityAnswers.length > 0) {
-      setPossibilityAnswers((current) => current.slice(0, -1));
-      setPossibilityAnswer("");
-      setPhase("possibility");
-      return;
-    }
-
-    setPhase("core_reflection");
-    return;
-  }
-
-  if (phase === "possibility_mirror") {
-    const previousAnswer = possibilityAnswers[possibilityAnswers.length - 1] ?? "";
-    setPossibilityAnswers((current) => current.slice(0, -1));
-    setPossibilityAnswer(previousAnswer);
-    setPhase("possibility");
-    return;
-  }
-
 }
 
   function beginNewSession() {
@@ -369,7 +316,6 @@ fetch("/api/compass/session", {
   phase: "intro",
   areaResponses: [],
   recursiveLayers: [],
-  possibilityAnswers: [],
   discussionMessages: [],
 }),
 }).catch(() => {});
@@ -380,8 +326,6 @@ fetch("/api/compass/session", {
     setSelectedArea(null);
     setRecursiveLayers([]);
     setRecursiveAnswer("");
-setPossibilityAnswers([]);
-setPossibilityAnswer("");
     setDiscussionInput("");
     setDiscussionMessages([]);
     setPhase("intro");
@@ -405,8 +349,21 @@ setPossibilityAnswer("");
 
     setAreaResponses(restoredAreaResponses);
     setRecursiveLayers(restoredRecursiveLayers);
-setPossibilityAnswers(toArray<string>(savedSession.possibility_answers));
-    setDiscussionMessages(restoredMessages);
+
+    const restoredFromRemovedGate =
+      savedSession.phase === "possibility" ||
+      savedSession.phase === "possibility_mirror";
+    setDiscussionMessages(
+      restoredFromRemovedGate && restoredMessages.length === 0
+        ? [
+            {
+              role: "compass",
+              content:
+                "Continue from the Core Reflection you completed. What has your attention now?",
+            },
+          ]
+        : restoredMessages,
+    );
 
     const restoredArea = isCompassGoalArea(savedSession.selected_area)
       ? savedSession.selected_area
@@ -574,44 +531,18 @@ async function generateCompassMirror(
     });
   }
 
-function submitPossibilityAnswer() {
-  const participantAnswer = possibilityAnswer.trim();
-  if (!participantAnswer) return;
+function beginDiscussion(savedMirror: string) {
+  const acceptedMirror =
+    savedMirror || compassMirrorOutput || coreReflection.reflection;
 
-  setHasStarted(true);
-
-  const updated = [...possibilityAnswers, participantAnswer];
-
-  setPossibilityAnswers(updated);
-  setPossibilityAnswer("");
-
-  if (updated.length < COMPASS_POSSIBILITY_STEP_COUNT) {
-    pauseThen(() => setPhase("possibility"), {
-      showAnalyzing: false,
-    });
-    return;
-  }
-
-  pauseThen(() => setPhase("possibility_mirror"), {
-    showAnalyzing: false,
-  });
-}
-
-function beginCompletedReality() {
+  setCompassMirrorOutput(acceptedMirror);
   setDiscussionMessages([
     {
       role: "compass",
-      content: "This has already happened. What is now true in observable terms?",
+      content: acceptedMirror,
     },
   ]);
   setPhase("discussion");
-}
-
-function revisePossibilityChoice() {
-  const previousAnswer = possibilityAnswers[possibilityAnswers.length - 1] ?? "";
-  setPossibilityAnswers((current) => current.slice(0, -1));
-  setPossibilityAnswer(previousAnswer);
-  setPhase("possibility");
 }
 
   async function submitDiscussionMessage() {
@@ -685,15 +616,6 @@ function revisePossibilityChoice() {
                 .map(
                   (layer) =>
                     `Layer ${layer.layer}\n${layer.answer}`,
-                )
-                .join("\n\n"),
-            },
-            {
-              label: "Possibility course",
-              content: possibilityAnswers
-                .map(
-                  (item, index) =>
-                    `Step ${index + 1}\n${item}`,
                 )
                 .join("\n\n"),
             },
@@ -927,52 +849,13 @@ description=""
             />
           )}
 
-          {phase === "possibility" && (
-  <CompassPromptFlow
-    title={possibilityQuestion.question}
-    description={null}
-    value={possibilityAnswer}
-    onChange={setPossibilityAnswer}
-    onSubmit={submitPossibilityAnswer}
-    placeholder={possibilityQuestion.placeholder}
-    buttonLabel="Continue"
-  />
-)}
-
-          {phase === "possibility_mirror" && (
-            <CompassCard
-              title="Your chosen direction"
-              description={possibilityMirror}
-            >
-              <button
-                type="button"
-                onClick={beginCompletedReality}
-                className="primary-button"
-              >
-                Yes — describe the completed reality
-              </button>
-              <button
-                type="button"
-                onClick={revisePossibilityChoice}
-                className="secondary-button"
-              >
-                Change my chosen possibility
-              </button>
-            </CompassCard>
-          )}
-
           {phase === "core_reflection" && (
             <CompassCoreReflection
               reflection={compassMirrorOutput || coreReflection.reflection}
               areaResponses={areaResponses}
               selectedArea={selectedArea}
               recursiveLayers={recursiveLayers}
-              onContinue={(savedMirror) => {
-                setCompassMirrorOutput(
-                  savedMirror || compassMirrorOutput || coreReflection.reflection,
-                );
-                setPhase("possibility");
-              }}
+              onContinue={beginDiscussion}
             />
           )}
 
@@ -1113,12 +996,12 @@ function normalizePhase(value: string | null | undefined): CompassPhase {
     "depth_intro",
     "depth",
     "core_reflection",
-    "possibility",
-    "possibility_mirror",
     "discussion",
   ];
 
   if (
+    value === "possibility" ||
+    value === "possibility_mirror" ||
     value === "resistance" ||
     value === "execution_check" ||
     value === "complete"
@@ -1149,4 +1032,3 @@ function isCompassGoalArea(value: unknown): value is CompassGoalArea {
 function toArray<T>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
 }
-

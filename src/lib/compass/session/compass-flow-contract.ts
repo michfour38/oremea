@@ -1,5 +1,4 @@
 export const COMPASS_DESCENT_LAYER_COUNT = 7 as const
-export const COMPASS_POSSIBILITY_STEP_COUNT = 4 as const
 
 export const COMPASS_PRIMARY_FLOW = [
   "intro",
@@ -9,8 +8,6 @@ export const COMPASS_PRIMARY_FLOW = [
   "depth_intro",
   "depth",
   "core_reflection",
-  "possibility",
-  "possibility_mirror",
   "discussion",
 ] as const
 
@@ -30,11 +27,7 @@ export const COMPASS_PHASE_PURPOSE: Record<CompassPrimaryPhase, string> = {
   depth:
     "Follow why the chosen direction matters for exactly seven accepted layers without introducing possibility, planning, or action.",
   core_reflection:
-    "Reflect the completed Descent in the participant's words and let them decide whether to continue.",
-  possibility:
-    "Name available resources, strengths, real possibilities, and the possibility the participant chooses.",
-  possibility_mirror:
-    "Return the participant's chosen direction for correction before it becomes a working reality.",
+    "Reflect the completed Descent in the participant's words and let them decide whether to enter Discussion.",
   discussion:
-    "Describe the completed reality, resolve meaningful objections, maintain the working Map, and end with one participant-chosen movement.",
+    "Continue from the Core Reflection, resolve what is actually current, maintain the working Map, and end with one participant-chosen movement.",
 }
