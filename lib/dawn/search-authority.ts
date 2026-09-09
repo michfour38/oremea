@@ -51,8 +51,15 @@ export const DISCOVERY_MEASUREMENT_REGISTRY = {
   },
   bingWebmasterAiPerformance: {
     mode: "observation_only",
-    dimensions: ["topics", "intents", "citation_share", "compare"],
-    rule: "availability_must_be_confirmed_in_bing_before_recording",
+    dimensions: [
+      "total_citations",
+      "average_cited_pages",
+      "grounding_queries",
+      "page_level_citation_activity",
+      "visibility_trends_over_time",
+    ],
+    rule: "record_only_metrics_officially_available_in_bing_webmaster_tools",
+    interpretation: "citation_activity_is_retrieval_evidence_not_ranking_authority_or_causation",
   },
   aiCitationEvidence: {
     mode: "observation_only",
