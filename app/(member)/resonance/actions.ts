@@ -17,6 +17,19 @@ import {
   getActiveResonanceRun,
 } from "@/src/lib/resonance/resonance-week-run";
 
+const RESONANCE_ROOM_LABELS: Record<number, string> = {
+  1: "Resonance · The Hearth",
+  2: "Resonance · Mirror",
+  3: "Resonance · Garden",
+  4: "Resonance · Bearing",
+  5: "Resonance · Pulse",
+  6: "Resonance · Shadow",
+  7: "Resonance · Forge",
+  8: "Resonance · Vision",
+  9: "Resonance · Gathering",
+  10: "Resonance · Becoming",
+};
+
 async function assertActiveDay(
   userId: string,
   weekNumber: number,
@@ -242,5 +255,9 @@ export async function completeResonanceWeekAction(formData: FormData) {
   revalidatePath("/entry");
   revalidatePath("/resonance");
   revalidatePath("/resonance/archive");
-  redirect("/entry");
+
+  const product = RESONANCE_ROOM_LABELS[weekNumber] ?? "Oremea generally";
+  redirect(
+    `https://www.oremea.com/feedback/complete?product=${encodeURIComponent(product)}&source=resonance-complete`,
+  );
 }
