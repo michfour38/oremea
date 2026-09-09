@@ -1,0 +1,57 @@
+{
+  "version": "2026-09-09",
+  "authority": "measurement-only",
+  "purpose": "Track official search and AI-discovery evidence without changing Oremea product truth or participant-facing UI.",
+  "guardrails": {
+    "uiChanges": false,
+    "productTruthChanges": false,
+    "pricingChanges": false,
+    "launchStateChanges": false,
+    "affiliateActivationChanges": false,
+    "paidMarketingChanges": false,
+    "modelTrainingPermissionChanges": false,
+    "metricsAreEvidenceNotAuthority": true,
+    "doNotInferRankingOrCausation": true
+  },
+  "sources": {
+    "googleSearchConsole": {
+      "mode": "read-only",
+      "generativeAiPerformance": {
+        "status": "observe-when-available",
+        "fields": ["impressions", "pages", "country", "device", "date"]
+      },
+      "southAfricaProductSurface": {
+        "eligibility": "unverified",
+        "requiresSpecialMarkup": false,
+        "rankingBenefitClaimAllowed": false
+      }
+    },
+    "bingWebmaster": {
+      "mode": "read-only",
+      "aiPerformance": {
+        "fields": ["citations", "citedUrls", "groundingQueries", "intents", "topics", "citationShare", "compare"]
+      }
+    },
+    "openai": {
+      "mode": "policy-observation",
+      "searchCrawler": "OAI-SearchBot",
+      "trainingCrawler": "GPTBot",
+      "keepPermissionsIndependent": true
+    },
+    "anthropic": {
+      "mode": "policy-observation",
+      "searchCrawler": "Claude-SearchBot",
+      "userFetchCrawler": "Claude-User",
+      "trainingCrawler": "ClaudeBot",
+      "keepPermissionsIndependent": true
+    },
+    "perplexity": {
+      "mode": "policy-observation",
+      "crawler": "PerplexityBot",
+      "userFetchCrawler": "Perplexity-User",
+      "wafVerification": ["official-ip-ranges", "user-agent"],
+      "refreshOfficialIpRanges": true
+    }
+  },
+  "responseRule": "Only escalate a platform change when it can materially affect crawling, indexing, AI-search citation or retrieval, Search Console or Bing measurement, WAF crawler handling, or evidence-based marketing. Apply the smallest safe response."
+}
