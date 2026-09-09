@@ -16,8 +16,6 @@ const KNOWN_PRODUCTS = new Set([
   "Resonance · Vision",
   "Resonance · Gathering",
   "Resonance · Becoming",
-  "Harmonize",
-  "The Current",
   "Oremea generally",
 ]);
 
@@ -25,10 +23,14 @@ function ScoreRow({
   label,
   value,
   onChange,
+  lowLabel,
+  highLabel,
 }: {
   label: string;
   value: number | null;
   onChange: (value: number) => void;
+  lowLabel: string;
+  highLabel: string;
 }) {
   return (
     <fieldset>
@@ -49,20 +51,67 @@ function ScoreRow({
             {score}
           </button>
         ))}
-        <span className="ml-1 text-xs text-zinc-500">1 = not clear · 5 = very clear</span>
+      </div>
+      <div className="mt-2 flex max-w-[310px] justify-between text-[11px] text-zinc-500">
+        <span>{lowLabel}</span>
+        <span>{highLabel}</span>
       </div>
     </fieldset>
   );
 }
+
+function RecommendRow({
+  value,
+  onChange,
+}: {
+  value: number | null;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <fieldset>
+      <legend className="text-sm leading-6 text-zinc-200">
+        How likely are you to recommend this experience to someone who needed this
+        kind of support?
+      </legend>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {Array.from({ length: 11 }, (_, index) => index).map((score) => (
+          <button
+            key={score}
+            type="button"
+            aria-pressed={value === score}
+            onClick={() => onChange(score)}
+            className={`flex h-10 w-10 items-center justify-center rounded-full border text-xs transition ${
+              value === score
+                ? "border-[#c6a96b] bg-[#c6a96b]/20 text-[#f0dcae]"
+                : "border-white/10 bg-black/25 text-zinc-400 hover:border-[#c6a96b]/45 hover:text-zinc-200"
+            }`}
+          >
+            {score}
+          </button>
+        ))}
+      </div>
+      <div className="mt-2 flex max-w-[510px] justify-between text-[11px] text-zinc-500">
+        <span>Not likely</span>
+        <span>Very likely</span>
+      </div>
+    </fieldset>
+  );
+}
+
+const TEXTAREA_CLASS =
+  "mt-3 w-full resize-y rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm leading-7 text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-[#c6a96b]/60";
 
 export default function CompletionFeedbackForm() {
   const [product, setProduct] = useState("Oremea generally");
   const [source, setSource] = useState("completion");
   const [beforeClarity, setBeforeClarity] = useState<number | null>(null);
   const [afterClarity, setAfterClarity] = useState<number | null>(null);
+  const [fitScore, setFitScore] = useState<number | null>(null);
+  const [recommendScore, setRecommendScore] = useState<number | null>(null);
   const [whatChanged, setWhatChanged] = useState("");
-  const [showWitnessFeedback, setShowWitnessFeedback] = useState(false);
-  const [witnessMissed, setWitnessMissed] = useState("");
+  const [mostUseful, setMostUseful] = useState("");
+  const [improvement, setImprovement] = useState("");
+  const [anythingElse, setAnythingElse] = useState("");
   const [website, setWebsite] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -87,7 +136,15 @@ export default function CompletionFeedbackForm() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (beforeClarity === null || afterClarity === null || sending) return;
+    if (
+      beforeClarity === null ||
+      afterClarity === null ||
+      fitScore === null ||
+      recommendScore === null ||
+      sending
+    ) {
+      return;
+    }
 
     setSending(true);
     setSent(false);
@@ -102,8 +159,12 @@ export default function CompletionFeedbackForm() {
           category: "completion",
           beforeClarity,
           afterClarity,
+          fitScore,
+          recommendScore,
           whatChanged,
-          witnessMissed,
+          mostUseful,
+          improvement,
+          anythingElse,
           source,
           website,
         }),
@@ -111,16 +172,16 @@ export default function CompletionFeedbackForm() {
       const data = await response.json().catch(() => null);
 
       if (!response.ok || !data?.success) {
-        throw new Error(data?.error || "Your feedback could not be sent yet.");
+        throw new Error(data?.error || "Your survey could not be sent yet.");
       }
 
       setSent(true);
-      setNotice(data.message || "Thank you. This feedback stays private.");
+      setNotice(data.message || "Thank you. Your survey has reached Oremea privately.");
     } catch (error) {
       setNotice(
         error instanceof Error
           ? error.message
-          : "Your feedback could not be sent yet.",
+          : "Your survey could not be sent yet.",
       );
     } finally {
       setSending(false);
@@ -131,26 +192,24 @@ export default function CompletionFeedbackForm() {
     return (
       <div className="rounded-[2rem] border border-[#c6a96b]/25 bg-black/45 p-6 shadow-2xl shadow-black/25 backdrop-blur md:p-8">
         <p className="text-sm uppercase tracking-[0.24em] text-[#c6a96b]">
-          Received privately
+          Survey complete
         </p>
-        <h2 className="mt-4 text-3xl font-light text-zinc-100">
-          Thank you.
-        </h2>
+        <h2 className="mt-4 text-3xl font-light text-zinc-100">Thank you.</h2>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-300">
           {notice} Nothing from this survey is published automatically.
         </p>
 
         <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-5">
-          <p className="text-base text-zinc-100">Want to make a reflection public?</p>
+          <p className="text-base text-zinc-100">Would you like to leave a public review?</p>
           <p className="mt-2 text-sm leading-7 text-zinc-400">
-            That is a separate choice. A public review requires its own explicit
-            submission and publication permission.
+            That is separate from this survey. Only the reflection you deliberately
+            submit on the Reviews page can be considered for publication.
           </p>
           <Link
             href={reviewHref}
             className="mt-5 inline-flex rounded-full border border-[#c6a96b]/45 bg-[#c6a96b]/10 px-5 py-3 text-sm text-[#e5d4a6] transition hover:border-[#c6a96b]/70"
           >
-            Share a public reflection
+            Leave a public review
           </Link>
         </div>
 
@@ -174,62 +233,86 @@ export default function CompletionFeedbackForm() {
           {product}
         </p>
         <p className="mt-3 text-sm leading-7 text-zinc-300">
-          This completion survey is private. It helps Oremea measure whether the
-          experience actually changed anything and find what the product missed.
+          This is the full completion survey. It is private and separate from the
+          Feedback button and the public Reviews page.
         </p>
       </div>
 
-      <div className="mt-8 space-y-7">
+      <div className="mt-8 space-y-8">
         <ScoreRow
           label="Before this experience, how clear did this feel?"
           value={beforeClarity}
           onChange={setBeforeClarity}
+          lowLabel="Not clear"
+          highLabel="Very clear"
         />
+
         <ScoreRow
           label="How clear does it feel now?"
           value={afterClarity}
           onChange={setAfterClarity}
+          lowLabel="Not clear"
+          highLabel="Very clear"
         />
+
+        <ScoreRow
+          label="How well did this experience do what you came here for?"
+          value={fitScore}
+          onChange={setFitScore}
+          lowLabel="Not at all"
+          highLabel="Exactly"
+        />
+
+        <RecommendRow value={recommendScore} onChange={setRecommendScore} />
       </div>
 
-      <label className="mt-8 block text-sm leading-6 text-zinc-200">
+      <label className="mt-9 block text-sm leading-6 text-zinc-200">
         What changed, if anything?
         <textarea
           value={whatChanged}
           onChange={(event) => setWhatChanged(event.target.value)}
           maxLength={5000}
-          rows={6}
+          rows={5}
           placeholder="Use your own words."
-          className="mt-3 w-full resize-y rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm leading-7 text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-[#c6a96b]/60"
+          className={TEXTAREA_CLASS}
         />
       </label>
 
-      <button
-        type="button"
-        onClick={() => setShowWitnessFeedback((current) => !current)}
-        className="mt-7 text-left text-sm text-[#c6a96b] underline-offset-4 transition hover:underline"
-      >
-        The witness missed something
-      </button>
+      <label className="mt-7 block text-sm leading-6 text-zinc-200">
+        What was most useful?
+        <textarea
+          value={mostUseful}
+          onChange={(event) => setMostUseful(event.target.value)}
+          maxLength={5000}
+          rows={4}
+          placeholder="What actually helped?"
+          className={TEXTAREA_CLASS}
+        />
+      </label>
 
-      {showWitnessFeedback ? (
-        <div className="mt-4 rounded-3xl border border-[#c6a96b]/20 bg-black/25 p-5">
-          <p className="text-sm leading-7 text-zinc-300">
-            Something emerged that Oremea did not know how to hold well. What did
-            it overlook? What felt most alive, most important, or most easily
-            misunderstood? If you were sitting in the witness seat, where would
-            your curiosity have gone next?
-          </p>
-          <textarea
-            value={witnessMissed}
-            onChange={(event) => setWitnessMissed(event.target.value)}
-            maxLength={5000}
-            rows={6}
-            placeholder="Teach Oremea what it missed..."
-            className="mt-4 w-full resize-y rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm leading-7 text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-[#c6a96b]/60"
-          />
-        </div>
-      ) : null}
+      <label className="mt-7 block text-sm leading-6 text-zinc-200">
+        What could work better?
+        <textarea
+          value={improvement}
+          onChange={(event) => setImprovement(event.target.value)}
+          maxLength={5000}
+          rows={4}
+          placeholder="Anything confusing, unnecessary, missing, awkward, or frustrating belongs here."
+          className={TEXTAREA_CLASS}
+        />
+      </label>
+
+      <label className="mt-7 block text-sm leading-6 text-zinc-200">
+        Anything else Oremea should know?
+        <textarea
+          value={anythingElse}
+          onChange={(event) => setAnythingElse(event.target.value)}
+          maxLength={5000}
+          rows={4}
+          placeholder="Optional."
+          className={TEXTAREA_CLASS}
+        />
+      </label>
 
       <label className="sr-only" aria-hidden="true">
         Website
@@ -244,17 +327,23 @@ export default function CompletionFeedbackForm() {
       <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
         <button
           type="submit"
-          disabled={sending || beforeClarity === null || afterClarity === null}
+          disabled={
+            sending ||
+            beforeClarity === null ||
+            afterClarity === null ||
+            fitScore === null ||
+            recommendScore === null
+          }
           className="inline-flex items-center justify-center rounded-full bg-[#c6a96b] px-6 py-3 text-sm font-medium text-[#0f0f0d] transition hover:brightness-110 disabled:cursor-wait disabled:opacity-50"
         >
-          {sending ? "Sending…" : "Send private completion feedback"}
+          {sending ? "Sending…" : "Complete survey"}
         </button>
 
         <Link
           href="https://www.oremea.com"
           className="inline-flex items-center justify-center rounded-full border border-white/10 px-5 py-3 text-sm text-zinc-400 transition hover:border-[#c6a96b]/40 hover:text-[#c6a96b]"
         >
-          Skip and return to Oremea
+          Skip survey
         </Link>
       </div>
 
