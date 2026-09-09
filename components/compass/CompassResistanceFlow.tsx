@@ -124,7 +124,7 @@ export function CompassCoreReflection({
         disabled={!mirrorAvailable}
         className="primary-button disabled:opacity-60"
       >
-        Continue
+        Continue to Discussion
       </button>
     </CompassCard>
   );

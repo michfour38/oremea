@@ -4,14 +4,8 @@ import { readFileSync } from "node:fs"
 import {
   COMPASS_DESCENT_LAYER_COUNT,
   COMPASS_PHASE_PURPOSE,
-  COMPASS_POSSIBILITY_STEP_COUNT,
   COMPASS_PRIMARY_FLOW,
 } from "../src/lib/compass/session/compass-flow-contract"
-import {
-  buildPossibilityMirror,
-  COMPASS_POSSIBILITY_QUESTIONS,
-  getPossibilityQuestion,
-} from "../src/lib/compass/session/possibility-expansion"
 
 function read(path: string) {
   return readFileSync(path, "utf8")
@@ -21,11 +15,6 @@ assert.equal(
   COMPASS_DESCENT_LAYER_COUNT,
   7,
   "Compass must preserve all seven Why layers.",
-)
-assert.equal(
-  COMPASS_POSSIBILITY_STEP_COUNT,
-  4,
-  "The post-Descent course must preserve resource, strength/support, possibilities, and participant choice.",
 )
 assert.deepEqual(
   COMPASS_PRIMARY_FLOW,
@@ -37,8 +26,6 @@ assert.deepEqual(
     "depth_intro",
     "depth",
     "core_reflection",
-    "possibility",
-    "possibility_mirror",
     "discussion",
   ],
   "Compass must keep one legible route from orientation to participant-owned movement.",
@@ -51,59 +38,9 @@ for (const phase of COMPASS_PRIMARY_FLOW) {
   )
 }
 
-assert.equal(
-  COMPASS_POSSIBILITY_QUESTIONS.length,
-  COMPASS_POSSIBILITY_STEP_COUNT,
-  "Every post-Descent possibility purpose must have one question.",
-)
-assert.match(
-  getPossibilityQuestion({ selectedArea: "income", index: 0 }).question,
-  /resource/i,
-  "Possibility step one must ask for a resource.",
-)
-assert.match(
-  getPossibilityQuestion({ selectedArea: "income", index: 1 }).question,
-  /strength|support/i,
-  "Possibility step two must ask what is already available.",
-)
-assert.match(
-  getPossibilityQuestion({ selectedArea: "income", index: 2 }).question,
-  /possibilities/i,
-  "Possibility step three must make real possibilities visible.",
-)
-assert.match(
-  getPossibilityQuestion({ selectedArea: "income", index: 3 }).question,
-  /choosing/i,
-  "Possibility step four must leave the choice with the participant.",
-)
-
-const possibilityMirror = buildPossibilityMirror({
-  selectedArea: "income",
-  possibilityAnswers: [
-    "Two uninterrupted mornings",
-    "I already know the customers",
-    "A smaller paid pilot or a partner launch",
-    "I am choosing the smaller paid pilot",
-  ],
-})
-
-for (const participantPhrase of [
-  "Two uninterrupted mornings",
-  "I already know the customers",
-  "A smaller paid pilot or a partner launch",
-  "I am choosing the smaller paid pilot",
-]) {
-  assert.match(
-    possibilityMirror,
-    new RegExp(participantPhrase),
-    "The possibility mirror must preserve every participant-written answer.",
-  )
-}
-
 const page = read("app/compass/page.tsx")
 const depth = read("components/compass/CompassDepthFlow.tsx")
 const discussion = read("components/compass/CompassDiscussionFlow.tsx")
-const promptFlow = read("components/compass/CompassPromptFlow.tsx")
 const stageCopy = read("src/lib/compass/session/session-stage-copy.ts")
 const conversationEngine = read("src/lib/el/conversation-engine.ts")
 const endingEngine = read("src/lib/compass/ending/ending-engine.ts")
@@ -125,33 +62,23 @@ assert.match(
 )
 assert.match(
   page,
-  /onContinue=\{\(savedMirror\) => \{[\s\S]*setPhase\("possibility"\)/,
-  "Accepting Core Reflection must begin the post-Descent possibility course.",
+  /onContinue=\{beginDiscussion\}/,
+  "Accepting Core Reflection must enter Discussion directly.",
 )
 assert.match(
   page,
-  /updated\.length < COMPASS_POSSIBILITY_STEP_COUNT/,
-  "All four possibility purposes must be completed.",
+  /function beginDiscussion\(savedMirror: string\)[\s\S]*content: acceptedMirror[\s\S]*setPhase\("discussion"\)/,
+  "Discussion must begin from the accepted Core Reflection and its live question.",
+)
+assert.doesNotMatch(
+  page,
+  /CompassPromptFlow|possibilityQuestion|submitPossibilityAnswer|setPhase\("possibility|\{phase === "possibility/,
+  "No mandatory questionnaire may sit between Core Reflection and Discussion.",
 )
 assert.match(
   page,
-  /setPhase\("possibility_mirror"\)/,
-  "The participant must review the chosen direction before Discussion.",
-)
-assert.match(
-  page,
-  /onClick=\{beginCompletedReality\}[\s\S]*Yes — describe the completed reality/,
-  "The chosen-direction confirmation button must enter completed-reality Discussion.",
-)
-assert.match(
-  page,
-  /onClick=\{revisePossibilityChoice\}[\s\S]*Change my chosen possibility/,
-  "The correction button must return to the participant's choice.",
-)
-assert.match(
-  page,
-  /This has already happened\. What is now true in observable terms\?/,
-  "Discussion must begin by asking for completed reality rather than more Recognition.",
+  /value === "possibility" \|\|[\s\S]*value === "possibility_mirror" \|\|[\s\S]*return "discussion"/,
+  "Saved runs from the removed questionnaire must resume in Discussion.",
 )
 assert.doesNotMatch(
   page,
@@ -179,6 +106,11 @@ assert.match(
   /const acceptedMirror = savedCoreMirror \|\| fallbackReflection;[\s\S]*onContinue\(acceptedMirror\)/,
   "Core Reflection Continue must accept the participant-grounded fallback instead of becoming an enabled no-op.",
 )
+assert.match(
+  read("components/compass/CompassResistanceFlow.tsx"),
+  /Continue to Discussion/,
+  "The Core Reflection button must name its direct destination.",
+)
 
 assert.match(
   stageCopy,
@@ -195,10 +127,15 @@ assert.match(
   /completed all seven Why layers/,
   "Discussion intelligence must know the full Descent is complete.",
 )
-assert.match(
+assert.doesNotMatch(
   conversationEngine,
-  /possibility-course answers preserve the participant/i,
-  "Discussion intelligence must preserve resource, strength/support, possibilities, and choice.",
+  /possibility-course answers|named a resource and an available strength/i,
+  "Discussion must not pretend the participant completed the removed questionnaire.",
+)
+assert.doesNotMatch(
+  endingEngine,
+  /POSSIBILITY RESPONSES|Possibility-course answers|named a resource and an available strength/i,
+  "The ending must not depend on answers from the removed questionnaire.",
 )
 assert.match(
   endingEngine,
@@ -237,11 +174,6 @@ assert.match(
   discussion,
   /disabled=\{!discussionInput\.trim\(\) \|\| discussionSending\}/,
   "Continue discussion must not present an enabled no-op button.",
-)
-assert.match(
-  promptFlow,
-  /disabled=\{!value\.trim\(\)\}/,
-  "Every open Compass prompt must disable blank no-op submissions.",
 )
 assert.match(
   discussion,

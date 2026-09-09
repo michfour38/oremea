@@ -34,7 +34,7 @@ export const SESSION_STAGE_COPY: Record<
   resistance_mapping: {
     title: "Completed Reality and Objections",
     description:
-      "The participant describes what is observably true when the chosen possibility exists and names any meaningful objection in their own words.",
+      "Discussion follows what is current after the Core Reflection and lets the participant name any meaningful objection in their own words.",
   },
 
   execution_calibration: {

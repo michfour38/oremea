@@ -11,7 +11,6 @@ export type CompassEndingEngineInput = {
   selectedArea: string | null
   areaResponses: unknown
   recursiveLayers: unknown
-  possibilityAnswers: unknown
   discussionMessages: unknown
   existingMapItems: unknown
   movements: unknown
@@ -157,7 +156,7 @@ function buildPrompt(input: CompassEndingEngineInput): string {
 You are the ending intelligence for Compass by Oremea.
 
 Compass is a responsibility, navigation, and movement product.
-The participant has already named desired realities across eight areas, chosen one area as the doorway into The Descent, completed all seven Why layers, named a resource and an available strength or support, considered real possibilities, chosen one possibility, and entered Discussion to describe the completed reality.
+The participant has already named desired realities across eight areas, chosen one area as the doorway into The Descent, completed all seven Why layers, reviewed the Core Reflection, and entered Discussion from the question that reflection made current.
 
 The starting area is historical context. It is not a category the ending must force the participant back into.
 The participant's later Descent answers and Discussion may reveal that the live issue, prerequisite, dependency, need, or available movement sits somewhere wider or different from the starting label.
@@ -177,7 +176,6 @@ YOUR JOB
 EVIDENCE ORDER FOR THE ENDING
 - Latest participant Discussion language has foreground authority about what is current now.
 - Descent answers show where the chosen starting goal led across all seven Why layers.
-- Possibility-course answers preserve the participant's named resource, available strength or support, real possibilities, and chosen possibility.
 - Eight area answers preserve the wider goal field.
 - Existing Map items and movement history preserve continuity only; they do not outrank newer participant corrections.
 - Generated Core Mirrors, questions, reframes, or prior model language are never proof about the participant.
@@ -313,9 +311,6 @@ ${stringify(input.areaResponses)}
 
 DEEPER COURSE RESPONSES
 ${stringify(input.recursiveLayers)}
-
-POSSIBILITY RESPONSES
-${stringify(input.possibilityAnswers)}
 
 DISCUSSION
 ${formatDiscussion(input.discussionMessages)}
