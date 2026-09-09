@@ -33,6 +33,7 @@ export function CompassCard({
   const isResumeCard = title === "Resume Compass?";
   const isDiscussionCard = title === "Discussion";
   const isMapCard = title === "Map";
+  const isCompletionCard = title === "Resolved. Movement chosen.";
   const childArray = Children.toArray(children);
   const cardRef = useRef<HTMLElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -239,6 +240,15 @@ export function CompassCard({
     const target = event.target as HTMLElement;
     const button = target.closest("button");
     const label = button?.textContent?.trim() ?? "";
+
+    if (isCompletionCard && label === "Leave Compass and move") {
+      event.preventDefault();
+      event.stopPropagation();
+      window.location.assign(
+        "https://www.oremea.com/feedback/complete?product=Compass&source=compass-complete",
+      );
+      return;
+    }
 
     if (isDiscussionCard && label === "Reach a resolution" && !mapReview?.reviewed) {
       event.preventDefault();
