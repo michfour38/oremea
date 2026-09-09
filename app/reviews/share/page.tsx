@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 
 const PRODUCT_OPTIONS = [
@@ -43,14 +42,14 @@ const INITIAL_FORM: ReviewForm = {
 };
 
 export default function ShareReviewPage() {
-  const searchParams = useSearchParams();
   const [form, setForm] = useState(INITIAL_FORM);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
-    const requestedProduct = searchParams.get("product");
+    const params = new URLSearchParams(window.location.search);
+    const requestedProduct = params.get("product");
     if (
       requestedProduct &&
       PRODUCT_OPTIONS.some((option) => option === requestedProduct)
@@ -59,7 +58,7 @@ export default function ShareReviewPage() {
         current.product ? current : { ...current, product: requestedProduct },
       );
     }
-  }, [searchParams]);
+  }, []);
 
   function update<K extends keyof ReviewForm>(key: K, value: ReviewForm[K]) {
     setForm((current) => ({ ...current, [key]: value }));
