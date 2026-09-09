@@ -52,7 +52,7 @@ export function ExploreEcosystem() {
         </div>
 
         <div className="mt-10 grid gap-4 md:grid-cols-2">
-          {products.map((product, index) => (
+          {products.map((product) => (
             <article
               key={product.name}
               className="group flex min-h-full flex-col rounded-3xl border border-white/10 bg-zinc-950/80 p-6 transition hover:border-[#b79a63]/35 md:p-8"
@@ -66,10 +66,7 @@ export function ExploreEcosystem() {
                 </span>
               </div>
 
-              <div className="mt-8 flex items-baseline gap-3">
-                <span className="text-sm tabular-nums text-zinc-600">
-                  0{index + 1}
-                </span>
+              <div className="mt-8">
                 <h3 className="text-3xl font-light text-zinc-100">
                   {product.name}
                 </h3>
