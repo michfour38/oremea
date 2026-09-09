@@ -257,6 +257,8 @@ function compassDomainResponse(req: NextRequest) {
       pathname === "/profile" ||
       pathname === "/compare" ||
       pathname === "/contact" ||
+      pathname === "/feedback" ||
+      pathname.startsWith("/feedback/") ||
       pathname === "/reviews" ||
       pathname.startsWith("/reviews/")
     ) {
@@ -306,6 +308,8 @@ const isPublicRoute = createRouteMatcher([
   "/resonance-rooms(.*)",
   "/contact(.*)",
   "/api/contact",
+  "/feedback(.*)",
+  "/api/feedback/submit",
   "/reviews(.*)",
   "/api/reviews/submit",
   "/terms(.*)",
