@@ -49,6 +49,7 @@ export function SiteNav() {
             <NavItem href="/explore" label="Explore" pathname={pathname} />
             <NavItem href="/works" label="WORKS" pathname={pathname} />
             <NavItem href="/reviews" label="Reviews" pathname={pathname} />
+            <NavItem href="/feedback" label="Feedback" pathname={pathname} />
             <NavItem href="/compare" label="Compare" pathname={pathname} />
             <NavItem href="/contact" label="Contact" pathname={pathname} />
           </nav>
