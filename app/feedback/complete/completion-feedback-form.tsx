@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 
 const KNOWN_PRODUCTS = new Set([
   "Recognition",
@@ -57,13 +56,8 @@ function ScoreRow({
 }
 
 export default function CompletionFeedbackForm() {
-  const searchParams = useSearchParams();
-  const requestedProduct = searchParams.get("product") || "Oremea generally";
-  const product = KNOWN_PRODUCTS.has(requestedProduct)
-    ? requestedProduct
-    : "Oremea generally";
-  const source = (searchParams.get("source") || "completion").slice(0, 180);
-
+  const [product, setProduct] = useState("Oremea generally");
+  const [source, setSource] = useState("completion");
   const [beforeClarity, setBeforeClarity] = useState<number | null>(null);
   const [afterClarity, setAfterClarity] = useState<number | null>(null);
   const [whatChanged, setWhatChanged] = useState("");
@@ -73,6 +67,17 @@ export default function CompletionFeedbackForm() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const requestedProduct = params.get("product") || "Oremea generally";
+    setProduct(
+      KNOWN_PRODUCTS.has(requestedProduct)
+        ? requestedProduct
+        : "Oremea generally",
+    );
+    setSource((params.get("source") || "completion").slice(0, 180));
+  }, []);
 
   const reviewHref = useMemo(
     () =>
