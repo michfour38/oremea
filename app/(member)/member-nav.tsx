@@ -122,6 +122,15 @@ export default function MemberNav() {
         </div>
 
         <div className="ml-auto flex h-12 items-center justify-end gap-3">
+          {activeProduct === "recognition" ? (
+            <a
+              href="https://www.oremea.com/feedback/complete?product=Recognition&source=recognition-finished"
+              className="flex h-10 items-center px-3 text-sm font-medium text-[#C8A96A] transition hover:text-[#F1DFB4]"
+            >
+              Finish reflection
+            </a>
+          ) : null}
+
           <div
             className="relative flex h-12 items-center"
             onMouseLeave={() => setOpenMenu(null)}
@@ -163,6 +172,13 @@ export default function MemberNav() {
               </div>
             ) : null}
           </div>
+
+          <a
+            href="https://www.oremea.com/feedback"
+            className="flex h-10 items-center px-3 text-sm font-medium text-zinc-300 transition hover:text-white"
+          >
+            Feedback
+          </a>
 
           <div
             className="relative flex h-12 items-center"
