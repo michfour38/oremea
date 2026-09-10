@@ -6,7 +6,7 @@
  * or model-training permissions without separate explicit authority.
  */
 
-export const DAWN_SEARCH_AUTHORITY_VERSION = "2026-09-09" as const;
+export const DAWN_SEARCH_AUTHORITY_VERSION = "2026-09-10" as const;
 
 export const PROTECTED_DECISIONS = [
   "product_truth",
@@ -35,7 +35,9 @@ export const CRAWLER_AUTHORITY = {
   anthropic: {
     discoveryAgents: ["Claude-SearchBot", "Claude-User"],
     trainingControlAgents: ["ClaudeBot"],
-    verification: "official_anthropic_guidance",
+    verification: "official_anthropic_published_source_ip_ranges_for_waf_identity_verification",
+    robotsPolicy: "robots_txt_remains_the_permission_control",
+    rule: "source_ip_verification_must_not_change_or_override_robots_permissions",
   },
   perplexity: {
     discoveryAgents: ["PerplexityBot", "Perplexity-User"],
@@ -72,6 +74,8 @@ export const WAF_POLICY = {
   principle: "verify_before_special_treatment",
   rules: [
     "Do not trust a crawler user-agent alone when the provider publishes a verification method.",
+    "Use official provider-published source IP data only for crawler identity verification when applicable.",
+    "IP verification never grants a crawler permission that robots.txt denies.",
     "Do not bypass the WAF globally for crawlers.",
     "Keep public discovery and model-training permissions independent.",
     "Private/member product surfaces remain blocked from crawler discovery unless explicitly re-authorized.",
