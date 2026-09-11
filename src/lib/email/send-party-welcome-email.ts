@@ -13,10 +13,12 @@ export async function sendPartyWelcomeEmail({
   to,
   firstName,
   questionsToken,
+  guestPassTokens,
 }: {
   to: string;
   firstName?: string | null;
   questionsToken: string;
+  guestPassTokens: string[];
 }) {
   const apiKey = process.env.RESEND_API_KEY?.trim();
   if (!apiKey) {
@@ -34,6 +36,35 @@ export async function sendPartyWelcomeEmail({
   const greeting = firstName?.trim()
     ? `Hi ${escapeHtml(firstName.trim())},`
     : "Hi,";
+
+  const guestPassesHtml = guestPassTokens.slice(0, 2).map((token, index) => {
+    const passUrl =
+      `${origin.replace(/\/$/, "")}/party?pass=${encodeURIComponent(token)}`;
+    const subject = "A guest pass for What Keeps Repeating in Connection?";
+    const body = [
+      "I’m joining a free live Oremea session called “What Keeps Repeating in Connection?”",
+      "",
+      "I have a guest pass for you. If the conversation feels useful, claim your place here:",
+      passUrl,
+    ].join("\n");
+    const mailto =
+      `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    return `
+      <div style="margin-top:16px;padding:20px;border:1px solid #3A2F1C;border-radius:18px;">
+        <p style="margin:0;font-size:18px;color:#F1DFB4;">Guest Pass ${index + 1}</p>
+        <p style="margin-top:10px;font-size:14px;line-height:1.7;color:#BFBFBF;">
+          One person can claim this pass. Oremea does not need their email address until they choose to register.
+        </p>
+        <a href="${mailto}" style="display:inline-block;margin-top:12px;padding:10px 18px;border:1px solid #C8A96A;border-radius:999px;color:#F1DFB4;text-decoration:none;font-size:14px;">
+          Send Guest Pass ${index + 1} by email
+        </a>
+        <p style="margin-top:12px;font-size:12px;line-height:1.6;color:#777;word-break:break-all;">
+          Or copy this pass link: ${escapeHtml(passUrl)}
+        </p>
+      </div>
+    `;
+  }).join("");
 
   const resend = new Resend(apiKey);
   const { error } = await resend.emails.send({
@@ -63,8 +94,17 @@ export async function sendPartyWelcomeEmail({
               Open the Questions Box
             </a>
           </div>
+          <div style="margin-top:34px;padding:28px;border:1px solid #4A3A20;background:#10100D;border-radius:22px;">
+            <p style="margin:0;font-size:25px;color:#F1DFB4;">Two guest passes</p>
+            <p style="margin-top:16px;font-size:16px;line-height:1.8;color:#CFCFCF;">
+              These are yours to send. Each pass is unique and can be claimed once.
+              Use the buttons below to open a ready-written email from your own mailbox.
+            </p>
+            ${guestPassesHtml}
+          </div>
           <p style="margin-top:30px;font-size:14px;line-height:1.8;color:#777;">
-            Please keep this email. The Questions Box link is private to this registration and is the way back into the box whenever another question comes up.
+            Please keep this welcome email private: it contains your personal Questions Box link.
+            Send the guest passes using the buttons above rather than forwarding this whole email.
           </p>
         </div>
       </div>
