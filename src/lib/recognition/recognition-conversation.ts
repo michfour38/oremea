@@ -392,6 +392,45 @@ function keepAtMostOneQuestion(value: string) {
   });
 }
 
+function buildDeterministicRecognitionFallback(
+  recentMessages: RecognitionConversationMessage[],
+) {
+  const latest =
+    [...recentMessages]
+      .reverse()
+      .find((message) => message.role === "user")
+      ?.content.trim() ?? "";
+
+  const retaliationSignal =
+    /\b(?:irritat|annoy|punish|retaliat|revenge|payback|get back at|hurt him|hurt her|hurt them|piss .* off)\b/i.test(
+      latest,
+    );
+
+  const motiveSignal =
+    /\b(?:why does|why would|why is|what makes)\b[\s\S]{0,120}\b(?:he|she|they|him|her|them|greg)\b/i.test(
+      latest,
+    );
+
+  if (retaliationSignal) {
+    return (
+      "You moved from trying to understand the other person to wanting to use the situation against them. " +
+      "Recognition can stay with that shift without helping with retaliation. What payoff are you wanting from irritating them?"
+    );
+  }
+
+  if (motiveSignal) {
+    return (
+      "I can stay with what this brings up for you without pretending to know the other person’s motive. " +
+      "What part of your own reaction to it has your attention?"
+    );
+  }
+
+  return (
+    "Recognition has your words, and I do not want to invent a meaning just to keep the conversation moving. " +
+    "Which part of what you just wrote has your attention most?"
+  );
+}
+
 function assertRecognitionReplyBoundary(reply: string) {
   if (!reply) {
     throw new Error("Recognition returned no participant-facing reply.");
@@ -511,7 +550,18 @@ export async function generateRecognitionConversationReply({
 
   if (fallback) return fallback;
 
-  throw new Error(
-    "Recognition could not respond without leaving the participant's evidence.",
-  );
+  const reply = buildDeterministicRecognitionFallback(recentMessages);
+  assertRecognitionReplyBoundary(reply);
+
+  return {
+    reply,
+    memory,
+    model: "recognition-deterministic-fallback",
+    usage: {
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheCreationInputTokens: 0,
+      cacheReadInputTokens: 0,
+    },
+  };
 }
