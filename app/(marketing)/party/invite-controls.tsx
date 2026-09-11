@@ -4,19 +4,21 @@ import { useState } from "react";
 
 export function PartyInviteControls({
   inviteUrl,
+  funnelUrl,
   remainingInvites,
 }: {
   inviteUrl: string;
+  funnelUrl: string;
   remainingInvites: number;
 }) {
   const [copied, setCopied] = useState(false);
   const unavailable = remainingInvites <= 0;
-  const inviteText = `I’m joining a free live Oremea session called “What Keeps Repeating in Connection?” If this conversation would be useful to you, here’s one of my guest invitations: ${inviteUrl}`;
+  const inviteText = `I’m joining a free live Oremea session called “What Keeps Repeating in Connection?” If this conversation would be useful to you, here’s one of my guest invitations: ${inviteUrl}\n\nCurious about Oremea before the live session? Resonance starts here: ${funnelUrl}\nA Resonance purchase unlocks two guest invitations of your own.`;
   const whatsappHref = `https://wa.me/?text=${encodeURIComponent(inviteText)}`;
 
   async function copyInvite() {
     if (unavailable) return;
-    await navigator.clipboard.writeText(inviteUrl);
+    await navigator.clipboard.writeText(inviteText);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1800);
   }
@@ -57,7 +59,7 @@ export function PartyInviteControls({
             ? "Invitation link used"
             : copied
               ? "Invitation link copied"
-              : "Copy invitation link"}
+              : "Copy full invitation"}
         </button>
       </div>
     </div>
