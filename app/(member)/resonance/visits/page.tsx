@@ -13,6 +13,12 @@ import { purchaseVisits } from "./actions";
 
 export const dynamic = "force-dynamic";
 
+const VISIT_DESCRIPTIONS: Record<number, string> = {
+  1: "Start with one seven-day room. A simple way to experience Resonance.",
+  3: "Three visits let you explore a few different rooms without deciding everything now.",
+  4: "Four visits give you the strongest starting rate before the complete-ten offer.",
+};
+
 export default async function VisitPurchasePage({ searchParams }: {
   searchParams: Promise<{ order?: string; error?: string }>;
 }) {
@@ -37,9 +43,17 @@ export default async function VisitPurchasePage({ searchParams }: {
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           {INITIAL_QUANTITIES.map((quantity) => (
             <form key={quantity} action={purchaseVisits} className="rounded-3xl border border-white/15 bg-black/45 p-6">
-              <h2 className="text-2xl font-light">{quantity} visit{quantity === 1 ? "" : "s"}</h2>
+              <div className="flex items-start justify-between gap-3">
+                <h2 className="text-2xl font-light">{quantity} visit{quantity === 1 ? "" : "s"}</h2>
+                {quantity === 4 ? (
+                  <span className="rounded-full border border-[#c8a96a]/45 bg-[#c8a96a]/10 px-3 py-1 text-sm uppercase tracking-[0.14em] text-[#e0c38b]">
+                    Best choice
+                  </span>
+                ) : null}
+              </div>
               <p className="mt-4 text-3xl text-[#e0c38b]">{formatOremeaPrice(VISIT_PRICES[quantity])}</p>
-              <p className="mb-6 mt-2 text-lg leading-7 text-zinc-300">{quantity === 3 ? "About " : ""}{formatOremeaPrice(VISIT_PRICES[quantity] / quantity)} per visit</p>
+              <p className="mt-2 text-lg leading-7 text-zinc-300">{quantity === 3 ? "About " : ""}{formatOremeaPrice(VISIT_PRICES[quantity] / quantity)} per visit</p>
+              <p className="mb-6 mt-4 text-lg leading-8 text-zinc-300">{VISIT_DESCRIPTIONS[quantity]}</p>
               <input type="hidden" name="quantity" value={quantity} />
               <input type="hidden" name="requestId" value={randomUUID()} />
               <VisitSubmitButton disabled={!checkoutEnabled}>Choose {quantity}</VisitSubmitButton>
