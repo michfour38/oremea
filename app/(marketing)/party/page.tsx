@@ -87,63 +87,63 @@ export default async function PartyPage({
     <main className="min-h-screen bg-[#080704] text-white">
       <SiteNav />
 
-      <section className="mx-auto max-w-5xl px-6 py-16 md:py-24">
-        <div className="max-w-3xl">
-          <p className="text-sm uppercase tracking-[0.24em] text-[#c8a96a]">
+      <section className="mx-auto max-w-5xl px-6 py-20 md:px-8 md:py-28">
+        <div className="max-w-2xl">
+          <p className="text-base uppercase tracking-[0.2em] text-[#d9bb7b]">
             Free live Oremea session
           </p>
-          <h1 className="mt-5 font-serif text-4xl font-light leading-tight md:text-6xl">
+          <h1 className="mt-6 font-serif text-4xl font-light leading-[1.08] md:text-6xl">
             What Keeps Repeating in Connection?
           </h1>
-          <p className="mt-6 text-lg leading-8 text-zinc-300">
+          <p className="mt-7 max-w-2xl text-xl leading-9 text-zinc-200">
             A live conversation for looking more closely at relational patterns that can
             remain strangely familiar even when the people, circumstances, and stories change.
           </p>
-          <p className="mt-4 text-lg leading-8 text-zinc-300">
+          <p className="mt-5 max-w-2xl text-xl leading-9 text-zinc-200">
             Private reflection. Live teaching. No requirement to disclose personal details publicly.
           </p>
 
-          <div className="mt-7 flex flex-wrap gap-3 text-base text-[#f1dfb4]">
-            <span className="rounded-full border border-[#c8a96a]/30 px-4 py-2">Free admission</span>
-            <span className="rounded-full border border-[#c8a96a]/30 px-4 py-2">Live online</span>
-            <span className="rounded-full border border-[#c8a96a]/30 px-4 py-2">
+          <div className="mt-10 flex flex-wrap gap-3 text-lg text-[#f1dfb4]">
+            <span className="rounded-full border border-[#c8a96a]/35 bg-[#c8a96a]/[0.04] px-5 py-2.5">Free admission</span>
+            <span className="rounded-full border border-[#c8a96a]/35 bg-[#c8a96a]/[0.04] px-5 py-2.5">Live online</span>
+            <span className="rounded-full border border-[#c8a96a]/35 bg-[#c8a96a]/[0.04] px-5 py-2.5">
               {startLabel || "Date + access details by email"}
             </span>
           </div>
         </div>
 
         {registration ? (
-          <section className="mt-12 max-w-3xl">
+          <section className="mt-16 max-w-3xl">
             <div className="overflow-hidden rounded-[2rem] border border-[#c8a96a]/45 bg-[#15120c]">
               <div className="border-b border-[#c8a96a]/20 px-7 py-6 md:px-9">
-                <p className="text-sm uppercase tracking-[0.22em] text-[#c8a96a]">
+                <p className="text-base uppercase tracking-[0.2em] text-[#d9bb7b]">
                   Your place is reserved
                 </p>
-                <h2 className="mt-3 font-serif text-3xl md:text-4xl">
+                <h2 className="mt-4 font-serif text-3xl leading-tight md:text-4xl">
                   Your Oremea live-session ticket
                 </h2>
               </div>
 
               <div className="grid gap-6 px-7 py-7 md:grid-cols-[1fr_auto] md:px-9">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">
+                  <p className="text-base uppercase tracking-[0.18em] text-zinc-400">
                     What Keeps Repeating in Connection?
                   </p>
                   <p className="mt-3 text-2xl text-[#f1dfb4]">{ticketCode(registration.id)}</p>
-                  <p className="mt-4 text-lg leading-8 text-zinc-300">
+                  <p className="mt-5 max-w-2xl text-xl leading-9 text-zinc-200">
                     {startLabel || "Live date, time, and access details will be sent to the registration email."}
                   </p>
                 </div>
                 <div className="min-w-40 rounded-2xl border border-white/10 bg-black/25 p-5">
-                  <p className="text-sm uppercase tracking-[0.18em] text-zinc-500">Admission</p>
+                  <p className="text-base uppercase tracking-[0.16em] text-zinc-400">Admission</p>
                   <p className="mt-2 text-3xl font-light">1</p>
-                  <p className="mt-4 text-base text-zinc-300">Live online</p>
-                  <p className="mt-1 text-base text-zinc-400">Free</p>
+                  <p className="mt-5 text-lg text-zinc-200">Live online</p>
+                  <p className="mt-2 text-lg text-zinc-300">Free</p>
                 </div>
               </div>
 
               <div className="border-t border-white/10 px-7 py-6 md:px-9">
-                <p className="text-lg leading-8 text-zinc-300">
+                <p className="text-xl leading-9 text-zinc-200">
                   Keep this page or the confirmation email. The ticket is the confirmation that the place is reserved.
                 </p>
                 {joinUrl ? (
@@ -159,28 +159,28 @@ export default async function PartyPage({
 
             {registration.invite_allowance > 0 ? (
               <div className="mt-6 rounded-[2rem] border border-white/10 bg-white/[0.03] p-7 md:p-9">
-                <p className="text-sm uppercase tracking-[0.22em] text-[#c8a96a]">
+                <p className="text-base uppercase tracking-[0.2em] text-[#d9bb7b]">
                   Included with this ticket
                 </p>
-                <h2 className="mt-3 font-serif text-3xl">Two guest invitations</h2>
-                <p className="mt-4 text-lg leading-8 text-zinc-300">
+                <h2 className="mt-4 font-serif text-3xl leading-tight">Two guest invitations</h2>
+                <p className="mt-5 max-w-2xl text-xl leading-9 text-zinc-200">
                   If two people come immediately to mind who would genuinely use this conversation,
                   send them an invitation. Each person reserves their own place.
                 </p>
 
-                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <div className="mt-7 grid gap-4 sm:grid-cols-2">
                   {[0, 1].map((index) => {
                     const unlocked = index < registration.invite_allowance;
                     const used = unlocked && index < usedGuestInvitations;
                     return (
                       <div
                         key={index}
-                        className="rounded-2xl border border-white/10 bg-black/25 p-5"
+                        className="rounded-2xl border border-white/15 bg-black/30 p-6"
                       >
-                        <p className="text-sm uppercase tracking-[0.18em] text-zinc-500">
+                        <p className="text-base uppercase tracking-[0.16em] text-zinc-400">
                           Guest invitation {index + 1}
                         </p>
-                        <p className="mt-2 text-xl text-zinc-100">
+                        <p className="mt-3 text-2xl text-zinc-100">
                           {used ? "Used" : unlocked ? "Available" : "Locked"}
                         </p>
                       </div>
@@ -196,11 +196,11 @@ export default async function PartyPage({
               </div>
             ) : (
               <div className="mt-6 rounded-[2rem] border border-white/10 bg-white/[0.03] p-7 md:p-9">
-                <p className="text-sm uppercase tracking-[0.22em] text-[#c8a96a]">
+                <p className="text-base uppercase tracking-[0.2em] text-[#d9bb7b]">
                   Guest ticket
                 </p>
                 <h2 className="mt-3 font-serif text-3xl">This invitation stops here.</h2>
-                <p className="mt-4 text-lg leading-8 text-zinc-300">
+                <p className="mt-5 max-w-2xl text-xl leading-9 text-zinc-200">
                   A guest ticket does not automatically create two more free invitations.
                   If Resonance is useful enough to purchase, that purchase unlocks two guest invitations on this ticket.
                 </p>
@@ -215,7 +215,7 @@ export default async function PartyPage({
 
             <div className="mt-6 rounded-[2rem] border border-white/10 bg-black/25 p-7 md:p-9">
               <h2 className="font-serif text-2xl">What happens next</h2>
-              <div className="mt-5 grid gap-4 text-lg leading-8 text-zinc-300 md:grid-cols-3">
+              <div className="mt-6 grid gap-5 text-lg leading-8 text-zinc-200 md:grid-cols-3">
                 <p><span className="text-[#c8a96a]">1.</span> Keep the ticket email.</p>
                 <p><span className="text-[#c8a96a]">2.</span> Live access details arrive by email.</p>
                 <p><span className="text-[#c8a96a]">3.</span> Join without needing to share personal details publicly.</p>
@@ -225,15 +225,15 @@ export default async function PartyPage({
         ) : (
           <form
             action={registerForParty}
-            className="mt-12 max-w-2xl rounded-[2rem] border border-white/10 bg-white/[0.03] p-7 md:p-9"
+            className="mt-16 max-w-xl rounded-[2rem] border border-white/15 bg-white/[0.035] p-8 shadow-2xl shadow-black/20 md:p-10"
           >
-            <h2 className="font-serif text-3xl">Reserve a place</h2>
-            <p className="mt-3 text-lg leading-8 text-zinc-300">
+            <h2 className="font-serif text-4xl leading-tight">Reserve a place</h2>
+            <p className="mt-5 text-lg leading-8 text-zinc-200">
               Registration asks one useful question so part of the live session can be shaped around what participants are actually carrying.
             </p>
 
             {incomingReferral ? (
-              <div className="mt-5 rounded-2xl border border-[#c8a96a]/25 bg-[#c8a96a]/5 p-5">
+              <div className="mt-7 rounded-2xl border border-[#c8a96a]/30 bg-[#c8a96a]/[0.06] p-6">
                 <p className="text-lg text-[#f1dfb4]">
                   {incomingInvitationAvailable
                     ? "A guest invitation brought this page here."
@@ -243,7 +243,7 @@ export default async function PartyPage({
             ) : null}
 
             {query.error ? (
-              <p role="alert" className="mt-5 rounded-xl border border-amber-200/20 bg-amber-100/5 p-4 text-base text-amber-100">
+              <p role="alert" className="mt-7 rounded-2xl border border-amber-200/25 bg-amber-100/[0.06] p-5 text-lg leading-7 text-amber-50">
                 Add a valid email address and the question or relational theme taking up the most space right now.
               </p>
             ) : null}
@@ -254,17 +254,17 @@ export default async function PartyPage({
               value={incomingInvitationAvailable ? incomingReferral ?? "" : ""}
             />
 
-            <label className="mt-7 block text-base text-zinc-200">
+            <label className="mt-9 block text-lg font-medium text-zinc-100">
               First name
               <input
                 name="firstName"
                 maxLength={120}
                 autoComplete="given-name"
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-lg text-white outline-none focus:border-[#c8a96a]/60"
+                className="mt-3 w-full rounded-2xl border border-white/15 bg-black/40 px-5 py-4 text-xl text-white outline-none transition focus:border-[#c8a96a]/70 focus:ring-1 focus:ring-[#c8a96a]/35"
               />
             </label>
 
-            <label className="mt-5 block text-base text-zinc-200">
+            <label className="mt-7 block text-lg font-medium text-zinc-100">
               Email
               <input
                 name="email"
@@ -272,24 +272,24 @@ export default async function PartyPage({
                 required
                 maxLength={254}
                 autoComplete="email"
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-lg text-white outline-none focus:border-[#c8a96a]/60"
+                className="mt-3 w-full rounded-2xl border border-white/15 bg-black/40 px-5 py-4 text-xl text-white outline-none transition focus:border-[#c8a96a]/70 focus:ring-1 focus:ring-[#c8a96a]/35"
               />
             </label>
 
-            <label className="mt-5 block text-base leading-7 text-zinc-200">
+            <label className="mt-7 block text-lg font-medium leading-8 text-zinc-100">
               What relationship question, recurring pattern, or relational theme is taking up the most space right now?
               <textarea
                 name="question"
                 required
                 maxLength={3000}
-                rows={5}
-                className="mt-2 w-full resize-y rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-lg text-white outline-none focus:border-[#c8a96a]/60"
+                rows={6}
+                className="mt-3 w-full resize-y rounded-2xl border border-white/15 bg-black/40 px-5 py-4 text-xl leading-8 text-white outline-none transition focus:border-[#c8a96a]/70 focus:ring-1 focus:ring-[#c8a96a]/35"
               />
             </label>
 
             <button
               type="submit"
-              className="mt-7 w-full rounded-full border border-[#c8a96a]/60 bg-[#c8a96a]/10 px-6 py-3 text-lg text-[#f1dfb4] transition hover:bg-[#c8a96a]/15"
+              className="mt-10 w-full rounded-full border border-[#c8a96a]/70 bg-[#c8a96a]/15 px-6 py-4 text-xl font-medium text-[#f6e8c5] transition hover:bg-[#c8a96a]/20 focus:outline-none focus:ring-2 focus:ring-[#c8a96a]/50"
             >
               Reserve my free place
             </button>
