@@ -101,6 +101,7 @@ export default function RecognitionChat({
   const [composerHydrated, setComposerHydrated] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isStartingNewChat, setIsStartingNewChat] = useState(false);
+  const [showEarlierMessages, setShowEarlierMessages] = useState(false);
   const [error, setError] = useState("");
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -110,6 +111,14 @@ export default function RecognitionChat({
     lastMessage?.role === "user" && lastMessage.clientMessageId
       ? lastMessage
       : null;
+  const defaultVisibleMessageCount = 2;
+  const hiddenMessageCount = Math.max(
+    0,
+    messages.length - defaultVisibleMessageCount,
+  );
+  const visibleMessages = showEarlierMessages
+    ? messages
+    : messages.slice(-defaultVisibleMessageCount);
 
   useEffect(() => {
     const stored = readStoredComposer();
@@ -276,7 +285,7 @@ export default function RecognitionChat({
       <MemberNav />
 
       {messages.length > 0 ? (
-        <div className="relative z-20 mx-auto flex w-full max-w-4xl justify-end px-5 pt-3 md:px-8">
+        <div className="relative z-20 mx-auto flex w-full max-w-3xl justify-end px-5 pt-3 md:px-8">
           <button
             type="button"
             onClick={() => void startNewChat()}
@@ -303,7 +312,7 @@ export default function RecognitionChat({
         </div>
       </div>
 
-      <section className="relative z-10 mx-auto flex min-h-[calc(100vh-65px)] max-w-4xl flex-col px-5 md:px-8">
+      <section className="relative z-10 mx-auto flex min-h-[calc(100vh-65px)] max-w-3xl flex-col px-5 md:px-8">
         <div
           className={
             messages.length === 0
@@ -312,7 +321,7 @@ export default function RecognitionChat({
           }
         >
           {messages.length === 0 ? (
-            <div className="mx-auto max-w-2xl py-2 md:py-3">
+            <div className="mx-auto max-w-xl py-2 md:py-3">
               <p className="text-xs uppercase tracking-[0.28em] text-[#b79a63]">
                 Begin where you are
               </p>
@@ -328,14 +337,28 @@ export default function RecognitionChat({
               </p>
             </div>
           ) : (
-            <div className="space-y-8 md:space-y-10">
-              {messages.map((message) => (
+            <div className="space-y-7 md:space-y-8">
+              {hiddenMessageCount > 0 ? (
+                <div className="flex justify-center pb-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowEarlierMessages((current) => !current)}
+                    className="rounded-full border border-white/[0.08] bg-black/30 px-4 py-2 text-[11px] uppercase tracking-[0.14em] text-zinc-500 transition hover:border-[#6f5a31] hover:text-[#c8a96a]"
+                  >
+                    {showEarlierMessages
+                      ? "Hide earlier reflections"
+                      : `Earlier reflections · ${hiddenMessageCount}`}
+                  </button>
+                </div>
+              ) : null}
+
+              {visibleMessages.map((message) => (
                 <article
                   key={message.turnIndex}
                   className={
                     message.role === "user"
-                      ? "ml-auto max-w-2xl"
-                      : "mr-auto max-w-3xl"
+                      ? "ml-auto max-w-xl"
+                      : "mr-auto max-w-2xl"
                   }
                 >
                   <p
@@ -350,8 +373,8 @@ export default function RecognitionChat({
                   <div
                     className={
                       message.role === "user"
-                        ? "whitespace-pre-wrap rounded-[1.6rem] border border-white/[0.08] bg-zinc-900 px-5 py-4 text-base leading-7 text-zinc-200 md:px-6 md:text-lg"
-                        : "whitespace-pre-wrap border-l border-[#6f5a31] pl-5 font-serif text-xl leading-9 text-[#e6dfd2] md:pl-7 md:text-2xl md:leading-10"
+                        ? "whitespace-pre-wrap rounded-[1.45rem] border border-white/[0.08] bg-zinc-900 px-4 py-3 text-[15px] leading-6 text-zinc-200 md:px-5 md:text-base md:leading-7"
+                        : "whitespace-pre-wrap border-l border-[#6f5a31] pl-4 font-serif text-lg leading-8 text-[#e6dfd2] md:pl-5 md:text-xl md:leading-8"
                     }
                   >
                     {message.content}
@@ -375,7 +398,7 @@ export default function RecognitionChat({
         </div>
 
         <div className="sticky bottom-0 z-20 -mx-5 border-t border-white/[0.06] bg-[#090909]/95 px-5 pb-5 pt-4 backdrop-blur-xl md:-mx-8 md:px-8 md:pb-7">
-          <div className="mx-auto max-w-4xl">
+          <div className="mx-auto max-w-3xl">
             {error ? (
               <div className="mb-3 rounded-2xl border border-[#5c4433] bg-[#17110d] px-4 py-3 text-sm leading-6 text-[#d7b49a]">
                 {error}
