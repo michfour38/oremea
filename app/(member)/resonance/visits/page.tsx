@@ -39,18 +39,19 @@ export default async function VisitPurchasePage({ searchParams }: {
             <form key={quantity} action={purchaseVisits} className="rounded-3xl border border-white/15 bg-black/45 p-6">
               <h2 className="text-2xl font-light">{quantity} visit{quantity === 1 ? "" : "s"}</h2>
               <p className="mt-4 text-3xl text-[#e0c38b]">{formatOremeaPrice(VISIT_PRICES[quantity])}</p>
-              <p className="mb-6 mt-2 text-sm text-zinc-400">{quantity === 3 ? "About " : ""}{formatOremeaPrice(VISIT_PRICES[quantity] / quantity)} per visit</p>
+              <p className="mb-6 mt-2 text-lg leading-7 text-zinc-300">{quantity === 3 ? "About " : ""}{formatOremeaPrice(VISIT_PRICES[quantity] / quantity)} per visit</p>
               <input type="hidden" name="quantity" value={quantity} />
               <input type="hidden" name="requestId" value={randomUUID()} />
               <VisitSubmitButton disabled={!checkoutEnabled}>Choose {quantity}</VisitSubmitButton>
             </form>
           ))}
         </div>
+        <p className="mt-5 text-center text-lg leading-7 text-zinc-300">USD · one-time · no automatic renewal</p>
       ) : order.whop_checkout_id && order.status === "pending" && checkoutEnabled ? (
         <section className="mx-auto mt-8 max-w-xl rounded-3xl border border-white/15 bg-black/50 p-6">
           <h2 className="text-2xl">{order.quantity} visits · {formatOremeaPrice(order.amount_cents)}</h2>
           <p className="mt-4 text-base leading-7 text-zinc-300">Checking out as {order.buyer_email}. Whop securely saves an eligible payment method for an optional separate purchase on the next page. Nothing extra is charged unless an offer is accepted.</p>
-          <p className="mt-3 text-sm text-zinc-400">USD pricing. Review any applicable taxes and fees in checkout.</p>
+          <p className="mt-3 text-lg leading-7 text-zinc-300">USD pricing. Review any applicable taxes and fees in checkout.</p>
           <Script src="https://js.whop.com/static/checkout/loader.js" strategy="afterInteractive" />
           <div key={order.id} className="mt-6 min-h-[420px]" data-whop-checkout-plan-id={order.whop_plan_id}
             data-whop-checkout-session={order.whop_checkout_id} data-whop-checkout-theme="dark"
