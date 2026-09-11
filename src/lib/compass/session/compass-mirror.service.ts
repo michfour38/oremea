@@ -40,44 +40,64 @@ export async function runCompassMirror({
           recursiveLayers,
         })
 
-  try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY!,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: COMPASS_MODEL,
-        max_tokens: 900,
-        messages: [{ role: "user", content: prompt }],
-      }),
-    })
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const attemptPrompt =
+        attempt === 0
+          ? prompt
+          : `${prompt}
 
-    const data = await res.json()
+RETRY REQUIREMENT
+The previous generation did not complete successfully.
+Return only the finished Compass Mirror reflection requested above.
+Do not add JSON, XML, markdown fences, metadata, or commentary about the retry.`
 
-    if (!res.ok) {
-      console.error("Compass Mirror API error:", data)
-      return null
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.ANTHROPIC_API_KEY!,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: COMPASS_MODEL,
+          max_tokens: 900,
+          messages: [{ role: "user", content: attemptPrompt }],
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        console.error(`Compass Mirror API error on attempt ${attempt + 1}:`, data)
+        continue
+      }
+
+      const text = Array.isArray(data?.content)
+        ? data.content
+            .filter(
+              (item: { type?: string; text?: string }) =>
+                item?.type === "text",
+            )
+            .map((item: { text?: string }) => item.text ?? "")
+            .join("\n\n")
+            .trim()
+        : ""
+
+      if (text) return text
+
+      console.warn(
+        `Compass Mirror returned no readable text on attempt ${attempt + 1}; retrying before using the deterministic reflection fallback.`,
+      )
+    } catch (error) {
+      console.error(
+        `Compass Mirror request failed on attempt ${attempt + 1}:`,
+        error,
+      )
     }
-
-    const text = Array.isArray(data?.content)
-      ? data.content
-          .filter(
-            (item: { type?: string; text?: string }) =>
-              item?.type === "text",
-          )
-          .map((item: { text?: string }) => item.text ?? "")
-          .join("\n\n")
-          .trim()
-      : ""
-
-    return text || null
-  } catch (error) {
-    console.error("Compass Mirror request failed:", error)
-    return null
   }
+
+  return null
 }
 
 function buildAreaMirrorPrompt({
