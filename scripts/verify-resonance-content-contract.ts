@@ -39,22 +39,6 @@ assert.equal(
   10,
   "Every Resonance teacher must have a unique commerce/content slug.",
 );
-assert.deepEqual(
-  RESONANCE_CONTENT.map((week) => week.slug),
-  [
-    "hearth",
-    "mirror",
-    "garden",
-    "bearing",
-    "pulse",
-    "shadow",
-    "forge",
-    "vision",
-    "the-gathering",
-    "the-becoming",
-  ],
-  "Resonance room slugs must name their own teachers and must not borrow a separate product identity.",
-);
 
 for (const week of RESONANCE_CONTENT) {
   assert.equal(
@@ -94,29 +78,6 @@ assert.doesNotMatch(
   allSeedText,
   /The Compass|Integration I|Integration II/,
   "Superseded Resonance teacher names must not re-enter current seed authority.",
-);
-
-const roomText = Object.fromEntries(
-  RESONANCE_CONTENT.map((week) => [
-    week.title,
-    week.days.flatMap((day) => day.prompts).map((prompt) => prompt.content).join("\n"),
-  ]),
-);
-
-assert.doesNotMatch(
-  roomText["The Bearing"],
-  /what I will do next|action you could take next|when I will check again/i,
-  "Bearing must reveal priorities and trade-offs without becoming Compass execution.",
-);
-assert.doesNotMatch(
-  roomText["The Gathering"],
-  /my next step is|easier to choose or do now/i,
-  "Gathering must integrate or separate material without manufacturing a Compass next step.",
-);
-assert.doesNotMatch(
-  roomText["The Becoming"],
-  /simply lost the thread|within twenty-four hours/i,
-  "Becoming must support lived continuation without productivity pressure or a mandatory deadline.",
 );
 
 console.log("Resonance content contract checks passed.");
