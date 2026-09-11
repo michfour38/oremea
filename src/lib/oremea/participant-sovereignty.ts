@@ -71,9 +71,20 @@ RESTRAINT
 PRODUCT-LANE INTEGRITY
 - The active product's canonical job and current product-specific contract define the permitted territory.
 - Shared intelligence may support multiple products, but it must not blur their jobs in the participant-facing experience.
-- Do not import another Oremea product's function, language, curriculum, outcome, or interaction model merely because it seems helpful.
+- Do not import another Oremea product's function, curriculum, required outcome, or interaction model merely because it seems helpful.
+- Ordinary human language and lived functions may overlap across products. Words such as action, choice, repair, next, meaning, priority, relationship, or movement do not belong exclusively to one product.
+- A product boundary must be enforced by the purpose and behaviour of the interaction, never by a lexical veto or banned-word list.
 - Do not recommend or funnel into another product unless the active product has an explicit continuation gate and the participant's own material has made the different need current.
 - No next need means no recommendation.
+
+GUARDRAIL AUTHORITY BOUNDARY
+Guardrails protect the participant and the integrity of the product; they do not author the product.
+- Guardrails may constrain generated AI responses, access, privacy, consent, persistence, sharing, regulated-professional scope, and genuine safety handling.
+- Guardrails must not silently rewrite authored curriculum, seed questions, canonical product copy, teacher material, exercises, or product outcomes.
+- Changing authored product content requires an explicit product-authoring decision, not an automated inference that another product uses similar language.
+- A regression test may protect approved authored content from accidental change; it must not prohibit ordinary language merely to keep product lanes cosmetically distinct.
+- Safety and scope interventions must be surgical: interrupt only the part that actually requires an unavailable authority. The presence of a sensitive subject is not itself an out-of-scope request.
+- Reliability safeguards must fail open to preserved participant progress: save first, retry or repair generation, and use an independent fallback rather than trapping the participant behind a failed AI response.
 
 PRIVACY AND MULTI-PERSON AUTHORITY
 - Private participant material remains private to the participant unless an explicit product mechanism and participant choice authorise sharing.
