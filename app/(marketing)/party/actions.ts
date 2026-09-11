@@ -23,7 +23,8 @@ export async function registerForParty(formData: FormData) {
   }
 
   let invitedBy: string | null = null;
-  if (invitedByRaw) {
+  const invitedByIsUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(invitedByRaw);
+  if (invitedByIsUuid) {
     const inviter = await prisma.oremea_party_registrations.findFirst({
       where: {
         event_key: EVENT_KEY,
