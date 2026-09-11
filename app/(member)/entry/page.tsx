@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { randomUUID } from "node:crypto";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
@@ -14,6 +15,10 @@ import {
   getResonanceWeekRuns,
 } from "@/src/lib/resonance/resonance-week-run";
 import MemberNav from "../member-nav";
+import { getVisitBalance } from "@/src/lib/resonance/visit-orders";
+import { visitsEnabled, visitCheckoutEnabled } from "@/src/lib/resonance/visit-offers";
+import { enterVisitRoom } from "../resonance/visits/actions";
+import { VisitSubmitButton } from "../resonance/visits/submit-button";
 
 export const dynamic = "force-dynamic";
 
@@ -131,11 +136,14 @@ async function getActiveRunDay(runId: string) {
   return 7;
 }
 
-export default async function EntryPage() {
+export default async function EntryPage({ searchParams }: { searchParams: Promise<{ visitError?: string }> }) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in?redirect_url=%2Fentry");
+  const query = await searchParams;
+  const creditFlow = visitsEnabled();
+  const newCheckout = visitCheckoutEnabled();
 
-  const [weeks, activeRun, runs] = await Promise.all([
+  const [weeks, activeRun, runs, visitBalance] = await Promise.all([
     prisma.resonance_weeks.findMany({
       orderBy: { week_number: "asc" },
       select: {
@@ -147,6 +155,7 @@ export default async function EntryPage() {
     }),
     getActiveResonanceRun(userId),
     getResonanceWeekRuns(userId),
+    creditFlow ? getVisitBalance(userId) : Promise.resolve(0),
   ]);
 
   const activeDay = activeRun ? await getActiveRunDay(activeRun.id) : null;
@@ -189,15 +198,23 @@ export default async function EntryPage() {
                 Resonance
               </p>
               <h2 className="mt-3 text-3xl font-light">Which one do you choose?</h2>
+              {creditFlow ? (
+                <div className="mt-5 rounded-2xl border border-[#c8a96a]/30 bg-black/35 p-5">
+                  <p className="text-lg text-[#e0c38b]">{visitBalance} unused visit{visitBalance === 1 ? "" : "s"}</p>
+                  <p className="mt-2 text-base text-zinc-300">Entering a room uses one visit. The other visits remain available for later.</p>
+                  {newCheckout ? <Link href="/resonance/visits" className="mt-3 inline-block text-base text-[#e0c38b] underline">Buy visits</Link> : null}
+                </div>
+              ) : null}
+              {query.visitError ? <p role="alert" className="mt-4 text-base text-amber-100">That room could not be opened. Check for an active visit or an unused visit below. No additional visit was deducted for the failed request.</p> : null}
               <p className="mt-4 text-base leading-8 text-zinc-300">
-                Each purchase opens one seven-day Resonance room. There is no
+                {creditFlow ? "Each visit opens one seven-day Resonance room." : "Each purchase opens one seven-day Resonance room."} There is no
                 required order. Choose the room containing the question that
                 currently has your attention. When the visit closes, it remains
                 available in the archive. Returning to the same room later opens a
                 new visit while preserving the earlier one.
               </p>
 
-              <div className="mt-5 inline-flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-full border border-[#c8a96a]/25 bg-black/30 px-4 py-2 text-sm">
+              {!creditFlow ? <div className="mt-5 inline-flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-full border border-[#c8a96a]/25 bg-black/30 px-4 py-2 text-sm">
                 <span className="text-xs uppercase tracking-[0.16em] text-[#c8a96a]/75">
                   {HAS_RESONANCE_LAUNCH_DISCOUNT
                     ? RESONANCE_LAUNCH_LABEL
@@ -212,7 +229,7 @@ export default async function EntryPage() {
                   {RESONANCE_LAUNCH_PRICE}
                 </span>
                 <span className="text-zinc-500">per seven-day room</span>
-              </div>
+              </div> : null}
             </div>
 
             <details className="group mt-8 rounded-3xl border border-[#c8a96a]/25 bg-black/35 backdrop-blur-[2px]">
@@ -276,7 +293,9 @@ export default async function EntryPage() {
                 const hasArchivedHistory =
                   completedRuns.length > 0 || preservedRuns.length > 0;
                 const isActive = activeRun?.weekNumber === week.week_number;
-                const canPurchase = week.is_published && activeRun === null;
+                const canRedeem = creditFlow && visitBalance > 0 && week.is_published && activeRun === null;
+                const canPurchase = week.is_published && activeRun === null && !canRedeem;
+                const nextRun = weekRuns.reduce((highest, run) => Math.max(highest, run.runNumber), 0) + 1;
                 const isLockedByActive =
                   week.is_published && activeRun !== null && !isActive;
 
@@ -291,7 +310,7 @@ export default async function EntryPage() {
                         : isLockedByActive
                           ? "Locked"
                           : week.is_published
-                            ? "Available to purchase"
+                            ? canRedeem ? "Use one visit" : "Available to purchase"
                             : "Unavailable";
 
                 return (
@@ -357,22 +376,31 @@ export default async function EntryPage() {
                           </Link>
                         ) : null}
 
+                        {canRedeem ? (
+                          <form action={enterVisitRoom}>
+                            <input type="hidden" name="weekNumber" value={week.week_number} />
+                            <input type="hidden" name="requestId" value={randomUUID()} />
+                            <VisitSubmitButton>{nextRun > 1 ? `Start round ${nextRun} · Use one visit` : "Enter room · Use one visit"}</VisitSubmitButton>
+                            {nextRun > 1 ? <p className="mt-3 text-sm text-zinc-400">A fresh round. Previous reflections remain in the archive.</p> : null}
+                          </form>
+                        ) : null}
+
                         {canPurchase ? (
                           <Link
-                            href={`/resonance/purchase?week=${week.week_number}`}
+                            href={newCheckout ? "/resonance/visits" : `/resonance/purchase?week=${week.week_number}`}
                             className="inline-flex flex-wrap items-center rounded-xl border border-[#c8a96a]/60 px-5 py-2.5 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10"
                           >
                             <span>
-                              {hasArchivedHistory
+                              {newCheckout ? "Buy visits" : hasArchivedHistory
                                 ? `Purchase ${week.title} again`
                                 : `Purchase ${week.title}`}
                             </span>
-                            {HAS_RESONANCE_LAUNCH_DISCOUNT ? (
+                            {!newCheckout && HAS_RESONANCE_LAUNCH_DISCOUNT ? (
                               <span className="ml-2 text-zinc-500 line-through">
                                 {RESONANCE_REGULAR_PRICE}
                               </span>
                             ) : null}
-                            <span className="ml-2">{RESONANCE_LAUNCH_PRICE}</span>
+                            {!newCheckout ? <span className="ml-2">{RESONANCE_LAUNCH_PRICE}</span> : null}
                           </Link>
                         ) : null}
 

@@ -4,6 +4,7 @@ import { Playfair_Display } from "next/font/google";
 
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteNav } from "@/components/site/site-nav";
+import { visitCheckoutEnabled } from "@/src/lib/resonance/visit-offers";
 import {
   RESONANCE_LAUNCH_LABEL,
   RESONANCE_LAUNCH_PRICE,
@@ -18,9 +19,10 @@ const playfair = Playfair_Display({
 
 export default async function ResonanceEnterPage() {
   const { userId } = await auth();
+  const destination = visitCheckoutEnabled() ? "/resonance/visits" : "/entry";
   const entryHref = userId
-    ? "/entry"
-    : `/sign-up?redirect_url=${encodeURIComponent("/entry")}`;
+    ? destination
+    : `/sign-up?redirect_url=${encodeURIComponent(destination)}`;
 
   return (
     <main id="top" className="relative min-h-screen overflow-x-hidden text-white">
@@ -121,7 +123,7 @@ export default async function ResonanceEnterPage() {
               href={entryHref}
               className="inline-flex rounded-xl border border-[#c8a96a]/60 px-6 py-3 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10"
             >
-              {userId ? "Choose a Resonance room" : "Create account and choose a room"}
+              {visitCheckoutEnabled() ? userId ? "Choose Resonance visits" : "Create account and choose visits" : userId ? "Choose a Resonance room" : "Create account and choose a room"}
             </Link>
           </div>
         </section>

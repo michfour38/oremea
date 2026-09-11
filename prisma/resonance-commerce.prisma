@@ -1,0 +1,39 @@
+model resonance_visit_orders {
+  id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                String
+  buyer_email            String
+  kind                   String
+  quantity               Int
+  amount_cents           Int
+  remaining_quantity     Int       @default(0)
+  status                 String    @default("created")
+  parent_id              String?   @unique @db.Uuid
+  offer_closed_at        DateTime? @db.Timestamptz(6)
+  whop_plan_id           String
+  whop_checkout_id       String?   @unique
+  whop_payment_id        String?   @unique
+  whop_member_id         String?
+  whop_payment_method_id String?
+  paid_at                DateTime? @db.Timestamptz(6)
+  created_at             DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime  @updatedAt @db.Timestamptz(6)
+  parent                 resonance_visit_orders? @relation("visit_additions", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  addition               resonance_visit_orders? @relation("visit_additions")
+  redemptions            resonance_visit_redemptions[]
+
+  @@index([user_id, status, created_at])
+}
+
+model resonance_visit_redemptions {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String
+  order_id   String   @db.Uuid
+  run_id     String   @unique @db.Uuid
+  request_id String   @unique @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  order      resonance_visit_orders @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  run        resonance_week_runs @relation(fields: [run_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([order_id])
+  @@index([user_id])
+}

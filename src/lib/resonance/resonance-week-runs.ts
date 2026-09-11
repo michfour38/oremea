@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { lockResonanceAccount } from "./resonance-account-lock";
 
 export type ResonanceWeekRunStatus =
   | "active"
@@ -123,7 +124,9 @@ export async function createPurchasedResonanceRun(params: {
     throw new Error("A purchase reference is required to open a Resonance run.");
   }
 
-  const existing = await prisma.$queryRaw<RunRow[]>`
+  return prisma.$transaction(async (tx) => {
+    await lockResonanceAccount(tx, userId);
+    const existing = await tx.$queryRaw<RunRow[]>`
     SELECT *
     FROM "resonance_week_runs"
     WHERE "purchase_reference" = ${purchaseReference}
@@ -141,12 +144,14 @@ export async function createPurchasedResonanceRun(params: {
     return mapRun(existing[0]);
   }
 
-  const active = await getActiveResonanceRun(userId);
+  const active = await tx.resonance_week_runs.findFirst({
+    where: { user_id: userId, status: "active" },
+  });
   if (active) {
     throw new Error("Complete the active Resonance week before opening another.");
   }
 
-  const rows = await prisma.$queryRaw<RunRow[]>`
+  const rows = await tx.$queryRaw<RunRow[]>`
     INSERT INTO "resonance_week_runs" (
       "user_id",
       "week_number",
@@ -181,7 +186,8 @@ export async function createPurchasedResonanceRun(params: {
     throw new Error("The Resonance run could not be created.");
   }
 
-  return mapRun(created);
+    return mapRun(created);
+  });
 }
 
 export async function completeResonanceRun(
