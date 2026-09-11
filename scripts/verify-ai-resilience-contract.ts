@@ -40,6 +40,11 @@ assert.match(
 );
 assert.match(
   recognitionEngine,
+  /buildDeterministicRecognitionFallback/,
+  "Recognition must have a non-AI final fallback so a saved participant turn can never remain stranded.",
+);
+assert.match(
+  recognitionEngine,
   /more than one participant-facing question/,
   "Recognition fallback hardening must not remove the post-generation one-question boundary.",
 );
