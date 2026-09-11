@@ -8,7 +8,6 @@ import { registerForParty } from "./actions";
 
 const EVENT_KEY = "what-keeps-repeating-in-connection-1";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const MAX_GUEST_INVITATIONS = 2;
 
 export const metadata: Metadata = {
   title: "What Keeps Repeating in Connection? | Oremea",
@@ -59,7 +58,7 @@ export default async function PartyPage({
     : 0;
   const remainingInvites = Math.max(
     0,
-    MAX_GUEST_INVITATIONS - usedGuestInvitations,
+    (registration?.invite_allowance ?? 0) - usedGuestInvitations,
   );
 
   const incomingReferral =
@@ -70,7 +69,7 @@ export default async function PartyPage({
           event_key: EVENT_KEY,
           referral_code: incomingReferral,
         },
-        select: { referral_code: true },
+        select: { referral_code: true, invite_allowance: true },
       })
     : null;
   const inviterUses = inviter
@@ -82,7 +81,7 @@ export default async function PartyPage({
       })
     : 0;
   const incomingInvitationAvailable =
-    Boolean(inviter) && inviterUses < MAX_GUEST_INVITATIONS;
+    Boolean(inviter) && inviterUses < (inviter?.invite_allowance ?? 0);
 
   return (
     <main className="min-h-screen bg-[#080704] text-white">
@@ -158,40 +157,61 @@ export default async function PartyPage({
               </div>
             </div>
 
-            <div className="mt-6 rounded-[2rem] border border-white/10 bg-white/[0.03] p-7 md:p-9">
-              <p className="text-sm uppercase tracking-[0.22em] text-[#c8a96a]">
-                Included with this ticket
-              </p>
-              <h2 className="mt-3 font-serif text-3xl">Two guest invitations</h2>
-              <p className="mt-4 text-lg leading-8 text-zinc-300">
-                If two people come immediately to mind who would genuinely use this conversation,
-                send them an invitation. Each person reserves their own place.
-              </p>
+            {registration.invite_allowance > 0 ? (
+              <div className="mt-6 rounded-[2rem] border border-white/10 bg-white/[0.03] p-7 md:p-9">
+                <p className="text-sm uppercase tracking-[0.22em] text-[#c8a96a]">
+                  Included with this ticket
+                </p>
+                <h2 className="mt-3 font-serif text-3xl">Two guest invitations</h2>
+                <p className="mt-4 text-lg leading-8 text-zinc-300">
+                  If two people come immediately to mind who would genuinely use this conversation,
+                  send them an invitation. Each person reserves their own place.
+                </p>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                {[0, 1].map((index) => {
-                  const used = index < usedGuestInvitations;
-                  return (
-                    <div
-                      key={index}
-                      className="rounded-2xl border border-white/10 bg-black/25 p-5"
-                    >
-                      <p className="text-sm uppercase tracking-[0.18em] text-zinc-500">
-                        Guest invitation {index + 1}
-                      </p>
-                      <p className="mt-2 text-xl text-zinc-100">
-                        {used ? "Used" : "Available"}
-                      </p>
-                    </div>
-                  );
-                })}
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {[0, 1].map((index) => {
+                    const unlocked = index < registration.invite_allowance;
+                    const used = unlocked && index < usedGuestInvitations;
+                    return (
+                      <div
+                        key={index}
+                        className="rounded-2xl border border-white/10 bg-black/25 p-5"
+                      >
+                        <p className="text-sm uppercase tracking-[0.18em] text-zinc-500">
+                          Guest invitation {index + 1}
+                        </p>
+                        <p className="mt-2 text-xl text-zinc-100">
+                          {used ? "Used" : unlocked ? "Available" : "Locked"}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <PartyInviteControls
+                  inviteUrl={inviteUrl}
+                  funnelUrl={`${origin}/resonance/visits`}
+                  remainingInvites={remainingInvites}
+                />
               </div>
-
-              <PartyInviteControls
-                inviteUrl={inviteUrl}
-                remainingInvites={remainingInvites}
-              />
-            </div>
+            ) : (
+              <div className="mt-6 rounded-[2rem] border border-white/10 bg-white/[0.03] p-7 md:p-9">
+                <p className="text-sm uppercase tracking-[0.22em] text-[#c8a96a]">
+                  Guest ticket
+                </p>
+                <h2 className="mt-3 font-serif text-3xl">This invitation stops here.</h2>
+                <p className="mt-4 text-lg leading-8 text-zinc-300">
+                  A guest ticket does not automatically create two more free invitations.
+                  If Resonance is useful enough to purchase, that purchase unlocks two guest invitations on this ticket.
+                </p>
+                <a
+                  href="/resonance/visits"
+                  className="mt-6 inline-flex rounded-full border border-[#c8a96a]/55 bg-[#c8a96a]/10 px-6 py-3 text-lg text-[#f1dfb4]"
+                >
+                  Start with Resonance
+                </a>
+              </div>
+            )}
 
             <div className="mt-6 rounded-[2rem] border border-white/10 bg-black/25 p-7 md:p-9">
               <h2 className="font-serif text-2xl">What happens next</h2>
