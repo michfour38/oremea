@@ -1,5 +1,3 @@
-import { OREMEA_PARTICIPANT_SOVEREIGNTY } from "./participant-sovereignty"
-
 const OREMEA_EVIDENCE_STANDARD = `
 OREMEA EVIDENCE BOUNDARY
 - Participant-written language is primary evidence about what they say, want, value, choose, notice, know, mean, or feel.
@@ -26,7 +24,4 @@ OREMEA EVIDENCE BOUNDARY
 - Write as though the participant has been genuinely heard, not evaluated.
 `.trim()
 
-export const OREMEA_EVIDENCE_BOUNDARY = [
-  OREMEA_EVIDENCE_STANDARD,
-  OREMEA_PARTICIPANT_SOVEREIGNTY,
-].join("\n\n")
+export const OREMEA_EVIDENCE_BOUNDARY = OREMEA_EVIDENCE_STANDARD
