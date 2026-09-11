@@ -156,36 +156,65 @@ Your substantial Daily Mirror reflection here.
 <question_two>Your second precise question?</question_two>
 `.trim();
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY!,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-5-20250929",
-      max_tokens: 1500,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const attemptPrompt =
+        attempt === 0
+          ? prompt
+          : `${prompt}
 
-  const data = await res.json();
+RETRY FORMAT REQUIREMENT
+The previous attempt could not be read by the application.
+Return exactly the three requested XML blocks and nothing else.
+Do not use markdown fences. Do not add commentary before or after the blocks.
+Preserve the participant evidence and write both questions as actual questions ending in question marks.`;
 
-  if (!res.ok) {
-    console.error("Daily Mirror API error:", data);
-    return null;
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.ANTHROPIC_API_KEY!,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-5-20250929",
+          max_tokens: 1500,
+          messages: [{ role: "user", content: attemptPrompt }],
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error(`Daily Mirror API error on attempt ${attempt + 1}:`, data);
+        continue;
+      }
+
+      const text: string = Array.isArray(data?.content)
+        ? data.content
+            .filter(
+              (item: { type?: string; text?: string }) => item?.type === "text",
+            )
+            .map((item: { text?: string }) => item.text ?? "")
+            .join("\n")
+            .trim()
+        : "";
+
+      const parsed = parseDailyMirror(text);
+      if (parsed) return parsed;
+
+      console.warn(
+        `Daily Mirror response could not be parsed on attempt ${attempt + 1}; retrying before surfacing an error.`,
+      );
+    } catch (error) {
+      console.error(
+        `Daily Mirror request failed on attempt ${attempt + 1}:`,
+        error,
+      );
+    }
   }
 
-  const text: string = Array.isArray(data?.content)
-    ? data.content
-        .filter((item: { type?: string; text?: string }) => item?.type === "text")
-        .map((item: { text?: string }) => item.text ?? "")
-        .join("\n")
-        .trim()
-    : "";
-
-  return parseDailyMirror(text);
+  return null;
 }
 
 async function assertActiveCompletedDay(
