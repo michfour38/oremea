@@ -1041,3 +1041,20 @@ model oremea_party_questions {
   @@index([registration_id])
   @@index([created_at])
 }
+
+
+model oremea_party_guest_passes {
+  id                         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  event_key                  String
+  owner_registration_id      String    @db.Uuid
+  slot                       Int
+  token                      String    @unique @db.Uuid
+  claimed_by_registration_id String?   @db.Uuid
+  claimed_at                 DateTime? @db.Timestamptz(6)
+  created_at                 DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@unique([owner_registration_id, slot])
+  @@index([event_key])
+  @@index([owner_registration_id])
+  @@index([claimed_at])
+}

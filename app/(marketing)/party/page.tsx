@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { SiteFooter } from "@/components/site/site-footer";
+import { prisma } from "@/lib/prisma";
 import { SiteNav } from "@/components/site/site-nav";
 import { PartyInviteControls } from "./invite-controls";
 import { PartyTopicSurvey } from "./topic-survey";
@@ -17,7 +18,7 @@ export const dynamic = "force-dynamic";
 export default async function PartyPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ref?: string; registered?: string; error?: string }>;
+  searchParams: Promise<{ ref?: string; pass?: string; registered?: string; error?: string }>;
 }) {
   const query = await searchParams;
   const startLabel = process.env.OREMEA_PARTY_START_LABEL?.trim() || null;
@@ -27,9 +28,26 @@ export default async function PartyPage({
     "https://www.oremea.com";
 
   const referralCode = query.registered?.trim() || "";
-  const inviteUrl = referralCode
-    ? `${origin.replace(/\/$/, "")}/party?ref=${encodeURIComponent(referralCode)}`
-    : "";
+  const registered = referralCode
+    ? await prisma.oremea_party_registrations.findFirst({
+        where: {
+          event_key: "what-keeps-repeating-in-connection-1",
+          referral_code: referralCode,
+        },
+        select: { id: true },
+      })
+    : null;
+  const guestPasses = registered
+    ? await prisma.oremea_party_guest_passes.findMany({
+        where: { owner_registration_id: registered.id },
+        orderBy: { slot: "asc" },
+        select: { token: true },
+      })
+    : [];
+  const inviteUrls = guestPasses.map(
+    (guestPass) =>
+      `${origin.replace(/\/$/, "")}/party?pass=${encodeURIComponent(guestPass.token)}`,
+  );
 
   return (
     <main className="min-h-screen bg-[#080704] text-white">
@@ -63,12 +81,12 @@ export default async function PartyPage({
             <p className="text-xs uppercase tracking-[0.24em] text-[#c8a96a]">
               Place reserved
             </p>
-            <h2 className="mt-3 font-serif text-3xl">Two guest invitations are available.</h2>
+            <h2 className="mt-3 font-serif text-3xl">Two guest passes are yours.</h2>
             <p className="mt-4 text-sm leading-7 text-zinc-300">
-              If two people come immediately to mind who would genuinely use this conversation,
-              send them an invitation. Each person registers for their own place.
+              Each pass can be claimed once. Send it yourself by email, WhatsApp, or copy and paste.
+              Oremea does not collect your friends’ details unless they choose to claim a place.
             </p>
-            <PartyInviteControls inviteUrl={inviteUrl} />
+            <PartyInviteControls inviteUrls={inviteUrls} />
             <p className="mt-7 text-sm leading-7 text-zinc-500">
               Read the welcome email — the private Questions Box is inside. Keep that email. The box stays open, can be used more than once, and questions added there help shape the live conversation before the session begins.
             </p>
@@ -90,6 +108,13 @@ export default async function PartyPage({
             ) : null}
 
             <input type="hidden" name="invitedBy" value={query.ref?.trim() || ""} />
+            <input type="hidden" name="guestPass" value={query.pass?.trim() || ""} />
+
+            {query.pass ? (
+              <p className="mt-6 rounded-2xl border border-[#c8a96a]/25 bg-[#c8a96a]/10 p-4 text-sm leading-6 text-[#f1dfb4]">
+                A guest pass brought you here. Register in your own name and choose the perspective that is actually yours.
+              </p>
+            ) : null}
 
             <label className="mt-7 block text-sm text-zinc-200">
               First name
