@@ -184,26 +184,42 @@ export function CompassArchiveSessionView({
             </div>
           ) : null}
 
-          {discussionMessages.map((message, index) => (
-            <div
-              id={`archive-discussion-${index}`}
-              key={`${message.role}-${index}`}
-              className={`rounded-[1.4rem] border p-5 text-sm leading-7 transition duration-500 ${
-                highlightedMessageIndex === index
-                  ? "border-[#E7C98B] bg-[#21190F] shadow-[0_0_0_3px_rgba(231,201,139,0.14)]"
-                  : message.role === "compass"
-                    ? "border-transparent bg-[#12100D] text-zinc-400"
-                    : "border-transparent bg-[#121212] text-zinc-200"
-              }`}
-            >
-              {highlightedMessageIndex === index ? (
-                <p className="mb-3 text-[11px] uppercase tracking-[0.18em] text-[#E7C98B]">
-                  Source for this Map item
+          {discussionMessages.map((message, index) => {
+            const isCompass = message.role === "compass";
+
+            return (
+              <article
+                id={`archive-discussion-${index}`}
+                key={`${message.role}-${index}`}
+                className={isCompass ? "mr-auto max-w-[92%]" : "ml-auto max-w-[88%]"}
+              >
+                <p
+                  className={`mb-2 text-[11px] font-medium uppercase tracking-[0.18em] ${
+                    isCompass ? "text-[#d8b15f]" : "text-right text-zinc-500"
+                  }`}
+                >
+                  {isCompass ? "Compass" : "You"}
                 </p>
-              ) : null}
-              <p className="whitespace-pre-wrap">{message.content}</p>
-            </div>
-          ))}
+
+                <div
+                  className={`text-sm leading-7 transition duration-500 ${
+                    highlightedMessageIndex === index
+                      ? "rounded-[1.4rem] border border-[#E7C98B] bg-[#21190F] px-5 py-4 shadow-[0_0_0_3px_rgba(231,201,139,0.14)]"
+                      : isCompass
+                        ? "border-l-2 border-[#8f713b] bg-[#12100D] px-5 py-4 text-zinc-400"
+                        : "rounded-[1.4rem] border border-white/[0.08] bg-[#191919] px-5 py-4 text-zinc-200"
+                  }`}
+                >
+                  {highlightedMessageIndex === index ? (
+                    <p className="mb-3 text-[11px] uppercase tracking-[0.18em] text-[#E7C98B]">
+                      Source for this Map item
+                    </p>
+                  ) : null}
+                  <p className="whitespace-pre-wrap">{message.content}</p>
+                </div>
+              </article>
+            );
+          })}
         </div>
       ) : (
         <div className="mt-6 space-y-6">
