@@ -57,7 +57,7 @@ Internal working record for cross-room comparison. This file does not drive part
 | D3.5 | Deeper | Make one change around you today that makes the practice easier to do. What will you change, and what action should become easier because of it? | multi-step episode / map / participant-authored synthesis | `practice`, `environment`, `exercise` |
 | D4.1 | Thread | On a busy or low-energy day, what usually happens to the thing you meant to practice? | understanding-to-action | `practice`, `low_capacity`, `entry` |
 | D4.2 | Thread | What is the smallest version that would still count? | behaviour specification | `practice`, `low_capacity`, `contrast` |
-| D4.3 | Thread | What tells you whether rest is the right choice, the practice needs adjusting, or you want to resume? | participant evidence across three valid responses | `practice`, `low_capacity`, `rest_or_adjust_or_resume` |
+| D4.3 | Thread | How can you tell when you genuinely need rest and when you have simply lost the thread? | context | `practice`, `low_capacity`, `evidence` |
 | D4.4 | Thread | What would keeping the practice alive look like on a bad day? | observable evidence | `practice`, `low_capacity`, `choice` |
 | D4.5 | Deeper | Write the low-capacity version of your practice: on a difficult day I will do ___. It still counts because ___. | multi-step episode / map / participant-authored synthesis | `practice`, `low_capacity`, `exercise` |
 | D5.1 | Thread | What is a promise to yourself you have actually kept before? | understanding-to-action | `practice`, `agreement`, `entry` |
@@ -74,7 +74,7 @@ Internal working record for cross-room comparison. This file does not drive part
 | D7.2 | Thread | Which practice do you actually want to keep? | behaviour specification | `practice`, `continuation`, `contrast` |
 | D7.3 | Thread | What will you look for to know it is happening in real life? | context | `practice`, `continuation`, `evidence` |
 | D7.4 | Thread | What is the next thing you want to get better at actually doing, not just understanding? | observable evidence | `practice`, `continuation`, `choice` |
-| D7.5 | Deeper | Write a continuation plan: the practice I am keeping → what will show me it is happening in real life → when I want to review it → the next action I choose and when it would fit. | participant-authored continuation with chosen timing | `practice`, `continuation`, `exercise` |
+| D7.5 | Deeper | Write a continuation plan: the practice I am keeping → what I will measure → when I will review it → the next action I will take within twenty-four hours. | multi-step episode / map / participant-authored synthesis | `practice`, `continuation`, `exercise` |
 
 ## Cross-room overlap notes
 
@@ -82,7 +82,7 @@ Internal working record for cross-room comparison. This file does not drive part
 - **Vision / Becoming:** Vision designs shared systems; Becoming designs personal continuity around one practice. Environment and routine appear here only as support for repeated action.
 - **Garden / Becoming:** capacity appears in both. Garden maps care and resource circulation; Becoming creates a deliberately smaller practice for low-capacity days.
 - **Gathering / Becoming:** Gathering sorts and integrates meaning; Becoming takes one chosen piece into observable continuation.
-- Distinct Becoming evidence: visible action, realistic frequency, environmental friction/support, minimum viable practice, keepable agreement, rest/adjust/resume distinction, and participant-chosen review timing.
+- Distinct Becoming evidence: visible action, realistic frequency, environmental friction/support, minimum viable practice, keepable agreement, repair-versus-resume distinction, review date.
 
 ## Cross-room comparison fields retained
 
