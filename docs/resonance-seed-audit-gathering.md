@@ -33,7 +33,7 @@ Internal working record for cross-room comparison. This file does not drive part
 | 4 | Recurring thread | cross-context recurrence, domain variation, same/different, participant naming, three-context trace |
 | 5 | Sort what stays | continued attention, completion, action need, release, keep/act/structure/release sort |
 | 6 | Tell a fuller story | increased sense-making, contextualised contradiction, unfinished clarity, complexity-preserving account, change story |
-| 7 | Integration | carry-forward pieces, deliberate separation, genuine connection, increased clarity, participant-authored integration |
+| 7 | Integration | carry-forward pieces, deliberate separation, genuine connection, available action, participant-authored integration |
 
 ## Prompt-level audit
 
@@ -72,14 +72,14 @@ Internal working record for cross-room comparison. This file does not drive part
 | D7.1 | Thread | What are the few things you most want to carry forward from this week? | current inventory | `integration`, `integration`, `entry` |
 | D7.2 | Thread | Which of those need to stay separate instead of becoming one big lesson? | recurrence | `integration`, `integration`, `contrast` |
 | D7.3 | Thread | What, if anything, genuinely connects them? | premise-tolerant change | `integration`, `integration`, `evidence` |
-| D7.4 | Thread | What, if anything, is clearer now because you placed these pieces beside one another? | increased clarity through juxtaposition | `integration`, `connection_or_separation`, `clarity` |
-| D7.5 | Deeper | Finish this from what you have actually noticed this week: I see ___. I care about ___. These pieces connect through ___, or remain separate because ___. I am still unsure about ___. I want to carry forward ___. | participant-authored connection/separation and carry-forward synthesis | `integration`, `connection_or_separation`, `exercise` |
+| D7.4 | Thread | What is easier to choose or do now because you gathered these pieces? | behaviour evidence | `integration`, `integration`, `choice` |
+| D7.5 | Deeper | Finish this from what you have actually noticed this week: I see ___. I care about ___. I choose ___. I am still unsure about ___. My next step is ___. | multi-step episode / map / participant-authored synthesis | `integration`, `integration`, `exercise` |
 
 ## Cross-room overlap notes
 
 - **All prior rooms / Gathering:** Gathering may receive material that resembles any room, but its job is not to redo those constructs. Its job is to test what genuinely belongs together, what stays separate, and what the participant chooses to carry forward.
 - **Mirror / Gathering:** recurrence in Mirror is a pattern to inspect; recurrence in Gathering is a possible through-line across different domains and may remain only recurrence if the participant sees no shared meaning.
-- **Bearing / Gathering:** both may contain choices in the material. Bearing tests what those choices reveal about priorities and trade-offs; Gathering tests whether different pieces genuinely connect or need to remain separate.
+- **Bearing / Gathering:** both may produce a next choice. Bearing derives it from priority/trade-off evidence; Gathering derives it from sorting and integrating the current room's pieces.
 - Distinct Gathering evidence: explicit non-connection, competing truths, participant-named through-line, keep/act/structure/release sorting, complexity-preserving story.
 - Independence check: no prompt requires a previous Resonance room. Prior room material may be volunteered, but it is never a prerequisite.
 
