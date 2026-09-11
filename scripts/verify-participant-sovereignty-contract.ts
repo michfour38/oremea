@@ -9,6 +9,7 @@ const sovereignty = read("src/lib/oremea/participant-sovereignty.ts");
 const evidence = read("src/lib/oremea/evidence-boundary.ts");
 const el = read("src/lib/el/conversation-engine.ts");
 const boundaries = read("docs/product-boundaries.md");
+const compassScope = read("src/lib/compass/scope-boundary.ts");
 
 assert.match(
   sovereignty,
@@ -51,10 +52,25 @@ assert.match(
   "The central contract must retain the semantic pre-send review standard.",
 );
 
-assert.match(
+assert.doesNotMatch(
   evidence,
   /OREMEA_PARTICIPANT_SOVEREIGNTY/,
-  "The shared evidence boundary must inherit universal participant sovereignty.",
+  "Evidence discipline must remain separate from the universal sovereignty guardrail instead of silently injecting the whole guardrail into every evidence consumer.",
+);
+assert.match(
+  sovereignty,
+  /GUARDRAIL AUTHORITY BOUNDARY/,
+  "The central sovereignty contract must explicitly bound the authority of guardrails themselves.",
+);
+assert.match(
+  sovereignty,
+  /Guardrails must not silently rewrite authored curriculum, seed questions, canonical product copy, teacher material, exercises, or product outcomes\./,
+  "Guardrails must not become product authors.",
+);
+assert.match(
+  sovereignty,
+  /A product boundary must be enforced by the purpose and behaviour of the interaction, never by a lexical veto or banned-word list\./,
+  "Product lanes must be protected semantically rather than by banned ordinary language.",
 );
 assert.match(
   el,
@@ -65,6 +81,26 @@ assert.match(
   boundaries,
   /participant-sovereignty\.ts/,
   "Product boundary documentation must name the central sovereignty authority.",
+);
+assert.match(
+  boundaries,
+  /Evidence discipline and behavioural guardrails are separate layers/i,
+  "Boundary documentation must preserve the separation between evidence rules and behavioural guardrails.",
+);
+assert.match(
+  compassScope,
+  /shouldApplyCompassScopeBoundary/,
+  "Compass must independently verify that a professional-scope boundary actually applies to the participant's request.",
+);
+assert.match(
+  compassScope,
+  /participantText/,
+  "Compass scope enforcement must inspect the participant's actual request rather than trust topic classification alone.",
+);
+assert.match(
+  compassScope,
+  /This specific question needs legal guidance/,
+  "Compass professional boundaries must be narrow to the specific unavailable authority rather than ending the whole conversation.",
 );
 
 console.log("Participant sovereignty contract checks passed.");
