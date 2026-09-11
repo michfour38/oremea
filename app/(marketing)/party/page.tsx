@@ -70,7 +70,7 @@ export default async function PartyPage({
             </p>
             <PartyInviteControls inviteUrl={inviteUrl} />
             <p className="mt-7 text-sm leading-7 text-zinc-500">
-              Session details will be sent using the registration information supplied.
+              Check the welcome email for session details and the private Questions Box. That box can be used again whenever another question, pattern, or thought comes up before the live session.
             </p>
           </section>
         ) : (
@@ -80,7 +80,7 @@ export default async function PartyPage({
           >
             <h2 className="font-serif text-3xl">Reserve a place</h2>
             <p className="mt-3 text-sm leading-7 text-zinc-400">
-              A few quick choices help shape what needs attention in the live session without asking for anyone's whole story.
+              A few quick choices help shape what needs attention in the live session without asking for anyone's whole story. Your welcome email will include a private Questions Box, so anything else that comes up can be added later.
             </p>
 
             {query.error ? (
