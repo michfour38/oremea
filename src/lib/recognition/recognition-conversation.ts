@@ -375,6 +375,66 @@ Return the requested structured response envelope. Keep the remember array empty
 `.trim();
 }
 
+function trimReplyToWordLimit(value: string, limit: number) {
+  const words = value.trim().split(/\s+/).filter(Boolean);
+  if (words.length <= limit) return value.trim();
+  return `${words.slice(0, limit).join(" ")}…`;
+}
+
+function keepAtMostOneQuestion(value: string) {
+  let seenQuestion = false;
+  return value.replace(/\?/g, () => {
+    if (!seenQuestion) {
+      seenQuestion = true;
+      return "?";
+    }
+    return ".";
+  });
+}
+
+async function generateRecognitionFallbackReply({
+  firstName,
+  recentMessages,
+  memory,
+}: {
+  firstName?: string | null;
+  recentMessages: RecognitionConversationMessage[];
+  memory: RecognitionConversationMemory;
+}) {
+  const result = await generateAIWithUsage({
+    task: "recognition_conversation_fallback",
+    system: `${RECOGNITION_SYSTEM_PROMPT}
+
+FALLBACK RESPONSE MODE
+The normal structured response could not be completed. Return only the participant-facing Recognition reply as plain text: no JSON, no headings, no memory envelope.
+Stay with the participant's newest message rather than refusing the whole conversation.
+If the participant asks for tactics to provoke, punish, harass, coerce, manipulate, or retaliate against another person, do not provide those tactics. Instead, remain inside Recognition's purpose: accurately reflect the participant's own stated impulse, distinction, participation, or contradiction and, when useful, ask one evidence-bound question.
+Keep the reply under ${MAX_REPLY_WORDS} words and ask no more than one question.`,
+    cacheSystem: true,
+    prompt: buildRecognitionConversationPrompt({
+      firstName,
+      recentMessages,
+      memory,
+    }),
+    maxTokens: 420,
+  });
+
+  if (!result?.text) return null;
+
+  const reply = keepAtMostOneQuestion(
+    trimReplyToWordLimit(stripJsonFence(result.text), MAX_REPLY_WORDS),
+  ).trim();
+
+  if (!reply) return null;
+
+  return {
+    reply,
+    memory,
+    model: result.model,
+    usage: result.usage,
+  };
+}
+
 export async function generateRecognitionConversationReply({
   firstName,
   recentMessages,
@@ -397,39 +457,53 @@ export async function generateRecognitionConversationReply({
     maxTokens: 550,
   });
 
-  if (!result?.text) {
-    throw new Error("Recognition could not respond without leaving the participant's evidence.");
+  if (result?.text) {
+    try {
+      const parsed = JSON.parse(stripJsonFence(result.text)) as RawModelResponse;
+      const reply =
+        typeof parsed.reply === "string" ? parsed.reply.trim() : "";
+
+      if (
+        reply &&
+        wordCount(reply) <= MAX_REPLY_WORDS + 30 &&
+        (reply.match(/\?/g) ?? []).length <= 1
+      ) {
+        const participantMessages = recentMessages.filter(
+          (message) => message.role === "user",
+        );
+        const nextMemory = mergeRecognitionMemory({
+          existing: memory,
+          remember: parsed.remember,
+          participantMessages,
+        });
+
+        return {
+          reply,
+          memory: nextMemory,
+          model: result.model,
+          usage: result.usage,
+        };
+      }
+
+      console.warn(
+        "Recognition structured response missed the conversation envelope; using fallback response mode.",
+      );
+    } catch {
+      console.warn(
+        "Recognition structured response was unreadable; using fallback response mode.",
+      );
+    }
   }
 
-  let parsed: RawModelResponse;
-  try {
-    parsed = JSON.parse(stripJsonFence(result.text)) as RawModelResponse;
-  } catch {
-    throw new Error("Recognition returned an unreadable conversation response.");
-  }
-
-  const reply = typeof parsed.reply === "string" ? parsed.reply.trim() : "";
-  if (!reply) throw new Error("Recognition returned no participant-facing reply.");
-  if (wordCount(reply) > MAX_REPLY_WORDS + 30) {
-    throw new Error("Recognition exceeded the conversational response boundary.");
-  }
-  if ((reply.match(/\?/g) ?? []).length > 1) {
-    throw new Error("Recognition asked more than one participant-facing question.");
-  }
-
-  const participantMessages = recentMessages.filter(
-    (message) => message.role === "user",
-  );
-  const nextMemory = mergeRecognitionMemory({
-    existing: memory,
-    remember: parsed.remember,
-    participantMessages,
+  const fallback = await generateRecognitionFallbackReply({
+    firstName,
+    recentMessages,
+    memory,
   });
 
-  return {
-    reply,
-    memory: nextMemory,
-    model: result.model,
-    usage: result.usage,
-  };
+  if (fallback) return fallback;
+
+  throw new Error(
+    "Recognition could not respond without leaving the participant's evidence.",
+  );
 }
