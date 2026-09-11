@@ -319,20 +319,27 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
                     open={isActive}
                     className="group rounded-3xl border border-white/10 bg-black/35 backdrop-blur-[2px]"
                   >
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-5 px-6 py-5 md:px-7">
-                      <div>
-                        <p className="text-xs uppercase tracking-[0.22em] text-[#c8a96a]/65">
+                    <summary className="flex cursor-pointer list-none items-start justify-between gap-5 px-6 py-5 md:px-7">
+                      <div className="min-w-0">
+                        <p className="text-sm uppercase tracking-[0.18em] text-[#c8a96a]/80">
                           {detail?.label ?? week.theme}
                         </p>
-                        <h3 className="mt-2 text-xl text-zinc-100">{week.title}</h3>
+                        <h3 className="mt-2 text-2xl text-zinc-100">{week.title}</h3>
+                        {detail ? (
+                          <p className="mt-2 max-w-2xl text-base leading-7 text-zinc-300">
+                            {detail.question}
+                          </p>
+                        ) : null}
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <span className="rounded-full border border-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-zinc-400">
+                      <div className="flex shrink-0 flex-col items-end gap-3">
+                        <span className="rounded-full border border-white/10 px-3 py-1 text-sm text-zinc-300">
                           {status}
                         </span>
-                        <span className="text-zinc-500 transition group-open:rotate-180">
-                          ↓
+                        <span className="flex items-center gap-2 text-base text-[#e0c38b]">
+                          <span className="group-open:hidden">See explanation</span>
+                          <span className="hidden group-open:inline">Hide explanation</span>
+                          <span className="transition group-open:rotate-180">↓</span>
                         </span>
                       </div>
                     </summary>
@@ -340,16 +347,21 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
                     <div className="border-t border-white/5 px-6 py-6 md:px-7">
                       {detail ? (
                         <div className="max-w-3xl">
-                          <p className="text-lg font-light leading-8 text-zinc-100">
-                            {detail.question}
+                          <p className="text-sm uppercase tracking-[0.18em] text-[#c8a96a]/80">
+                            What this room explores
                           </p>
-                          <p className="mt-3 text-sm leading-7 text-zinc-300">
+                          <p className="mt-3 text-lg leading-8 text-zinc-200">
                             {detail.description}
                           </p>
-                          <p className="mt-4 text-sm leading-7 text-zinc-400">
-                            <span className="text-[#c8a96a]/80">Choose this room when:</span>{" "}
-                            {detail.chooseWhen}
-                          </p>
+
+                          <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-5">
+                            <p className="text-sm uppercase tracking-[0.18em] text-[#c8a96a]/80">
+                              Choose this room when
+                            </p>
+                            <p className="mt-3 text-lg leading-8 text-zinc-200">
+                              {detail.chooseWhen}
+                            </p>
+                          </div>
                         </div>
                       ) : (
                         <p className="max-w-3xl text-sm leading-7 text-zinc-300">
