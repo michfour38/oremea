@@ -161,7 +161,11 @@ async function main() {
   const legacy = readFileSync("src/lib/resonance/resonance-week-runs.ts", "utf8");
   assert.match(legacy, /lockResonanceAccount\(tx, userId\)/);
   const completionPage = readFileSync("app/(member)/resonance/complete/page.tsx", "utf8");
-  assert.match(completionPage, /<details[\s\S]*Choose fewer[\s\S]*<\/details>[\s\S]*No thanks/);
+  assert.match(completionPage, /AdditionalOfferPicker/);
+  const completionPicker = readFileSync("app/(member)/resonance/complete/additional-offer-picker.tsx", "utf8");
+  assert.match(completionPicker, /Complete ten[\s\S]*Choose fewer visits[\s\S]*No thanks/);
+  assert.match(completionPicker, /aria-label="Choose fewer additional visits"/);
+  assert.match(completionPicker, /aria-label="Choose more additional visits"/);
   const purchasePage = readFileSync("app/(member)/resonance/visits/page.tsx", "utf8");
   assert.match(purchasePage, /data-whop-checkout-setup-future-usage="off_session"/);
   assert.match(purchasePage, /data-whop-checkout-session=\{order.whop_checkout_id\}/);
