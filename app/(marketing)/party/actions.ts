@@ -24,18 +24,18 @@ export async function registerForParty(formData: FormData) {
 
   const topicGroup = getPartyTopicGroup(topicCategory);
   const isListedSelection = Boolean(
-    topicGroup?.options.some((option) => option === topicSelection),
+    topicGroup?.options.some((option) => option.label === topicSelection),
   );
   const isOtherSelection =
-    topicSelection === "Something else" && topicOther.length > 0;
+    topicSelection === "Neither — my version is different" && topicOther.length > 0;
 
   if (!EMAIL_PATTERN.test(email) || !topicGroup || (!isListedSelection && !isOtherSelection)) {
     redirect("/party?error=details");
   }
 
   const question = isOtherSelection
-    ? `${topicGroup.label} — ${topicOther}`
-    : `${topicGroup.label} — ${topicSelection}`;
+    ? `${topicGroup.question} — My version: ${topicOther}`
+    : `${topicGroup.question} — ${topicSelection}`;
 
   let invitedBy: string | null = null;
   const invitedByIsUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(invitedByRaw);
