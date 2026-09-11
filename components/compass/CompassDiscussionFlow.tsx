@@ -711,16 +711,6 @@ export function CompassDiscussionFlow({
                   key={message.localKey ?? `${message.role}-${index}`}
                   className={isCompass ? "mr-auto max-w-[92%]" : "ml-auto max-w-[88%]"}
                 >
-                  <p
-                    className={`mb-2 text-[11px] font-medium uppercase tracking-[0.18em] ${
-                      isCompass
-                        ? "text-[#d8b15f]"
-                        : "text-right text-zinc-500"
-                    }`}
-                  >
-                    {isCompass ? "Compass" : "You"}
-                  </p>
-
                   <div
                     className={`text-sm leading-7 ${
                       isCompass
