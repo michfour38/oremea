@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteNav } from "@/components/site/site-nav";
 import { PartyInviteControls } from "./invite-controls";
+import { PartyTopicSurvey } from "./topic-survey";
 import { registerForParty } from "./actions";
 
 export const metadata: Metadata = {
@@ -69,7 +70,7 @@ export default async function PartyPage({
             </p>
             <PartyInviteControls inviteUrl={inviteUrl} />
             <p className="mt-7 text-sm leading-7 text-zinc-500">
-              Session details will be sent using the registration information supplied.
+              Check the welcome email for session details and the private Questions Box. That box can be used again whenever another question, pattern, or thought comes up before the live session.
             </p>
           </section>
         ) : (
@@ -79,12 +80,12 @@ export default async function PartyPage({
           >
             <h2 className="font-serif text-3xl">Reserve a place</h2>
             <p className="mt-3 text-sm leading-7 text-zinc-400">
-              One question helps shape what needs attention in the live session without turning registration into homework.
+              A few quick choices help shape what needs attention in the live session without asking for anyone's whole story. Your welcome email will include a private Questions Box, so anything else that comes up can be added later.
             </p>
 
             {query.error ? (
               <p role="alert" className="mt-5 rounded-xl border border-amber-200/20 bg-amber-100/5 p-4 text-sm text-amber-100">
-                Add a valid email address and the question or relational theme taking up the most space right now.
+                Add a valid email address and choose the topic that comes closest to what has your attention right now.
               </p>
             ) : null}
 
@@ -112,16 +113,7 @@ export default async function PartyPage({
               />
             </label>
 
-            <label className="mt-5 block text-sm leading-6 text-zinc-200">
-              What relationship question, recurring pattern, or relational theme is taking up the most space right now?
-              <textarea
-                name="question"
-                required
-                maxLength={3000}
-                rows={5}
-                className="mt-2 w-full resize-y rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-white outline-none focus:border-[#c8a96a]/60"
-              />
-            </label>
+            <PartyTopicSurvey />
 
             <button
               type="submit"
