@@ -22,6 +22,7 @@
     "test:backend-hygiene": "tsx scripts/verify-backend-launch-hygiene-contract.ts",
     "test:superseded-boundary": "tsx scripts/verify-superseded-boundary.ts",
     "test:participant-sovereignty": "tsx scripts/verify-participant-sovereignty-contract.ts",
+    "test:ai-resilience": "tsx scripts/verify-ai-resilience-contract.ts",
     "test:resonance-content": "tsx scripts/verify-resonance-content-contract.ts && tsx scripts/verify-resonance-visits-contract.ts",
     "test:resonance-visits": "tsx scripts/verify-resonance-visits-contract.ts",
     "test:reviews": "tsx scripts/verify-review-submission-contract.ts",
@@ -44,7 +45,7 @@
     "test:product-marketing": "tsx scripts/verify-product-marketing-contract.ts",
     "test:product-reset": "tsx scripts/verify-product-test-reset-contract.ts",
     "test:member-nav-product": "tsx scripts/verify-member-nav-product-contract.ts",
-    "test:launch": "npm run test:central-pricing && npm run test:production-migrations && npm run test:backend-hygiene && npm run test:superseded-boundary && npm run test:participant-sovereignty && npm run test:resonance-content && npm run test:reviews && npm run test:public-product-routing && npm run test:recognition-pricing && npm run test:recognition-conversation && npm run test:commerce-routing && npm run test:public-pricing && npm run test:compass && npm run test:current && npm run test:dawn-truth && npm run test:product-marketing && npm run test:product-reset && npm run test:member-nav-product"
+    "test:launch": "npm run test:central-pricing && npm run test:production-migrations && npm run test:backend-hygiene && npm run test:superseded-boundary && npm run test:participant-sovereignty && npm run test:ai-resilience && npm run test:resonance-content && npm run test:reviews && npm run test:public-product-routing && npm run test:recognition-pricing && npm run test:recognition-conversation && npm run test:commerce-routing && npm run test:public-pricing && npm run test:compass && npm run test:current && npm run test:dawn-truth && npm run test:product-marketing && npm run test:product-reset && npm run test:member-nav-product"
   },
   "prisma": {
     "schema": "./prisma",
