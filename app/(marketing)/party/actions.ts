@@ -128,24 +128,17 @@ export async function registerForParty(formData: FormData) {
         event_key: EVENT_KEY,
         referral_code: invitedByRaw,
       },
-      select: { referral_code: true },
+      select: { referral_code: true, invite_allowance: true },
     });
 
     if (inviter) {
-      const fullInviter = await prisma.oremea_party_registrations.findFirst({
-        where: {
-          event_key: EVENT_KEY,
-          referral_code: inviter.referral_code,
-        },
-        select: { referral_code: true, invite_allowance: true },
-      });
       const usedInvitations = await prisma.oremea_party_registrations.count({
         where: {
           event_key: EVENT_KEY,
           invited_by: inviter.referral_code,
         },
       });
-      if (fullInviter && usedInvitations < fullInviter.invite_allowance) {
+      if (usedInvitations < inviter.invite_allowance) {
         invitedBy = inviter.referral_code;
       }
     }
@@ -166,7 +159,7 @@ export async function registerForParty(formData: FormData) {
         data: {
           first_name: firstName || existing.first_name,
           question,
-          invited_by: existing.invited_by ?? invitedBy,
+          invited_by: existing.invited_by,
         },
       })
     : await prisma.oremea_party_registrations.create({
