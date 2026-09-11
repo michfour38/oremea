@@ -131,7 +131,7 @@ export const WEEK_10: ResonanceWeekSeed = {
           prompt_order: 3,
           type: "thread_prompt",
           label: null,
-          content: "What tells you whether rest is the right choice, the practice needs adjusting, or you want to resume?",
+          content: "How can you tell when you genuinely need rest and when you have simply lost the thread?",
         },
         {
           prompt_order: 4,
@@ -248,7 +248,7 @@ export const WEEK_10: ResonanceWeekSeed = {
           prompt_order: 5,
           type: "mirror_exercise",
           label: null,
-          content: "Write a continuation plan: the practice I am keeping → what will show me it is happening in real life → when I want to review it → the next action I choose and when it would fit.",
+          content: "Write a continuation plan: the practice I am keeping → what I will measure → when I will review it → the next action I will take within twenty-four hours.",
         },
       ],
     },
