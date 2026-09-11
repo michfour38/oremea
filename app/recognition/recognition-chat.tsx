@@ -101,7 +101,6 @@ export default function RecognitionChat({
   const [composerHydrated, setComposerHydrated] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isStartingNewChat, setIsStartingNewChat] = useState(false);
-  const [showEarlierMessages, setShowEarlierMessages] = useState(false);
   const [error, setError] = useState("");
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -111,14 +110,6 @@ export default function RecognitionChat({
     lastMessage?.role === "user" && lastMessage.clientMessageId
       ? lastMessage
       : null;
-  const defaultVisibleMessageCount = 2;
-  const hiddenMessageCount = Math.max(
-    0,
-    messages.length - defaultVisibleMessageCount,
-  );
-  const visibleMessages = showEarlierMessages
-    ? messages
-    : messages.slice(-defaultVisibleMessageCount);
 
   useEffect(() => {
     const stored = readStoredComposer();
@@ -338,21 +329,7 @@ export default function RecognitionChat({
             </div>
           ) : (
             <div className="space-y-7 md:space-y-8">
-              {hiddenMessageCount > 0 ? (
-                <div className="flex justify-center pb-1">
-                  <button
-                    type="button"
-                    onClick={() => setShowEarlierMessages((current) => !current)}
-                    className="rounded-full border border-white/[0.08] bg-black/30 px-4 py-2 text-[11px] uppercase tracking-[0.14em] text-zinc-500 transition hover:border-[#6f5a31] hover:text-[#c8a96a]"
-                  >
-                    {showEarlierMessages
-                      ? "Hide earlier reflections"
-                      : `Earlier reflections · ${hiddenMessageCount}`}
-                  </button>
-                </div>
-              ) : null}
-
-              {visibleMessages.map((message) => (
+              {messages.map((message) => (
                 <article
                   key={message.turnIndex}
                   className={
