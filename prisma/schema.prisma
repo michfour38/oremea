@@ -1009,3 +1009,20 @@ model witness_feedback {
   @@index([cycle_id])
   @@index([participant_id])
 }
+
+
+model oremea_party_registrations {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  event_key     String
+  email         String
+  first_name    String?
+  question      String
+  referral_code String   @unique @db.Uuid
+  invited_by    String?  @db.Uuid
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime @updatedAt @db.Timestamptz(6)
+
+  @@unique([event_key, email])
+  @@index([event_key])
+  @@index([invited_by])
+}
