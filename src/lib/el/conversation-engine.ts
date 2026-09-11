@@ -64,15 +64,21 @@ export async function runELConversation({
       const parsed = parseCompassDiscussion(text)
       if (!parsed) continue
 
-      const boundary = getCompassBoundaryMessage(parsed.scopeCategory)
+      const boundary = getCompassBoundaryMessage(
+        parsed.scopeCategory,
+        latestAnswer,
+      )
+      const enforcedScopeCategory: CompassScopeCategory = boundary
+        ? parsed.scopeCategory
+        : "in_scope"
 
       return {
         reply: boundary ?? parsed.reply,
         shouldContinue: true,
         suggestedNextStep: null,
-        scopeCategory: parsed.scopeCategory,
-        movementReady: parsed.movementReady,
-        retirePriorFrame: parsed.retirePriorFrame,
+        scopeCategory: enforcedScopeCategory,
+        movementReady: boundary ? false : parsed.movementReady,
+        retirePriorFrame: boundary ? false : parsed.retirePriorFrame,
       }
     }
 
@@ -296,12 +302,15 @@ Use legal only when answering would require legal advice or legal judgement Comp
 Use regulated_professional only when the requested guidance requires another qualified professional authority Compass does not possess.
 
 The presence of health problems, divorce, legal proceedings, finances, eating behaviour, or other serious circumstances does not automatically put ordinary goal-setting and movement discussion outside scope.
-When scope is outside, do not interpret, reframe, question, or advise. The application will replace your reply with its boundary message.
+Scope classification is advisory to the application, not authority to end the whole conversation.
+Always write the normal Compass Discussion reply from the participant's actual material, even when you classify one requested part as medical, legal, self_harm_intent, or regulated_professional.
+The application will decide whether the narrow boundary actually applies and, if it does, will replace only that response with its boundary message.
+Never classify merely because the participant mentions health, medication, divorce, court, law, money, tax, investment, abuse, grief, or another serious subject.
 
 Return valid JSON only:
 {
   "scopeCategory": "in_scope | self_harm_intent | medical | legal | regulated_professional",
-  "reply": "your normal Compass Discussion reply, or an empty string when outside scope",
+  "reply": "your normal Compass Discussion reply",
   "movementReady": false,
   "retirePriorFrame": false
 }
@@ -359,7 +368,7 @@ function parseCompassDiscussion(text: string): {
   const movementReady = parsed.movementReady === true
   const retirePriorFrame = parsed.retirePriorFrame === true
 
-  if (scopeCategory === "in_scope" && !reply) return null
+  if (!reply) return null
 
   return {
     scopeCategory,
