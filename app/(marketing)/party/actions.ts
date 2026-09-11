@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
+import { sendPartyWelcomeEmail } from "@/src/lib/email/send-party-welcome-email";
 import { getPartyTopicGroup } from "./topics";
 
 const EVENT_KEY = "what-keeps-repeating-in-connection-1";
@@ -80,9 +81,16 @@ export async function registerForParty(formData: FormData) {
           topic_selection: topicSelection,
           topic_other: isOtherSelection ? topicOther : null,
           referral_code: randomUUID(),
+          questions_token: randomUUID(),
           invited_by: invitedBy,
         },
       });
+
+  await sendPartyWelcomeEmail({
+    to: registration.email,
+    firstName: registration.first_name,
+    questionsToken: registration.questions_token,
+  });
 
   redirect(`/party?registered=${registration.referral_code}`);
 }
