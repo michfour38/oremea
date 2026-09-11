@@ -392,6 +392,22 @@ function keepAtMostOneQuestion(value: string) {
   });
 }
 
+function assertRecognitionReplyBoundary(reply: string) {
+  if (!reply) {
+    throw new Error("Recognition returned no participant-facing reply.");
+  }
+
+  if (wordCount(reply) > MAX_REPLY_WORDS + 30) {
+    throw new Error("Recognition exceeded the conversational response boundary.");
+  }
+
+  if ((reply.match(/\?/g) ?? []).length > 1) {
+    throw new Error(
+      "Recognition asked more than one participant-facing question.",
+    );
+  }
+}
+
 async function generateRecognitionFallbackReply({
   firstName,
   recentMessages,
@@ -463,31 +479,23 @@ export async function generateRecognitionConversationReply({
       const reply =
         typeof parsed.reply === "string" ? parsed.reply.trim() : "";
 
-      if (
-        reply &&
-        wordCount(reply) <= MAX_REPLY_WORDS + 30 &&
-        (reply.match(/\?/g) ?? []).length <= 1
-      ) {
-        const participantMessages = recentMessages.filter(
-          (message) => message.role === "user",
-        );
-        const nextMemory = mergeRecognitionMemory({
-          existing: memory,
-          remember: parsed.remember,
-          participantMessages,
-        });
+      assertRecognitionReplyBoundary(reply);
 
-        return {
-          reply,
-          memory: nextMemory,
-          model: result.model,
-          usage: result.usage,
-        };
-      }
-
-      console.warn(
-        "Recognition structured response missed the conversation envelope; using fallback response mode.",
+      const participantMessages = recentMessages.filter(
+        (message) => message.role === "user",
       );
+      const nextMemory = mergeRecognitionMemory({
+        existing: memory,
+        remember: parsed.remember,
+        participantMessages,
+      });
+
+      return {
+        reply,
+        memory: nextMemory,
+        model: result.model,
+        usage: result.usage,
+      };
     } catch {
       console.warn(
         "Recognition structured response was unreadable; using fallback response mode.",
