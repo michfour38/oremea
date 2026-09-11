@@ -701,30 +701,42 @@ export function CompassDiscussionFlow({
 
       {view === "discussion" ? (
         <>
-          <div className="space-y-4">
-            {displayMessages.map((message, index) => (
-              <div
-                id={`compass-discussion-${index}`}
-                key={message.localKey ?? `${message.role}-${index}`}
-                className={`rounded-[1.4rem] p-5 text-sm leading-relaxed ${
-                  message.role === "compass"
-                    ? "bg-[#12100D]"
-                    : "bg-[#121212] text-zinc-100"
-                }`}
-              >
-                {message.role === "compass" && message.content === "..." ? (
-                  <DiscussionThinkingIndicator />
-                ) : (
+          <div className="space-y-5">
+            {displayMessages.map((message, index) => {
+              const isCompass = message.role === "compass";
+
+              return (
+                <article
+                  id={`compass-discussion-${index}`}
+                  key={message.localKey ?? `${message.role}-${index}`}
+                  className={isCompass ? "mr-auto max-w-[92%]" : "ml-auto max-w-[88%]"}
+                >
                   <p
-                    className={`whitespace-pre-line ${
-                      message.role === "compass" ? BODY_TEXT : "text-zinc-100"
+                    className={`mb-2 text-[11px] font-medium uppercase tracking-[0.18em] ${
+                      isCompass
+                        ? "text-[#d8b15f]"
+                        : "text-right text-zinc-500"
                     }`}
                   >
-                    {message.content}
+                    {isCompass ? "Compass" : "You"}
                   </p>
-                )}
-              </div>
-            ))}
+
+                  <div
+                    className={`text-sm leading-7 ${
+                      isCompass
+                        ? "border-l-2 border-[#8f713b] bg-[#12100D] px-5 py-4 text-zinc-300"
+                        : "rounded-[1.4rem] border border-white/[0.08] bg-[#191919] px-5 py-4 text-zinc-100"
+                    }`}
+                  >
+                    {isCompass && message.content === "..." ? (
+                      <DiscussionThinkingIndicator />
+                    ) : (
+                      <p className="whitespace-pre-line">{message.content}</p>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
           </div>
 
           {!discussionBlocked ? (
