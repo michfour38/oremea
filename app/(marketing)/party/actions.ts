@@ -32,6 +32,7 @@ async function sendPartyTicketEmail(registration: {
   email: string;
   first_name: string | null;
   referral_code: string;
+  invite_allowance: number;
 }) {
   const apiKey = process.env.RESEND_API_KEY?.trim();
   if (!apiKey) {
@@ -42,6 +43,7 @@ async function sendPartyTicketEmail(registration: {
   const origin = partyOrigin();
   const confirmationUrl = `${origin}/party?registered=${encodeURIComponent(registration.id)}`;
   const inviteUrl = `${origin}/party?ref=${encodeURIComponent(registration.referral_code)}`;
+  const funnelUrl = `${origin}/resonance/visits`;
   const startLabel = process.env.OREMEA_PARTY_START_LABEL?.trim();
   const joinUrl = process.env.OREMEA_PARTY_JOIN_URL?.trim();
   const greeting = registration.first_name ? `Howzit ${registration.first_name},` : "Howzit,";
@@ -60,8 +62,13 @@ async function sendPartyTicketEmail(registration: {
     joinUrl ? `Join the live session: ${joinUrl}` : "",
     `View your ticket: ${confirmationUrl}`,
     "",
-    "You also have two guest invitations.",
-    `Invite link: ${inviteUrl}`,
+    registration.invite_allowance > 0
+      ? "You also have two guest invitations."
+      : "This guest ticket does not create more free invitations.",
+    registration.invite_allowance > 0
+      ? `Invite link: ${inviteUrl}`
+      : "If Resonance is useful enough to purchase, that purchase unlocks two guest invitations on this ticket.",
+    registration.invite_allowance > 0 ? "" : `Start with Resonance: ${funnelUrl}`,
   ].filter(Boolean);
 
   const resend = new Resend(apiKey);
@@ -86,9 +93,14 @@ async function sendPartyTicketEmail(registration: {
           ${joinUrl ? `<p><a href="${joinUrl}" style="color:#f1dfb4">Join the live session</a></p>` : ""}
           <p><a href="${confirmationUrl}" style="color:#f1dfb4">View your ticket</a></p>
           <hr style="border:0;border-top:1px solid #27272a;margin:28px 0" />
-          <h2 style="font-weight:400">Two guest invitations are included.</h2>
-          <p>If two people come immediately to mind who would genuinely use this conversation, send them this invitation link:</p>
-          <p><a href="${inviteUrl}" style="color:#f1dfb4">${inviteUrl}</a></p>
+${registration.invite_allowance > 0
+  ? `<h2 style="font-weight:400">Two guest invitations are included.</h2>
+     <p>If two people come immediately to mind who would genuinely use this conversation, send them this invitation link:</p>
+     <p><a href="${inviteUrl}" style="color:#f1dfb4">${inviteUrl}</a></p>`
+  : `<h2 style="font-weight:400">This guest ticket stops here.</h2>
+     <p>It does not automatically create two more free invitations.</p>
+     <p>If Resonance is useful enough to purchase, that purchase unlocks two guest invitations on this ticket.</p>
+     <p><a href="${funnelUrl}" style="color:#f1dfb4">Start with Resonance</a></p>`}
         </div>
       </div>
     `,
@@ -120,13 +132,20 @@ export async function registerForParty(formData: FormData) {
     });
 
     if (inviter) {
+      const fullInviter = await prisma.oremea_party_registrations.findFirst({
+        where: {
+          event_key: EVENT_KEY,
+          referral_code: inviter.referral_code,
+        },
+        select: { referral_code: true, invite_allowance: true },
+      });
       const usedInvitations = await prisma.oremea_party_registrations.count({
         where: {
           event_key: EVENT_KEY,
           invited_by: inviter.referral_code,
         },
       });
-      if (usedInvitations < MAX_GUEST_INVITATIONS) {
+      if (fullInviter && usedInvitations < fullInviter.invite_allowance) {
         invitedBy = inviter.referral_code;
       }
     }
@@ -158,6 +177,7 @@ export async function registerForParty(formData: FormData) {
           question,
           referral_code: randomUUID(),
           invited_by: invitedBy,
+          invite_allowance: invitedBy ? 0 : MAX_GUEST_INVITATIONS,
         },
       });
 
