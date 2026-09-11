@@ -66,7 +66,7 @@ export function AdditionalOfferPicker({
           </div>
         </div>
 
-        <p className="mt-5 text-sm leading-7 text-zinc-300">
+        <p className="mt-5 text-lg leading-8 text-zinc-300">
           {formatOremeaPrice(completeTotalCents)} total paid · {formatOremeaPrice(completePerVisitCents)} per visit.
         </p>
 
@@ -83,7 +83,7 @@ export function AdditionalOfferPicker({
             type="button"
             onClick={() => setShowFewer((value) => !value)}
             aria-expanded={showFewer}
-            className="mt-5 w-full text-center text-sm text-zinc-300 underline underline-offset-4 hover:text-white"
+            className="mt-5 w-full text-center text-lg leading-7 text-zinc-200 underline underline-offset-4 hover:text-white"
           >
             {showFewer ? "Hide fewer visits" : "Choose fewer visits"}
           </button>
@@ -96,7 +96,7 @@ export function AdditionalOfferPicker({
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Fewer visits</p>
               <h3 className="mt-2 text-xl text-zinc-100">Compare a smaller addition</h3>
-              <p className="mt-2 text-sm leading-6 text-zinc-400">
+              <p className="mt-2 text-lg leading-8 text-zinc-300">
                 {rangeLabel}. The complete-ten offer remains above so the comparison stays visible.
               </p>
             </div>
@@ -161,7 +161,7 @@ export function AdditionalOfferPicker({
         <input type="hidden" name="orderId" value={orderId} />
         <button
           type="submit"
-          className="w-full py-2 text-center text-sm text-zinc-300 underline underline-offset-4 hover:text-white"
+          className="w-full py-3 text-center text-lg leading-7 text-zinc-200 underline underline-offset-4 hover:text-white"
         >
           No thanks · Choose my room
         </button>
