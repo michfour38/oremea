@@ -87,7 +87,7 @@ export default async function VisitCompletionPage({ searchParams }: {
         canCharge={canCharge}
       />
 
-      <p className="mt-5 text-sm leading-7 text-zinc-400">
+      <p className="mt-5 text-lg leading-8 text-zinc-300">
         {canCharge
           ? "Any accepted addition is a separate charge using the saved payment method. A bank may still require verification."
           : "A saved-payment addition is not available for this checkout. Your purchased visits can be used now."}
