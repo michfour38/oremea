@@ -338,15 +338,6 @@ export default function RecognitionChat({
                       : "mr-auto max-w-2xl"
                   }
                 >
-                  <p
-                    className={`mb-2 text-[11px] uppercase tracking-[0.2em] ${
-                      message.role === "user"
-                        ? "text-right text-zinc-600"
-                        : "text-[#9d8659]"
-                    }`}
-                  >
-                    {message.role === "user" ? "You" : "Recognition"}
-                  </p>
                   <div
                     className={
                       message.role === "user"
