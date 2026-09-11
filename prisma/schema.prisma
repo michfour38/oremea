@@ -1016,8 +1016,11 @@ model oremea_party_registrations {
   event_key     String
   email         String
   first_name    String?
-  question      String
-  referral_code String   @unique @db.Uuid
+  question        String
+  topic_category  String?
+  topic_selection String?
+  topic_other     String?
+  referral_code   String   @unique @db.Uuid
   invited_by    String?  @db.Uuid
   created_at    DateTime @default(now()) @db.Timestamptz(6)
   updated_at    DateTime @updatedAt @db.Timestamptz(6)
