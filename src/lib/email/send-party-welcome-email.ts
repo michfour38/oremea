@@ -39,7 +39,7 @@ export async function sendPartyWelcomeEmail({
   const { error } = await resend.emails.send({
     from: "Oremea <support@oremea.com>",
     to,
-    subject: "Welcome — What Keeps Repeating in Connection?",
+    subject: "Welcome + your private Questions Box — Oremea",
     html: `
       <div style="background:#080704;padding:40px 20px;font-family:Georgia,serif;color:#EAEAEA;">
         <div style="max-width:680px;margin:0 auto;">
@@ -55,15 +55,16 @@ export async function sendPartyWelcomeEmail({
           <div style="margin-top:34px;padding:28px;border:1px solid #4A3A20;background:#15120C;border-radius:22px;">
             <p style="margin:0;font-size:25px;color:#F1DFB4;">Questions Box</p>
             <p style="margin-top:16px;font-size:16px;line-height:1.8;color:#CFCFCF;">
-              If another question, pattern, example, or thought comes up before the live session,
-              add it here. You do not need to explain the whole story, and you can return to the box again.
+              This box stays open before the live session. If another question, pattern, example,
+              contradiction, or thought comes up, add it here. You can use the box more than once,
+              and what is submitted helps shape the live conversation.
             </p>
             <a href="${questionsUrl}" style="display:inline-block;margin-top:18px;padding:12px 22px;border:1px solid #C8A96A;border-radius:999px;color:#F1DFB4;text-decoration:none;font-size:15px;">
               Open the Questions Box
             </a>
           </div>
           <p style="margin-top:30px;font-size:14px;line-height:1.8;color:#777;">
-            The Questions Box link is private to this registration. Please keep this email for access.
+            Please keep this email. The Questions Box link is private to this registration and is the way back into the box whenever another question comes up.
           </p>
         </div>
       </div>
