@@ -70,7 +70,7 @@ export default async function PartyPage({
             </p>
             <PartyInviteControls inviteUrl={inviteUrl} />
             <p className="mt-7 text-sm leading-7 text-zinc-500">
-              Check the welcome email for session details and the private Questions Box. That box can be used again whenever another question, pattern, or thought comes up before the live session.
+              Read the welcome email — the private Questions Box is inside. Keep that email. The box stays open, can be used more than once, and questions added there help shape the live conversation before the session begins.
             </p>
           </section>
         ) : (
@@ -80,12 +80,12 @@ export default async function PartyPage({
           >
             <h2 className="font-serif text-3xl">Reserve a place</h2>
             <p className="mt-3 text-sm leading-7 text-zinc-400">
-              A few quick choices help shape what needs attention in the live session without asking for anyone's whole story. Your welcome email will include a private Questions Box, so anything else that comes up can be added later.
+              Choose a topic, then choose between the two meanings inside the question — or write your own version. After registering, read the welcome email: it contains your private Questions Box. That box stays open, can be used more than once, and what is submitted there helps shape the live conversation.
             </p>
 
             {query.error ? (
               <p role="alert" className="mt-5 rounded-xl border border-amber-200/20 bg-amber-100/5 p-4 text-sm text-amber-100">
-                Add a valid email address and choose the topic that comes closest to what has your attention right now.
+                Add a valid email address, choose a topic, and answer the contrast — or write your own version.
               </p>
             ) : null}
 

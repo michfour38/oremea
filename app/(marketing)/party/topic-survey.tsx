@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { PARTY_TOPIC_GROUPS } from "./topics";
 
+const OWN_VERSION = "Neither — my version is different";
+
 export function PartyTopicSurvey() {
   const [category, setCategory] = useState("");
   const [selection, setSelection] = useState("");
@@ -19,18 +21,18 @@ export function PartyTopicSurvey() {
     setOther("");
   };
 
-  const needsOther = selection === "Something else";
+  const needsOther = selection === OWN_VERSION;
 
   return (
     <fieldset className="mt-7">
       <legend className="text-sm leading-6 text-zinc-200">
-        Which area feels closest to what has your attention right now?
+        Choose the relationship topic you want to look at.
       </legend>
       <p className="mt-2 text-sm leading-6 text-zinc-500">
-        Choose the closest fit. There is no need to explain the whole story.
+        Then choose which side of the question feels closer. If neither does, write it in your own words.
       </p>
 
-      <div className="mt-4 grid gap-3">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         {PARTY_TOPIC_GROUPS.map((item) => {
           const selected = category === item.key;
           return (
@@ -53,33 +55,56 @@ export function PartyTopicSurvey() {
 
       {group ? (
         <div className="mt-7 rounded-3xl border border-white/10 bg-black/20 p-5">
-          <p className="text-sm leading-6 text-zinc-200">{group.label}</p>
-          <div className="mt-4 space-y-3">
-            {[...group.options, "Something else"].map((option) => (
+          <p className="font-serif text-xl leading-8 text-white">{group.question}</p>
+          <p className="mt-2 text-sm leading-6 text-zinc-500">
+            This is not a diagnosis. It is simply a contrast to help make the ambiguity visible.
+          </p>
+
+          <div className="mt-5 space-y-3">
+            {group.options.map((option, index) => (
               <label
-                key={option}
-                className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/10 px-4 py-3 text-sm leading-6 text-zinc-300 hover:border-white/20"
+                key={option.key}
+                className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/10 px-4 py-4 text-sm leading-6 text-zinc-300 hover:border-white/20"
               >
                 <input
                   type="radio"
                   name="topicSelection"
-                  value={option}
-                  checked={selection === option}
+                  value={option.label}
+                  checked={selection === option.label}
                   onChange={() => {
-                    setSelection(option);
-                    if (option !== "Something else") setOther("");
+                    setSelection(option.label);
+                    setOther("");
                   }}
                   required
                   className="mt-1"
                 />
-                <span>{option}</span>
+                <span>
+                  <span className="mr-2 text-[#c8a96a]">{index === 0 ? "A" : "B"}.</span>
+                  {option.label}
+                </span>
               </label>
             ))}
+
+            <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/10 px-4 py-4 text-sm leading-6 text-zinc-300 hover:border-white/20">
+              <input
+                type="radio"
+                name="topicSelection"
+                value={OWN_VERSION}
+                checked={selection === OWN_VERSION}
+                onChange={() => setSelection(OWN_VERSION)}
+                required
+                className="mt-1"
+              />
+              <span>
+                <span className="mr-2 text-[#c8a96a]">C.</span>
+                Neither — my version is different.
+              </span>
+            </label>
           </div>
 
           {needsOther ? (
             <label className="mt-5 block text-sm leading-6 text-zinc-200">
-              Add the topic or question that fits better
+              Write your version of the question or contrast
               <textarea
                 name="topicOther"
                 value={other}
@@ -87,7 +112,7 @@ export function PartyTopicSurvey() {
                 required
                 maxLength={1000}
                 rows={4}
-                placeholder="A few words is enough."
+                placeholder="What are the two possibilities you are actually weighing?"
                 className="mt-2 w-full resize-y rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-white outline-none placeholder:text-zinc-600 focus:border-[#c8a96a]/60"
               />
             </label>
