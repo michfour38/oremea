@@ -17,6 +17,7 @@ import {
   getResonanceWeekRuns,
 } from "@/src/lib/resonance/resonance-week-run";
 import MemberNav from "../../member-nav";
+import { visitCheckoutEnabled } from "@/src/lib/resonance/visit-offers";
 
 export const dynamic = "force-dynamic";
 
@@ -131,6 +132,7 @@ async function completeTesterPurchase(formData: FormData) {
 }
 
 export default async function ResonancePurchasePage(props: Props) {
+  if (visitCheckoutEnabled()) redirect("/resonance/visits");
   const searchParams = await props.searchParams;
   const { userId } = await auth();
   if (!userId) {

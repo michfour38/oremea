@@ -246,6 +246,7 @@ model resonance_week_runs {
   resonance_guidance   resonance_day_guidance[]
   resonance_continues  resonance_day_continues[]
   mirror_responses     mirror_responses[]
+  visit_redemption     resonance_visit_redemptions?
 
   @@unique([user_id, week_number, run_number])
   @@index([user_id, week_number])

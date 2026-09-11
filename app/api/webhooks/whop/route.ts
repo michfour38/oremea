@@ -15,6 +15,7 @@ import { setRecognitionMembershipAccess } from "@/src/lib/recognition/recognitio
 import { getResonanceWeekForWhopProduct } from "@/src/lib/resonance/resonance-commerce";
 import { createPurchasedResonanceRun } from "@/src/lib/resonance/resonance-week-run";
 import { verifyWhopWebhook } from "@/src/lib/whop/verify-webhook";
+import { applyVisitPaymentEvent, applyVisitRefundEvent } from "@/src/lib/resonance/visit-orders";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -159,6 +160,31 @@ export async function POST(request: Request) {
     event = JSON.parse(body) as WhopPaymentSucceededEvent & WhopMembershipEvent;
   } catch {
     return NextResponse.json({ error: "Invalid webhook body." }, { status: 400 });
+  }
+
+  // Visit orders are bound to server-created checkout metadata. Keep the
+  // existing room and other product webhook paths unchanged during rollout.
+  const refundEvent = event as { data?: { payment?: { metadata?: { oremea_visit_order?: unknown } } } };
+  if ((event.type === "refund.created" || event.type === "refund.updated") &&
+      refundEvent.data?.payment?.metadata?.oremea_visit_order) {
+    try {
+      const order = await applyVisitRefundEvent(event);
+      return NextResponse.json({ received: true, product: "resonance", orderId: order.id, status: order.status });
+    } catch {
+      console.error("Resonance visit refund requires reconciliation.");
+      return NextResponse.json({ error: "Visit refund could not be reconciled." }, { status: 422 });
+    }
+  }
+  const visitEvent = event as { type?: string; data?: { metadata?: { oremea_visit_order?: unknown } } };
+  if (visitEvent.data?.metadata?.oremea_visit_order &&
+      ["payment.succeeded", "payment.failed", "payment.canceled"].includes(visitEvent.type ?? "")) {
+    try {
+      const order = await applyVisitPaymentEvent(visitEvent.type!, event.data);
+      return NextResponse.json({ received: true, product: "resonance", orderId: order.id, status: order.status });
+    } catch {
+      console.error("Resonance visit payment requires reconciliation.");
+      return NextResponse.json({ error: "Visit payment could not be reconciled." }, { status: 422 });
+    }
   }
 
   if (
