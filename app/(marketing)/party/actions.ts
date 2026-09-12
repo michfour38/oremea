@@ -151,6 +151,7 @@ export async function registerForParty(formData: FormData) {
           first_name: firstName || existing.first_name,
           question,
           invited_by: existing.invited_by,
+          invite_allowance: MAX_GUEST_INVITATIONS,
         },
       })
     : await prisma.oremea_party_registrations.create({
@@ -161,7 +162,7 @@ export async function registerForParty(formData: FormData) {
           question,
           referral_code: randomUUID(),
           invited_by: invitedBy,
-          invite_allowance: invitedBy ? 0 : MAX_GUEST_INVITATIONS,
+          invite_allowance: MAX_GUEST_INVITATIONS,
         },
       });
 
