@@ -66,6 +66,9 @@ Recognition is an ongoing private conversational witness.
 Its purpose is: help the participant see themselves accurately while they are speaking.
 Recognition is accountability to the participant's own words, evidence, distinctions, choices, participation, stated values, stated responsibilities, stated boundaries, stated uncertainty, and corrections.
 The participant remains the authority over what their material means and what they choose.
+Recognition is relationally continuous. Its success is not measured by making the participant independent of Recognition or by ending the conversation as quickly as possible.
+The intended rhythm can be: curiosity -> recognition -> participant-led action or experimentation when something lands -> return with what happened -> renewed curiosity.
+Recognition may warmly support an action the participant themselves chooses from what they have seen, while remaining a witness rather than becoming a planner, coach, or task manager.
 
 THIS IS NOT COMPASS
 Recognition has no destination it must move the participant toward.
@@ -73,6 +76,8 @@ Do not turn the conversation into goal-setting, execution, planning, strategy, r
 Do not ask what the participant will do next merely because something became clear.
 Do not treat insight as incomplete because action has not followed.
 A conversation can succeed because one distinction became visible and no decision was made.
+If the participant themselves names an action, experiment, conversation, boundary, choice, or behaviour they want to try because of what became visible, Recognition may acknowledge or encourage that participant-led movement in ordinary language.
+Do not convert that movement into milestones, accountability tasks, optimisation, a prescribed next step, or an action plan.
 
 RECURSION
 - respond to the participant's newest message first
@@ -135,6 +140,8 @@ VOICE
 - do not moralise
 - do not become clinical or academic
 - natural humour or plain language may follow the participant's register, but never perform intensity that the participant did not supply
+- when rapport has clearly formed, let the reply sound like an intelligent familiar conversation rather than resetting to formal witness language every turn
+- preserve enough warmth and continuity that returning to Recognition feels like resuming a conversation, not opening a fresh assessment
 
 REPLY SHAPE
 - normally 1 to 3 short paragraphs and no more than ${MAX_REPLY_WORDS} words
@@ -145,6 +152,9 @@ REPLY SHAPE
 - a short reflection followed by one exact question is usually enough
 - if a direct reflection is enough, you may make the reflection without a question
 - if the participant explicitly asks for no questions, respect that
+- when the participant says a question has landed hard, says they need to think, sit with it, take a minute, or come back later, do not immediately press them with another Recognition question
+- treat that as relational pacing, not unfinished work: respond briefly and casually in the participant's register, leave the thread open, and let them return when they are ready
+- in that moment, sounding like a human companion matters more than proving analytical precision; one warm sentence is often enough
 - never finish by assigning homework, an exercise, a plan, or an action
 
 LONGITUDINAL MEMORY
@@ -457,6 +467,31 @@ function findFallbackContrastPair(latest: string): [string, string] | null {
   ];
 }
 
+function recognitionPacingReply(value: string): string | null {
+  const normalized = value.toLowerCase().replace(/\s+/g, " ").trim();
+  if (!normalized) return null;
+
+  const asksForPause =
+    /\b(?:need|want) to (?:think|sit with|process)\b/.test(normalized) ||
+    /\b(?:let me|i(?:'|’)ll) (?:think|sit with|process)\b/.test(normalized) ||
+    /\b(?:need|give me) (?:a )?(?:minute|moment|bit|time)\b/.test(normalized) ||
+    /\bcome back\b/.test(normalized) ||
+    /\b(?:mind blown|blew my mind|blown my(?: own)? mind)\b/.test(normalized) ||
+    /\b(?:challenge accepted|accept(?:ed|ing)? (?:the )?challenge)\b/.test(normalized);
+
+  if (!asksForPause) return null;
+
+  if (/\b(?:challenge accepted|accept(?:ed|ing)? (?:the )?challenge)\b/.test(normalized)) {
+    return "Deal. I’ll leave that one with you. Come back when you’re ready.";
+  }
+
+  if (/\b(?:mind blown|blew my mind|blown my(?: own)? mind)\b/.test(normalized)) {
+    return "Ha — fair. Sit with that one. I’ll be here when you come back.";
+  }
+
+  return "Yep. Sit with it. I’ll be here when you come back.";
+}
+
 function buildDeterministicRecognitionFallback(
   recentMessages: RecognitionConversationMessage[],
 ) {
@@ -465,6 +500,9 @@ function buildDeterministicRecognitionFallback(
       .reverse()
       .find((message) => message.role === "user")
       ?.content.trim() ?? "";
+
+  const pacingReply = recognitionPacingReply(latest);
+  if (pacingReply) return pacingReply;
 
   const contrast = findFallbackContrastPair(latest);
 
@@ -573,8 +611,12 @@ export async function generateRecognitionConversationReply({
   if (result?.text) {
     try {
       const parsed = JSON.parse(stripJsonFence(result.text)) as RawModelResponse;
-      const reply =
+      const generatedReply =
         typeof parsed.reply === "string" ? parsed.reply.trim() : "";
+      const latestParticipantMessage =
+        [...recentMessages].reverse().find((message) => message.role === "user")?.content ?? "";
+      const reply =
+        recognitionPacingReply(latestParticipantMessage) ?? generatedReply;
 
       assertRecognitionReplyBoundary(reply);
 
@@ -606,7 +648,12 @@ export async function generateRecognitionConversationReply({
     memory,
   });
 
-  if (fallback) return fallback;
+  if (fallback) {
+    const latestParticipantMessage =
+      [...recentMessages].reverse().find((message) => message.role === "user")?.content ?? "";
+    const pacingReply = recognitionPacingReply(latestParticipantMessage);
+    return pacingReply ? { ...fallback, reply: pacingReply } : fallback;
+  }
 
   const reply = buildDeterministicRecognitionFallback(recentMessages);
   assertRecognitionReplyBoundary(reply);
