@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 const VISIT_DESCRIPTIONS: Record<number, string> = {
   1: "Start with one seven-day room. A simple way to experience Resonance.",
   3: "Three visits let you explore a few different rooms without deciding everything now.",
-  4: "Four visits give you the strongest starting rate before the complete-ten offer.",
+  4: "Four visits give you the best starting rate of these three options.",
 };
 
 export default async function VisitPurchasePage({ searchParams }: {
@@ -36,8 +36,8 @@ export default async function VisitPurchasePage({ searchParams }: {
       <p className="text-sm uppercase tracking-[0.2em] text-[#c8a96a]">Resonance visits</p>
       <h1 className="mt-3 text-4xl font-light">Choose the visits. Choose the room next.</h1>
       <p className="mt-5 max-w-2xl text-base leading-8 text-zinc-300">Each visit opens one seven-day room experience, starting when it is entered. Use different rooms or return to the same room for a fresh round. One visit is active at a time.</p>
-      {!checkoutEnabled ? <p role="status" className="mt-6 text-zinc-300">Package checkout is not open yet. Existing purchases remain available.</p> : null}
-      {query.error ? <p role="alert" className="mt-6 text-amber-100">{query.error === "email" ? "Verify the primary email on this account before purchasing." : "Checkout could not be opened. No payment has been confirmed."}</p> : null}
+      {!checkoutEnabled ? <p role="status" className="mt-6 text-zinc-300">New Resonance purchases are temporarily unavailable. Existing visits are still available.</p> : null}
+      {query.error ? <p role="alert" className="mt-6 text-amber-100">{query.error === "email" ? "Verify the primary email on this account before purchasing." : "We couldn’t open checkout. You have not been charged."}</p> : null}
 
       {!order ? (
         <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -64,7 +64,7 @@ export default async function VisitPurchasePage({ searchParams }: {
       ) : order.whop_checkout_id && order.status === "pending" && checkoutEnabled ? (
         <section className="mx-auto mt-8 max-w-xl rounded-3xl border border-white/15 bg-black/50 p-6">
           <h2 className="text-2xl">{order.quantity} visits · {formatOremeaPrice(order.amount_cents)}</h2>
-          <p className="mt-4 text-base leading-7 text-zinc-300">Checking out as {order.buyer_email}. Whop securely saves an eligible payment method for an optional separate purchase on the next page. Nothing extra is charged unless an offer is accepted.</p>
+          <p className="mt-4 text-base leading-7 text-zinc-300">Checking out as {order.buyer_email}. Checkout is handled securely by Whop. Nothing beyond this purchase is charged unless you explicitly choose an additional offer afterward.</p>
           <p className="mt-3 text-lg leading-7 text-zinc-300">USD pricing. Review any applicable taxes and fees in checkout.</p>
           <Script src="https://js.whop.com/static/checkout/loader.js" strategy="afterInteractive" />
           <div key={order.id} className="mt-6 min-h-[420px]" data-whop-checkout-plan-id={order.whop_plan_id}
@@ -74,7 +74,7 @@ export default async function VisitPurchasePage({ searchParams }: {
             data-whop-checkout-return-url={`${whopVisitConfig().origin}/resonance/complete?order=${order.id}`} />
         </section>
       ) : (
-        <p role="status" className="mt-8 text-base leading-8 text-zinc-300">This checkout could not be confirmed. No visits have been added for it. Contact support before retrying if Whop has shown a successful payment.</p>
+        <p role="status" className="mt-8 text-base leading-8 text-zinc-300">We couldn’t confirm this checkout. If Whop showed a successful payment, contact support before trying again.</p>
       )}
       <p className="mt-8"><Link href="/entry" className="text-base text-zinc-300 underline underline-offset-4">View my rooms and purchased visits</Link></p>
     </FunnelFrame>
