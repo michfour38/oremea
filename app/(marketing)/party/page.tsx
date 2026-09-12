@@ -194,24 +194,7 @@ export default async function PartyPage({
                   remainingInvites={remainingInvites}
                 />
               </div>
-            ) : (
-              <div className="mt-6 rounded-[2rem] border border-white/10 bg-white/[0.03] p-7 md:p-9">
-                <p className="text-base uppercase tracking-[0.2em] text-[#d9bb7b]">
-                  Guest ticket
-                </p>
-                <h2 className="mt-3 font-serif text-3xl">This invitation stops here.</h2>
-                <p className="mt-5 max-w-2xl text-xl leading-9 text-zinc-200">
-                  A guest ticket does not automatically create two more free invitations.
-                  If Resonance is useful enough to purchase, that purchase unlocks two guest invitations on this ticket.
-                </p>
-                <a
-                  href="/resonance/visits"
-                  className="mt-6 inline-flex rounded-full border border-[#c8a96a]/55 bg-[#c8a96a]/10 px-6 py-3 text-lg text-[#f1dfb4]"
-                >
-                  Start with Resonance
-                </a>
-              </div>
-            )}
+            ) : null}
 
             <div className="mt-6 rounded-[2rem] border border-white/10 bg-black/25 p-7 md:p-9">
               <h2 className="font-serif text-2xl">What happens next</h2>
@@ -236,8 +219,8 @@ export default async function PartyPage({
               <div className="mt-7 rounded-2xl border border-[#c8a96a]/30 bg-[#c8a96a]/[0.06] p-6">
                 <p className="text-lg text-[#f1dfb4]">
                   {incomingInvitationAvailable
-                    ? "A guest invitation brought this page here."
-                    : "That guest invitation has already been used twice. A free place can still be reserved normally."}
+                    ? "You’re here with a guest invitation."
+                    : "That invitation is no longer available. A free place can still be reserved here."}
                 </p>
               </div>
             ) : null}
