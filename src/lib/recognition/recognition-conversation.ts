@@ -83,6 +83,14 @@ RECURSION
 - repetition is recurrence before it is meaning; do not force a deeper explanation merely because wording repeats
 - when the participant changes subject, follow the new subject unless they explicitly connect it to the old one
 
+CONTRAST AS RECURSION
+- when the participant supplies two statements, meanings, conclusions, positions, or realities that sit differently beside one another, place the smallest useful pair beside each other and open the distinction between them
+- contrast is not contradiction by default; ask what distinguishes the two rather than deciding what the tension means
+- prefer a participant-supplied contrast over a generic agenda question
+- do not retreat to "which part has your attention?", "what do you want to get into?", or another topic-selection question when a specific distinction is already available in the participant's newest words
+- use at most two short participant phrases to pose the contrast; do not recap the whole message
+- when the participant writes their way from one position into another, the movement between those positions may be the live thread
+
 THREAD SELECTION
 - when the newest message contains several genuinely different live threads, do not arbitrarily choose one merely because it came first, took more words, sounds more dramatic, or resembles a familiar topic
 - material does not need to be logically related to belong in the same message; if several things arrived together, treat each as potentially meaningful somewhere without inventing a hidden causal link between them
@@ -137,6 +145,9 @@ REPLY SHAPE
 - a short reflection followed by one exact question is usually enough
 - if a direct reflection is enough, you may make the reflection without a question
 - if the participant explicitly asks for no questions, respect that
+- when the participant says a question has landed hard, says they need to think, sit with it, take a minute, or come back later, do not immediately press them with another Recognition question
+- treat that as relational pacing, not unfinished work: respond briefly and casually in the participant's register, leave the thread open, and let them return when they are ready
+- in that moment, sounding like a human companion matters more than proving analytical precision; one warm sentence is often enough
 - never finish by assigning homework, an exercise, a plan, or an action
 
 LONGITUDINAL MEMORY
@@ -375,6 +386,199 @@ Return the requested structured response envelope. Keep the remember array empty
 `.trim();
 }
 
+function trimReplyToWordLimit(value: string, limit: number) {
+  const words = value.trim().split(/\s+/).filter(Boolean);
+  if (words.length <= limit) return value.trim();
+  return `${words.slice(0, limit).join(" ")}…`;
+}
+
+function keepAtMostOneQuestion(value: string) {
+  let seenQuestion = false;
+  return value.replace(/\?/g, () => {
+    if (!seenQuestion) {
+      seenQuestion = true;
+      return "?";
+    }
+    return ".";
+  });
+}
+
+function splitFallbackStatements(value: string) {
+  return value
+    .replace(/\r/g, "")
+    .split(/\n+|(?<=[.!?])\s+/)
+    .map((item) => item.replace(/\s+/g, " ").trim())
+    .filter((item) => item.split(/\s+/).filter(Boolean).length >= 3);
+}
+
+function compactFallbackQuote(value: string, maxWords = 22) {
+  const words = value.split(/\s+/).filter(Boolean);
+  if (words.length <= maxWords) return value;
+  return `${words.slice(0, maxWords).join(" ")}…`;
+}
+
+function findFallbackContrastPair(latest: string): [string, string] | null {
+  const statements = splitFallbackStatements(latest);
+  if (statements.length < 2) return null;
+
+  const becauseIndex = statements.findIndex(
+    (statement, index) => index > 0 && /\bbecause\b/i.test(statement),
+  );
+
+  if (becauseIndex > 0) {
+    return [
+      compactFallbackQuote(statements[0]),
+      compactFallbackQuote(statements[becauseIndex]),
+    ];
+  }
+
+  const contrastIndex = statements.findIndex(
+    (statement) =>
+      /\b(?:but|yet|although|though|even though|while|at the same time)\b/i.test(
+        statement,
+      ),
+  );
+
+  if (contrastIndex >= 0) {
+    const statement = statements[contrastIndex];
+    const parts = statement
+      .split(/\b(?:but|yet|although|though|even though|while|at the same time)\b/i)
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (parts.length >= 2) {
+      return [
+        compactFallbackQuote(parts[0]),
+        compactFallbackQuote(parts.slice(1).join(" ")),
+      ];
+    }
+  }
+
+  return [
+    compactFallbackQuote(statements[0]),
+    compactFallbackQuote(statements.at(-1) ?? statements[1]),
+  ];
+}
+
+function recognitionPacingReply(value: string): string | null {
+  const normalized = value.toLowerCase().replace(/\s+/g, " ").trim();
+  if (!normalized) return null;
+
+  const asksForPause =
+    /\b(?:need|want) to (?:think|sit with|process)\b/.test(normalized) ||
+    /\b(?:let me|i(?:'|’)ll) (?:think|sit with|process)\b/.test(normalized) ||
+    /\b(?:need|give me) (?:a )?(?:minute|moment|bit|time)\b/.test(normalized) ||
+    /\bcome back\b/.test(normalized) ||
+    /\b(?:mind blown|blew my mind|blown my mind)\b/.test(normalized) ||
+    /\bchallenge accepted\b/.test(normalized);
+
+  if (!asksForPause) return null;
+
+  if (/\bchallenge accepted\b/.test(normalized)) {
+    return "Deal. I’ll leave that one with you. Come back when you’re ready.";
+  }
+
+  if (/\b(?:mind blown|blew my mind|blown my mind)\b/.test(normalized)) {
+    return "Ha — fair. Sit with that one. I’ll be here when you come back.";
+  }
+
+  return "Yep. Sit with it. I’ll be here when you come back.";
+}
+
+function buildDeterministicRecognitionFallback(
+  recentMessages: RecognitionConversationMessage[],
+) {
+  const latest =
+    [...recentMessages]
+      .reverse()
+      .find((message) => message.role === "user")
+      ?.content.trim() ?? "";
+
+  const pacingReply = recognitionPacingReply(latest);
+  if (pacingReply) return pacingReply;
+
+  const contrast = findFallbackContrastPair(latest);
+
+  if (contrast) {
+    return (
+      `You put “${contrast[0]}” beside “${contrast[1]}.” ` +
+      "Those are two different positions inside the same account. What distinguishes them for you?"
+    );
+  }
+
+  const statement = splitFallbackStatements(latest)[0] ?? latest;
+
+  if (statement) {
+    return (
+      `You wrote “${compactFallbackQuote(statement)}.” ` +
+      "What changed in the meaning of that sentence as you wrote it?"
+    );
+  }
+
+  return "What changed in what you were saying as you wrote that?";
+}
+
+function assertRecognitionReplyBoundary(reply: string) {
+  if (!reply) {
+    throw new Error("Recognition returned no participant-facing reply.");
+  }
+
+  if (wordCount(reply) > MAX_REPLY_WORDS + 30) {
+    throw new Error("Recognition exceeded the conversational response boundary.");
+  }
+
+  if ((reply.match(/\?/g) ?? []).length > 1) {
+    throw new Error(
+      "Recognition asked more than one participant-facing question.",
+    );
+  }
+}
+
+async function generateRecognitionFallbackReply({
+  firstName,
+  recentMessages,
+  memory,
+}: {
+  firstName?: string | null;
+  recentMessages: RecognitionConversationMessage[];
+  memory: RecognitionConversationMemory;
+}) {
+  const result = await generateAIWithUsage({
+    task: "recognition_conversation_fallback",
+    system: `${RECOGNITION_SYSTEM_PROMPT}
+
+FALLBACK RESPONSE MODE
+The normal structured response could not be completed. Return only the participant-facing Recognition reply as plain text: no JSON, no headings, no memory envelope.
+Stay with the participant's newest message rather than refusing the whole conversation.
+Preserve recursion. When the newest message contains two participant-supplied statements, meanings, conclusions, positions, or realities that sit differently beside one another, pose the next turn through that contrast. Put the smallest useful pair beside each other and ask what distinguishes them without deciding what the contrast means.
+Do not fall back to a generic topic-selection question such as "which part has your attention?" or "what do you want to get into?" when a specific participant-supplied contrast is available.
+If the participant asks for tactics to provoke, punish, harass, coerce, manipulate, or retaliate against another person, do not provide those tactics. Instead, remain inside Recognition's purpose: accurately reflect the participant's own stated impulse, distinction, participation, or contrast and, when useful, ask one evidence-bound question.
+Keep the reply under ${MAX_REPLY_WORDS} words and ask no more than one question.`,
+    cacheSystem: true,
+    prompt: buildRecognitionConversationPrompt({
+      firstName,
+      recentMessages,
+      memory,
+    }),
+    maxTokens: 420,
+  });
+
+  if (!result?.text) return null;
+
+  const reply = keepAtMostOneQuestion(
+    trimReplyToWordLimit(stripJsonFence(result.text), MAX_REPLY_WORDS),
+  ).trim();
+
+  if (!reply) return null;
+
+  return {
+    reply,
+    memory,
+    model: result.model,
+    usage: result.usage,
+  };
+}
+
 export async function generateRecognitionConversationReply({
   firstName,
   recentMessages,
@@ -397,39 +601,65 @@ export async function generateRecognitionConversationReply({
     maxTokens: 550,
   });
 
-  if (!result?.text) {
-    throw new Error("Recognition could not respond without leaving the participant's evidence.");
+  if (result?.text) {
+    try {
+      const parsed = JSON.parse(stripJsonFence(result.text)) as RawModelResponse;
+      const generatedReply =
+        typeof parsed.reply === "string" ? parsed.reply.trim() : "";
+      const latestParticipantMessage =
+        [...recentMessages].reverse().find((message) => message.role === "user")?.content ?? "";
+      const reply =
+        recognitionPacingReply(latestParticipantMessage) ?? generatedReply;
+
+      assertRecognitionReplyBoundary(reply);
+
+      const participantMessages = recentMessages.filter(
+        (message) => message.role === "user",
+      );
+      const nextMemory = mergeRecognitionMemory({
+        existing: memory,
+        remember: parsed.remember,
+        participantMessages,
+      });
+
+      return {
+        reply,
+        memory: nextMemory,
+        model: result.model,
+        usage: result.usage,
+      };
+    } catch {
+      console.warn(
+        "Recognition structured response was unreadable; using fallback response mode.",
+      );
+    }
   }
 
-  let parsed: RawModelResponse;
-  try {
-    parsed = JSON.parse(stripJsonFence(result.text)) as RawModelResponse;
-  } catch {
-    throw new Error("Recognition returned an unreadable conversation response.");
-  }
-
-  const reply = typeof parsed.reply === "string" ? parsed.reply.trim() : "";
-  if (!reply) throw new Error("Recognition returned no participant-facing reply.");
-  if (wordCount(reply) > MAX_REPLY_WORDS + 30) {
-    throw new Error("Recognition exceeded the conversational response boundary.");
-  }
-  if ((reply.match(/\?/g) ?? []).length > 1) {
-    throw new Error("Recognition asked more than one participant-facing question.");
-  }
-
-  const participantMessages = recentMessages.filter(
-    (message) => message.role === "user",
-  );
-  const nextMemory = mergeRecognitionMemory({
-    existing: memory,
-    remember: parsed.remember,
-    participantMessages,
+  const fallback = await generateRecognitionFallbackReply({
+    firstName,
+    recentMessages,
+    memory,
   });
+
+  if (fallback) {
+    const latestParticipantMessage =
+      [...recentMessages].reverse().find((message) => message.role === "user")?.content ?? "";
+    const pacingReply = recognitionPacingReply(latestParticipantMessage);
+    return pacingReply ? { ...fallback, reply: pacingReply } : fallback;
+  }
+
+  const reply = buildDeterministicRecognitionFallback(recentMessages);
+  assertRecognitionReplyBoundary(reply);
 
   return {
     reply,
-    memory: nextMemory,
-    model: result.model,
-    usage: result.usage,
+    memory,
+    model: "recognition-deterministic-fallback",
+    usage: {
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheCreationInputTokens: 0,
+      cacheReadInputTokens: 0,
+    },
   };
 }
