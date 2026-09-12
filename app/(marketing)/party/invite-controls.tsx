@@ -13,7 +13,7 @@ export function PartyInviteControls({
 }) {
   const [copied, setCopied] = useState(false);
   const unavailable = remainingInvites <= 0;
-  const inviteText = `I’m joining a free live Oremea session called “What Keeps Repeating in Connection?” If this conversation would be useful to you, here’s one of my guest invitations: ${inviteUrl}\n\nCurious about Oremea before the live session? Resonance starts here: ${funnelUrl}\nA Resonance purchase unlocks two guest invitations of your own.`;
+  const inviteText = `I’m joining a free live Oremea session called “What Keeps Repeating in Connection?” If this conversation would be useful to you, here’s one of my guest invitations: ${inviteUrl}\n\nCurious about Oremea before the live session? Resonance starts here: ${funnelUrl}`;
   const whatsappHref = `https://wa.me/?text=${encodeURIComponent(inviteText)}`;
 
   async function copyInvite() {
