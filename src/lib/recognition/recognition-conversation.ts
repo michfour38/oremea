@@ -487,8 +487,6 @@ function buildDeterministicRecognitionFallback(
   return "What changed in what you were saying as you wrote that?";
 }
 
-}
-
 function assertRecognitionReplyBoundary(reply: string) {
   if (!reply) {
     throw new Error("Recognition returned no participant-facing reply.");
