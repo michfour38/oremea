@@ -97,7 +97,7 @@ export function AdditionalOfferPicker({
               <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Fewer visits</p>
               <h3 className="mt-2 text-xl text-zinc-100">Compare a smaller addition</h3>
               <p className="mt-2 text-lg leading-8 text-zinc-300">
-                {rangeLabel}. The complete-ten offer remains above so the comparison stays visible.
+                {rangeLabel}. Choose the amount that fits.
               </p>
             </div>
 
