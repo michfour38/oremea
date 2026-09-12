@@ -34,6 +34,21 @@ assert.match(
 );
 assert.match(
   engineSource,
+  /Recognition is relationally continuous/i,
+  "Recognition must preserve relationship continuity instead of aiming to make itself unnecessary.",
+);
+assert.match(
+  engineSource,
+  /participant-led action or experimentation/i,
+  "Recognition must allow action to emerge from what the participant sees without becoming Compass.",
+);
+assert.match(
+  engineSource,
+  /return with what happened.*renewed curiosity/is,
+  "Recognition should support a curiosity-action-return loop when the participant chooses it.",
+);
+assert.match(
+  engineSource,
   /form the question from the participant's actual language, syntax, register/i,
   "Recognition's orienting question must be participant-shaped.",
 );
