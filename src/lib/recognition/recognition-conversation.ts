@@ -83,6 +83,14 @@ RECURSION
 - repetition is recurrence before it is meaning; do not force a deeper explanation merely because wording repeats
 - when the participant changes subject, follow the new subject unless they explicitly connect it to the old one
 
+CONTRAST AS RECURSION
+- when the participant supplies two statements, meanings, conclusions, positions, or realities that sit differently beside one another, place the smallest useful pair beside each other and open the distinction between them
+- contrast is not contradiction by default; ask what distinguishes the two rather than deciding what the tension means
+- prefer a participant-supplied contrast over a generic agenda question
+- do not retreat to "which part has your attention?", "what do you want to get into?", or another topic-selection question when a specific distinction is already available in the participant's newest words
+- use at most two short participant phrases to pose the contrast; do not recap the whole message
+- when the participant writes their way from one position into another, the movement between those positions may be the live thread
+
 THREAD SELECTION
 - when the newest message contains several genuinely different live threads, do not arbitrarily choose one merely because it came first, took more words, sounds more dramatic, or resembles a familiar topic
 - material does not need to be logically related to belong in the same message; if several things arrived together, treat each as potentially meaningful somewhere without inventing a hidden causal link between them
@@ -392,6 +400,63 @@ function keepAtMostOneQuestion(value: string) {
   });
 }
 
+function splitFallbackStatements(value: string) {
+  return value
+    .replace(/\r/g, "")
+    .split(/\n+|(?<=[.!?])\s+/)
+    .map((item) => item.replace(/\s+/g, " ").trim())
+    .filter((item) => item.split(/\s+/).filter(Boolean).length >= 3);
+}
+
+function compactFallbackQuote(value: string, maxWords = 22) {
+  const words = value.split(/\s+/).filter(Boolean);
+  if (words.length <= maxWords) return value;
+  return `${words.slice(0, maxWords).join(" ")}…`;
+}
+
+function findFallbackContrastPair(latest: string): [string, string] | null {
+  const statements = splitFallbackStatements(latest);
+  if (statements.length < 2) return null;
+
+  const becauseIndex = statements.findIndex(
+    (statement, index) => index > 0 && /\bbecause\b/i.test(statement),
+  );
+
+  if (becauseIndex > 0) {
+    return [
+      compactFallbackQuote(statements[0]),
+      compactFallbackQuote(statements[becauseIndex]),
+    ];
+  }
+
+  const contrastIndex = statements.findIndex(
+    (statement) =>
+      /\b(?:but|yet|although|though|even though|while|at the same time)\b/i.test(
+        statement,
+      ),
+  );
+
+  if (contrastIndex >= 0) {
+    const statement = statements[contrastIndex];
+    const parts = statement
+      .split(/\b(?:but|yet|although|though|even though|while|at the same time)\b/i)
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (parts.length >= 2) {
+      return [
+        compactFallbackQuote(parts[0]),
+        compactFallbackQuote(parts.slice(1).join(" ")),
+      ];
+    }
+  }
+
+  return [
+    compactFallbackQuote(statements[0]),
+    compactFallbackQuote(statements.at(-1) ?? statements[1]),
+  ];
+}
+
 function buildDeterministicRecognitionFallback(
   recentMessages: RecognitionConversationMessage[],
 ) {
@@ -401,34 +466,27 @@ function buildDeterministicRecognitionFallback(
       .find((message) => message.role === "user")
       ?.content.trim() ?? "";
 
-  const retaliationSignal =
-    /\b(?:irritat|annoy|punish|retaliat|revenge|payback|get back at|hurt him|hurt her|hurt them|piss .* off)\b/i.test(
-      latest,
-    );
+  const contrast = findFallbackContrastPair(latest);
 
-  const motiveSignal =
-    /\b(?:why does|why would|why is|what makes)\b[\s\S]{0,120}\b(?:he|she|they|him|her|them|greg)\b/i.test(
-      latest,
-    );
-
-  if (retaliationSignal) {
+  if (contrast) {
     return (
-      "You moved from trying to understand the other person to wanting to use the situation against them. " +
-      "Recognition can stay with that shift without helping with retaliation. What payoff are you wanting from irritating them?"
+      `You put “${contrast[0]}” beside “${contrast[1]}.” ` +
+      "Those are two different positions inside the same account. What distinguishes them for you?"
     );
   }
 
-  if (motiveSignal) {
+  const statement = splitFallbackStatements(latest)[0] ?? latest;
+
+  if (statement) {
     return (
-      "I can stay with what this brings up for you without pretending to know the other person’s motive. " +
-      "What part of your own reaction to it has your attention?"
+      `You wrote “${compactFallbackQuote(statement)}.” ` +
+      "What changed in the meaning of that sentence as you wrote it?"
     );
   }
 
-  return (
-    "Recognition has your words, and I do not want to invent a meaning just to keep the conversation moving. " +
-    "Which part of what you just wrote has your attention most?"
-  );
+  return "What changed in what you were saying as you wrote that?";
+}
+
 }
 
 function assertRecognitionReplyBoundary(reply: string) {
@@ -463,7 +521,9 @@ async function generateRecognitionFallbackReply({
 FALLBACK RESPONSE MODE
 The normal structured response could not be completed. Return only the participant-facing Recognition reply as plain text: no JSON, no headings, no memory envelope.
 Stay with the participant's newest message rather than refusing the whole conversation.
-If the participant asks for tactics to provoke, punish, harass, coerce, manipulate, or retaliate against another person, do not provide those tactics. Instead, remain inside Recognition's purpose: accurately reflect the participant's own stated impulse, distinction, participation, or contradiction and, when useful, ask one evidence-bound question.
+Preserve recursion. When the newest message contains two participant-supplied statements, meanings, conclusions, positions, or realities that sit differently beside one another, pose the next turn through that contrast. Put the smallest useful pair beside each other and ask what distinguishes them without deciding what the contrast means.
+Do not fall back to a generic topic-selection question such as "which part has your attention?" or "what do you want to get into?" when a specific participant-supplied contrast is available.
+If the participant asks for tactics to provoke, punish, harass, coerce, manipulate, or retaliate against another person, do not provide those tactics. Instead, remain inside Recognition's purpose: accurately reflect the participant's own stated impulse, distinction, participation, or contrast and, when useful, ask one evidence-bound question.
 Keep the reply under ${MAX_REPLY_WORDS} words and ask no more than one question.`,
     cacheSystem: true,
     prompt: buildRecognitionConversationPrompt({

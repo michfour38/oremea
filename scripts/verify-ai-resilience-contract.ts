@@ -45,6 +45,16 @@ assert.match(
 );
 assert.match(
   recognitionEngine,
+  /findFallbackContrastPair/,
+  "Recognition's independent fallback must still recurse through participant-supplied contrast rather than flattening into a generic prompt.",
+);
+assert.doesNotMatch(
+  recognitionEngine,
+  /Which part of what you just wrote has your attention most\?/,
+  "Recognition's resilience fallback must not reintroduce the generic attention question that flattened the product.",
+);
+assert.match(
+  recognitionEngine,
   /more than one participant-facing question/,
   "Recognition fallback hardening must not remove the post-generation one-question boundary.",
 );

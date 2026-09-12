@@ -72,6 +72,16 @@ assert.match(
 );
 assert.match(
   RECOGNITION_CONVERSATION_STANDARD,
+  /CONTRAST AS RECURSION/,
+  "Recognition must preserve contrast as a recursive move rather than falling back to topic selection.",
+);
+assert.match(
+  RECOGNITION_CONVERSATION_STANDARD,
+  /do not retreat to "which part has your attention\?"/i,
+  "Recognition must not flatten a specific participant-supplied contrast into a generic attention question.",
+);
+assert.match(
+  RECOGNITION_CONVERSATION_STANDARD,
   /SAFETY OVERRIDE/,
   "Immediate safety must outrank ordinary recursive accountability.",
 );
@@ -343,6 +353,16 @@ assert.match(
   chatSource,
   /bottomRef\.current\?\.scrollIntoView/,
   "Recognition must land at the newest exchange instead of making a returning participant scroll through the thread.",
+);
+assert.doesNotMatch(
+  chatSource,
+  /message\.role === "user"[\s\S]{0,120}"You"[\s\S]{0,120}"Recognition"/,
+  "Recognition must not announce speaker names above each message when the two visual perspectives are already distinct.",
+);
+assert.doesNotMatch(
+  chatSource,
+  /<p[^>]*>\s*Recognition\s*<\/p>/,
+  "Recognition must not render a visible Recognition name tag above the response or thinking state.",
 );
 assert.match(
   chatSource,

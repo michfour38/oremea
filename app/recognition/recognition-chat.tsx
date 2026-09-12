@@ -352,9 +352,6 @@ export default function RecognitionChat({
 
               {isSending ? (
                 <article className="mr-auto max-w-3xl">
-                  <p className="mb-2 text-[11px] uppercase tracking-[0.2em] text-[#9d8659]">
-                    Recognition
-                  </p>
                   <div className="border-l border-[#6f5a31] py-1 pl-5 text-zinc-500 md:pl-7">
                     <RecognitionDots />
                   </div>
