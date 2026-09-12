@@ -5,6 +5,8 @@ import { matchesVisitOrder, matchesVisitRefund, uuidSchema, visitPaymentSchema, 
 import { chargeVisitOrder, createVisitCheckout, whopVisitConfig } from "../whop/visit-payments";
 import { lockResonanceAccount } from "./resonance-account-lock";
 
+const PARTY_EVENT_KEY = "what-keeps-repeating-in-connection-1";
+
 export function getVisitOrder(userId: string, id: string) {
   if (!uuidSchema.safeParse(id).success) return null;
   return prisma.resonance_visit_orders.findFirst({ where: { id, user_id: userId } });
@@ -130,6 +132,16 @@ export async function applyVisitPaymentEvent(type: string, data: unknown) {
     const settledOrder = update
       ? await tx.resonance_visit_orders.update({ where: { id: order.id }, data: update })
       : order;
+
+    if (type === "payment.succeeded" && order.parent_id === null) {
+      await tx.oremea_party_registrations.updateMany({
+        where: {
+          event_key: PARTY_EVENT_KEY,
+          email: order.buyer_email.toLowerCase(),
+        },
+        data: { invite_allowance: 2 },
+      });
+    }
 
     return settledOrder;
   });
