@@ -469,16 +469,16 @@ function recognitionPacingReply(value: string): string | null {
     /\b(?:let me|i(?:'|’)ll) (?:think|sit with|process)\b/.test(normalized) ||
     /\b(?:need|give me) (?:a )?(?:minute|moment|bit|time)\b/.test(normalized) ||
     /\bcome back\b/.test(normalized) ||
-    /\b(?:mind blown|blew my mind|blown my mind)\b/.test(normalized) ||
-    /\bchallenge accepted\b/.test(normalized);
+    /\b(?:mind blown|blew my mind|blown my(?: own)? mind)\b/.test(normalized) ||
+    /\b(?:challenge accepted|accept(?:ed|ing)? (?:the )?challenge)\b/.test(normalized);
 
   if (!asksForPause) return null;
 
-  if (/\bchallenge accepted\b/.test(normalized)) {
+  if (/\b(?:challenge accepted|accept(?:ed|ing)? (?:the )?challenge)\b/.test(normalized)) {
     return "Deal. I’ll leave that one with you. Come back when you’re ready.";
   }
 
-  if (/\b(?:mind blown|blew my mind|blown my mind)\b/.test(normalized)) {
+  if (/\b(?:mind blown|blew my mind|blown my(?: own)? mind)\b/.test(normalized)) {
     return "Ha — fair. Sit with that one. I’ll be here when you come back.";
   }
 
