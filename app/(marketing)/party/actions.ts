@@ -62,13 +62,8 @@ async function sendPartyTicketEmail(registration: {
     joinUrl ? `Join the live session: ${joinUrl}` : "",
     `View your ticket: ${confirmationUrl}`,
     "",
-    registration.invite_allowance > 0
-      ? "You also have two guest invitations."
-      : "This guest ticket does not create more free invitations.",
-    registration.invite_allowance > 0
-      ? `Invite link: ${inviteUrl}`
-      : "If Resonance is useful enough to purchase, that purchase unlocks two guest invitations on this ticket.",
-    registration.invite_allowance > 0 ? "" : `Start with Resonance: ${funnelUrl}`,
+    registration.invite_allowance > 0 ? "You also have two guest invitations." : "",
+    registration.invite_allowance > 0 ? `Invite link: ${inviteUrl}` : "",
   ].filter(Boolean);
 
   const resend = new Resend(apiKey);
@@ -97,10 +92,7 @@ ${registration.invite_allowance > 0
   ? `<h2 style="font-weight:400">Two guest invitations are included.</h2>
      <p>If two people come immediately to mind who would genuinely use this conversation, send them this invitation link:</p>
      <p><a href="${inviteUrl}" style="color:#f1dfb4">${inviteUrl}</a></p>`
-  : `<h2 style="font-weight:400">This guest ticket stops here.</h2>
-     <p>It does not automatically create two more free invitations.</p>
-     <p>If Resonance is useful enough to purchase, that purchase unlocks two guest invitations on this ticket.</p>
-     <p><a href="${funnelUrl}" style="color:#f1dfb4">Start with Resonance</a></p>`}
+  : ""}
         </div>
       </div>
     `,
