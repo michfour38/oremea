@@ -205,7 +205,7 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
                   {newCheckout ? <Link href="/resonance/visits" className="mt-3 inline-block text-base text-[#e0c38b] underline">Buy visits</Link> : null}
                 </div>
               ) : null}
-              {query.visitError ? <p role="alert" className="mt-4 text-base text-amber-100">That room could not be opened. Check for an active visit or an unused visit below. No additional visit was deducted for the failed request.</p> : null}
+              {query.visitError ? <p role="alert" className="mt-4 text-base text-amber-100">That room could not be opened. Check for an active visit or an unused visit below. Your visit balance has not changed.</p> : null}
               <p className="mt-4 text-base leading-8 text-zinc-300">
                 {creditFlow ? "Each visit opens one seven-day Resonance room." : "Each purchase opens one seven-day Resonance room."} There is no
                 required order. Choose the room containing the question that
