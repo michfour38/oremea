@@ -138,6 +138,7 @@ export async function applyVisitPaymentEvent(type: string, data: unknown) {
         where: {
           event_key: PARTY_EVENT_KEY,
           email: order.buyer_email.toLowerCase(),
+          invited_by: { not: null },
         },
         data: { invite_allowance: 2 },
       });
