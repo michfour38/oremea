@@ -55,16 +55,6 @@ export default async function VisitCompletionPage({ searchParams }: {
 
   const [complete, ...smaller] = additionalOffers(order.quantity);
   const canCharge = visitCheckoutEnabled() && Boolean(order.whop_member_id && order.whop_payment_method_id);
-  const unlockedPartyTicket = await prisma.oremea_party_registrations.findFirst({
-    where: {
-      event_key: "what-keeps-repeating-in-connection-1",
-      email: order.buyer_email.toLowerCase(),
-      invited_by: { not: null },
-      invite_allowance: { gt: 0 },
-    },
-    select: { id: true },
-  });
-
   return (
     <FunnelFrame>
       <p className="text-sm uppercase tracking-[0.2em] text-[#c8a96a]">
@@ -80,24 +70,6 @@ export default async function VisitCompletionPage({ searchParams }: {
         <p role="alert" className="mt-4 text-amber-100">
           The additional purchase could not be started. Your original visits remain available.
         </p>
-      ) : null}
-
-      {unlockedPartyTicket ? (
-        <div className="mt-6 rounded-3xl border border-[#c8a96a]/35 bg-[#c8a96a]/[0.06] p-6">
-          <p className="text-sm uppercase tracking-[0.2em] text-[#c8a96a]">
-            Party invitations unlocked
-          </p>
-          <h2 className="mt-2 text-2xl text-zinc-100">Two guest invitations are now available.</h2>
-          <p className="mt-3 text-lg leading-8 text-zinc-300">
-            You now have two guest invitations for the live session.
-          </p>
-          <Link
-            href={`/party?registered=${unlockedPartyTicket.id}`}
-            className="mt-5 inline-flex rounded-full border border-[#c8a96a]/55 px-6 py-3 text-lg text-[#f1dfb4]"
-          >
-            Open my two invitations
-          </Link>
-        </div>
       ) : null}
 
       <AdditionalOfferPicker
