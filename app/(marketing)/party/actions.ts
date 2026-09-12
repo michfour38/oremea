@@ -43,7 +43,6 @@ async function sendPartyTicketEmail(registration: {
   const origin = partyOrigin();
   const confirmationUrl = `${origin}/party?registered=${encodeURIComponent(registration.id)}`;
   const inviteUrl = `${origin}/party?ref=${encodeURIComponent(registration.referral_code)}`;
-  const funnelUrl = `${origin}/resonance/visits`;
   const startLabel = process.env.OREMEA_PARTY_START_LABEL?.trim();
   const joinUrl = process.env.OREMEA_PARTY_JOIN_URL?.trim();
   const greeting = registration.first_name ? `Howzit ${registration.first_name},` : "Howzit,";
