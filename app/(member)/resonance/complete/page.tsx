@@ -38,8 +38,8 @@ export default async function VisitCompletionPage({ searchParams }: {
         <p className="mt-5 text-base leading-8 text-zinc-300">
           {order.status === "paid"
             ? "Choose a room below. Unused visits remain on this account."
-            : "Only confirmed payments add visits. Do not submit another charge while this is being checked."}
-          {order.parent_id ? " The original purchase remains available, regardless of this additional payment." : ""}
+            : "We’re still confirming this payment. Please don’t try again yet."}
+          {order.parent_id ? " Your original visits are unaffected." : ""}
         </p>
         <div className="mt-8 flex flex-wrap gap-6">
           {order.status === "pending" || order.status === "unknown" ? (
@@ -72,8 +72,8 @@ export default async function VisitCompletionPage({ searchParams }: {
       </p>
       <h1 className="mt-3 text-4xl font-light">Complete ten?</h1>
       <p className="mt-5 max-w-2xl text-base leading-8 text-zinc-300">
-        Your first purchase is secure. This page is only about whether you want to add more visits now.
-        No extra purchase is required before choosing a room.
+        Continue with the visits you already bought, or add more now.
+        You do not need to add anything before choosing a room.
       </p>
 
       {query.error ? (
@@ -89,7 +89,7 @@ export default async function VisitCompletionPage({ searchParams }: {
           </p>
           <h2 className="mt-2 text-2xl text-zinc-100">Two guest invitations are now available.</h2>
           <p className="mt-3 text-lg leading-8 text-zinc-300">
-            The guest ticket that brought you here did not reproduce automatically. This purchase unlocks two invitations of your own.
+            You now have two guest invitations for the live session.
           </p>
           <Link
             href={`/party?registered=${unlockedPartyTicket.id}`}
@@ -116,8 +116,8 @@ export default async function VisitCompletionPage({ searchParams }: {
 
       <p className="mt-5 text-lg leading-8 text-zinc-300">
         {canCharge
-          ? "Any accepted addition is a separate charge using the saved payment method. A bank may still require verification."
-          : "A saved-payment addition is not available for this checkout. Your purchased visits can be used now."}
+          ? "If you add visits, it is a separate purchase. Your bank may ask you to verify it."
+          : "Additional visits aren’t available here right now. Your purchased visits are ready to use."}
       </p>
     </FunnelFrame>
   );
