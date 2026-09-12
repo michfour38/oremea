@@ -1019,7 +1019,7 @@ model oremea_party_registrations {
   question      String
   referral_code   String   @unique @db.Uuid
   invited_by      String?  @db.Uuid
-  invite_allowance Int     @default(2)
+  invite_allowance Int     @default(0)
   created_at      DateTime @default(now()) @db.Timestamptz(6)
   updated_at    DateTime @updatedAt @db.Timestamptz(6)
 
