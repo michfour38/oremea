@@ -19,6 +19,21 @@ assert.match(
 );
 assert.match(
   engineSource,
+  /when the participant says a question has landed hard.*do not immediately press them with another Recognition question/is,
+  "Recognition must respect a participant's request to pause instead of treating every turn as a cue for another question.",
+);
+assert.match(
+  engineSource,
+  /function recognitionPacingReply/,
+  "Recognition must have a deterministic pacing guard for explicit pause/come-back signals.",
+);
+assert.match(
+  engineSource,
+  /I’ll be here when you come back/,
+  "Recognition pause acknowledgements should stay casual and relational rather than analytical.",
+);
+assert.match(
+  engineSource,
   /form the question from the participant's actual language, syntax, register/i,
   "Recognition's orienting question must be participant-shaped.",
 );
