@@ -114,8 +114,8 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-6">
                   <p className="text-sm leading-7 text-zinc-400">
                     Visits are purchased as capacity, not as preselected rooms. Each
-                    room stands on its own, no room is a prerequisite for another
-                    Oremea product, and unused visits remain available until the
+                    room stands on its own, no room is a prerequisite for another Oremea product,
+                    and unused visits remain available until the
                     participant chooses what to enter next.
                   </p>
                 </div>
