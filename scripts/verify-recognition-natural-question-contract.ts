@@ -19,18 +19,23 @@ assert.match(
 );
 assert.match(
   engineSource,
-  /when the participant says a question has landed hard[\s\S]*do not immediately press them with another Recognition question/i,
-  "Recognition must respect a participant's request to pause instead of treating every turn as a cue for another question.",
+  /when the participant says a question has landed hard[\s\S]*explicitly signals[\s\S]*do not immediately press them with another Recognition question/i,
+  "Recognition must respect an explicit pause without treating every conclusion or reaction as a cue to end the thread.",
 );
 assert.match(
   engineSource,
-  /function recognitionPacingReply/,
-  "Recognition must have a deterministic pacing guard for explicit pause/come-back signals.",
+  /pacing is recursive/i,
+  "Recognition pause acknowledgements must be generated from the live thread and participant register.",
 );
 assert.match(
   engineSource,
-  /I’ll be here when you come back/,
-  "Recognition pause acknowledgements should stay casual and relational rather than analytical.",
+  /a conclusion, realisation, strong reaction, or declaration by itself is not a pause signal/i,
+  "Recognition must distinguish a live conclusion from an explicit request to pause.",
+);
+assert.doesNotMatch(
+  engineSource,
+  /function recognitionPacingReply|recognitionDeterministicPacingFallback|I’ll be here when you come back|I’ll leave the thread open here\. Come back when you’re ready\./,
+  "Recognition must not hardcode pause detection or a canned participant-facing pause response.",
 );
 assert.match(
   engineSource,
