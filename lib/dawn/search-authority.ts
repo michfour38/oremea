@@ -6,7 +6,7 @@
  * or model-training permissions without separate explicit authority.
  */
 
-export const DAWN_SEARCH_AUTHORITY_VERSION = "2026-09-10" as const;
+export const DAWN_SEARCH_AUTHORITY_VERSION = "2026-09-14" as const;
 
 export const PROTECTED_DECISIONS = [
   "product_truth",
@@ -35,9 +35,9 @@ export const CRAWLER_AUTHORITY = {
   anthropic: {
     discoveryAgents: ["Claude-SearchBot", "Claude-User"],
     trainingControlAgents: ["ClaudeBot"],
-    verification: "official_anthropic_published_source_ip_ranges_for_waf_identity_verification",
-    robotsPolicy: "robots_txt_remains_the_permission_control",
-    rule: "source_ip_verification_must_not_change_or_override_robots_permissions",
+    verification: "official_anthropic_crawler_and_robots_guidance_no_published_ip_ranges",
+    robotsPolicy: "robots_txt_is_the_supported_permission_control",
+    rule: "do_not_assume_source_ip_ranges_can_authenticate_anthropic_crawler_identity",
   },
   perplexity: {
     discoveryAgents: ["PerplexityBot", "Perplexity-User"],
@@ -59,9 +59,13 @@ export const DISCOVERY_MEASUREMENT_REGISTRY = {
       "grounding_queries",
       "page_level_citation_activity",
       "visibility_trends_over_time",
+      "intents",
+      "topics",
+      "citation_share",
+      "compare",
     ],
     rule: "record_only_metrics_officially_available_in_bing_webmaster_tools",
-    interpretation: "citation_activity_is_retrieval_evidence_not_ranking_authority_or_causation",
+    interpretation: "all_ai_performance_dimensions_are_observational_retrieval_evidence_not_ranking_authority_or_causation",
   },
   aiCitationEvidence: {
     mode: "observation_only",
