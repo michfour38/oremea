@@ -37,6 +37,11 @@ assert.doesNotMatch(
   /function recognitionPacingReply|recognitionDeterministicPacingFallback|I’ll be here when you come back|I’ll leave the thread open here\. Come back when you’re ready\./,
   "Recognition must not hardcode pause detection or a canned participant-facing pause response.",
 );
+assert.doesNotMatch(
+  engineSource,
+  /What changed in the meaning of that sentence as you wrote it\?|buildDeterministicRecognitionFallback/,
+  "Recognition must not regress to the repetitive flattened fallback seen during provider outages.",
+);
 assert.match(
   engineSource,
   /Recognition is relationally continuous/i,
