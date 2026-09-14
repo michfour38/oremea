@@ -412,93 +412,6 @@ function keepAtMostOneQuestion(value: string) {
   });
 }
 
-function splitFallbackStatements(value: string) {
-  return value
-    .replace(/\r/g, "")
-    .split(/\n+|(?<=[.!?])\s+/)
-    .map((item) => item.replace(/\s+/g, " ").trim())
-    .filter((item) => item.split(/\s+/).filter(Boolean).length >= 3);
-}
-
-function compactFallbackQuote(value: string, maxWords = 22) {
-  const words = value.split(/\s+/).filter(Boolean);
-  if (words.length <= maxWords) return value;
-  return `${words.slice(0, maxWords).join(" ")}…`;
-}
-
-function findFallbackContrastPair(latest: string): [string, string] | null {
-  const statements = splitFallbackStatements(latest);
-  if (statements.length < 2) return null;
-
-  const becauseIndex = statements.findIndex(
-    (statement, index) => index > 0 && /\bbecause\b/i.test(statement),
-  );
-
-  if (becauseIndex > 0) {
-    return [
-      compactFallbackQuote(statements[0]),
-      compactFallbackQuote(statements[becauseIndex]),
-    ];
-  }
-
-  const contrastIndex = statements.findIndex(
-    (statement) =>
-      /\b(?:but|yet|although|though|even though|while|at the same time)\b/i.test(
-        statement,
-      ),
-  );
-
-  if (contrastIndex >= 0) {
-    const statement = statements[contrastIndex];
-    const parts = statement
-      .split(/\b(?:but|yet|although|though|even though|while|at the same time)\b/i)
-      .map((item) => item.trim())
-      .filter(Boolean);
-
-    if (parts.length >= 2) {
-      return [
-        compactFallbackQuote(parts[0]),
-        compactFallbackQuote(parts.slice(1).join(" ")),
-      ];
-    }
-  }
-
-  return [
-    compactFallbackQuote(statements[0]),
-    compactFallbackQuote(statements.at(-1) ?? statements[1]),
-  ];
-}
-
-function buildDeterministicRecognitionFallback(
-  recentMessages: RecognitionConversationMessage[],
-) {
-  const latest =
-    [...recentMessages]
-      .reverse()
-      .find((message) => message.role === "user")
-      ?.content.trim() ?? "";
-
-  const contrast = findFallbackContrastPair(latest);
-
-  if (contrast) {
-    return (
-      `You put “${contrast[0]}” beside “${contrast[1]}.” ` +
-      "Those are two different positions inside the same account. What distinguishes them for you?"
-    );
-  }
-
-  const statement = splitFallbackStatements(latest)[0] ?? latest;
-
-  if (statement) {
-    return (
-      `You wrote “${compactFallbackQuote(statement)}.” ` +
-      "What changed in the meaning of that sentence as you wrote it?"
-    );
-  }
-
-  return "What changed in what you were saying as you wrote that?";
-}
-
 function assertRecognitionReplyBoundary(reply: string) {
   if (!reply) {
     throw new Error("Recognition returned no participant-facing reply.");
@@ -623,18 +536,7 @@ export async function generateRecognitionConversationReply({
     return fallback;
   }
 
-  const reply = buildDeterministicRecognitionFallback(recentMessages);
-  assertRecognitionReplyBoundary(reply);
-
-  return {
-    reply,
-    memory,
-    model: "recognition-deterministic-fallback",
-    usage: {
-      inputTokens: 0,
-      outputTokens: 0,
-      cacheCreationInputTokens: 0,
-      cacheReadInputTokens: 0,
-    },
-  };
+  throw new Error(
+    "Recognition could not respond without leaving the participant's evidence.",
+  );
 }
