@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { CompareMode } from "@/app/compare/page";
+import { ProductLaunchPrice } from "@/components/site/product-launch-price";
 import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
 import { VISIT_PRICES } from "@/src/lib/resonance/visit-offers";
 
@@ -54,8 +55,14 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
                     attachment, clarity, and repetition.
                   </p>
 
-                  <p className="mt-10 text-sm leading-7 text-zinc-400">
-                    From <span className="text-[#e0c38b]">{singleVisitPrice}</span> for one seven-day visit · 3 and 4-visit packs available. Buy the visits first; choose each room when you are ready.
+                  <ProductLaunchPrice
+                    className="mt-10"
+                    regularPrice={singleVisitPrice}
+                    launchPrice={singleVisitPrice}
+                    unit="/ seven-day visit · 3 and 4-visit packs available"
+                  />
+                  <p className="mt-3 text-sm leading-7 text-zinc-400">
+                    Buy the visits first; choose each room when you are ready.
                   </p>
 
                   <div className="mt-4 flex flex-wrap gap-4">
@@ -120,9 +127,11 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
                   </p>
                 </div>
 
-                <p className="text-sm leading-7 text-zinc-400">
-                  From <span className="text-[#e0c38b]">{singleVisitPrice}</span> for one seven-day visit · 3 and 4-visit packs available.
-                </p>
+                <ProductLaunchPrice
+                  regularPrice={singleVisitPrice}
+                  launchPrice={singleVisitPrice}
+                  unit="/ seven-day visit · 3 and 4-visit packs available"
+                />
 
                 <div className="flex flex-wrap gap-4 pt-2">
                   <Link
