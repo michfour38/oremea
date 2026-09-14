@@ -427,6 +427,11 @@ assert.doesNotMatch(
   /recognitionDeterministicPacingFallback|asksForPause|I’ll leave the thread open here\. Come back when you’re ready\./,
   "Recognition must not hardcode pause detection or a canned participant-facing pause reply.",
 );
+assert.doesNotMatch(
+  engineSource,
+  /buildDeterministicRecognitionFallback|recognition-deterministic-fallback|What changed in the meaning of that sentence as you wrote it\?/,
+  "Recognition must never silently replace its recursive conversation with the flattened non-AI fallback.",
+);
 
 const memoryApiSource = readFileSync("app/api/recognition/memory/route.ts", "utf8");
 assert.match(
