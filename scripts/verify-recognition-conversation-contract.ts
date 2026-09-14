@@ -82,6 +82,12 @@ assert.match(
 );
 assert.match(
   RECOGNITION_CONVERSATION_STANDARD,
+  /pacing is recursive/i,
+  "Recognition pacing must stay recursive rather than collapsing to a canned pause response.",
+);
+
+assert.match(
+  RECOGNITION_CONVERSATION_STANDARD,
   /SAFETY OVERRIDE/,
   "Immediate safety must outrank ordinary recursive accountability.",
 );

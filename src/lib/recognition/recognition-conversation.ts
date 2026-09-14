@@ -154,6 +154,7 @@ REPLY SHAPE
 - if the participant explicitly asks for no questions, respect that
 - when the participant says a question has landed hard, says they need to think, sit with it, take a minute, or come back later, do not immediately press them with another Recognition question
 - treat that as relational pacing, not unfinished work: respond briefly and casually in the participant's register, leave the thread open, and let them return when they are ready
+- pacing is recursive: answer from the live thread and the participant's current register; never substitute a stock pause-or-return sentence merely because a phrase matched a detector
 - in that moment, sounding like a human companion matters more than proving analytical precision; one warm sentence is often enough
 - never finish by assigning homework, an exercise, a plan, or an action
 
@@ -467,7 +468,7 @@ function findFallbackContrastPair(latest: string): [string, string] | null {
   ];
 }
 
-function recognitionPacingReply(value: string): string | null {
+function recognitionDeterministicPacingFallback(value: string): string | null {
   const normalized = value.toLowerCase().replace(/\s+/g, " ").trim();
   if (!normalized) return null;
 
@@ -481,15 +482,7 @@ function recognitionPacingReply(value: string): string | null {
 
   if (!asksForPause) return null;
 
-  if (/\b(?:challenge accepted|accept(?:ed|ing)? (?:the )?challenge)\b/.test(normalized)) {
-    return "Deal. I’ll leave that one with you. Come back when you’re ready.";
-  }
-
-  if (/\b(?:mind blown|blew my mind|blown my(?: own)? mind)\b/.test(normalized)) {
-    return "Ha — fair. Sit with that one. I’ll be here when you come back.";
-  }
-
-  return "Yep. Sit with it. I’ll be here when you come back.";
+  return "I’ll leave the thread open here. Come back when you’re ready.";
 }
 
 function buildDeterministicRecognitionFallback(
@@ -501,7 +494,7 @@ function buildDeterministicRecognitionFallback(
       .find((message) => message.role === "user")
       ?.content.trim() ?? "";
 
-  const pacingReply = recognitionPacingReply(latest);
+  const pacingReply = recognitionDeterministicPacingFallback(latest);
   if (pacingReply) return pacingReply;
 
   const contrast = findFallbackContrastPair(latest);
@@ -613,10 +606,7 @@ export async function generateRecognitionConversationReply({
       const parsed = JSON.parse(stripJsonFence(result.text)) as RawModelResponse;
       const generatedReply =
         typeof parsed.reply === "string" ? parsed.reply.trim() : "";
-      const latestParticipantMessage =
-        [...recentMessages].reverse().find((message) => message.role === "user")?.content ?? "";
-      const reply =
-        recognitionPacingReply(latestParticipantMessage) ?? generatedReply;
+      const reply = generatedReply;
 
       assertRecognitionReplyBoundary(reply);
 
@@ -649,10 +639,7 @@ export async function generateRecognitionConversationReply({
   });
 
   if (fallback) {
-    const latestParticipantMessage =
-      [...recentMessages].reverse().find((message) => message.role === "user")?.content ?? "";
-    const pacingReply = recognitionPacingReply(latestParticipantMessage);
-    return pacingReply ? { ...fallback, reply: pacingReply } : fallback;
+    return fallback;
   }
 
   const reply = buildDeterministicRecognitionFallback(recentMessages);
