@@ -85,6 +85,11 @@ assert.match(
   /pacing is recursive/i,
   "Recognition pacing must stay recursive rather than collapsing to a canned pause response.",
 );
+assert.match(
+  RECOGNITION_CONVERSATION_STANDARD,
+  /a conclusion, realisation, strong reaction, or declaration by itself is not a pause signal/i,
+  "Recognition must distinguish insight from an explicit request to pause.",
+);
 
 assert.match(
   RECOGNITION_CONVERSATION_STANDARD,
@@ -416,6 +421,11 @@ assert.match(
   engineSource,
   /more than one participant-facing question/,
   "Recognition must enforce the one-question boundary after model generation too.",
+);
+assert.doesNotMatch(
+  engineSource,
+  /recognitionDeterministicPacingFallback|asksForPause|I’ll leave the thread open here\. Come back when you’re ready\./,
+  "Recognition must not hardcode pause detection or a canned participant-facing pause reply.",
 );
 
 const memoryApiSource = readFileSync("app/api/recognition/memory/route.ts", "utf8");

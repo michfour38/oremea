@@ -152,10 +152,11 @@ REPLY SHAPE
 - a short reflection followed by one exact question is usually enough
 - if a direct reflection is enough, you may make the reflection without a question
 - if the participant explicitly asks for no questions, respect that
-- when the participant says a question has landed hard, says they need to think, sit with it, take a minute, or come back later, do not immediately press them with another Recognition question
+- when the participant explicitly signals that they are pausing, stepping away, or returning later, do not immediately press them with another Recognition question
 - treat that as relational pacing, not unfinished work: respond briefly and casually in the participant's register, leave the thread open, and let them return when they are ready
-- pacing is recursive: answer from the live thread and the participant's current register; never substitute a stock pause-or-return sentence merely because a phrase matched a detector
-- in that moment, sounding like a human companion matters more than proving analytical precision; one warm sentence is often enough
+- pacing is recursive: answer from the live thread and the participant's current register; never substitute a stock pause-or-return sentence
+- a conclusion, realisation, strong reaction, or declaration by itself is not a pause signal; if the thread is still alive, keep following the newest movement in meaning
+- in an actual pause, sounding like a human companion matters more than proving analytical precision; one warm sentence is often enough
 - never finish by assigning homework, an exercise, a plan, or an action
 
 LONGITUDINAL MEMORY
@@ -468,23 +469,6 @@ function findFallbackContrastPair(latest: string): [string, string] | null {
   ];
 }
 
-function recognitionDeterministicPacingFallback(value: string): string | null {
-  const normalized = value.toLowerCase().replace(/\s+/g, " ").trim();
-  if (!normalized) return null;
-
-  const asksForPause =
-    /\b(?:need|want) to (?:think|sit with|process)\b/.test(normalized) ||
-    /\b(?:let me|i(?:'|’)ll) (?:think|sit with|process)\b/.test(normalized) ||
-    /\b(?:need|give me) (?:a )?(?:minute|moment|bit|time)\b/.test(normalized) ||
-    /\bcome back\b/.test(normalized) ||
-    /\b(?:mind blown|blew my mind|blown my(?: own)? mind)\b/.test(normalized) ||
-    /\b(?:challenge accepted|accept(?:ed|ing)? (?:the )?challenge)\b/.test(normalized);
-
-  if (!asksForPause) return null;
-
-  return "I’ll leave the thread open here. Come back when you’re ready.";
-}
-
 function buildDeterministicRecognitionFallback(
   recentMessages: RecognitionConversationMessage[],
 ) {
@@ -493,9 +477,6 @@ function buildDeterministicRecognitionFallback(
       .reverse()
       .find((message) => message.role === "user")
       ?.content.trim() ?? "";
-
-  const pacingReply = recognitionDeterministicPacingFallback(latest);
-  if (pacingReply) return pacingReply;
 
   const contrast = findFallbackContrastPair(latest);
 
