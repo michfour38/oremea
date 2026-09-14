@@ -19,7 +19,7 @@ assert.match(
 );
 assert.match(
   engineSource,
-  /when the participant says a question has landed hard.*do not immediately press them with another Recognition question/is,
+  /when the participant says a question has landed hard[\s\S]*do not immediately press them with another Recognition question/i,
   "Recognition must respect a participant's request to pause instead of treating every turn as a cue for another question.",
 );
 assert.match(
@@ -44,7 +44,7 @@ assert.match(
 );
 assert.match(
   engineSource,
-  /return with what happened.*renewed curiosity/is,
+  /return with what happened[\s\S]*renewed curiosity/i,
   "Recognition should support a curiosity-action-return loop when the participant chooses it.",
 );
 assert.match(
