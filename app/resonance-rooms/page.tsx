@@ -7,11 +7,13 @@ import {
   getOremeaMarketingProduct,
 } from "@/src/lib/oremea/public-product-marketing";
 import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
+import { VISIT_PRICES } from "@/src/lib/resonance/visit-offers";
 
 const canonicalUrl = "https://www.oremea.com/resonance-rooms";
-const title = "Choose a Resonance room | Oremea";
+const title = "Explore Resonance rooms | Oremea";
 const description =
-  "Ten private seven-day reflection rooms for ten different relational questions. Each room is complete, standalone and chosen separately.";
+  "Ten private seven-day reflection rooms. Buy Resonance visits first, then choose each room only when you are ready to enter it.";
+const singleVisitPrice = formatOremeaPrice(VISIT_PRICES[1]);
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.oremea.com"),
@@ -54,14 +56,7 @@ const structuredData = {
       "@type": "Product",
       name: room.name,
       description: room.marketing.description,
-      url: room.commerce.url,
-      offers: {
-        "@type": "Offer",
-        url: room.commerce.url,
-        priceCurrency: room.commercial.currency,
-        price: (room.commercial.priceCents / 100).toFixed(2),
-        availability: "https://schema.org/InStock",
-      },
+      url: `${canonicalUrl}#room-${room.marketing.weekNumber}`,
     },
   })),
 };
@@ -80,83 +75,89 @@ export default function ResonanceRoomsPage() {
             Resonance
           </p>
           <h1 className="mt-5 font-serif text-4xl font-light tracking-tight text-white md:text-6xl">
-            Ten rooms. Ten different questions. No required order.
+            Buy the visits first. Choose the room when you are ready.
           </h1>
           <p className="mt-6 text-base leading-8 text-zinc-300">
-            Choose one private seven-day room at a time. Every room is complete
-            and standalone: it stays inside one relational territory, and you
-            decide whether another room is ever useful.
+            Resonance has ten private seven-day rooms, each holding a different
+            relational territory. Purchasing visits does not lock those choices
+            in advance. An unused visit stays available until you decide which
+            room to open.
           </p>
           <p className="mt-4 text-sm leading-7 text-zinc-400">
-            Each room is a one-time purchase with seven days of access. It does
-            not renew automatically. Your completed visit remains available in
-            your Archive.
+            One room can be active at a time. A later visit can open a different
+            room or return to one you have used before, while completed visits
+            remain preserved in your Archive.
           </p>
+          <div className="mt-7 flex flex-wrap items-center gap-4">
+            <Link
+              href="/resonance/enter"
+              className="rounded-full border border-[#c8a96a]/55 px-5 py-3 text-sm text-[#f1dfb4] transition hover:border-[#c8a96a] hover:bg-[#c8a96a]/10"
+            >
+              Explore Resonance visits
+            </Link>
+            <p className="text-sm text-zinc-500">
+              From {singleVisitPrice} for one visit · 3 and 4-visit packs available
+            </p>
+          </div>
         </header>
 
         <section
           aria-label="Resonance rooms"
           className="mt-12 grid gap-5 lg:grid-cols-2"
         >
-          {rooms.map((room) => {
-            const price = formatOremeaPrice(
-              room.commercial.priceCents,
-              room.commercial.currency,
-            );
+          {rooms.map((room) => (
+            <article
+              id={`room-${room.marketing.weekNumber}`}
+              key={room.id}
+              className="flex flex-col rounded-[2rem] border border-[#c8a96a]/25 bg-[#15120c] p-6 md:p-8"
+            >
+              <div>
+                <p className="text-xs uppercase tracking-[0.24em] text-[#c8a96a]">
+                  Room {room.marketing.weekNumber}
+                </p>
+                <h2 className="mt-3 font-serif text-3xl text-white">
+                  {room.name.replace("Resonance · ", "")}
+                </h2>
+                <p className="mt-4 text-base leading-7 text-[#f1dfb4]">
+                  {room.marketing.headline}
+                </p>
+                <p className="mt-4 text-sm leading-7 text-zinc-300">
+                  {room.marketing.description}
+                </p>
+                <p className="mt-4 text-sm leading-7 text-zinc-400">
+                  <span className="text-zinc-200">Choose this room when: </span>
+                  {room.marketing.chooseWhen.replace(
+                    /^Choose [^.]+ when /,
+                    "",
+                  )}
+                </p>
+              </div>
 
-            return (
-              <article
-                key={room.id}
-                className="flex flex-col rounded-[2rem] border border-[#c8a96a]/25 bg-[#15120c] p-6 md:p-8"
-              >
+              <div className="mt-6 border-t border-white/10 pt-5">
+                <p className="text-sm text-zinc-400">What it will not do</p>
+                <ul className="mt-3 space-y-2 text-sm leading-6 text-zinc-400">
+                  {room.marketing.limits.map((limit) => (
+                    <li key={limit}>— {limit}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="mt-auto flex flex-wrap items-end justify-between gap-4 pt-7">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.24em] text-[#c8a96a]">
-                    Room {room.marketing.weekNumber}
-                  </p>
-                  <h2 className="mt-3 font-serif text-3xl text-white">
-                    {room.name.replace("Resonance · ", "")}
-                  </h2>
-                  <p className="mt-4 text-base leading-7 text-[#f1dfb4]">
-                    {room.marketing.headline}
-                  </p>
-                  <p className="mt-4 text-sm leading-7 text-zinc-300">
-                    {room.marketing.description}
-                  </p>
-                  <p className="mt-4 text-sm leading-7 text-zinc-400">
-                    <span className="text-zinc-200">Choose this room when: </span>
-                    {room.marketing.chooseWhen.replace(
-                      /^Choose [^.]+ when /,
-                      "",
-                    )}
+                  <p className="text-sm text-[#f1dfb4]">Uses 1 Resonance visit</p>
+                  <p className="mt-1 text-xs text-zinc-500">
+                    choose after purchase · seven days · no renewal
                   </p>
                 </div>
-
-                <div className="mt-6 border-t border-white/10 pt-5">
-                  <p className="text-sm text-zinc-400">What it will not do</p>
-                  <ul className="mt-3 space-y-2 text-sm leading-6 text-zinc-400">
-                    {room.marketing.limits.map((limit) => (
-                      <li key={limit}>— {limit}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="mt-auto flex flex-wrap items-end justify-between gap-4 pt-7">
-                  <div>
-                    <p className="text-2xl text-[#f1dfb4]">{price}</p>
-                    <p className="mt-1 text-xs text-zinc-500">
-                      once · seven days · no renewal
-                    </p>
-                  </div>
-                  <a
-                    href={room.commerce.url}
-                    className="rounded-full border border-[#c8a96a]/55 px-5 py-3 text-sm text-[#f1dfb4] transition hover:border-[#c8a96a] hover:bg-[#c8a96a]/10"
-                  >
-                    Choose {room.name.replace("Resonance · ", "")}
-                  </a>
-                </div>
-              </article>
-            );
-          })}
+                <Link
+                  href="/resonance/enter"
+                  className="rounded-full border border-[#c8a96a]/55 px-5 py-3 text-sm text-[#f1dfb4] transition hover:border-[#c8a96a] hover:bg-[#c8a96a]/10"
+                >
+                  Get Resonance visits
+                </Link>
+              </div>
+            </article>
+          ))}
         </section>
 
         <section className="mt-14 rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 md:p-8">
@@ -164,7 +165,8 @@ export default function ResonanceRoomsPage() {
             A room is a choice, not a sequence
           </h2>
           <p className="mt-4 max-w-3xl text-sm leading-7 text-zinc-300">
-            There is no first room, final room or completion ladder. If your
+            There is no first room, final room or completion ladder. Buying
+            several visits does not require choosing several rooms now. If your
             question is about seeing your own thought more clearly, Recognition
             may fit better. If something is ready to move, Compass may fit
             better.
