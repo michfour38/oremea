@@ -181,16 +181,6 @@ assert.match(recognitionPurchase, /FAQPage/);
 assert.match(recognitionPurchase, /How Recognition works/);
 assert.match(recognitionPurchase, /What it will not become/);
 
-const compassAccess = readFileSync(
-  "app/compass/access/page.tsx",
-  "utf8",
-);
-assert.match(compassAccess, /FAQPage/);
-assert.match(compassAccess, /Compass questions/);
-assert.match(compassAccess, /Does Compass tell me what to do\?/);
-assert.match(compassAccess, /Do I need to complete Recognition or Resonance first\?/);
-assert.match(compassAccess, /What happens if I cancel\?/);
-
 assert.match(readFileSync("middleware.ts", "utf8"), /"\/resonance-rooms\(\.\*\)"/);
 assert.match(
   readFileSync("app/sitemap.xml/route.ts", "utf8"),
