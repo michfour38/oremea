@@ -26,13 +26,25 @@ async function main() {
     assert.equal(initialOffer(quantity).amountCents + completion.amountCents, VISIT_PRICES[10]);
     assert.equal(offerPlanEnv(completion, quantity), `WHOP_RESONANCE_COMPLETE_FROM_${quantity}_PLAN_ID`);
     for (const offer of smaller) {
-      assert.ok(offer.quantity < completion.quantity && offer.amountCents < completion.amountCents,
-        "Do not show an inferior same-price smaller package.");
+      const intentionalFivePackComparison =
+        quantity === 4 &&
+        offer.quantity === 5 &&
+        offer.amountCents === completion.amountCents;
+      assert.ok(
+        offer.quantity < completion.quantity &&
+          (offer.amountCents < completion.amountCents || intentionalFivePackComparison),
+        "Only the intentional 5-vs-6 same-price comparison may match the completion price.",
+      );
       assert.equal(offer.amountCents, VISIT_PRICES[offer.quantity]);
     }
   }
   assert.deepEqual(additionalOffers(4)[0], { kind: "completion", quantity: 6, amountCents: 22000 });
-  assert.deepEqual(additionalOffers(4).slice(1).map((offer) => offer.quantity), [1, 2, 3, 4]);
+  assert.deepEqual(additionalOffers(4).slice(1).map((offer) => offer.quantity), [1, 2, 3, 4, 5]);
+  assert.deepEqual(
+    additionalOffers(4).find((offer) => offer.quantity === 5),
+    { kind: "smaller", quantity: 5, amountCents: 22000 },
+    "Keep the standalone five-pack visible beside add-six-for-$220 so the comparison is explicit.",
+  );
   assert.equal(initialOffer(4).amountCents * 2, 36000,
     "A later four-pack is a fresh purchase, not cumulative tier pricing.");
   // Every partition into smaller standalone orders costs at least the whole pack.

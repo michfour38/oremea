@@ -24,7 +24,14 @@ export function additionalOffers(initialQuantity: number): VisitOffer[] {
   const remaining = (10 - initialQuantity) as VisitQuantity;
   const amountCents = VISIT_PRICES[10] - VISIT_PRICES[initialQuantity];
   const smaller = (Object.keys(VISIT_PRICES).map(Number) as VisitQuantity[])
-    .filter((quantity) => quantity < remaining && VISIT_PRICES[quantity] < amountCents)
+    .filter((quantity) => {
+      const intentionalFivePackComparison =
+        initialQuantity === 4 && quantity === 5 && VISIT_PRICES[quantity] === amountCents;
+      return (
+        quantity < remaining &&
+        (VISIT_PRICES[quantity] < amountCents || intentionalFivePackComparison)
+      );
+    })
     .map((quantity): VisitOffer => ({ kind: "smaller", quantity, amountCents: VISIT_PRICES[quantity] }));
   return [{ kind: "completion", quantity: remaining, amountCents }, ...smaller];
 }
