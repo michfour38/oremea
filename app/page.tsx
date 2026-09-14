@@ -6,10 +6,6 @@ import Link from "next/link";
 import { ProductLaunchPrice } from "@/components/site/product-launch-price";
 import { SiteShell } from "@/components/site/site-shell";
 import {
-  RESONANCE_LAUNCH_PRICE,
-  RESONANCE_REGULAR_PRICE,
-} from "@/src/lib/resonance/resonance-pricing";
-import {
   COMPASS_PRICING,
   formatCompassPrice,
 } from "@/src/lib/compass/compass-pricing";
@@ -17,6 +13,8 @@ import {
   RECOGNITION_PRICING,
   formatRecognitionPrice,
 } from "@/src/lib/recognition/recognition-pricing";
+import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
+import { VISIT_PRICES } from "@/src/lib/resonance/visit-offers";
 
 const COMPASS_PRICE = formatCompassPrice(COMPASS_PRICING.launchPriceCents);
 const COMPASS_STANDARD_PRICE = formatCompassPrice(
@@ -28,6 +26,7 @@ const RECOGNITION_LAUNCH_PRICE = formatRecognitionPrice(
 const RECOGNITION_REGULAR_PRICE = formatRecognitionPrice(
   RECOGNITION_PRICING.regularPriceCents,
 );
+const RESONANCE_SINGLE_VISIT_PRICE = formatOremeaPrice(VISIT_PRICES[1]);
 
 const products = [
   {
@@ -49,14 +48,14 @@ const products = [
     href: "/resonance-rooms",
     active: true,
     short:
-      "A private seven-day reflection room that helps you stay with yourself inside one relational territory.",
-    action: "Choose a Resonance room",
+      "Private seven-day reflection visits. Buy the visits first; choose each room only when you are ready to enter it.",
+    action: "Explore Resonance visits",
     full: [
-      "Resonance gives you a structured place to notice what happens inside connection across seven days, one teacher at a time.",
-      "Each day you respond to the room's current seed questions in your own words. Guiding questions stay inside that teacher and that day's material rather than turning the experience into advice or diagnosis.",
-      "A Daily Mirror can reflect what is visible in that day's participant-written material without inventing a deeper theory about you.",
+      "Resonance gives you a structured place to notice what happens inside connection across seven days, one room at a time.",
+      "Visits are purchased as capacity rather than as preselected rooms. An unused visit stays available on your account until you choose which room to open.",
+      "Each day you respond to the room's current seed questions in your own words. A Daily Mirror can reflect what is visible in that day's participant-written material without inventing a deeper theory about you.",
       "On Day 7, a Closing Mirror can read across the full visit and reflect what becomes visible because the seven days can now be heard together.",
-      "Your completed visit remains available in your Archive, and returning to the same room later creates a fresh visit while preserving the earlier one.",
+      "Only one room is active at a time. A later visit can open a different room or return to one you have used before, while the earlier visit remains preserved in your Archive.",
     ],
   },
   {
@@ -172,12 +171,9 @@ export default function Home() {
                     ) : null}
 
                     {product.name === "Resonance" ? (
-                      <ProductLaunchPrice
-                        className="mt-4"
-                        regularPrice={RESONANCE_REGULAR_PRICE}
-                        launchPrice={RESONANCE_LAUNCH_PRICE}
-                        unit="per seven-day room"
-                      />
+                      <p className="mt-4 text-sm text-zinc-400">
+                        From <span className="text-[#f1dfb4]">{RESONANCE_SINGLE_VISIT_PRICE}</span> for one visit · 3 and 4-visit packs available
+                      </p>
                     ) : null}
 
                     {product.name === "Compass" ? (
