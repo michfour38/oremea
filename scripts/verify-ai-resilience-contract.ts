@@ -38,15 +38,15 @@ assert.match(
   /generateRecognitionFallbackReply/,
   "Recognition must have a second response path when its structured AI envelope fails.",
 );
-assert.match(
+assert.doesNotMatch(
   recognitionEngine,
-  /buildDeterministicRecognitionFallback/,
-  "Recognition must have a non-AI final fallback so a saved participant turn can never remain stranded.",
+  /buildDeterministicRecognitionFallback|recognition-deterministic-fallback/,
+  "Recognition must never counterfeit its core conversational witness with a canned non-AI reply when model generation is unavailable.",
 );
 assert.match(
   recognitionEngine,
-  /findFallbackContrastPair/,
-  "Recognition's independent fallback must still recurse through participant-supplied contrast rather than flattening into a generic prompt.",
+  /Recognition could not respond without leaving the participant's evidence/,
+  "Recognition must fail honestly after both AI response paths fail so the saved participant turn can be retried later.",
 );
 assert.doesNotMatch(
   recognitionEngine,
