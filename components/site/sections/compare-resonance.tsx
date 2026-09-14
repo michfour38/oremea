@@ -1,14 +1,13 @@
 import Link from "next/link";
 import type { CompareMode } from "@/app/compare/page";
-import { ProductLaunchPrice } from "@/components/site/product-launch-price";
-import {
-  RESONANCE_LAUNCH_PRICE,
-  RESONANCE_REGULAR_PRICE,
-} from "@/src/lib/resonance/resonance-pricing";
+import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
+import { VISIT_PRICES } from "@/src/lib/resonance/visit-offers";
 
 type CompareResonanceProps = {
   mode: CompareMode;
 };
+
+const singleVisitPrice = formatOremeaPrice(VISIT_PRICES[1]);
 
 export function CompareResonance({ mode }: CompareResonanceProps) {
   return (
@@ -55,19 +54,16 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
                     attachment, clarity, and repetition.
                   </p>
 
-                  <ProductLaunchPrice
-                    className="mt-10"
-                    regularPrice={RESONANCE_REGULAR_PRICE}
-                    launchPrice={RESONANCE_LAUNCH_PRICE}
-                    unit="per seven-day room"
-                  />
+                  <p className="mt-10 text-sm leading-7 text-zinc-400">
+                    From <span className="text-[#e0c38b]">{singleVisitPrice}</span> for one seven-day visit · 3 and 4-visit packs available. Buy the visits first; choose each room when you are ready.
+                  </p>
 
                   <div className="mt-4 flex flex-wrap gap-4">
                     <Link
                       href="/resonance-rooms"
                       className="rounded-full border border-[#b79a63]/25 bg-[#b79a63]/[0.05] px-5 py-2 text-sm text-[#b79a63] transition hover:border-[#b79a63]/55 hover:bg-[#b79a63]/10"
                     >
-                      Choose a Resonance room
+                      Explore Resonance visits
                     </Link>
                   </div>
                 </div>
@@ -93,7 +89,7 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
                   </p>
 
                   <ul className="grid gap-3 text-base leading-7 text-zinc-400 md:grid-cols-2">
-                    <li>• one seven-day thematic room</li>
+                    <li>• one seven-day thematic room per visit</li>
                     <li>• guided daily reflections</li>
                     <li>• Daily Mirrors</li>
                     <li>• two precise mirror questions each day</li>
@@ -117,24 +113,23 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
 
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-6">
                   <p className="text-sm leading-7 text-zinc-400">
-                    Each Resonance room stands on its own. Choose the teacher whose
-                    territory matches what you want to stay with; no room is a
-                    prerequisite for another Oremea product.
+                    Visits are purchased as capacity, not as preselected rooms. Each
+                    room stands on its own, no room is a prerequisite for another
+                    Oremea product, and unused visits remain available until the
+                    participant chooses what to enter next.
                   </p>
                 </div>
 
-                <ProductLaunchPrice
-                  regularPrice={RESONANCE_REGULAR_PRICE}
-                  launchPrice={RESONANCE_LAUNCH_PRICE}
-                  unit="per seven-day room"
-                />
+                <p className="text-sm leading-7 text-zinc-400">
+                  From <span className="text-[#e0c38b]">{singleVisitPrice}</span> for one seven-day visit · 3 and 4-visit packs available.
+                </p>
 
                 <div className="flex flex-wrap gap-4 pt-2">
                   <Link
                     href="/resonance-rooms"
                     className="rounded-full border border-[#b79a63]/25 bg-[#b79a63]/[0.05] px-5 py-2 text-sm text-[#b79a63] transition hover:border-[#b79a63]/55 hover:bg-[#b79a63]/10"
                   >
-                    Choose a Resonance room
+                    Explore Resonance visits
                   </Link>
                 </div>
               </div>
