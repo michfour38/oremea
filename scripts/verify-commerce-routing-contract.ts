@@ -1,4 +1,19 @@
 import assert from "node:assert/strict";
+import { getResonanceRoomTarget } from "../src/lib/resonance/room-entry";
+
+for (const weekNumber of [1, 2, 10]) {
+  const target = getResonanceRoomTarget(String(weekNumber));
+  assert.equal(target?.weekNumber, weekNumber);
+  // The same room must survive the encoded sign-in/sign-up return URL.
+  const signInUrl = new URL(`https://example.test/sign-in?redirect_url=${encodeURIComponent(target!.entryPath)}`);
+  const returnUrl = new URL(signInUrl.searchParams.get("redirect_url")!, signInUrl.origin);
+  assert.equal(returnUrl.pathname, "/entry");
+  assert.equal(getResonanceRoomTarget(returnUrl.searchParams.get("room")!)?.weekNumber, weekNumber);
+}
+
+for (const invalid of [undefined, "", "0", "11", "-1", "1.5", "01", "1e0", "1&paid=true", "https://example.test", ["1", "2"]]) {
+  assert.equal(getResonanceRoomTarget(invalid), null, "Invalid or ambiguous room instructions must use the normal room picker.");
+}
 
 import { getCompassWhopAccessForPlan } from "../src/lib/compass/compass-commerce";
 import {
