@@ -28,11 +28,39 @@ function NavItem({
   );
 }
 
+function FeedbackIcon({ pathname }: { pathname: string }) {
+  const isActive =
+    pathname === "/feedback" || pathname.startsWith("/feedback/");
+
+  return (
+    <Link
+      href="/feedback"
+      aria-label="Feedback"
+      title="Feedback"
+      className={`flex h-10 w-10 items-center justify-center rounded-full border bg-black/20 transition ${
+        isActive
+          ? "border-[#b79a63]/70 text-[#b79a63]"
+          : "border-[#b79a63]/35 text-[#e7c98b] hover:border-[#b79a63]/70 hover:bg-[#b79a63]/[0.06]"
+      }`}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        className="h-[18px] w-[18px] fill-none stroke-current"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M21 11.5a8.4 8.4 0 0 1-9 8.5 9.8 9.8 0 0 1-4.2-.9L3 21l1.6-4.1A8.1 8.1 0 0 1 3 12c0-4.7 4-8.5 9-8.5s9 3.6 9 8Z" />
+        <path d="M8.5 12h.01M12 12h.01M15.5 12h.01" />
+      </svg>
+    </Link>
+  );
+}
+
 export function SiteNav() {
   const { isSignedIn } = useUser();
   const pathname = usePathname();
-
-  const isEnterPage = pathname === "/oremea/enter";
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-zinc-950/80 backdrop-blur-xl">
@@ -49,7 +77,6 @@ export function SiteNav() {
             <NavItem href="/explore" label="Explore" pathname={pathname} />
             <NavItem href="/works" label="WORKS" pathname={pathname} />
             <NavItem href="/reviews" label="Reviews" pathname={pathname} />
-            <NavItem href="/feedback" label="Feedback" pathname={pathname} />
             <NavItem href="/compare" label="Compare" pathname={pathname} />
             <NavItem href="/contact" label="Contact" pathname={pathname} />
           </nav>
@@ -57,6 +84,7 @@ export function SiteNav() {
 
         <div className="flex items-center gap-3">
           <CurrentBell signedIn={Boolean(isSignedIn)} />
+          <FeedbackIcon pathname={pathname} />
 
           <Link
             href={isSignedIn ? "/profile" : "/sign-in"}
