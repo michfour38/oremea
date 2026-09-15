@@ -19,6 +19,8 @@ import { getVisitBalance } from "@/src/lib/resonance/visit-orders";
 import { visitsEnabled, visitCheckoutEnabled } from "@/src/lib/resonance/visit-offers";
 import { enterVisitRoom } from "../resonance/visits/actions";
 import { VisitSubmitButton } from "../resonance/visits/submit-button";
+import { getResonanceRoomTarget } from "@/src/lib/resonance/room-entry";
+import { RoomTarget } from "./room-target";
 
 export const dynamic = "force-dynamic";
 
@@ -136,10 +138,11 @@ async function getActiveRunDay(runId: string) {
   return 7;
 }
 
-export default async function EntryPage({ searchParams }: { searchParams: Promise<{ visitError?: string }> }) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in?redirect_url=%2Fentry");
+export default async function EntryPage({ searchParams }: { searchParams: Promise<{ visitError?: string; room?: string | string[] }> }) {
   const query = await searchParams;
+  const roomTarget = getResonanceRoomTarget(query.room);
+  const { userId } = await auth();
+  if (!userId) redirect(`/sign-in?redirect_url=${encodeURIComponent(roomTarget?.entryPath ?? "/entry")}`);
   const creditFlow = visitsEnabled();
   const newCheckout = visitCheckoutEnabled();
 
@@ -172,6 +175,7 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-zinc-950 text-white">
+      <RoomTarget weekNumber={roomTarget?.weekNumber} />
       <div
         className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-40 md:hidden"
         style={{ backgroundImage: "url(/images/mobile/bg-entry.webp)" }}
@@ -316,8 +320,10 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
                 return (
                   <details
                     key={week.week_number}
-                    open={isActive}
-                    className="group rounded-3xl border border-white/10 bg-black/35 backdrop-blur-[2px]"
+                    id={`room-${week.week_number}`}
+                    tabIndex={-1}
+                    open={roomTarget ? roomTarget.weekNumber === week.week_number : isActive}
+                    className="group scroll-mt-6 rounded-3xl border border-white/10 bg-black/35 backdrop-blur-[2px]"
                   >
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-5 px-6 py-5 md:px-7">
                       <div>
