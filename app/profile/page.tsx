@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { SiteShell } from "@/components/site/site-shell";
 
 import { ProfileAccount } from "@/components/site/sections/profile-account";
+import { ProfileAdmin } from "@/components/site/sections/profile-admin";
 import { ProfileCurrent } from "@/components/site/sections/profile-current";
 import { ProfileHero } from "@/components/site/sections/profile-hero";
 import { ProfileProducts } from "@/components/site/sections/profile-products";
@@ -27,6 +28,8 @@ export default async function ProfilePage() {
       <ProfileProducts />
 
       <ProfileCurrent />
+
+      <ProfileAdmin />
 
       <ProfileSupport />
     </SiteShell>
