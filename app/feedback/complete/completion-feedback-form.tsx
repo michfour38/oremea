@@ -172,16 +172,16 @@ export default function CompletionFeedbackForm() {
       const data = await response.json().catch(() => null);
 
       if (!response.ok || !data?.success) {
-        throw new Error(data?.error || "Your survey could not be sent yet.");
+        throw new Error(data?.error || "Your survey could not be saved yet.");
       }
 
       setSent(true);
-      setNotice(data.message || "Thank you. Your survey has reached Oremea privately.");
+      setNotice(data.message || "Thank you. Your survey was saved privately.");
     } catch (error) {
       setNotice(
         error instanceof Error
           ? error.message
-          : "Your survey could not be sent yet.",
+          : "Your survey could not be saved yet.",
       );
     } finally {
       setSending(false);
@@ -336,7 +336,7 @@ export default function CompletionFeedbackForm() {
           }
           className="inline-flex items-center justify-center rounded-full bg-[#c6a96b] px-6 py-3 text-sm font-medium text-[#0f0f0d] transition hover:brightness-110 disabled:cursor-wait disabled:opacity-50"
         >
-          {sending ? "Sending…" : "Complete survey"}
+          {sending ? "Saving…" : "Complete survey"}
         </button>
 
         <Link
