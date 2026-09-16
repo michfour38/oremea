@@ -1,11 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
+
+import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
-const SUPPORT_EMAIL = "support@oremea.com";
-const FEEDBACK_FROM_EMAIL = "Oremea website <website@oremea.com>";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const ALLOWED_CATEGORIES = new Set([
@@ -56,14 +55,14 @@ export async function POST(request: NextRequest) {
     const fitScore = score1to5(body.fitScore);
     const recommendScore = score0to10(body.recommendScore);
 
-    // Honeypot: accept bot submissions without sending anything.
+    // Honeypot: accept bot submissions without saving anything.
     if (website) {
       return NextResponse.json({ success: true });
     }
 
     if (!ALLOWED_CATEGORIES.has(category)) {
       return NextResponse.json(
-        { success: false, error: "This message could not be sent." },
+        { success: false, error: "This message could not be saved." },
         { status: 400 },
       );
     }
@@ -90,99 +89,51 @@ export async function POST(request: NextRequest) {
         recommendScore === null
       ) {
         return NextResponse.json(
-          { success: false, error: "Complete the survey scores before sending." },
+          { success: false, error: "Complete the survey scores before saving." },
           { status: 400 },
         );
       }
     } else if (!message) {
       return NextResponse.json(
-        { success: false, error: "Write a message before sending." },
+        { success: false, error: "Write a message before saving." },
         { status: 400 },
       );
     }
 
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      console.error("RESEND_API_KEY is missing. Feedback submissions cannot send.");
-      return NextResponse.json(
-        {
-          success: false,
-          error: "This form is temporarily unavailable. Please try again shortly.",
-        },
-        { status: 503 },
-      );
-    }
-
-    const categoryLabel =
-      category === "completion" ? "Completion survey" : "Quick contact";
-
-    const resend = new Resend(apiKey);
-    const { error } = await resend.emails.send({
-      from: FEEDBACK_FROM_EMAIL,
-      to: SUPPORT_EMAIL,
-      replyTo: email || undefined,
-      subject:
-        category === "completion"
-          ? `[Oremea survey] ${product}`
-          : "[Oremea feedback] Quick contact",
-      text: [
-        category === "completion"
-          ? "OREMEA COMPLETION SURVEY — PRIVATE"
-          : "OREMEA QUICK CONTACT — PRIVATE",
-        "",
-        `Type: ${categoryLabel}`,
-        category === "completion" ? `Product: ${product}` : "",
-        source ? `Source: ${source}` : "",
-        userId ? `Signed-in user id: ${userId}` : "Signed-in user id: not available",
-        name ? `Name supplied: ${name}` : "Name supplied: no",
-        email ? `Email supplied: ${email}` : "Email supplied: no",
-        `Reply requested: ${replyRequested ? "YES" : "NO"}`,
-        "",
-        category === "completion" ? "SURVEY SCORES" : "",
-        beforeClarity !== null ? `Clarity before: ${beforeClarity}/5` : "",
-        afterClarity !== null ? `Clarity after: ${afterClarity}/5` : "",
-        fitScore !== null ? `Did what they came for: ${fitScore}/5` : "",
-        recommendScore !== null ? `Recommend: ${recommendScore}/10` : "",
-        whatChanged ? `\nWHAT CHANGED\n${whatChanged}` : "",
-        mostUseful ? `\nMOST USEFUL\n${mostUseful}` : "",
-        improvement ? `\nWHAT COULD WORK BETTER\n${improvement}` : "",
-        anythingElse ? `\nANYTHING ELSE\n${anythingElse}` : "",
-        message ? `\nMESSAGE\n${message}` : "",
-        "",
-        "Privacy boundary:",
-        "- This submission is private.",
-        "- Do not publish it on Reviews.",
-        "- Do not treat it as publication consent.",
-        "- A public reflection requires a separate, explicit Reviews submission.",
-      ]
-        .filter(Boolean)
-        .join("\n"),
+    await prisma.oremea_feedback_messages.create({
+      data: {
+        user_id: userId || null,
+        category,
+        product,
+        message: message || null,
+        name: name || null,
+        email: email || null,
+        reply_requested: replyRequested,
+        source: source || null,
+        before_clarity: beforeClarity,
+        after_clarity: afterClarity,
+        fit_score: fitScore,
+        recommend_score: recommendScore,
+        what_changed: whatChanged || null,
+        most_useful: mostUseful || null,
+        improvement: improvement || null,
+        anything_else: anythingElse || null,
+      },
     });
-
-    if (error) {
-      console.error("Feedback email failed:", error);
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Your message could not be sent yet. Please try again.",
-        },
-        { status: 502 },
-      );
-    }
 
     return NextResponse.json({
       success: true,
       message:
         category === "completion"
-          ? "Thank you. Your survey has reached Oremea privately."
-          : "Message sent to Oremea.",
+          ? "Thank you. Your survey was saved privately."
+          : "Saved privately.",
     });
   } catch (error) {
-    console.error("Feedback submission failed:", error);
+    console.error("Feedback save failed:", error);
     return NextResponse.json(
       {
         success: false,
-        error: "Your message could not be sent yet. Please try again.",
+        error: "Your message could not be saved yet. Please try again.",
       },
       { status: 500 },
     );

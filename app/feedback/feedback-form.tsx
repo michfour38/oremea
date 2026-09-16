@@ -16,10 +16,9 @@ export default function FeedbackForm() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!message.trim() || sending) return;
+    if (!message.trim() || sending || sent) return;
 
     setSending(true);
-    setSent(false);
     setNotice("");
 
     try {
@@ -42,21 +41,49 @@ export default function FeedbackForm() {
       const data = await response.json().catch(() => null);
 
       if (!response.ok || !data?.success) {
-        throw new Error(data?.error || "Your message could not be sent yet.");
+        throw new Error(data?.error || "Your message could not be saved yet.");
       }
 
       setSent(true);
-      setNotice(data.message || "Message sent.");
+      setNotice(data.message || "Saved privately.");
       setMessage("");
     } catch (error) {
+      setSent(false);
       setNotice(
         error instanceof Error
           ? error.message
-          : "Your message could not be sent yet.",
+          : "Your message could not be saved yet.",
       );
     } finally {
       setSending(false);
     }
+  }
+
+  function startAnother() {
+    setSent(false);
+    setNotice("");
+    setMessage("");
+  }
+
+  if (sent) {
+    return (
+      <div className="rounded-[2rem] border border-[#c6a96b]/25 bg-black/45 p-6 shadow-2xl shadow-black/25 backdrop-blur md:p-8">
+        <p className="text-xs uppercase tracking-[0.24em] text-[#c6a96b]">
+          Saved privately
+        </p>
+        <h2 className="mt-3 text-3xl font-light text-zinc-100">✓ Received.</h2>
+        <p role="status" className="mt-4 text-sm leading-7 text-zinc-300">
+          {notice} It is now in the private Oremea feedback inbox.
+        </p>
+        <button
+          type="button"
+          onClick={startAnother}
+          className="mt-6 rounded-full border border-white/15 px-5 py-3 text-sm text-zinc-300 transition hover:border-[#c6a96b]/45 hover:text-[#c6a96b]"
+        >
+          Send another message
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -117,14 +144,11 @@ export default function FeedbackForm() {
           disabled={sending || !message.trim()}
           className="inline-flex items-center justify-center rounded-full bg-[#c6a96b] px-6 py-3 text-sm font-medium text-[#0f0f0d] transition hover:brightness-110 disabled:cursor-wait disabled:opacity-50"
         >
-          {sending ? "Sending…" : "Send message"}
+          {sending ? "Saving…" : "Send message"}
         </button>
 
         {notice ? (
-          <p
-            role="status"
-            className={sent ? "text-sm text-[#c6a96b]" : "text-sm text-zinc-300"}
-          >
+          <p role="status" className="text-sm text-zinc-300">
             {notice}
           </p>
         ) : null}

@@ -988,6 +988,38 @@ enum HarmonizeOutcome {
   incomplete
 }
 
+
+model oremea_feedback_messages {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id           String?
+  category          String
+  product           String    @default("Oremea generally")
+  message           String?   @db.Text
+  name              String?
+  email             String?
+  reply_requested   Boolean   @default(false)
+  source            String?
+  before_clarity    Int?
+  after_clarity     Int?
+  fit_score         Int?
+  recommend_score   Int?
+  what_changed      String?   @db.Text
+  most_useful       String?   @db.Text
+  improvement       String?   @db.Text
+  anything_else     String?   @db.Text
+  status            String    @default("new")
+  admin_note        String?   @db.Text
+  handled_by        String?
+  handled_at        DateTime? @db.Timestamptz(6)
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([status, created_at])
+  @@index([category, created_at])
+  @@index([user_id])
+  @@index([email])
+}
+
 model witness_feedback {
   id String @id @default(cuid())
 
