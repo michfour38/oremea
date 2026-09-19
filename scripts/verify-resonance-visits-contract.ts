@@ -124,7 +124,7 @@ async function main() {
 
   // Provider contract tests are mocked: no credentials, network, or real charge.
   process.env.WHOP_API_KEY = "test-only-not-a-real-key";
-  process.env.WHOP_ACCOUNT_ID = "biz_test";
+  process.env.WHOP_COMPANY_ID = "biz_test";
   process.env.WHOP_RESONANCE_VISITS_PRODUCT_ID = "prod_test";
   process.env.NEXT_PUBLIC_APP_URL = "https://example.test";
   const originalFetch = globalThis.fetch;
@@ -137,10 +137,11 @@ async function main() {
     globalThis.fetch = async (url, init) => {
       calls.push({ url: String(url), body: JSON.parse(String(init?.body)) });
       return Response.json(String(url).endsWith("/payments") ? { id: "pay_created" }
-        : { id: "ch_created", account_id: "biz_test", plan: responsePlan });
+        : { id: "ch_created", company_id: "biz_test", plan: responsePlan });
     };
     assert.equal(await createVisitCheckout(order), "ch_created");
     assert.deepEqual(calls[0].body.metadata, { oremea_visit_order: order.id });
+    assert.equal(calls[0].body.company_id, "biz_test");
     assert.equal(calls[0].body.plan_id, order.whop_plan_id);
     for (const change of [
       { initial_price: 1 }, { currency: "eur" }, { plan_type: "renewal" },
@@ -152,6 +153,7 @@ async function main() {
       responsePlan = original;
     }
     assert.equal(await chargeVisitOrder(addon), "pay_created");
+    assert.equal(calls.at(-1)?.body.company_id, "biz_test");
     assert.equal(calls.at(-1)?.body.member_id, "mbr_test");
     assert.equal(calls.at(-1)?.body.payment_method_id, "pmt_test");
     let attempts = 0;
