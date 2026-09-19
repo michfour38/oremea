@@ -1,6 +1,15 @@
 export const WHOP_API_BASE = "https://api.whop.com/api/v1";
 export const WHOP_VISIT_API_VERSION = "2025-01-01";
 
+export function getOremeaCommerceOrigin() {
+  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://www.oremea.com";
+  const origin = new URL(configured);
+  if (origin.protocol !== "https:" && origin.hostname !== "localhost") {
+    throw new Error("Commerce requires a secure application URL.");
+  }
+  return origin.origin;
+}
+
 export function getWhopApiKey() {
   const apiKey = process.env.WHOP_API_KEY?.trim();
   if (!apiKey) throw new Error("WHOP_API_KEY is not configured.");
