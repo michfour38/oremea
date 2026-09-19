@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const checkoutSchema = z.object({
   id: z.string().min(1),
-  account_id: z.string(),
+  company_id: z.string(),
   plan: z.object({
     id: z.string(),
     currency: z.string(),
@@ -15,17 +15,17 @@ const checkoutSchema = z.object({
 
 export function whopVisitConfig() {
   const apiKey = process.env.WHOP_API_KEY?.trim();
-  const accountId = process.env.WHOP_ACCOUNT_ID?.trim();
+  const companyId = process.env.WHOP_COMPANY_ID?.trim();
   const productId = process.env.WHOP_RESONANCE_VISITS_PRODUCT_ID?.trim();
   const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (!apiKey || !accountId || !productId || !configuredOrigin) {
+  if (!apiKey || !companyId || !productId || !configuredOrigin) {
     throw new Error("Resonance visit payments are not configured.");
   }
   const origin = new URL(configuredOrigin);
   if (origin.protocol !== "https:" && origin.hostname !== "localhost") {
     throw new Error("Checkout requires a secure application URL.");
   }
-  return { apiKey, accountId, productId, origin: origin.origin };
+  return { apiKey, companyId, productId, origin: origin.origin };
 }
 
 async function whopRequest(path: string, body: Record<string, unknown>) {
@@ -45,16 +45,16 @@ async function whopRequest(path: string, body: Record<string, unknown>) {
 export async function createVisitCheckout(order: {
   id: string; whop_plan_id: string; amount_cents: number;
 }) {
-  const { accountId, origin } = whopVisitConfig();
+  const { companyId, origin } = whopVisitConfig();
   const checkout = checkoutSchema.parse(await whopRequest("checkout_configurations", {
-    account_id: accountId,
+    company_id: companyId,
     plan_id: order.whop_plan_id,
     mode: "payment",
     metadata: { oremea_visit_order: order.id },
     redirect_url: `${origin}/resonance/complete?order=${order.id}`,
   }));
   if (
-    checkout.account_id !== accountId ||
+    checkout.company_id !== companyId ||
     checkout.plan.id !== order.whop_plan_id ||
     checkout.plan.currency !== "usd" ||
     Math.abs(checkout.plan.initial_price * 100 - order.amount_cents) >= 0.001 ||
@@ -69,10 +69,10 @@ export async function chargeVisitOrder(order: {
   id: string; whop_plan_id: string;
   whop_member_id: string; whop_payment_method_id: string;
 }) {
-  const { accountId } = whopVisitConfig();
+  const { companyId } = whopVisitConfig();
   const payment = z.object({ id: z.string().min(1) }).parse(
     await whopRequest("payments", {
-      account_id: accountId,
+      company_id: companyId,
       member_id: order.whop_member_id,
       payment_method_id: order.whop_payment_method_id,
       plan_id: order.whop_plan_id,

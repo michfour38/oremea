@@ -118,14 +118,14 @@ export async function applyVisitPaymentEvent(type: string, data: unknown) {
   const parsed = visitPaymentSchema.safeParse(data);
   if (!parsed.success) throw new Error("Invalid visit payment event.");
   const payment = parsed.data;
-  const accountId = process.env.WHOP_ACCOUNT_ID?.trim() ?? "";
+  const companyId = process.env.WHOP_COMPANY_ID?.trim() ?? "";
   const productId = process.env.WHOP_RESONANCE_VISITS_PRODUCT_ID?.trim() ?? "";
   return prisma.$transaction(async (tx) => {
     const found = await tx.resonance_visit_orders.findUnique({ where: { id: payment.metadata.oremea_visit_order } });
     if (!found) throw new Error("Visit order not found.");
     await lockResonanceAccount(tx, found.user_id);
     const order = await tx.resonance_visit_orders.findUniqueOrThrow({ where: { id: found.id } });
-    if (!matchesVisitOrder(payment, order, accountId, productId)) throw new Error("Visit payment does not match the order.");
+    if (!matchesVisitOrder(payment, order, companyId, productId)) throw new Error("Visit payment does not match the order.");
     const update = visitPaymentUpdate(type, payment, order);
     return update ? tx.resonance_visit_orders.update({ where: { id: order.id }, data: update }) : order;
   });
@@ -134,7 +134,7 @@ export async function applyVisitPaymentEvent(type: string, data: unknown) {
 /** Refund payloads differ from payment payloads. Verify their signed envelope too. */
 export async function applyVisitRefundEvent(event: unknown) {
   const refund = visitRefundSchema.parse(event);
-  const accountId = process.env.WHOP_ACCOUNT_ID?.trim() ?? "";
+  const companyId = process.env.WHOP_COMPANY_ID?.trim() ?? "";
   const productId = process.env.WHOP_RESONANCE_VISITS_PRODUCT_ID?.trim() ?? "";
   return prisma.$transaction(async (tx) => {
     const found = await tx.resonance_visit_orders.findUnique({ where: {
@@ -143,7 +143,7 @@ export async function applyVisitRefundEvent(event: unknown) {
     if (!found) throw new Error("Visit order not found.");
     await lockResonanceAccount(tx, found.user_id);
     const order = await tx.resonance_visit_orders.findUniqueOrThrow({ where: { id: found.id } });
-    if (!matchesVisitRefund(refund, order, accountId, productId)) throw new Error("Refund does not match the order.");
+    if (!matchesVisitRefund(refund, order, companyId, productId)) throw new Error("Refund does not match the order.");
     if (refund.data.status !== "succeeded" || order.status === "refunded") return order;
     // A partial or full refund freezes this order's unused credits for review.
     // Already-entered rooms and earlier reflections are preserved.
