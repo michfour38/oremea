@@ -24,6 +24,10 @@ export default async function VisitPurchasePage({ searchParams }: {
   if (query.order && (!order || order.kind !== "initial")) notFound();
   if (order?.status === "paid") redirect(`/resonance/complete?order=${order.id}`);
   const checkoutEnabled = visitCheckoutEnabled();
+  const checkoutOrigin =
+    order?.whop_checkout_id && order.status === "pending" && checkoutEnabled
+      ? (await whopVisitConfig()).origin
+      : null;
 
   return (
     <FunnelFrame>
@@ -56,7 +60,7 @@ export default async function VisitPurchasePage({ searchParams }: {
             data-whop-checkout-session={order.whop_checkout_id} data-whop-checkout-theme="dark"
             data-whop-checkout-prefill-email={order.buyer_email} data-whop-checkout-disable-email="true"
             data-whop-checkout-setup-future-usage="off_session"
-            data-whop-checkout-return-url={`${whopVisitConfig().origin}/resonance/complete?order=${order.id}`} />
+            data-whop-checkout-return-url={`${checkoutOrigin}/resonance/complete?order=${order.id}`} />
         </section>
       ) : (
         <p role="status" className="mt-8 text-base leading-8 text-zinc-300">This checkout could not be confirmed. No visits have been added for it. Contact support before retrying if Whop has shown a successful payment.</p>

@@ -50,8 +50,3 @@ export function visitCheckoutEnabled() {
   return visitsEnabled() && process.env.RESONANCE_VISITS_CHECKOUT_ENABLED === "true";
 }
 
-export function visitPlanId(offer: VisitOffer, initialQuantity?: number) {
-  const id = process.env[offerPlanEnv(offer, initialQuantity)]?.trim();
-  if (!id) throw new Error("The visit payment plan is not configured.");
-  return id;
-}

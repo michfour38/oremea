@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
-import { additionalOffers, initialOffer, visitPlanId, VISIT_PRICES } from "./visit-offers";
+import { additionalOffers, initialOffer, VISIT_PRICES } from "./visit-offers";
 import { matchesVisitOrder, matchesVisitRefund, uuidSchema, visitPaymentSchema, visitPaymentUpdate, visitRefundSchema } from "./visit-payment-contract";
 import { chargeVisitOrder, createVisitCheckout, whopVisitConfig } from "../whop/visit-payments";
+import { loadResonanceWhopCatalog, visitPlanIdFromCatalog } from "../whop/resonance-catalog";
 import { lockResonanceAccount } from "./resonance-account-lock";
 
 export function getVisitOrder(userId: string, id: string) {
@@ -21,8 +22,9 @@ export async function getVisitBalance(userId: string) {
 export async function startVisitPurchase(userId: string, email: string, quantity: number, requestId: string) {
   uuidSchema.parse(requestId);
   const offer = initialOffer(quantity);
-  const planId = visitPlanId(offer);
-  whopVisitConfig();
+  const catalog = await loadResonanceWhopCatalog();
+  const planId = visitPlanIdFromCatalog(catalog, offer);
+  const paymentConfig = await whopVisitConfig(catalog);
   const order = await prisma.resonance_visit_orders.upsert({
     where: { id: requestId }, update: {},
     create: {
@@ -39,7 +41,7 @@ export async function startVisitPurchase(userId: string, email: string, quantity
   });
   if (!claim.count) return order.id;
   try {
-    const checkoutId = await createVisitCheckout(order);
+    const checkoutId = await createVisitCheckout(order, paymentConfig);
     await prisma.resonance_visit_orders.update({
       where: { id: order.id }, data: { whop_checkout_id: checkoutId },
     });
@@ -53,7 +55,8 @@ export async function startVisitPurchase(userId: string, email: string, quantity
 
 export async function acceptVisitAddition(userId: string, parentId: string, quantity: number) {
   uuidSchema.parse(parentId);
-  whopVisitConfig();
+  const catalog = await loadResonanceWhopCatalog();
+  const paymentConfig = await whopVisitConfig(catalog);
   const result = await prisma.$transaction(async (tx) => {
     await lockResonanceAccount(tx, userId);
     const parent = await tx.resonance_visit_orders.findFirst({ where: { id: parentId, user_id: userId } });
@@ -71,7 +74,7 @@ export async function acceptVisitAddition(userId: string, parentId: string, quan
     const order = await tx.resonance_visit_orders.create({ data: {
       user_id: userId, buyer_email: parent.buyer_email, parent_id: parent.id,
       kind: offer.kind, quantity: offer.quantity, amount_cents: offer.amountCents,
-      whop_plan_id: visitPlanId(offer, parent.quantity),
+      whop_plan_id: visitPlanIdFromCatalog(catalog, offer, parent.quantity),
       whop_member_id: parent.whop_member_id, whop_payment_method_id: parent.whop_payment_method_id,
       status: "pending",
     } });
@@ -83,12 +86,12 @@ export async function acceptVisitAddition(userId: string, parentId: string, quan
   try {
     // Confirm the provider's price and one-time terms before charging. Do not
     // expose this add-on checkout to the buyer as a second way to pay it.
-    await createVisitCheckout(order);
+    await createVisitCheckout(order, paymentConfig);
     const paymentId = await chargeVisitOrder({
       ...order,
       whop_member_id: order.whop_member_id!,
       whop_payment_method_id: order.whop_payment_method_id!,
-    });
+    }, paymentConfig);
     await prisma.resonance_visit_orders.updateMany({
       where: { id: order.id, whop_payment_id: null }, data: { whop_payment_id: paymentId },
     });
@@ -118,8 +121,9 @@ export async function applyVisitPaymentEvent(type: string, data: unknown) {
   const parsed = visitPaymentSchema.safeParse(data);
   if (!parsed.success) throw new Error("Invalid visit payment event.");
   const payment = parsed.data;
-  const companyId = process.env.WHOP_COMPANY_ID?.trim() ?? "";
-  const productId = process.env.WHOP_RESONANCE_VISITS_PRODUCT_ID?.trim() ?? "";
+  const catalog = await loadResonanceWhopCatalog();
+  const companyId = catalog.companyId;
+  const productId = catalog.productId;
   return prisma.$transaction(async (tx) => {
     const found = await tx.resonance_visit_orders.findUnique({ where: { id: payment.metadata.oremea_visit_order } });
     if (!found) throw new Error("Visit order not found.");
@@ -134,8 +138,9 @@ export async function applyVisitPaymentEvent(type: string, data: unknown) {
 /** Refund payloads differ from payment payloads. Verify their signed envelope too. */
 export async function applyVisitRefundEvent(event: unknown) {
   const refund = visitRefundSchema.parse(event);
-  const companyId = process.env.WHOP_COMPANY_ID?.trim() ?? "";
-  const productId = process.env.WHOP_RESONANCE_VISITS_PRODUCT_ID?.trim() ?? "";
+  const catalog = await loadResonanceWhopCatalog();
+  const companyId = catalog.companyId;
+  const productId = catalog.productId;
   return prisma.$transaction(async (tx) => {
     const found = await tx.resonance_visit_orders.findUnique({ where: {
       id: refund.data.payment.metadata.oremea_visit_order,

@@ -1,6 +1,6 @@
 # Resonance visit checkout: staged implementation
 
-This change is a draft until the Whop and PostgreSQL acceptance checks below pass. Both feature flags default to false. It does not deploy a live checkout or create Whop plans.
+This rollout remains gated until the Whop and PostgreSQL acceptance checks below pass. Both feature flags default to false. The private admin provisioner can create or reuse the hidden Whop product and plans, but provisioning never enables public checkout.
 
 ## Customer flow
 
@@ -12,10 +12,11 @@ The initial selection and embedded checkout share one route. The smaller offer i
 
 ## Configuration and deployment sequence
 
-- Apply `20260910165000_resonance_visit_orders` through the existing migration deployment process before enabling either flag. It creates order and redemption tables; it does not convert historic purchases or delete runs.
-- Configure the server-only Whop API key, company ID, visit product ID, plan IDs, and webhook secret in the deployment environment. `.env.example` lists the names. Existing DNS and Namecheap settings need no change.
-- Create eight fixed USD standalone plans (quantities 1–8) and three completion plans (`COMPLETE_FROM_1`, `_3`, `_4`). Use one-time billing, no trial, no adaptive pricing, and no membership expiry beginning at purchase. The API preflight rejects incorrect plan amounts, currency, recurring terms, or expiry. Confirm repeat purchases under the same product are supported.
-- Subscribe the existing signature-verified webhook endpoint to `payment.succeeded`, `payment.failed`, `payment.canceled`, `refund.created`, and `refund.updated`. Verify the deployed account permissions expose the required product, plan, buyer email, member, payment method, metadata, checkout ID, amount, and company fields. Missing or mismatched fields fail closed and require reconciliation.
+- Apply `20260910165000_resonance_visit_orders` and `20260919103000_resonance_whop_catalog` through the existing migration deployment process before enabling either flag. They add visit ledgers and the private provider catalog; they do not convert historic purchases or delete runs.
+- Configure one server-only Whop Account API key as `WHOP_API_KEY`. Keep it out of client-side variables. Oremea discovers the Whop company from that key; company/product/plan IDs are stored in PostgreSQL after provisioning.
+- Open `/admin/resonance-commerce` as an Oremea admin and run **Provision Resonance commerce**. The action reuses resources carrying Oremea's private marker, or creates one hidden `Resonance Visits` product with eight fixed USD standalone plans (quantities 1–8) and three completion plans (`COMPLETE_FROM_1`, `_3`, `_4`). It verifies one-time billing, no trial, no adaptive pricing, hidden visibility and no purchase-time expiry.
+- The provisioner finds the existing signature-verified Oremea webhook by URL and extends it with `payment.succeeded`, `payment.failed`, `refund.created`, and `refund.updated`. It deliberately refuses to create a second webhook because a new webhook would have a different signing secret. The existing `WHOP_WEBHOOK_SECRET` remains authoritative.
+- Oremea pins the visit-payment provider contract with `Api-Version-Date: 2025-01-01`; do not remove this header while the request/response contract still uses `company_id`. Provider contract changes require a new acceptance pass, not an implicit API-key upgrade.
 - In an isolated test environment, set `RESONANCE_VISITS_ENABLED=true` and `RESONANCE_VISITS_CHECKOUT_ENABLED=true`, then perform the acceptance checks below. Do not enable production sales based only on mocked tests.
 - After activation, `RESONANCE_VISITS_CHECKOUT_ENABLED=false` stops new package charges while `RESONANCE_VISITS_ENABLED=true` keeps purchased balances redeemable. Do not disable credit access once customers own visits.
 

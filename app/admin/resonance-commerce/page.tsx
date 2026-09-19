@@ -1,0 +1,125 @@
+import Link from "next/link";
+
+import { SiteShell } from "@/components/site/site-shell";
+import { requireAdminPage } from "@/lib/auth/require-admin";
+import { getResonanceWhopProvisioningStatus } from "@/src/lib/whop/resonance-catalog";
+
+import { provisionResonanceCommerce } from "./actions";
+
+export const dynamic = "force-dynamic";
+
+export default async function ResonanceCommerceAdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
+  await requireAdminPage();
+  const query = await searchParams;
+  const status = await getResonanceWhopProvisioningStatus();
+
+  return (
+    <SiteShell>
+      <section className="mx-auto w-full max-w-4xl px-6 py-12 md:px-10 md:py-16">
+        <Link
+          href="/admin"
+          className="text-xs uppercase tracking-[0.22em] text-[#b79a63] hover:text-[#e7c98b]"
+        >
+          ← Oremea Admin
+        </Link>
+
+        <p className="mt-8 text-xs uppercase tracking-[0.26em] text-[#b79a63]">
+          Resonance commerce
+        </p>
+        <h1 className="mt-4 text-4xl font-light tracking-tight md:text-5xl">
+          Visit-credit checkout
+        </h1>
+        <p className="mt-5 max-w-2xl text-sm leading-7 text-zinc-400">
+          Private setup for the Resonance visit product, fixed-price plans and
+          the existing Oremea Whop webhook. Provisioning does not enable public
+          visit checkout.
+        </p>
+
+        {query.status === "ready" ? (
+          <p className="mt-6 rounded-2xl border border-emerald-300/20 bg-emerald-300/5 p-4 text-sm text-emerald-100">
+            Resonance commerce is provisioned. Public checkout remains controlled
+            separately by its feature flags.
+          </p>
+        ) : null}
+        {query.status === "error" ? (
+          <p className="mt-6 rounded-2xl border border-amber-300/20 bg-amber-300/5 p-4 text-sm text-amber-100">
+            Provisioning stopped safely. No public checkout was enabled. Check
+            the Whop API key permissions and existing webhook before retrying.
+          </p>
+        ) : null}
+
+        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+          <Status label="Whop API key" ready={status.apiKeyConfigured} />
+          <Status label="Stored catalog" ready={status.catalogConfigured} />
+          <Status
+            label="Fixed-price plans"
+            ready={status.planCount === 11}
+            detail={status.catalogConfigured ? `${status.planCount} / 11` : "Not provisioned"}
+          />
+          <Status
+            label="Existing webhook"
+            ready={Boolean(status.webhookId)}
+            detail={status.webhookId ? "Connected" : "Not verified"}
+          />
+        </div>
+
+        {status.productId ? (
+          <p className="mt-5 text-xs text-zinc-600">
+            Whop product: {status.productId}
+          </p>
+        ) : null}
+
+        <div className="mt-8 rounded-[2rem] border border-white/10 bg-black/40 p-6 md:p-8">
+          <h2 className="text-2xl font-light text-zinc-100">
+            Provision from the configured API key
+          </h2>
+          <p className="mt-3 text-sm leading-7 text-zinc-400">
+            This reuses Oremea-marked resources when they already exist, creates
+            only missing hidden resources, verifies every approved amount and
+            one-time term, and extends the existing webhook. It fails closed on
+            mismatches.
+          </p>
+
+          <form action={provisionResonanceCommerce} className="mt-6">
+            <button
+              type="submit"
+              disabled={!status.apiKeyConfigured}
+              className="rounded-full border border-[#b79a63]/50 bg-[#b79a63]/10 px-6 py-3 text-sm text-[#e2c78e] transition hover:border-[#b79a63]/80 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Provision Resonance commerce
+            </button>
+          </form>
+
+          {!status.apiKeyConfigured ? (
+            <p className="mt-4 text-xs leading-6 text-zinc-500">
+              Add WHOP_API_KEY to the Oremea production service first. Never paste
+              the key into a public page or client-side variable.
+            </p>
+          ) : null}
+        </div>
+      </section>
+    </SiteShell>
+  );
+}
+
+function Status({
+  label,
+  ready,
+  detail,
+}: {
+  label: string;
+  ready: boolean;
+  detail?: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/35 p-5">
+      <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">{label}</p>
+      <p className="mt-2 text-lg text-zinc-100">{ready ? "Ready" : "Waiting"}</p>
+      {detail ? <p className="mt-1 text-xs text-zinc-500">{detail}</p> : null}
+    </div>
+  );
+}
