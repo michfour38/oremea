@@ -5,11 +5,6 @@ import { Playfair_Display } from "next/font/google";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteNav } from "@/components/site/site-nav";
 import { visitCheckoutEnabled } from "@/src/lib/resonance/visit-offers";
-import {
-  RESONANCE_LAUNCH_LABEL,
-  RESONANCE_LAUNCH_PRICE,
-  RESONANCE_REGULAR_PRICE,
-} from "@/src/lib/resonance/resonance-pricing";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -68,27 +63,24 @@ export default async function ResonanceEnterPage() {
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.28em] text-[#c8a96a]/70">
-                One room · one visit
+                One visit · one seven-day room
               </p>
               <h2 className={`${playfair.className} mt-3 text-3xl text-white`}>
-                Seven days of Resonance
+                Choose the visits first. Choose the room next.
               </h2>
             </div>
 
-            <div className="text-right">
-              <p className="text-xs uppercase tracking-[0.18em] text-[#c8a96a]/70">
-                {RESONANCE_LAUNCH_LABEL}
-              </p>
-              <div className="mt-1 flex items-baseline justify-end gap-3">
-                <span className="text-base text-zinc-500 line-through">
-                  {RESONANCE_REGULAR_PRICE}
-                </span>
-                <span className="text-3xl text-[#c8a96a]">
-                  {RESONANCE_LAUNCH_PRICE}
-                </span>
-              </div>
-            </div>
+            <p className="max-w-xs text-right text-xs uppercase leading-6 tracking-[0.18em] text-[#c8a96a]/70">
+              Ten rooms · any order · one active visit at a time
+            </p>
           </div>
+
+          <p className="mt-6 text-sm leading-7 text-zinc-300">
+            The purchase step offers one, three, or four visits. Each unused visit stays
+            available on the account until it is used to open a room. Room choice happens
+            after payment, so the purchase is for Resonance visits rather than for a
+            specific room.
+          </p>
 
           <div className="mt-6 grid gap-5 text-sm leading-7 text-zinc-300 md:grid-cols-2">
             <div className="rounded-2xl border border-white/8 bg-black/25 p-5">
