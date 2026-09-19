@@ -59,6 +59,22 @@ export default async function AdminPage() {
             </div>
           </Link>
 
+          <Link
+            href="/admin/resonance-commerce"
+            className="group rounded-[2rem] border border-[#b79a63]/25 bg-black/45 p-7 transition hover:border-[#b79a63]/55"
+          >
+            <p className="text-xs uppercase tracking-[0.22em] text-[#b79a63]">
+              Resonance
+            </p>
+            <h2 className="mt-3 text-2xl font-light text-zinc-100">
+              Visit-credit commerce
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-zinc-400">
+              Provision and verify the hidden Whop visit product, fixed-price
+              plans and webhook before public checkout is enabled.
+            </p>
+          </Link>
+
           <div className="rounded-[2rem] border border-white/10 bg-black/35 p-7">
             <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
               Admin foundation
