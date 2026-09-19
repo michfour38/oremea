@@ -118,11 +118,11 @@ export async function loadResonanceWhopCatalog(): Promise<ResonanceWhopCatalog> 
   // Temporary rollback bridge for environments provisioned before the catalog table.
   const companyId = process.env.WHOP_COMPANY_ID?.trim();
   const productId = process.env.WHOP_RESONANCE_VISITS_PRODUCT_ID?.trim();
-  const plans = Object.fromEntries(
-    planSpecs()
-      .map((spec) => [spec.key, process.env[spec.key]?.trim()] as const)
-      .filter((entry): entry is [string, string] => Boolean(entry[1])),
-  );
+  const plans: Record<string, string> = {};
+  for (const spec of planSpecs()) {
+    const id = process.env[spec.key]?.trim();
+    if (id) plans[spec.key] = id;
+  }
   if (!companyId || !productId || Object.keys(plans).length !== planSpecs().length) {
     throw new Error("Resonance Whop catalog is not provisioned.");
   }
