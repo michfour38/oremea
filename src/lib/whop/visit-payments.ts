@@ -4,7 +4,7 @@ import {
   loadResonanceWhopCatalog,
   type ResonanceWhopCatalog,
 } from "./resonance-catalog";
-import { getWhopApiKey, whopApiRequest } from "./whop-api";
+import { getOremeaCommerceOrigin, getWhopApiKey, whopApiRequest } from "./whop-api";
 
 const checkoutSchema = z.object({
   id: z.string().min(1),
@@ -31,19 +31,11 @@ export async function whopVisitConfig(
 ): Promise<WhopVisitConfig> {
   const apiKey = getWhopApiKey();
   const resolvedCatalog = catalog ?? await loadResonanceWhopCatalog();
-  const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (!configuredOrigin) {
-    throw new Error("Resonance visit payments are not configured.");
-  }
-  const origin = new URL(configuredOrigin);
-  if (origin.protocol !== "https:" && origin.hostname !== "localhost") {
-    throw new Error("Checkout requires a secure application URL.");
-  }
   return {
     apiKey,
     companyId: resolvedCatalog.companyId,
     productId: resolvedCatalog.productId,
-    origin: origin.origin,
+    origin: getOremeaCommerceOrigin(),
   };
 }
 
