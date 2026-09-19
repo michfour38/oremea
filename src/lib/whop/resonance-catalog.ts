@@ -147,7 +147,11 @@ async function ensureProduct(companyId: string, apiKey: string) {
       { apiKey },
     ),
   ).data;
-  const existing = products.find(productIsOremeaCatalog);
+  const matches = products.filter(productIsOremeaCatalog);
+  if (matches.length > 1) {
+    throw new Error("Multiple Oremea Resonance Visits products were found.");
+  }
+  const existing = matches[0];
   if (existing) {
     if (existing.visibility !== "hidden") {
       throw new Error("The Oremea Resonance Visits product exists but is not hidden.");
@@ -184,10 +188,17 @@ async function ensurePlans(companyId: string, productId: string, apiKey: string)
       { apiKey },
     ),
   );
+  const markedPlans = response.data.filter((plan) =>
+    plan.internal_notes?.startsWith(PLAN_MARKER_PREFIX),
+  );
+  const duplicateMarkers = markedPlans
+    .map((plan) => plan.internal_notes!)
+    .filter((marker, index, all) => all.indexOf(marker) !== index);
+  if (duplicateMarkers.length) {
+    throw new Error("Duplicate Oremea Resonance visit plans were found.");
+  }
   const byMarker = new Map(
-    response.data
-      .filter((plan) => plan.internal_notes?.startsWith(PLAN_MARKER_PREFIX))
-      .map((plan) => [plan.internal_notes!, plan]),
+    markedPlans.map((plan) => [plan.internal_notes!, plan]),
   );
   const result: Record<string, string> = {};
 
@@ -241,7 +252,23 @@ async function ensureWebhook(companyId: string, origin: string, apiKey: string) 
       { apiKey },
     ),
   ).data;
-  const webhook = webhooks.find((candidate) => candidate.url === expectedUrl);
+  const matchingWebhooks = webhooks.filter((candidate) => {
+    try {
+      const url = new URL(candidate.url);
+      return (
+        url.pathname.replace(/\/$/, "") === "/api/webhooks/whop" &&
+        (url.hostname === "oremea.com" ||
+          url.hostname === "www.oremea.com" ||
+          url.hostname.endsWith(".up.railway.app"))
+      );
+    } catch {
+      return false;
+    }
+  });
+  if (matchingWebhooks.length > 1) {
+    throw new Error("Multiple Oremea Whop webhooks were found.");
+  }
+  const webhook = matchingWebhooks[0];
   if (!webhook) {
     throw new Error(
       "The existing Oremea Whop webhook was not found. Refusing to create a second webhook with a different secret.",
