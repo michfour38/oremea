@@ -9,6 +9,7 @@ import {
   visitPaymentUpdate, visitRefundSchema,
 } from "../src/lib/resonance/visit-payment-contract";
 import { chargeVisitOrder, createVisitCheckout } from "../src/lib/whop/visit-payments";
+import { WHOP_VISIT_API_VERSION } from "../src/lib/whop/whop-api";
 
 async function main() {
   assert.deepEqual(INITIAL_QUANTITIES, [1, 3, 4]);
@@ -123,42 +124,55 @@ async function main() {
   assert.equal(matchesVisitRefund(refund, { ...order, whop_payment_id: "pay_other" }, "biz_test", "prod_test"), false);
 
   // Provider contract tests are mocked: no credentials, network, or real charge.
-  process.env.WHOP_API_KEY = "test-only-not-a-real-key";
-  process.env.WHOP_COMPANY_ID = "biz_test";
-  process.env.WHOP_RESONANCE_VISITS_PRODUCT_ID = "prod_test";
-  process.env.NEXT_PUBLIC_APP_URL = "https://example.test";
+  const testConfig = {
+    apiKey: "test-only-not-a-real-key",
+    companyId: "biz_test",
+    productId: "prod_test",
+    origin: "https://example.test",
+  };
   const originalFetch = globalThis.fetch;
-  const calls: { url: string; body: Record<string, unknown> }[] = [];
+  const calls: {
+    url: string;
+    body: Record<string, unknown>;
+    headers: Record<string, string>;
+  }[] = [];
   let responsePlan: Record<string, unknown> = {
     id: "plan_test", currency: "usd", initial_price: 180,
     plan_type: "one_time", expiration_days: null, adaptive_pricing_enabled: false,
   };
   try {
     globalThis.fetch = async (url, init) => {
-      calls.push({ url: String(url), body: JSON.parse(String(init?.body)) });
+      calls.push({
+        url: String(url),
+        body: JSON.parse(String(init?.body)),
+        headers: init?.headers as Record<string, string>,
+      });
       return Response.json(String(url).endsWith("/payments") ? { id: "pay_created" }
         : { id: "ch_created", company_id: "biz_test", plan: responsePlan });
     };
-    assert.equal(await createVisitCheckout(order), "ch_created");
+    assert.equal(await createVisitCheckout(order, testConfig), "ch_created");
     assert.deepEqual(calls[0].body.metadata, { oremea_visit_order: order.id });
     assert.equal(calls[0].body.company_id, "biz_test");
     assert.equal(calls[0].body.plan_id, order.whop_plan_id);
+    assert.equal(calls[0].headers["Api-Version-Date"], WHOP_VISIT_API_VERSION);
+    assert.match(calls[0].headers.Authorization, /^Bearer /);
     for (const change of [
       { initial_price: 1 }, { currency: "eur" }, { plan_type: "renewal" },
       { expiration_days: 7 }, { adaptive_pricing_enabled: true },
     ]) {
       const original = responsePlan;
       responsePlan = { ...original, ...change };
-      await assert.rejects(() => createVisitCheckout(order));
+      await assert.rejects(() => createVisitCheckout(order, testConfig));
       responsePlan = original;
     }
-    assert.equal(await chargeVisitOrder(addon), "pay_created");
+    assert.equal(await chargeVisitOrder(addon, testConfig), "pay_created");
     assert.equal(calls.at(-1)?.body.company_id, "biz_test");
     assert.equal(calls.at(-1)?.body.member_id, "mbr_test");
     assert.equal(calls.at(-1)?.body.payment_method_id, "pmt_test");
+    assert.equal(calls.at(-1)?.headers["Api-Version-Date"], WHOP_VISIT_API_VERSION);
     let attempts = 0;
     globalThis.fetch = async () => { attempts++; throw new Error("simulated connection interruption"); };
-    await assert.rejects(() => chargeVisitOrder(addon));
+    await assert.rejects(() => chargeVisitOrder(addon, testConfig));
     assert.equal(attempts, 1, "Never automatically retry an unknown saved-card charge.");
   } finally { globalThis.fetch = originalFetch; }
 
@@ -172,6 +186,18 @@ async function main() {
   assert.match(service, /status: "unknown"/);
   assert.match(service, /room\?\.is_published/);
   assert.match(service, /started_at: new Date\(\)/);
+  const catalog = readFileSync("src/lib/whop/resonance-catalog.ts", "utf8");
+  assert.match(catalog, /RESONANCE_WHOP_CATALOG_KEY = "resonance-visits-v1"/);
+  assert.match(catalog, /\[1, 2, 3, 4, 5, 6, 7, 8\]/);
+  assert.match(catalog, /\[1, 3, 4\]/);
+  assert.match(catalog, /visibility: "hidden"/);
+  assert.match(catalog, /adaptive_pricing_enabled: false/);
+  assert.match(catalog, /Refusing to create a second webhook/);
+  const migration = readFileSync("prisma/migrations/20260919103000_resonance_whop_catalog/migration.sql", "utf8");
+  assert.match(migration, /CREATE TABLE "resonance_whop_catalog"/);
+  const adminCommerce = readFileSync("app/admin/resonance-commerce/page.tsx", "utf8");
+  assert.match(adminCommerce, /Provision Resonance commerce/);
+  assert.match(adminCommerce, /does not enable public/);
   const legacy = readFileSync("src/lib/resonance/resonance-week-runs.ts", "utf8");
   assert.match(legacy, /lockResonanceAccount\(tx, userId\)/);
   const completionPage = readFileSync("app/(member)/resonance/complete/page.tsx", "utf8");
