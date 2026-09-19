@@ -5,6 +5,7 @@ import { OREMEA_PRICING } from "@/src/lib/oremea/pricing";
 import { offerPlanEnv, type VisitOffer } from "@/src/lib/resonance/visit-offers";
 import {
   WHOP_VISIT_API_VERSION,
+  getOremeaCommerceOrigin,
   getWhopApiKey,
   whopApiRequest,
 } from "@/src/lib/whop/whop-api";
@@ -179,7 +180,7 @@ async function ensureProduct(companyId: string, apiKey: string) {
 async function ensurePlans(companyId: string, productId: string, apiKey: string) {
   const response = planListSchema.parse(
     await whopApiRequest(
-      `plans?company_id=${encodeURIComponent(companyId)}&first=100&product_ids[]=${encodeURIComponent(productId)}`,
+      `plans?company_id=${encodeURIComponent(companyId)}&first=100`,
       { apiKey },
     ),
   );
@@ -270,19 +271,14 @@ async function ensureWebhook(companyId: string, origin: string, apiKey: string) 
 
 export async function provisionResonanceWhopCatalog() {
   const apiKey = getWhopApiKey();
-  const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (!configuredOrigin) throw new Error("NEXT_PUBLIC_APP_URL is not configured.");
-  const origin = new URL(configuredOrigin);
-  if (origin.protocol !== "https:" && origin.hostname !== "localhost") {
-    throw new Error("Resonance commerce requires a secure application URL.");
-  }
+  const origin = getOremeaCommerceOrigin();
 
   const account = accountSchema.parse(
     await whopApiRequest("accounts/me", { apiKey }),
   );
   const product = await ensureProduct(account.id, apiKey);
   const plans = await ensurePlans(account.id, product.id, apiKey);
-  const webhookId = await ensureWebhook(account.id, origin.origin, apiKey);
+  const webhookId = await ensureWebhook(account.id, origin, apiKey);
 
   await prisma.resonance_whop_catalog.upsert({
     where: { catalog_key: RESONANCE_WHOP_CATALOG_KEY },
