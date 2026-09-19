@@ -62,9 +62,9 @@ export const visitRefundSchema = z.object({
 
 export function matchesVisitRefund(refund: z.infer<typeof visitRefundSchema>, order: {
   id: string; buyer_email: string; whop_plan_id: string; whop_payment_id: string | null;
-}, accountId: string, productId: string) {
+}, companyId: string, productId: string) {
   const payment = refund.data.payment;
-  return Boolean(accountId && productId && refund.company_id === accountId &&
+  return Boolean(companyId && productId && refund.company_id === companyId &&
     refund.data.currency.toLowerCase() === "usd" &&
     payment.metadata.oremea_visit_order === order.id &&
     payment.product?.id === productId && payment.plan?.id === order.whop_plan_id &&
@@ -82,11 +82,11 @@ export function matchesVisitOrder(payment: VisitPayment, order: {
   whop_payment_id: string | null;
   parent_id: string | null;
   amount_cents: number;
-}, accountId: string, productId: string) {
+}, companyId: string, productId: string) {
   return Boolean(
-    accountId && productId &&
+    companyId && productId &&
     payment.metadata.oremea_visit_order === order.id &&
-    payment.company?.id === accountId &&
+    payment.company?.id === companyId &&
     payment.product?.id === productId &&
     payment.plan?.id === order.whop_plan_id &&
     payment.user.email.toLowerCase() === order.buyer_email.toLowerCase() &&
