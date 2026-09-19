@@ -14,7 +14,8 @@ const playfair = Playfair_Display({
 
 export default async function ResonanceEnterPage() {
   const { userId } = await auth();
-  const destination = visitCheckoutEnabled() ? "/resonance/visits" : "/entry";
+  const checkoutEnabled = visitCheckoutEnabled();
+  const destination = checkoutEnabled ? "/resonance/visits" : "/entry";
   const entryHref = userId
     ? destination
     : `/sign-up?redirect_url=${encodeURIComponent(destination)}`;
@@ -76,10 +77,9 @@ export default async function ResonanceEnterPage() {
           </div>
 
           <p className="mt-6 text-sm leading-7 text-zinc-300">
-            The purchase step offers one, three, or four visits. Each unused visit stays
-            available on the account until it is used to open a room. Room choice happens
-            after payment, so the purchase is for Resonance visits rather than for a
-            specific room.
+            {checkoutEnabled
+              ? "The purchase step offers one, three, or four visits. Each unused visit stays available on the account until it is used to open a room. Room choice happens after payment, so the purchase is for Resonance visits rather than for a specific room."
+              : "Choose the room that fits what is present now. Each purchase opens one fresh seven-day Resonance visit, while earlier completed visits remain preserved in the archive."}
           </p>
 
           <div className="mt-6 grid gap-5 text-sm leading-7 text-zinc-300 md:grid-cols-2">
@@ -115,7 +115,7 @@ export default async function ResonanceEnterPage() {
               href={entryHref}
               className="inline-flex rounded-xl border border-[#c8a96a]/60 px-6 py-3 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10"
             >
-              {visitCheckoutEnabled() ? userId ? "Choose Resonance visits" : "Create account and choose visits" : userId ? "Choose a Resonance room" : "Create account and choose a room"}
+              {checkoutEnabled ? userId ? "Choose Resonance visits" : "Create account and choose visits" : userId ? "Choose a Resonance room" : "Create account and choose a room"}
             </Link>
           </div>
         </section>
