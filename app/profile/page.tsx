@@ -4,11 +4,11 @@ import { redirect } from "next/navigation";
 import { SiteShell } from "@/components/site/site-shell";
 
 import { ProfileAccount } from "@/components/site/sections/profile-account";
-import { ProfileAdmin } from "@/components/site/sections/profile-admin";
 import { ProfileCurrent } from "@/components/site/sections/profile-current";
 import { ProfileHero } from "@/components/site/sections/profile-hero";
 import { ProfileProducts } from "@/components/site/sections/profile-products";
 import { ProfileSupport } from "@/components/site/sections/profile-support";
+import { isOremeaAdmin } from "@/lib/auth/admin-access";
 
 export const dynamic = "force-dynamic";
 
@@ -19,17 +19,18 @@ export default async function ProfilePage() {
     redirect("/sign-in");
   }
 
+  const isAdmin = await isOremeaAdmin(userId);
+
   return (
     <SiteShell>
       <ProfileHero />
 
-      <ProfileAccount />
+      <ProfileAccount isAdmin={isAdmin} />
 
       <ProfileProducts />
 
       <ProfileCurrent />
 
-      <ProfileAdmin />
 
       <ProfileSupport />
     </SiteShell>
