@@ -19,7 +19,7 @@ function safeDetail(value: unknown, apiKey: string, limit: number): string | und
     .replace(/Bearer\s+[^\s"'<>;,]+/gi, "Bearer [redacted]")
     .replace(/\b(?:apik|whsec|sk|pk)_[a-zA-Z0-9_.-]+/g, "[redacted]")
     .replace(/\beyJ[a-zA-Z0-9_.-]+/g, "[redacted]")
-    .replace(/((?:api[_ -]?key|authorization|token|secret|password)\s*["']?\s*[:=]\s*["']?)[^\s"'<>;,]+/gi, "$1[redacted]")
+    .replace(/((?:api[_ -]?key|authorization|token|secret|password)\s*["']?\s*[:=]\s*["']?)[^\s"'<>;,]+/gi, (_match, prefix: string) => prefix + "[redacted]")
     .replace(/https?:\/\/[^\s"'<>]+/gi, "[URL removed]")
     .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "[email removed]")
     .replace(/[a-zA-Z0-9_+\/-]{40,}={0,2}/g, "[redacted]")
