@@ -1,6 +1,16 @@
 export const WHOP_API_BASE = "https://api.whop.com/api/v1";
 export const WHOP_VISIT_API_VERSION = "2025-01-01";
 
+export class WhopApiError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly path: string,
+  ) {
+    super(`Whop request returned ${status}.`);
+    this.name = "WhopApiError";
+  }
+}
+
 export function getOremeaCommerceOrigin() {
   const configured = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://www.oremea.com";
   const origin = new URL(configured);
@@ -42,7 +52,7 @@ export async function whopApiRequest(
   });
 
   if (!response.ok) {
-    throw new Error(`Whop request returned ${response.status}.`);
+    throw new WhopApiError(response.status, path);
   }
   return response.json() as Promise<unknown>;
 }
