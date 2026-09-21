@@ -8,6 +8,7 @@ import {
   getOremeaCommerceOrigin,
   getWhopApiKey,
   WhopApiError,
+  type WhopFailureDetails,
   whopApiRequest,
 } from "@/src/lib/whop/whop-api";
 
@@ -63,6 +64,7 @@ export class ResonanceProvisioningError extends Error {
     public readonly stage: ResonanceProvisioningStage,
     public readonly code: "permission" | "not_found" | "conflict" | "validation" | "provider" | "storage",
     public readonly providerStatus?: number,
+    public readonly providerDetails?: WhopFailureDetails,
   ) {
     super(`Resonance provisioning failed at ${stage}.`);
     this.name = "ResonanceProvisioningError";
@@ -86,7 +88,7 @@ async function atProvisioningStage<T>(
             : error.status === 409
               ? "conflict"
               : "provider";
-      throw new ResonanceProvisioningError(stage, code, error.status);
+      throw new ResonanceProvisioningError(stage, code, error.status, error.details);
     }
     if (error instanceof z.ZodError) {
       throw new ResonanceProvisioningError(stage, "validation");
