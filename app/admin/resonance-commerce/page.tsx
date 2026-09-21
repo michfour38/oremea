@@ -11,7 +11,12 @@ export const dynamic = "force-dynamic";
 export default async function ResonanceCommerceAdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{
+    status?: string;
+    stage?: string;
+    code?: string;
+    providerStatus?: string;
+  }>;
 }) {
   await requireAdminPage();
   const query = await searchParams;
@@ -46,10 +51,18 @@ export default async function ResonanceCommerceAdminPage({
           </p>
         ) : null}
         {query.status === "error" ? (
-          <p className="mt-6 rounded-2xl border border-amber-300/20 bg-amber-300/5 p-4 text-sm text-amber-100">
-            Provisioning stopped safely. No public checkout was enabled. Check
-            the Whop API key permissions and existing webhook before retrying.
-          </p>
+          <div className="mt-6 rounded-2xl border border-amber-300/20 bg-amber-300/5 p-4 text-sm text-amber-100">
+            <p className="font-medium">Provisioning stopped safely. No public checkout was enabled.</p>
+            <p className="mt-2 leading-6">
+              {provisioningFailureMessage(query.stage, query.code, query.providerStatus)}
+            </p>
+            {query.stage ? (
+              <p className="mt-2 text-xs uppercase tracking-[0.16em] text-amber-100/60">
+                Stage: {query.stage}
+                {query.providerStatus ? ` · Whop HTTP ${query.providerStatus}` : ""}
+              </p>
+            ) : null}
+          </div>
         ) : null}
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
@@ -122,4 +135,42 @@ function Status({
       {detail ? <p className="mt-1 text-xs text-zinc-500">{detail}</p> : null}
     </div>
   );
+}
+
+
+function provisioningFailureMessage(
+  stage?: string,
+  code?: string,
+  providerStatus?: string,
+) {
+  const stageLabel: Record<string, string> = {
+    account: "reading the Whop company attached to this API key",
+    product: "finding or creating the hidden Resonance Visits product",
+    plans: "finding, creating, or validating the fixed-price plans",
+    webhook: "finding or updating the existing Oremea Whop webhook",
+    storage: "saving the verified Whop catalog in Oremea",
+  };
+
+  const where = stageLabel[stage ?? ""] ?? "an unknown provisioning step";
+
+  if (code === "permission") {
+    return `Whop denied permission while ${where}. The API key is valid enough to reach Whop, but it is missing a permission required for this step.`;
+  }
+  if (code === "not_found") {
+    return `Whop could not find the expected resource while ${where}. This usually means the existing resource is absent or the key cannot see it.`;
+  }
+  if (code === "conflict") {
+    return `Whop reported a resource conflict while ${where}. Oremea did not create a replacement or continue past the conflict.`;
+  }
+  if (code === "provider") {
+    return `Whop returned ${providerStatus ? `HTTP ${providerStatus}` : "an API error"} while ${where}. No public checkout was enabled.`;
+  }
+  if (code === "storage") {
+    return "Whop provisioning completed far enough to reach Oremea storage, but the verified catalog could not be saved. No public checkout was enabled.";
+  }
+  if (code === "validation") {
+    return `Oremea received data that did not match the expected safe contract while ${where}. It stopped rather than adopting or creating uncertain commerce resources.`;
+  }
+
+  return "Provisioning stopped before the commerce catalog was verified. No public checkout was enabled.";
 }
