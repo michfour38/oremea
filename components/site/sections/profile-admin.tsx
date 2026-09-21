@@ -2,17 +2,13 @@ import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 
 import { prisma } from "@/lib/prisma";
+import { isOremeaAdmin } from "@/lib/auth/admin-access";
 
 export async function ProfileAdmin() {
   const { userId } = await auth();
   if (!userId) return null;
 
-  const profile = await prisma.profiles.findUnique({
-    where: { id: userId },
-    select: { is_admin: true },
-  });
-
-  if (!profile?.is_admin) return null;
+  if (!(await isOremeaAdmin(userId))) return null;
 
   const newFeedback = await prisma.oremea_feedback_messages.count({
     where: { status: "new" },
