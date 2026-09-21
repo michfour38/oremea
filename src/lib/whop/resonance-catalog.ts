@@ -7,6 +7,7 @@ import {
   WHOP_VISIT_API_VERSION,
   getOremeaCommerceOrigin,
   getWhopApiKey,
+  WhopApiError,
   whopApiRequest,
 } from "@/src/lib/whop/whop-api";
 
@@ -48,6 +49,54 @@ const webhookSchema = z.object({
   enabled: z.boolean(),
 }).passthrough();
 const webhookListSchema = z.object({ data: z.array(webhookSchema) }).passthrough();
+
+
+export type ResonanceProvisioningStage =
+  | "account"
+  | "product"
+  | "plans"
+  | "webhook"
+  | "storage";
+
+export class ResonanceProvisioningError extends Error {
+  constructor(
+    public readonly stage: ResonanceProvisioningStage,
+    public readonly code: "permission" | "not_found" | "conflict" | "validation" | "provider" | "storage",
+    public readonly providerStatus?: number,
+  ) {
+    super(`Resonance provisioning failed at ${stage}.`);
+    this.name = "ResonanceProvisioningError";
+  }
+}
+
+async function atProvisioningStage<T>(
+  stage: ResonanceProvisioningStage,
+  action: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await action();
+  } catch (error) {
+    if (error instanceof ResonanceProvisioningError) throw error;
+    if (error instanceof WhopApiError) {
+      const code =
+        error.status === 401 || error.status === 403
+          ? "permission"
+          : error.status === 404
+            ? "not_found"
+            : error.status === 409
+              ? "conflict"
+              : "provider";
+      throw new ResonanceProvisioningError(stage, code, error.status);
+    }
+    if (error instanceof z.ZodError) {
+      throw new ResonanceProvisioningError(stage, "validation");
+    }
+    throw new ResonanceProvisioningError(
+      stage,
+      stage === "storage" ? "storage" : "validation",
+    );
+  }
+}
 
 export type ResonanceWhopCatalog = {
   companyId: string;
@@ -300,14 +349,20 @@ export async function provisionResonanceWhopCatalog() {
   const apiKey = getWhopApiKey();
   const origin = getOremeaCommerceOrigin();
 
-  const account = accountSchema.parse(
-    await whopApiRequest("accounts/me", { apiKey }),
+  const account = await atProvisioningStage("account", async () =>
+    accountSchema.parse(await whopApiRequest("accounts/me", { apiKey })),
   );
-  const product = await ensureProduct(account.id, apiKey);
-  const plans = await ensurePlans(account.id, product.id, apiKey);
-  const webhookId = await ensureWebhook(account.id, origin, apiKey);
+  const product = await atProvisioningStage("product", () =>
+    ensureProduct(account.id, apiKey),
+  );
+  const plans = await atProvisioningStage("plans", () =>
+    ensurePlans(account.id, product.id, apiKey),
+  );
+  const webhookId = await atProvisioningStage("webhook", () =>
+    ensureWebhook(account.id, origin, apiKey),
+  );
 
-  await prisma.resonance_whop_catalog.upsert({
+  await atProvisioningStage("storage", () => prisma.resonance_whop_catalog.upsert({
     where: { catalog_key: RESONANCE_WHOP_CATALOG_KEY },
     update: {
       company_id: account.id,
@@ -322,7 +377,7 @@ export async function provisionResonanceWhopCatalog() {
       plans,
       webhook_id: webhookId,
     },
-  });
+  }));
 
   return {
     companyId: account.id,
