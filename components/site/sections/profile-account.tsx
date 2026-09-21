@@ -1,6 +1,7 @@
 "use client";
 
 import { useClerk, useUser } from "@clerk/nextjs";
+import Link from "next/link";
 
 function initialsFor(name: string) {
   return name
@@ -20,7 +21,7 @@ function formatMemberSince(value: Date | null | undefined) {
   }).format(new Date(value));
 }
 
-export function ProfileAccount() {
+export function ProfileAccount({ isAdmin = false }: { isAdmin?: boolean }) {
   const { openUserProfile } = useClerk();
   const { isLoaded, user } = useUser();
   const displayName = user?.fullName || user?.firstName || "Oremea Member";
@@ -75,14 +76,24 @@ export function ProfileAccount() {
                   <p className="mt-2 text-xs uppercase tracking-[0.2em] text-zinc-500">
                     Oremea participant
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => openUserProfile()}
-                    disabled={!isLoaded}
-                    className="mt-2 text-xs text-[#b79a63]/75 underline decoration-[#b79a63]/30 underline-offset-4 transition hover:text-[#b79a63] disabled:text-zinc-600"
-                  >
-                    Update profile photo
-                  </button>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <button
+                      type="button"
+                      onClick={() => openUserProfile()}
+                      disabled={!isLoaded}
+                      className="text-xs text-[#b79a63]/75 underline decoration-[#b79a63]/30 underline-offset-4 transition hover:text-[#b79a63] disabled:text-zinc-600"
+                    >
+                      Update profile photo
+                    </button>
+                    {isAdmin ? (
+                      <Link
+                        href="/admin"
+                        className="text-xs uppercase tracking-[0.16em] text-[#b79a63] underline decoration-[#b79a63]/30 underline-offset-4 transition hover:text-[#e7c98b]"
+                      >
+                        Admin tools
+                      </Link>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             </div>
