@@ -198,12 +198,12 @@ async function ensureProduct(companyId: string, apiKey: string) {
   ).data;
   const matches = products.filter(productIsOremeaCatalog);
   if (matches.length > 1) {
-    throw new Error("Multiple Oremea Resonance Visits products were found.");
+    throw new ResonanceProvisioningError("product", "conflict");
   }
   const existing = matches[0];
   if (existing) {
     if (existing.visibility !== "hidden") {
-      throw new Error("The Oremea Resonance Visits product exists but is not hidden.");
+      throw new ResonanceProvisioningError("product", "validation");
     }
     return existing;
   }
@@ -244,7 +244,7 @@ async function ensurePlans(companyId: string, productId: string, apiKey: string)
     .map((plan) => plan.internal_notes!)
     .filter((marker, index, all) => all.indexOf(marker) !== index);
   if (duplicateMarkers.length) {
-    throw new Error("Duplicate Oremea Resonance visit plans were found.");
+    throw new ResonanceProvisioningError("plans", "conflict");
   }
   const byMarker = new Map(
     markedPlans.map((plan) => [plan.internal_notes!, plan]),
@@ -315,13 +315,11 @@ async function ensureWebhook(companyId: string, origin: string, apiKey: string) 
     }
   });
   if (matchingWebhooks.length > 1) {
-    throw new Error("Multiple Oremea Whop webhooks were found.");
+    throw new ResonanceProvisioningError("webhook", "conflict");
   }
   const webhook = matchingWebhooks[0];
   if (!webhook) {
-    throw new Error(
-      "The existing Oremea Whop webhook was not found. Refusing to create a second webhook with a different secret.",
-    );
+    throw new ResonanceProvisioningError("webhook", "not_found");
   }
 
   const events = [...new Set([...webhook.events, ...REQUIRED_WEBHOOK_EVENTS])];
