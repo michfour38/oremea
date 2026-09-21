@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { isOremeaAdmin } from "@/lib/auth/admin-access";
 
 export async function requireAdminPage(): Promise<{ clerkUserId: string }> {
   const { userId } = await auth();
@@ -9,12 +9,7 @@ export async function requireAdminPage(): Promise<{ clerkUserId: string }> {
     redirect("/sign-in");
   }
 
-  const profile = await prisma.profiles.findUnique({
-    where: { id: userId },
-    select: { is_admin: true },
-  });
-
-  if (!profile?.is_admin) {
+  if (!(await isOremeaAdmin(userId))) {
     redirect("/");
   }
 
@@ -28,12 +23,7 @@ export async function requireAdminAction(): Promise<{ clerkUserId: string }> {
     throw new Error("Unauthorized");
   }
 
-  const profile = await prisma.profiles.findUnique({
-    where: { id: userId },
-    select: { is_admin: true },
-  });
-
-  if (!profile?.is_admin) {
+  if (!(await isOremeaAdmin(userId))) {
     throw new Error("Forbidden");
   }
 
