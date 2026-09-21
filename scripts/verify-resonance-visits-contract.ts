@@ -192,12 +192,16 @@ async function main() {
   assert.match(catalog, /\[1, 3, 4\]/);
   assert.match(catalog, /visibility: "hidden"/);
   assert.match(catalog, /adaptive_pricing_enabled: false/);
-  assert.match(catalog, /Refusing to create a second webhook/);
+  assert.match(catalog, /ResonanceProvisioningError\("webhook", "not_found"\)/);
+  assert.match(catalog, /ResonanceProvisioningError\("plans", "conflict"\)/);
+  assert.match(catalog, /ResonanceProvisioningError\("product", "conflict"\)/);
   const migration = readFileSync("prisma/migrations/20260919103000_resonance_whop_catalog/migration.sql", "utf8");
   assert.match(migration, /CREATE TABLE "resonance_whop_catalog"/);
   const adminCommerce = readFileSync("app/admin/resonance-commerce/page.tsx", "utf8");
   assert.match(adminCommerce, /Provision Resonance commerce/);
   assert.match(adminCommerce, /does not enable public/);
+  assert.match(adminCommerce, /Stage:/);
+  assert.match(adminCommerce, /Whop HTTP/);
   const legacy = readFileSync("src/lib/resonance/resonance-week-runs.ts", "utf8");
   assert.match(legacy, /lockResonanceAccount\(tx, userId\)/);
   const completionPage = readFileSync("app/(member)/resonance/complete/page.tsx", "utf8");
