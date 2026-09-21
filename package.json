@@ -23,7 +23,7 @@
     "test:superseded-boundary": "tsx scripts/verify-superseded-boundary.ts",
     "test:participant-sovereignty": "tsx scripts/verify-participant-sovereignty-contract.ts",
     "test:ai-resilience": "tsx scripts/verify-ai-resilience-contract.ts",
-    "test:resonance-content": "tsx scripts/verify-resonance-content-contract.ts && tsx scripts/verify-resonance-visits-contract.ts",
+    "test:resonance-content": "tsx scripts/verify-resonance-content-contract.ts && tsx scripts/verify-resonance-visits-contract.ts && tsx scripts/verify-whop-api-diagnostics.ts",
     "test:resonance-visits": "tsx scripts/verify-resonance-visits-contract.ts",
     "test:reviews": "tsx scripts/verify-review-submission-contract.ts",
     "test:public-product-routing": "tsx scripts/verify-public-product-routing-contract.ts",

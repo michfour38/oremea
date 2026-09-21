@@ -4,7 +4,7 @@ import { SiteShell } from "@/components/site/site-shell";
 import { requireAdminPage } from "@/lib/auth/require-admin";
 import { getResonanceWhopProvisioningStatus } from "@/src/lib/whop/resonance-catalog";
 
-import { provisionResonanceCommerce } from "./actions";
+import { ProvisionForm } from "./provision-form";
 
 export const dynamic = "force-dynamic";
 
@@ -97,15 +97,9 @@ export default async function ResonanceCommerceAdminPage({
             mismatches.
           </p>
 
-          <form action={provisionResonanceCommerce} className="mt-6">
-            <button
-              type="submit"
-              disabled={!status.apiKeyConfigured}
-              className="rounded-full border border-[#b79a63]/50 bg-[#b79a63]/10 px-6 py-3 text-sm text-[#e2c78e] transition hover:border-[#b79a63]/80 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Provision Resonance commerce
-            </button>
-          </form>
+          <ProvisionForm enabled={status.apiKeyConfigured}>
+            Provision Resonance commerce
+          </ProvisionForm>
 
           {!status.apiKeyConfigured ? (
             <p className="mt-4 text-xs leading-6 text-zinc-500">
@@ -154,7 +148,7 @@ function provisioningFailureMessage(
   const where = stageLabel[stage ?? ""] ?? "an unknown provisioning step";
 
   if (code === "permission") {
-    return `Whop denied permission while ${where}. The API key is valid enough to reach Whop, but it is missing a permission required for this step.`;
+    return `Whop denied permission while ${where}. This status alone cannot distinguish a key, role, account, or permission mismatch. Provision again to see Whop’s redacted reason below.`;
   }
   if (code === "not_found") {
     return `Whop could not find the expected resource while ${where}. This usually means the existing resource is absent or the key cannot see it.`;
