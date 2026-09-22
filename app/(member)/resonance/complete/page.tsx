@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
-import { additionalOffers, VISIT_PRICES, visitCheckoutEnabled, visitsEnabled } from "@/src/lib/resonance/visit-offers";
+import { additionalOffers, VISIT_PRICES } from "@/src/lib/resonance/visit-offers";
+import { visitCheckoutAvailableFor, visitCreditsAvailableFor } from "@/src/lib/resonance/visit-access";
 import { getVisitOrder } from "@/src/lib/resonance/visit-orders";
 import { FunnelFrame } from "../visits/funnel-frame";
 import { AdditionalOfferPicker } from "./additional-offer-picker";
@@ -15,7 +16,7 @@ export default async function VisitCompletionPage({ searchParams }: {
 }) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
-  if (!visitsEnabled()) notFound();
+  if (!(await visitCreditsAvailableFor(userId))) notFound();
 
   const query = await searchParams;
   const order = query.order ? await getVisitOrder(userId, query.order) : null;
@@ -54,7 +55,7 @@ export default async function VisitCompletionPage({ searchParams }: {
   }
 
   const [complete, ...smaller] = additionalOffers(order.quantity);
-  const canCharge = visitCheckoutEnabled() && Boolean(order.whop_member_id && order.whop_payment_method_id);
+  const canCharge = (await visitCheckoutAvailableFor(userId)) && Boolean(order.whop_member_id && order.whop_payment_method_id);
 
   return (
     <FunnelFrame>
