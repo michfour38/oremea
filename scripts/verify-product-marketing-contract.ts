@@ -181,6 +181,15 @@ assert.match(recognitionPurchase, /FAQPage/);
 assert.match(recognitionPurchase, /How Recognition works/);
 assert.doesNotMatch(recognitionPurchase, /What it will not become/);
 
+const resonanceEnterPage = readFileSync(
+  "app/(marketing)/resonance/enter/page.tsx",
+  "utf8",
+);
+assert.doesNotMatch(resonanceEnterPage, /next\/font\/google|Playfair_Display/);
+assert.doesNotMatch(resonanceEnterPage, /seven-day|seven days|Days 1–6|Day 7|each day&apos;s/i);
+assert.match(resonanceEnterPage, /seven-stage reflection experience/i);
+assert.match(resonanceEnterPage, /move through at your own pace/i);
+
 const resonanceRoomsPage = readFileSync("app/resonance-rooms/page.tsx", "utf8");
 assert.doesNotMatch(resonanceRoomsPage, /What it will not do|marketing\.limits/);
 assert.doesNotMatch(resonanceRoomsPage, /seven-day|seven days/i);
