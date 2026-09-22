@@ -179,7 +179,7 @@ const recognitionPurchase = readFileSync(
 );
 assert.match(recognitionPurchase, /FAQPage/);
 assert.match(recognitionPurchase, /How Recognition works/);
-assert.match(recognitionPurchase, /What it will not become/);
+assert.doesNotMatch(recognitionPurchase, /What it will not become/);
 
 assert.match(readFileSync("middleware.ts", "utf8"), /"\/resonance-rooms\(\.\*\)"/);
 assert.match(
