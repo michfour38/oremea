@@ -179,7 +179,22 @@ const recognitionPurchase = readFileSync(
 );
 assert.match(recognitionPurchase, /FAQPage/);
 assert.match(recognitionPurchase, /How Recognition works/);
-assert.match(recognitionPurchase, /What it will not become/);
+assert.doesNotMatch(recognitionPurchase, /What it will not become/);
+
+const resonanceRoomsPage = readFileSync("app/resonance-rooms/page.tsx", "utf8");
+assert.doesNotMatch(resonanceRoomsPage, /What it will not do|marketing\.limits/);
+
+const explorePage = readFileSync("app/explore/page.tsx", "utf8");
+assert.doesNotMatch(explorePage, /ExploreWhatNot/);
+assert.equal(
+  existsSync("components/site/sections/explore-what-not.tsx"),
+  false,
+  "The retired negative Explore section must not return.",
+);
+
+const disclaimer = readFileSync("app/(legal)/disclaimer/page.tsx", "utf8");
+assert.match(disclaimer, /do not diagnose personality, trauma, motives or hidden intent/i);
+assert.match(disclaimer, /do not promise compatibility, reconciliation, emotional safety/i);
 
 assert.match(readFileSync("middleware.ts", "utf8"), /"\/resonance-rooms\(\.\*\)"/);
 assert.match(

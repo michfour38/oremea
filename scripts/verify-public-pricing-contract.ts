@@ -13,7 +13,6 @@ const priceFreeSurfaces = [
   "components/site/sections/explore-hero.tsx",
   "components/site/sections/explore-starting-point.tsx",
   "components/site/sections/explore-what-is.tsx",
-  "components/site/sections/explore-what-not.tsx",
   "components/site/sections/explore-privacy-safety.tsx",
   "components/site/sections/current-panel.tsx",
 ];

@@ -16,6 +16,7 @@ const sections: readonly LegalSection[] = [
     paragraphs: [
       "Recognition, Resonance and Compass help users reflect on information they choose to provide. Their questions, summaries and outputs are designed to support awareness and decision-making, not to establish objective facts about another person or determine what a user must do.",
       "A reflective output may feel personally relevant without being complete, independently verified or suitable for every context. Users remain responsible for evaluating it against their own circumstances.",
+      "Oremea's reflective products do not diagnose personality, trauma, motives or hidden intent; do not promise compatibility, reconciliation, emotional safety, a particular relationship outcome or behaviour change; and do not require disclosure, forced participation or continued use.",
     ],
   },
   {
@@ -87,7 +88,7 @@ export default function DisclaimerPage() {
       activePath="/disclaimer"
       title="AI and Service Disclaimer"
       summary="Important limits for reflective outputs, AI-generated material, professional boundaries and WORKS business matching."
-      updated="9 August 2026"
+      updated="22 September 2026"
       sections={sections}
     />
   );

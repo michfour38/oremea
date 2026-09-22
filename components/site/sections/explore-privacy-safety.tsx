@@ -22,8 +22,9 @@ export function ExplorePrivacySafety() {
 
             <div className="space-y-3 text-sm leading-7 text-zinc-500 lg:text-right">
               <p>
-                Oremea does not provide therapy, medical treatment, diagnosis,
-                crisis support, or emergency care.
+                Detailed product boundaries, AI limitations and professional
+                disclaimers live in one place so the product pages can stay focused
+                on the experience itself.
               </p>
             </div>
           </div>
@@ -36,10 +37,10 @@ export function ExplorePrivacySafety() {
               Compare reflective products
             </Link>
             <Link
-              href="/privacy"
+              href="/disclaimer"
               className="rounded-full border border-white/10 px-5 py-2.5 text-sm text-zinc-400 transition hover:border-white/25 hover:text-zinc-100"
             >
-              Read privacy policy
+              Read product boundaries
             </Link>
           </div>
         </div>

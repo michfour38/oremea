@@ -127,15 +127,6 @@ export default function ResonanceRoomsPage() {
                 </p>
               </div>
 
-              <div className="mt-6 border-t border-white/10 pt-5">
-                <p className="text-sm text-zinc-400">What it will not do</p>
-                <ul className="mt-3 space-y-2 text-sm leading-6 text-zinc-400">
-                  {room.marketing.limits.map((limit) => (
-                    <li key={limit}>— {limit}</li>
-                  ))}
-                </ul>
-              </div>
-
               <div className="mt-auto flex flex-wrap items-end justify-between gap-4 pt-7">
                 <div>
                   <p className="text-sm text-[#f1dfb4]">Uses 1 Resonance visit</p>
