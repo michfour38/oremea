@@ -1,16 +1,10 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
-import { Playfair_Display } from "next/font/google";
 
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteNav } from "@/components/site/site-nav";
 import { visitCheckoutAvailableFor } from "@/src/lib/resonance/visit-access";
 
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
-});
 
 export default async function ResonanceEnterPage() {
   const { userId } = await auth();
@@ -49,14 +43,14 @@ export default async function ResonanceEnterPage() {
           </p>
 
           <h1
-            className={`${playfair.className} mt-4 text-4xl font-semibold leading-[0.98] tracking-tight md:text-6xl`}
+            className="mt-4 text-4xl font-semibold leading-[0.98] tracking-tight md:text-6xl font-serif"
           >
             Stay with what becomes visible.
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-zinc-200 md:text-lg">
-            Resonance is a private seven-day reflection experience. Ten thematic
-            rooms are available, and each visit opens one room for seven days.
+            Resonance is a private seven-stage reflection experience. Ten thematic
+            rooms are available, and each visit opens one room to move through at your own pace.
           </p>
         </header>
 
@@ -64,9 +58,9 @@ export default async function ResonanceEnterPage() {
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.28em] text-[#c8a96a]/70">
-                One visit · one seven-day room
+                One visit · one seven-stage room
               </p>
-              <h2 className={`${playfair.className} mt-3 text-3xl text-white`}>
+              <h2 className="mt-3 text-3xl text-white font-serif">
                 Choose the visits first. Choose the room next.
               </h2>
             </div>
@@ -79,12 +73,12 @@ export default async function ResonanceEnterPage() {
           <p className="mt-6 text-sm leading-7 text-zinc-300">
             {checkoutEnabled
               ? "The purchase step offers one, three, or four visits. Each unused visit stays available on the account until it is used to open a room. Room choice happens after payment, so the purchase is for Resonance visits rather than for a specific room."
-              : "Choose the room that fits what is present now. Each purchase opens one fresh seven-day Resonance visit, while earlier completed visits remain preserved in the archive."}
+              : "Choose the room that fits what is present now. Each purchase opens one fresh Resonance visit, while earlier completed visits remain preserved in the archive."}
           </p>
 
           <div className="mt-6 grid gap-5 text-sm leading-7 text-zinc-300 md:grid-cols-2">
             <div className="rounded-2xl border border-white/8 bg-black/25 p-5">
-              <p className="text-zinc-100">Days 1–6</p>
+              <p className="text-zinc-100">Stages 1–6</p>
               <p className="mt-2">
                 Private reflections are read together by the Daily Mirror. It
                 reflects the pattern, tension, contrast, or movement becoming visible,
@@ -94,10 +88,10 @@ export default async function ResonanceEnterPage() {
             </div>
 
             <div className="rounded-2xl border border-white/8 bg-black/25 p-5">
-              <p className="text-zinc-100">Day 7</p>
+              <p className="text-zinc-100">Stage 7</p>
               <p className="mt-2">
-                Day 7 receives the same Daily Mirror and 2Q, then opens a Closing
-                Mirror across the full seven-day visit to reflect what persisted,
+                Stage 7 receives the same Daily Mirror and 2Q, then opens a Closing
+                Mirror across the full seven-stage visit to reflect what persisted,
                 changed, sharpened, or became newly visible.
               </p>
             </div>
@@ -139,10 +133,10 @@ export default async function ResonanceEnterPage() {
               The role of Mirror
             </summary>
             <p className="mt-4 text-sm leading-7 text-zinc-400">
-              The Daily Mirror reads each day&apos;s participant-written reflections as
+              The Daily Mirror reads each stage&apos;s participant-written reflections as
               one body of evidence, reflects what becomes visible across them, and
               ends with 2Q arising from that reflection. The Closing Mirror arrives
-              after Day 7 and reads across the full visit, including participant-written
+              after Stage 7 and reads across the full visit, including participant-written
               2Q answers, while earlier generated material remains context rather than
               evidence about the participant.
             </p>
