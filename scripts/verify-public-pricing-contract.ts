@@ -15,17 +15,20 @@ const priceFreeSurfaces = [
   "components/site/sections/explore-what-is.tsx",
   "components/site/sections/explore-what-not.tsx",
   "components/site/sections/explore-privacy-safety.tsx",
+  "components/site/sections/current-panel.tsx",
 ];
 
 const pricingImplementationPatterns = [
   /ProductLaunchPrice/,
   /RECOGNITION_PRICING/,
   /COMPASS_PRICING/,
+  /CURRENT_PRICING/,
   /VISIT_PRICES/,
   /RESONANCE_LAUNCH_PRICE/,
   /RESONANCE_REGULAR_PRICE/,
   /formatRecognitionPrice/,
   /formatCompassPrice/,
+  /formatCurrentPrice/,
   /formatOremeaPrice/,
   /\$\s*\d/,
   /\bR\s*\d/i,
