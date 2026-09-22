@@ -133,7 +133,7 @@ export default async function ResonanceEnterPage() {
               The role of Mirror
             </summary>
             <p className="mt-4 text-sm leading-7 text-zinc-400">
-              The Daily Mirror reads each day&apos;s participant-written reflections as
+              The Daily Mirror reads each stage&apos;s participant-written reflections as
               one body of evidence, reflects what becomes visible across them, and
               ends with 2Q arising from that reflection. The Closing Mirror arrives
               after Stage 7 and reads across the full visit, including participant-written
