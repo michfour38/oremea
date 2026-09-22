@@ -1,84 +1,93 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const publicPricingFiles = [
+const priceFreeSurfaces = [
   "app/page.tsx",
+  "app/resonance-rooms/page.tsx",
+  "app/(marketing)/resonance/enter/page.tsx",
   "app/(member)/entry/page.tsx",
-  "app/(member)/resonance/purchase/page.tsx",
-  "components/site/product-launch-price.tsx",
   "components/site/sections/compare-recognition.tsx",
   "components/site/sections/compare-resonance.tsx",
   "components/site/sections/compare-compass.tsx",
   "components/site/sections/explore-ecosystem.tsx",
+  "components/site/sections/explore-hero.tsx",
+  "components/site/sections/explore-starting-point.tsx",
+  "components/site/sections/explore-what-is.tsx",
+  "components/site/sections/explore-what-not.tsx",
+  "components/site/sections/explore-privacy-safety.tsx",
 ];
 
-const publicPricingSource = publicPricingFiles
+const pricingImplementationPatterns = [
+  /ProductLaunchPrice/,
+  /RECOGNITION_PRICING/,
+  /COMPASS_PRICING/,
+  /VISIT_PRICES/,
+  /RESONANCE_LAUNCH_PRICE/,
+  /RESONANCE_REGULAR_PRICE/,
+  /formatRecognitionPrice/,
+  /formatCompassPrice/,
+  /formatOremeaPrice/,
+  /\$\s*\d/,
+  /\bR\s*\d/i,
+  /unit="\/ month"/,
+  /From[^\n]{0,80}one visit/i,
+  /\d\s*and\s*\d-visit packs available/i,
+];
+
+for (const file of priceFreeSurfaces) {
+  const source = readFileSync(file, "utf8");
+  for (const pattern of pricingImplementationPatterns) {
+    assert.doesNotMatch(
+      source,
+      pattern,
+      `${file} must remain price-free; pricing belongs inside a purchase funnel.`,
+    );
+  }
+}
+
+const funnelPricing = [
+  {
+    file: "app/recognition/purchase/page.tsx",
+    pattern: /formatRecognitionPrice\(RECOGNITION_PRICING\.launchPriceCents\)/,
+  },
+  {
+    file: "app/compass/access/page.tsx",
+    pattern: /formatCompassPrice\(COMPASS_PRICING\.launchPriceCents\)/,
+  },
+  {
+    file: "app/(member)/resonance/visits/page.tsx",
+    pattern: /formatOremeaPrice\(VISIT_PRICES\[quantity\]\)/,
+  },
+  {
+    file: "app/(member)/resonance/purchase/page.tsx",
+    pattern: /RESONANCE_LAUNCH_PRICE/,
+  },
+];
+
+for (const { file, pattern } of funnelPricing) {
+  assert.match(
+    readFileSync(file, "utf8"),
+    pattern,
+    `${file} must keep pricing inside the purchase funnel.`,
+  );
+}
+
+const combined = [
+  ...priceFreeSurfaces,
+  ...funnelPricing.map(({ file }) => file),
+]
   .map((file) => `${file}\n${readFileSync(file, "utf8")}`)
   .join("\n\n");
 
-const forbiddenLegacyCopy = [
+for (const legacy of [
   /Recognition[^\n]{0,120}one-time access/i,
   /\bR520\b/i,
   /\bR1240\b/i,
   /approximately 10 weeks/i,
   /10-week structure/i,
   /\/oremea\/enter/i,
-];
-
-for (const pattern of forbiddenLegacyCopy) {
-  assert.doesNotMatch(
-    publicPricingSource,
-    pattern,
-    `Public pricing still contains legacy copy matching ${pattern}.`,
-  );
+]) {
+  assert.doesNotMatch(combined, legacy, `Pricing surfaces still contain legacy copy matching ${legacy}.`);
 }
 
-for (const file of publicPricingFiles.filter((file) =>
-  file.includes("compare-"),
-)) {
-  assert.match(
-    readFileSync(file, "utf8"),
-    /ProductLaunchPrice/,
-    `${file} must use the shared launch-price presentation.`,
-  );
-}
-
-const recognitionHomepage = readFileSync("app/page.tsx", "utf8");
-const recognitionCompare = readFileSync(
-  "components/site/sections/compare-recognition.tsx",
-  "utf8",
-);
-const resonanceEntry = readFileSync("app/(member)/entry/page.tsx", "utf8");
-const resonancePurchase = readFileSync(
-  "app/(member)/resonance/purchase/page.tsx",
-  "utf8",
-);
-
-assert.match(
-  recognitionHomepage,
-  /unit="\/ month"/,
-  "Homepage Recognition pricing must present monthly subscription access.",
-);
-assert.match(
-  recognitionCompare,
-  /unit="\/ month"/,
-  "Compare Recognition pricing must present monthly subscription access.",
-);
-
-for (const [label, source] of [
-  ["Resonance room selector", resonanceEntry],
-  ["Resonance purchase", resonancePurchase],
-] as const) {
-  assert.match(
-    source,
-    /RESONANCE_LAUNCH_PRICE\s*!==\s*RESONANCE_REGULAR_PRICE/,
-    `${label} must detect whether a real launch discount exists.`,
-  );
-  assert.match(
-    source,
-    /HAS_RESONANCE_LAUNCH_DISCOUNT\s*\?\s*\([\s\S]*line-through[\s\S]*\)\s*:\s*null/,
-    `${label} must not show a crossed-out regular price when launch and regular prices match.`,
-  );
-}
-
-console.log("Public pricing contract checks passed.");
+console.log("Public marketing is price-free; prices remain inside purchase funnels.");

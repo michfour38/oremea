@@ -1,18 +1,5 @@
 import Link from "next/link";
 import type { CompareMode } from "@/app/compare/page";
-import { ProductLaunchPrice } from "@/components/site/product-launch-price";
-import {
-  RECOGNITION_PRICING,
-  formatRecognitionPrice,
-} from "@/src/lib/recognition/recognition-pricing";
-
-const RECOGNITION_LAUNCH_PRICE = formatRecognitionPrice(
-  RECOGNITION_PRICING.launchPriceCents,
-);
-const RECOGNITION_REGULAR_PRICE = formatRecognitionPrice(
-  RECOGNITION_PRICING.regularPriceCents,
-);
-
 type CompareRecognitionProps = {
   mode: CompareMode;
 };
@@ -59,13 +46,6 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
                     Like having your own words kept in view while interpretation,
                     authority, responsibility, and next movement remain yours.
                   </p>
-
-                  <ProductLaunchPrice
-                    className="mt-10"
-                    regularPrice={RECOGNITION_REGULAR_PRICE}
-                    launchPrice={RECOGNITION_LAUNCH_PRICE}
-                    unit="/ month"
-                  />
 
                   <div className="mt-4 flex flex-wrap gap-4">
                     <Link
@@ -116,12 +96,6 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
                     question. Compass is a separate product for direction and action.
                   </p>
                 </div>
-
-                <ProductLaunchPrice
-                  regularPrice={RECOGNITION_REGULAR_PRICE}
-                  launchPrice={RECOGNITION_LAUNCH_PRICE}
-                  unit="/ month"
-                />
 
                 <div className="flex flex-wrap gap-4 pt-2">
                   <Link

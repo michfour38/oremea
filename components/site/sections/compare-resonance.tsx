@@ -1,14 +1,9 @@
 import Link from "next/link";
 import type { CompareMode } from "@/app/compare/page";
-import { ProductLaunchPrice } from "@/components/site/product-launch-price";
-import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
-import { VISIT_PRICES } from "@/src/lib/resonance/visit-offers";
 
 type CompareResonanceProps = {
   mode: CompareMode;
 };
-
-const singleVisitPrice = formatOremeaPrice(VISIT_PRICES[1]);
 
 export function CompareResonance({ mode }: CompareResonanceProps) {
   return (
@@ -54,13 +49,6 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
                     Like finally recognising the difference between attraction,
                     attachment, clarity, and repetition.
                   </p>
-
-                  <ProductLaunchPrice
-                    className="mt-10"
-                    regularPrice={singleVisitPrice}
-                    launchPrice={singleVisitPrice}
-                    unit="/ seven-day visit · 3 and 4-visit packs available"
-                  />
                   <p className="mt-3 text-sm leading-7 text-zinc-400">
                     Buy the visits first; choose each room when you are ready.
                   </p>
@@ -126,12 +114,6 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
                     participant chooses what to enter next.
                   </p>
                 </div>
-
-                <ProductLaunchPrice
-                  regularPrice={singleVisitPrice}
-                  launchPrice={singleVisitPrice}
-                  unit="/ seven-day visit · 3 and 4-visit packs available"
-                />
 
                 <div className="flex flex-wrap gap-4 pt-2">
                   <Link
