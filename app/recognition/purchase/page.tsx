@@ -248,16 +248,6 @@ export default async function RecognitionPurchasePage(props: Props) {
               <li>— You want reflection without advice or a prescribed route.</li>
             </ul>
           </div>
-          <div className="rounded-3xl border border-white/10 bg-black/35 p-6">
-            <h2 className="font-serif text-2xl text-white">
-              What it will not become
-            </h2>
-            <ul className="mt-5 space-y-3 text-sm leading-7 text-zinc-300">
-              <li>— Therapy, coaching or crisis support.</li>
-              <li>— A fixed prompt sequence or personality verdict.</li>
-              <li>— An action plan, streak or accountability loop.</li>
-            </ul>
-          </div>
         </section>
 
         <section className="mt-12">
