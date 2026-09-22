@@ -213,8 +213,14 @@ async function main() {
   const purchasePage = readFileSync("app/(member)/resonance/visits/page.tsx", "utf8");
   assert.match(purchasePage, /data-whop-checkout-setup-future-usage="off_session"/);
   assert.match(purchasePage, /data-whop-checkout-session=\{order.whop_checkout_id\}/);
+  const access = readFileSync("src/lib/resonance/visit-access.ts", "utf8");
+  assert.match(access, /visitsEnabled\(\) \|\| \(await isOremeaAdmin\(userId\)\)/);
+  assert.match(access, /visitCheckoutEnabled\(\) \|\| \(await isOremeaAdmin\(userId\)\)/);
+  const actions = readFileSync("app/(member)/resonance/visits/actions.ts", "utf8");
+  assert.match(actions, /visitCheckoutAvailableFor\(user\.id\)/);
+  assert.match(actions, /visitCreditsAvailableFor\(userId\)/);
   const entryPage = readFileSync("app/(marketing)/resonance/enter/page.tsx", "utf8");
-  assert.match(entryPage, /const checkoutEnabled = visitCheckoutEnabled\(\)/);
+  assert.match(entryPage, /userId \? await visitCheckoutAvailableFor\(userId\) : false/);
   assert.match(entryPage, /checkoutEnabled \? "\/resonance\/visits" : "\/entry"/);
   assert.match(entryPage, /Choose the visits first\. Choose the room next\./);
   assert.doesNotMatch(entryPage, /RESONANCE_LAUNCH_PRICE|RESONANCE_REGULAR_PRICE/);
