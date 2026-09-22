@@ -3,30 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 
-import { ProductLaunchPrice } from "@/components/site/product-launch-price";
 import { SiteShell } from "@/components/site/site-shell";
-import {
-  COMPASS_PRICING,
-  formatCompassPrice,
-} from "@/src/lib/compass/compass-pricing";
-import {
-  RECOGNITION_PRICING,
-  formatRecognitionPrice,
-} from "@/src/lib/recognition/recognition-pricing";
-import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
-import { VISIT_PRICES } from "@/src/lib/resonance/visit-offers";
-
-const COMPASS_PRICE = formatCompassPrice(COMPASS_PRICING.launchPriceCents);
-const COMPASS_STANDARD_PRICE = formatCompassPrice(
-  COMPASS_PRICING.standardPriceCents,
-);
-const RECOGNITION_LAUNCH_PRICE = formatRecognitionPrice(
-  RECOGNITION_PRICING.launchPriceCents,
-);
-const RECOGNITION_REGULAR_PRICE = formatRecognitionPrice(
-  RECOGNITION_PRICING.regularPriceCents,
-);
-const RESONANCE_SINGLE_VISIT_PRICE = formatOremeaPrice(VISIT_PRICES[1]);
 
 const products = [
   {
@@ -160,30 +137,6 @@ export default function Home() {
                     <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-400">
                       {product.short}
                     </p>
-
-                    {product.name === "Recognition" ? (
-                      <ProductLaunchPrice
-                        className="mt-4"
-                        regularPrice={RECOGNITION_REGULAR_PRICE}
-                        launchPrice={RECOGNITION_LAUNCH_PRICE}
-                        unit="/ month"
-                      />
-                    ) : null}
-
-                    {product.name === "Resonance" ? (
-                      <p className="mt-4 text-sm text-zinc-400">
-                        From <span className="text-[#f1dfb4]">{RESONANCE_SINGLE_VISIT_PRICE}</span> for one visit · 3 and 4-visit packs available
-                      </p>
-                    ) : null}
-
-                    {product.name === "Compass" ? (
-                      <ProductLaunchPrice
-                        className="mt-4"
-                        regularPrice={COMPASS_STANDARD_PRICE}
-                        launchPrice={COMPASS_PRICE}
-                        unit="/ month"
-                      />
-                    ) : null}
                   </div>
 
                   <span className="shrink-0 text-sm text-[#c8a96a] transition group-hover:text-[#f1dfb4]">
