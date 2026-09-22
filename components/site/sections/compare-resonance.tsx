@@ -71,7 +71,7 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
                   </p>
 
                   <p className="text-base leading-8 text-zinc-300">
-                    Resonance is a private seven-day room with one teacher and one
+                    Resonance is a private seven-stage room with one teacher and one
                     relational territory. Daily questions and Mirrors stay inside
                     the participant&apos;s own material rather than turning the room
                     into advice, diagnosis, or a theory about the person.
@@ -84,7 +84,7 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
                   </p>
 
                   <ul className="grid gap-3 text-base leading-7 text-zinc-400 md:grid-cols-2">
-                    <li>• one seven-day thematic room per visit</li>
+                    <li>• one seven-stage thematic room per visit</li>
                     <li>• guided daily reflections</li>
                     <li>• Daily Mirrors</li>
                     <li>• two precise mirror questions each day</li>
@@ -101,7 +101,7 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
                   <p className="text-base leading-8 text-zinc-400">
                     Daily Mirrors reflect what is becoming visible across each
                     day&apos;s responses. The Closing Mirror reads across the
-                    full seven-day visit and reflects what persisted, changed,
+                    full seven-stage visit and reflects what persisted, changed,
                     or became newly visible.
                   </p>
                 </div>
