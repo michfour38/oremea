@@ -6,14 +6,11 @@ import {
   RESONANCE_ROOM_MARKETING,
   getOremeaMarketingProduct,
 } from "@/src/lib/oremea/public-product-marketing";
-import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
-import { VISIT_PRICES } from "@/src/lib/resonance/visit-offers";
 
 const canonicalUrl = "https://www.oremea.com/resonance-rooms";
 const title = "Explore Resonance rooms | Oremea";
 const description =
   "Ten private seven-day reflection rooms. Buy Resonance visits first, then choose each room only when you are ready to enter it.";
-const singleVisitPrice = formatOremeaPrice(VISIT_PRICES[1]);
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.oremea.com"),
@@ -95,9 +92,6 @@ export default function ResonanceRoomsPage() {
             >
               Explore Resonance visits
             </Link>
-            <p className="text-sm text-zinc-500">
-              From {singleVisitPrice} for one visit · 3 and 4-visit packs available
-            </p>
           </div>
         </header>
 
