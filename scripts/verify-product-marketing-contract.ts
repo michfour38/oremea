@@ -183,6 +183,17 @@ assert.doesNotMatch(recognitionPurchase, /What it will not become/);
 
 const resonanceRoomsPage = readFileSync("app/resonance-rooms/page.tsx", "utf8");
 assert.doesNotMatch(resonanceRoomsPage, /What it will not do|marketing\.limits/);
+assert.doesNotMatch(resonanceRoomsPage, /seven-day|seven days/i);
+assert.match(
+  resonanceRoomsPage,
+  /Open this room[\s\S]{0,180}Seven guided reflection stages · move at your own pace · no renewal/,
+);
+
+const compareResonance = readFileSync(
+  "components/site/sections/compare-resonance.tsx",
+  "utf8",
+);
+assert.doesNotMatch(compareResonance, /seven-day|seven days/i);
 
 const explorePage = readFileSync("app/explore/page.tsx", "utf8");
 assert.doesNotMatch(explorePage, /ExploreWhatNot/);

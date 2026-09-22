@@ -10,7 +10,7 @@ import {
 const canonicalUrl = "https://www.oremea.com/resonance-rooms";
 const title = "Explore Resonance rooms | Oremea";
 const description =
-  "Ten private seven-day reflection rooms. Buy Resonance visits first, then choose each room only when you are ready to enter it.";
+  "Ten private seven-stage reflection rooms. Buy Resonance visits first, then choose each room only when you are ready to enter it.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.oremea.com"),
@@ -75,7 +75,7 @@ export default function ResonanceRoomsPage() {
             Buy the visits first. Choose the room when you are ready.
           </h1>
           <p className="mt-6 text-base leading-8 text-zinc-300">
-            Resonance has ten private seven-day rooms, each holding a different
+            Resonance has ten private seven-stage rooms, each holding a different
             relational territory. Purchasing visits does not lock those choices
             in advance. An unused visit stays available until you decide which
             room to open.
@@ -129,9 +129,9 @@ export default function ResonanceRoomsPage() {
 
               <div className="mt-auto flex flex-wrap items-end justify-between gap-4 pt-7">
                 <div>
-                  <p className="text-sm text-[#f1dfb4]">Uses 1 Resonance visit</p>
+                  <p className="text-sm text-[#f1dfb4]">Open this room</p>
                   <p className="mt-1 text-xs text-zinc-500">
-                    choose after purchase · seven days · no renewal
+                    Seven guided reflection stages · move at your own pace · no renewal
                   </p>
                 </div>
                 <Link
