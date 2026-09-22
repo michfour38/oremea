@@ -1,18 +1,5 @@
 import Link from "next/link";
 import type { CompareMode } from "@/app/compare/page";
-import { ProductLaunchPrice } from "@/components/site/product-launch-price";
-import {
-  COMPASS_PRICING,
-  formatCompassPrice,
-} from "@/src/lib/compass/compass-pricing";
-
-const COMPASS_LAUNCH_PRICE = formatCompassPrice(
-  COMPASS_PRICING.launchPriceCents,
-);
-const COMPASS_REGULAR_PRICE = formatCompassPrice(
-  COMPASS_PRICING.standardPriceCents,
-);
-
 type CompareCompassProps = {
   mode: CompareMode;
 };
@@ -63,13 +50,6 @@ export function CompareCompass({ mode }: CompareCompassProps) {
                     Like noticing when more discussion is no longer changing what
                     can happen outside the conversation.
                   </p>
-
-                  <ProductLaunchPrice
-                    className="mt-10"
-                    regularPrice={COMPASS_REGULAR_PRICE}
-                    launchPrice={COMPASS_LAUNCH_PRICE}
-                    unit="/ month"
-                  />
 
                   <div className="mt-4 flex flex-wrap gap-4">
                     <Link
@@ -132,12 +112,6 @@ export function CompareCompass({ mode }: CompareCompassProps) {
                     the authority.
                   </p>
                 </div>
-
-                <ProductLaunchPrice
-                  regularPrice={COMPASS_REGULAR_PRICE}
-                  launchPrice={COMPASS_LAUNCH_PRICE}
-                  unit="/ month"
-                />
 
                 <p className="text-sm leading-7 text-zinc-500">
                   Monthly membership. Cancel anytime. Saved Archive remains available
