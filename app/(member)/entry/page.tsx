@@ -16,7 +16,7 @@ import {
 } from "@/src/lib/resonance/resonance-week-run";
 import MemberNav from "../member-nav";
 import { getVisitBalance } from "@/src/lib/resonance/visit-orders";
-import { visitsEnabled, visitCheckoutEnabled } from "@/src/lib/resonance/visit-offers";
+import { visitCheckoutAvailableFor, visitCreditsAvailableFor } from "@/src/lib/resonance/visit-access";
 import { enterVisitRoom } from "../resonance/visits/actions";
 import { VisitSubmitButton } from "../resonance/visits/submit-button";
 import { getResonanceRoomTarget } from "@/src/lib/resonance/room-entry";
@@ -143,8 +143,10 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
   const roomTarget = getResonanceRoomTarget(query.room);
   const { userId } = await auth();
   if (!userId) redirect(`/sign-in?redirect_url=${encodeURIComponent(roomTarget?.entryPath ?? "/entry")}`);
-  const creditFlow = visitsEnabled();
-  const newCheckout = visitCheckoutEnabled();
+  const [creditFlow, newCheckout] = await Promise.all([
+    visitCreditsAvailableFor(userId),
+    visitCheckoutAvailableFor(userId),
+  ]);
 
   const [weeks, activeRun, runs, visitBalance] = await Promise.all([
     prisma.resonance_weeks.findMany({

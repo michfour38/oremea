@@ -4,12 +4,12 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { acceptVisitAddition, declineVisitAddition, redeemVisit, startVisitPurchase } from "@/src/lib/resonance/visit-orders";
-import { visitCheckoutEnabled, visitsEnabled } from "@/src/lib/resonance/visit-offers";
+import { visitCheckoutAvailableFor, visitCreditsAvailableFor } from "@/src/lib/resonance/visit-access";
 
 export async function purchaseVisits(form: FormData) {
   const user = await currentUser();
   if (!user) redirect("/sign-in?redirect_url=%2Fresonance%2Fvisits");
-  if (!visitCheckoutEnabled()) redirect("/resonance/visits?error=unavailable");
+  if (!(await visitCheckoutAvailableFor(user.id))) redirect("/resonance/visits?error=unavailable");
   const email = user.emailAddresses.find((item) => item.id === user.primaryEmailAddressId);
   if (!email || email.verification?.status !== "verified") redirect("/resonance/visits?error=email");
   let orderId: string | null = null;
@@ -25,7 +25,7 @@ export async function purchaseVisits(form: FormData) {
 export async function addVisits(form: FormData) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
-  if (!visitCheckoutEnabled()) redirect("/entry");
+  if (!(await visitCheckoutAvailableFor(userId))) redirect("/entry");
   const parentId = String(form.get("orderId"));
   let orderId: string | null = null;
   try { orderId = await acceptVisitAddition(userId, parentId, Number(form.get("quantity"))); } catch { /* Show a safe error on the original order. */ }
@@ -36,7 +36,7 @@ export async function addVisits(form: FormData) {
 export async function skipAddition(form: FormData) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
-  if (!visitsEnabled()) redirect("/entry");
+  if (!(await visitCreditsAvailableFor(userId))) redirect("/entry");
   try { await declineVisitAddition(userId, String(form.get("orderId"))); } catch { /* Skipping never blocks purchased access. */ }
   redirect("/entry");
 }
@@ -44,7 +44,7 @@ export async function skipAddition(form: FormData) {
 export async function enterVisitRoom(form: FormData) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
-  if (!visitsEnabled()) redirect("/entry");
+  if (!(await visitCreditsAvailableFor(userId))) redirect("/entry");
   let entered = false;
   try {
     await redeemVisit(userId, Number(form.get("weekNumber")), String(form.get("requestId")));

@@ -4,7 +4,7 @@ import { Playfair_Display } from "next/font/google";
 
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteNav } from "@/components/site/site-nav";
-import { visitCheckoutEnabled } from "@/src/lib/resonance/visit-offers";
+import { visitCheckoutAvailableFor } from "@/src/lib/resonance/visit-access";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -14,7 +14,7 @@ const playfair = Playfair_Display({
 
 export default async function ResonanceEnterPage() {
   const { userId } = await auth();
-  const checkoutEnabled = visitCheckoutEnabled();
+  const checkoutEnabled = userId ? await visitCheckoutAvailableFor(userId) : false;
   const destination = checkoutEnabled ? "/resonance/visits" : "/entry";
   const entryHref = userId
     ? destination

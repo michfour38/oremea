@@ -4,7 +4,8 @@ import Link from "next/link";
 import Script from "next/script";
 import { notFound, redirect } from "next/navigation";
 import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
-import { INITIAL_QUANTITIES, VISIT_PRICES, visitCheckoutEnabled, visitsEnabled } from "@/src/lib/resonance/visit-offers";
+import { INITIAL_QUANTITIES, VISIT_PRICES } from "@/src/lib/resonance/visit-offers";
+import { visitCheckoutAvailableFor, visitCreditsAvailableFor } from "@/src/lib/resonance/visit-access";
 import { getVisitOrder } from "@/src/lib/resonance/visit-orders";
 import { whopVisitConfig } from "@/src/lib/whop/visit-payments";
 import { FunnelFrame } from "./funnel-frame";
@@ -18,12 +19,12 @@ export default async function VisitPurchasePage({ searchParams }: {
 }) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in?redirect_url=%2Fresonance%2Fvisits");
-  if (!visitsEnabled()) notFound();
+  if (!(await visitCreditsAvailableFor(userId))) notFound();
   const query = await searchParams;
   const order = query.order ? await getVisitOrder(userId, query.order) : null;
   if (query.order && (!order || order.kind !== "initial")) notFound();
   if (order?.status === "paid") redirect(`/resonance/complete?order=${order.id}`);
-  const checkoutEnabled = visitCheckoutEnabled();
+  const checkoutEnabled = await visitCheckoutAvailableFor(userId);
   const checkoutOrigin =
     order?.whop_checkout_id && order.status === "pending" && checkoutEnabled
       ? (await whopVisitConfig()).origin
