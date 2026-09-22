@@ -3,11 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import {
-  CURRENT_PRICING,
-  formatCurrentPrice,
-} from "@/src/lib/current/current-pricing";
-
 type Invitation = {
   id: string;
   sourceProduct: string;
@@ -84,8 +79,6 @@ export function CurrentPanel() {
   }
 
   const invitations = status?.pendingInvitations ?? [];
-  const currentPrice = formatCurrentPrice(CURRENT_PRICING.standardPriceCents);
-
   return (
     <section className="border-b border-white/5 bg-zinc-950/65">
       <div className="mx-auto max-w-4xl px-5 py-12 md:py-16">
@@ -139,7 +132,7 @@ export function CurrentPanel() {
                   An invitation to The Current
                 </h2>
                 <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-300">
-                  Your participation opened this invitation. The Current is a separate {currentPrice} / month membership. Opening this invitation does not accept it; it remains here until you choose.
+                  Your participation opened this invitation. The Current is a separate membership. Opening this invitation does not accept it; pricing appears only if you choose to continue to payment, and the invitation remains here until you choose.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
                   <button
