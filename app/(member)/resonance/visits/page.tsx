@@ -55,8 +55,6 @@ export default async function VisitPurchasePage({ searchParams }: {
       ) : order.whop_checkout_id && order.status === "pending" && checkoutEnabled ? (
         <section className="mx-auto mt-8 max-w-xl rounded-3xl border border-white/15 bg-black/50 p-6">
           <h2 className="text-2xl">{order.quantity} visits · {formatOremeaPrice(order.amount_cents)}</h2>
-          <p className="mt-4 text-base leading-7 text-zinc-300">Checking out as {order.buyer_email}. Whop securely saves an eligible payment method for an optional separate purchase on the next page. Nothing extra is charged unless an offer is accepted.</p>
-          <p className="mt-3 text-sm text-zinc-400">USD pricing. Review any applicable taxes and fees in checkout.</p>
           <Script src="https://js.whop.com/static/checkout/loader.js" strategy="afterInteractive" />
           <div key={order.id} className="mt-6 min-h-[420px]" data-whop-checkout-plan-id={order.whop_plan_id}
             data-whop-checkout-session={order.whop_checkout_id} data-whop-checkout-theme="dark"
