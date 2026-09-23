@@ -4,6 +4,7 @@ import { SignOutButton } from "@clerk/nextjs"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
+import { FeedbackIcon } from "@/components/site/feedback-icon"
 import {
   resolveMemberNavProduct,
   type MemberNavProduct,
@@ -173,12 +174,7 @@ export default function MemberNav() {
             ) : null}
           </div>
 
-          <a
-            href="https://www.oremea.com/feedback"
-            className="flex h-10 items-center px-3 text-sm font-medium text-zinc-300 transition hover:text-white"
-          >
-            Feedback
-          </a>
+          <FeedbackIcon href="https://www.oremea.com/feedback" />
 
           <div
             className="relative flex h-12 items-center"
