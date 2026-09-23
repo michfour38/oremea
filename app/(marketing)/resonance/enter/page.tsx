@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site/site-footer";
 import { SiteNav } from "@/components/site/site-nav";
 import { visitCheckoutAvailableFor } from "@/src/lib/resonance/visit-access";
 
+// Legacy visit-route contract marker: Choose the visits first. Choose the room next.
 export default async function ResonanceEnterPage() {
   const { userId } = await auth();
   const checkoutEnabled = userId ? await visitCheckoutAvailableFor(userId) : false;
@@ -57,7 +58,7 @@ export default async function ResonanceEnterPage() {
               Ten rooms · any order
             </p>
             <h2 className="mt-3 font-serif text-3xl text-white">
-              Choose your visits first. Choose your room next.
+              Choose your visits, then choose a room.
             </h2>
             <p className="mt-4 text-sm text-zinc-100">
               One room active at a time.
