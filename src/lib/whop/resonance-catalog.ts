@@ -22,7 +22,7 @@ const REQUIRED_WEBHOOK_EVENTS = [
   "refund.updated",
 ] as const;
 
-const accountSchema = z.object({ id: z.string().min(1) }).passthrough();
+const companyIdSchema = z.string().regex(/^biz_[A-Za-z0-9]+$/);
 const productSchema = z.object({
   id: z.string().min(1),
   title: z.string().optional(),
@@ -349,9 +349,19 @@ export async function provisionResonanceWhopCatalog() {
   const apiKey = getWhopApiKey();
   const origin = getOremeaCommerceOrigin();
 
-  const account = await atProvisioningStage("account", async () =>
-    accountSchema.parse(await whopApiRequest("accounts/me", { apiKey })),
-  );
+  // Commerce needs the company identifier, never its financial account/balance.
+  // Preserve the already-provisioned company; WHOP_COMPANY_ID bootstraps only
+  // installations without a stored catalog. Resource endpoints enforce key access.
+  const account = await atProvisioningStage("account", async () => {
+    const stored = await prisma.resonance_whop_catalog.findUnique({
+      where: { catalog_key: RESONANCE_WHOP_CATALOG_KEY },
+    });
+    const configured = process.env.WHOP_COMPANY_ID?.trim();
+    if (stored && configured && stored.company_id !== configured) {
+      throw new ResonanceProvisioningError("account", "conflict");
+    }
+    return { id: companyIdSchema.parse(stored?.company_id ?? configured) };
+  });
   const product = await atProvisioningStage("product", () =>
     ensureProduct(account.id, apiKey),
   );
@@ -391,7 +401,21 @@ export async function getResonanceWhopProvisioningStatus() {
   const catalog = await prisma.resonance_whop_catalog.findUnique({
     where: { catalog_key: RESONANCE_WHOP_CATALOG_KEY },
   });
+  const recentOrders = await prisma.resonance_visit_orders.findMany({
+    orderBy: { created_at: "desc" }, take: 10,
+    select: { id: true, kind: true, quantity: true, remaining_quantity: true,
+      status: true, whop_payment_id: true, whop_checkout_id: true },
+  });
+  const paidOrders = await prisma.resonance_visit_orders.count({ where: { status: "paid" } });
+  const redemptions = await prisma.resonance_visit_redemptions.count();
   return {
+    visitsEnabled: process.env.RESONANCE_VISITS_ENABLED === "true",
+    checkoutEnabled: process.env.RESONANCE_VISITS_CHECKOUT_ENABLED === "true",
+    companyId: catalog?.company_id ?? null,
+    plans: planSpecs().map((spec) => ({ ...spec,
+      id: catalog ? z.record(z.string()).parse(catalog.plans)[spec.key] ?? null : null,
+    })),
+    recentOrders, paidOrders, redemptions,
     apiKeyConfigured: Boolean(process.env.WHOP_API_KEY?.trim()),
     catalogConfigured: Boolean(catalog),
     productId: catalog?.product_id ?? null,

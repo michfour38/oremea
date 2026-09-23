@@ -24,8 +24,11 @@ export default async function VisitPurchasePage({ searchParams }: {
   if (query.order && (!order || order.kind !== "initial")) notFound();
   if (order?.status === "paid") redirect(`/resonance/complete?order=${order.id}`);
   const checkoutEnabled = await visitCheckoutAvailableFor(userId);
+  // A declined initial payment can be retried inside the same provider checkout.
+  // Unknown outcomes stay blocked to avoid submitting a second uncertain charge.
+  const canResumeCheckout = order?.status === "pending" || order?.status === "failed";
   const checkoutOrigin =
-    order?.whop_checkout_id && order.status === "pending" && checkoutEnabled
+    order?.whop_checkout_id && canResumeCheckout && checkoutEnabled
       ? (await whopVisitConfig()).origin
       : null;
 
@@ -52,7 +55,7 @@ export default async function VisitPurchasePage({ searchParams }: {
             </form>
           ))}
         </div>
-      ) : order.whop_checkout_id && order.status === "pending" && checkoutEnabled ? (
+      ) : order.whop_checkout_id && canResumeCheckout && checkoutEnabled ? (
         <section className="mx-auto mt-8 max-w-xl rounded-3xl border border-white/15 bg-black/50 p-6">
           <h2 className="text-2xl">{order.quantity} visits · {formatOremeaPrice(order.amount_cents)}</h2>
           <Script src="https://js.whop.com/static/checkout/loader.js" strategy="afterInteractive" />
