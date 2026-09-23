@@ -65,7 +65,7 @@ export default async function ResonanceEnterPage() {
             </p>
           </div>
 
-          <p className="mx-auto mt-7 max-w-2xl text-sm leading-7 text-zinc-100">
+          <p className="mx-auto mt-7 max-w-2xl text-center text-sm leading-7 text-zinc-100">
             {checkoutEnabled
               ? "The purchase step offers one, three, or four visits. Each unused visit stays available on the account until it is used to open a room. Room choice happens after payment, so the purchase is for Resonance visits rather than for a specific room."
               : "Choose the room that fits what is present now. Each purchase opens one fresh Resonance visit, while earlier completed visits remain preserved in the archive."}
