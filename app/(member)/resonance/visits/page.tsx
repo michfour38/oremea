@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { auth } from "@clerk/nextjs/server";
-import Link from "next/link";
 import Script from "next/script";
 import { notFound, redirect } from "next/navigation";
 import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
@@ -32,11 +31,13 @@ export default async function VisitPurchasePage({ searchParams }: {
 
   return (
     <FunnelFrame>
-      <p className="text-sm uppercase tracking-[0.2em] text-[#c8a96a]">Resonance visits</p>
-      <h1 className="mt-3 text-4xl font-light">Choose the visits. Choose the room next.</h1>
-      <p className="mt-5 max-w-2xl text-base leading-8 text-zinc-300">Each visit opens one seven-day room experience, starting when it is entered. Use different rooms or return to the same room for a fresh round. One visit is active at a time.</p>
-      {!checkoutEnabled ? <p role="status" className="mt-6 text-zinc-300">Package checkout is not open yet. Existing purchases remain available.</p> : null}
-      {query.error ? <p role="alert" className="mt-6 text-amber-100">{query.error === "email" ? "Verify the primary email on this account before purchasing." : "Checkout could not be opened. No payment has been confirmed."}</p> : null}
+      <div className={order ? "mx-auto max-w-xl" : undefined}>
+        <p className="text-sm uppercase tracking-[0.2em] text-[#c8a96a]">Resonance visits</p>
+        <h1 className="mt-3 text-4xl font-light">Choose the visits. Choose the room next.</h1>
+        <p className="mt-5 text-base leading-8 text-zinc-300">Each visit opens one seven-day room experience, starting when it is entered. Use different rooms or return to the same room for a fresh round. One visit is active at a time.</p>
+        {!checkoutEnabled ? <p role="status" className="mt-6 text-zinc-300">Package checkout is not open yet. Existing purchases remain available.</p> : null}
+        {query.error ? <p role="alert" className="mt-6 text-amber-100">{query.error === "email" ? "Verify the primary email on this account before purchasing." : "Checkout could not be opened. No payment has been confirmed."}</p> : null}
+      </div>
 
       {!order ? (
         <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -64,9 +65,8 @@ export default async function VisitPurchasePage({ searchParams }: {
             data-whop-checkout-return-url={`${checkoutOrigin}/resonance/complete?order=${order.id}`} />
         </section>
       ) : (
-        <p role="status" className="mt-8 text-base leading-8 text-zinc-300">This checkout could not be confirmed. No visits have been added for it. Contact support before retrying if Whop has shown a successful payment.</p>
+        <p role="status" className="mx-auto mt-8 max-w-xl text-base leading-8 text-zinc-300">This checkout could not be confirmed. No visits have been added for it. Contact support before retrying if Whop has shown a successful payment.</p>
       )}
-      <p className="mt-8"><Link href="/entry" className="text-base text-zinc-300 underline underline-offset-4">View my rooms and purchased visits</Link></p>
     </FunnelFrame>
   );
 }
