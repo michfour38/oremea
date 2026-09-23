@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SiteShell } from "@/components/site/site-shell";
 import { requireAdminPage } from "@/lib/auth/require-admin";
 import { getResonanceWhopProvisioningStatus } from "@/src/lib/whop/resonance-catalog";
+import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
 
 import { ProvisionForm } from "./provision-form";
 
@@ -85,6 +86,30 @@ export default async function ResonanceCommerceAdminPage({
             Whop product: {status.productId}
           </p>
         ) : null}
+
+        <div className="mt-8 rounded-2xl border border-white/10 p-5 text-sm">
+          <h2 className="text-xl">Private commerce audit</h2>
+          <p className="mt-3">Public visit credits: {status.visitsEnabled ? "ON" : "OFF"} · Public checkout: {status.checkoutEnabled ? "ON" : "OFF"}</p>
+          <p>Company: {status.companyId ?? "Not configured"}</p>
+          <p>Paid orders: {status.paidOrders} · Redeemed visits: {status.redemptions}</p>
+          <div className="mt-5 overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead><tr><th>Offer</th><th>Amount</th><th>Stored Whop plan</th></tr></thead>
+              <tbody>{status.plans.map((plan) => (
+                <tr key={plan.key}><td className="py-2">{plan.label}</td><td>{formatOremeaPrice(plan.amountCents)}</td><td>{plan.id ?? "Missing"}</td></tr>
+              ))}</tbody>
+            </table>
+          </div>
+          <div className="mt-5 overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <caption className="mb-2 text-left">Latest ten orders — identifiers and settlement state only</caption>
+              <thead><tr><th>Order</th><th>Status</th><th>Visits / unused</th><th>Checkout</th><th>Payment</th></tr></thead>
+              <tbody>{status.recentOrders.map((order) => (
+                <tr key={order.id}><td className="py-2">{order.id}</td><td>{order.status}</td><td>{order.quantity} / {order.remaining_quantity}</td><td>{order.whop_checkout_id ?? "—"}</td><td>{order.whop_payment_id ?? "—"}</td></tr>
+              ))}</tbody>
+            </table>
+          </div>
+        </div>
 
         <div className="mt-8 rounded-[2rem] border border-white/10 bg-black/40 p-6 md:p-8">
           <h2 className="text-2xl font-light text-zinc-100">

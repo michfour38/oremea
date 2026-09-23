@@ -43,6 +43,11 @@ export default async function VisitCompletionPage({ searchParams }: {
           {order.parent_id ? " The original purchase remains available, regardless of this additional payment." : ""}
         </p>
         <div className="mt-8 flex flex-wrap gap-6">
+          {order.status === "failed" && order.kind === "initial" && order.whop_checkout_id ? (
+            <Link href={`/resonance/visits?order=${order.id}`} className="text-base text-[#e0c38b] underline">
+              Return to checkout
+            </Link>
+          ) : null}
           {order.status === "pending" || order.status === "unknown" ? (
             <a href={`/resonance/complete?order=${order.id}`} className="text-base text-[#e0c38b] underline">
               Check payment status
