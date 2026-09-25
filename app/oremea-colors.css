@@ -16,11 +16,16 @@
   --oremea-panel-soft: rgb(0 0 0 / 0.50);
   --oremea-border: rgb(255 255 255 / 0.22);
   --oremea-border-strong: rgb(255 255 255 / 0.32);
+  --oremea-accent-panel: rgb(240 207 122 / 0.06);
 
   --oremea-alert: #fde68a;
   --oremea-danger: #fca5a5;
   --oremea-danger-border: rgb(248 113 113 / 0.35);
   --oremea-danger-panel: rgb(69 10 10 / 0.20);
+
+  --resonance-archive-overlay:
+    radial-gradient(circle at top, rgb(34 40 48 / 0.14) 0%, rgb(10 10 10 / 0.34) 40%, rgb(0 0 0 / 0.66) 100%),
+    linear-gradient(to bottom, rgb(0 0 0 / 0.14), rgb(0 0 0 / 0.38), rgb(0 0 0 / 0.58));
 
   /* Existing site brand values retained as tokens. */
   --brand: 36 74 62;
@@ -47,6 +52,7 @@
   --product-panel-soft: var(--oremea-panel-soft);
   --product-border: var(--oremea-border);
   --product-border-strong: var(--oremea-border-strong);
+  --product-accent-panel: var(--oremea-accent-panel);
   --product-alert: var(--oremea-alert);
   --product-danger: var(--oremea-danger);
   --product-danger-border: var(--oremea-danger-border);
@@ -70,12 +76,17 @@
 .res-panel { background-color: var(--product-panel); }
 .res-panel-strong { background-color: var(--product-panel-strong); }
 .res-panel-soft { background-color: var(--product-panel-soft); }
+.res-accent-panel {
+  background-color: var(--product-accent-panel);
+  border-color: rgb(213 181 110 / 0.55);
+}
 .res-border { border-color: var(--product-border); }
 .res-border-strong { border-color: var(--product-border-strong); }
 .res-accent-border { border-color: rgb(213 181 110 / 0.75); }
 .res-danger-border { border-color: var(--product-danger-border); }
 .res-divider { border-color: var(--product-border); }
 .res-photo-overlay { background-color: var(--product-panel-strong); }
+.res-archive-overlay { background: var(--resonance-archive-overlay); }
 .res-error-panel {
   color: var(--product-danger);
   border-color: var(--product-danger-border);
