@@ -1,15 +1,7 @@
 .recognition-theme {
-  --recognition-bg: #080808;
-  --recognition-surface: #0D0D0D;
-  --recognition-gold: #C8A96A;
-  --recognition-zinc: #E4E4E7;
-
   min-height: 100vh;
-  background: var(--recognition-bg);
-  color: var(--recognition-zinc);
   isolation: isolate;
   position: relative;
-  caret-color: var(--recognition-gold);
 }
 
 /*
@@ -20,6 +12,9 @@
   Zinc carries the conversation.
   Importance is communicated through composition, spacing and type — never by
   turning body copy into a palette the participant has to decode.
+
+  Palette values live in app/oremea-colors.css. This file only defines how the
+  Recognition tokens are composed into the product experience.
 */
 
 .recognition-theme::before {
