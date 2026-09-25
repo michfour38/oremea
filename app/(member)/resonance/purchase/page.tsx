@@ -166,7 +166,7 @@ export default async function ResonancePurchasePage(props: Props) {
   const isTester = userId === RESONANCE_TESTER_USER_ID;
 
   return (
-    <main className="resonance-readable relative min-h-screen overflow-x-hidden bg-zinc-950 text-[#f8f5ef]">
+    <main className="resonance-theme res-bg relative min-h-screen overflow-x-hidden">
       <div
         className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-40 md:hidden"
         style={{ backgroundImage: "url(/images/mobile/bg-entry.webp)" }}
@@ -175,60 +175,60 @@ export default async function ResonancePurchasePage(props: Props) {
         className="fixed inset-0 z-0 hidden bg-cover bg-center bg-no-repeat opacity-40 md:block"
         style={{ backgroundImage: "url(/images/desktop/bg-entry.webp)" }}
       />
-      <div className="resonance-photo-overlay fixed inset-0 z-10" />
+      <div className="res-photo-overlay fixed inset-0 z-10" />
 
       <div className="relative z-20 min-h-screen">
         <MemberNav />
 
         <div className="mx-auto max-w-2xl px-6 py-12 md:py-16">
-          <p className="text-xs uppercase tracking-[0.3em] text-[#c8a96a]/70">
+          <p className="res-accent text-xs uppercase tracking-[0.3em]">
             Resonance · {detail?.label ?? "Seven-day room"}
           </p>
 
-          <h1 className="mt-4 text-4xl font-light tracking-tight md:text-5xl">
+          <h1 className="res-text mt-4 text-4xl font-light tracking-tight md:text-5xl">
             {week.title}
           </h1>
 
           {detail ? (
             <div className="mt-5">
-              <p className="text-xl font-light leading-8 text-zinc-100">
+              <p className="res-text text-xl font-light leading-8">
                 {detail.question}
               </p>
-              <p className="mt-3 text-base leading-8 text-zinc-300">
+              <p className="res-text-primary mt-3 text-base leading-8">
                 {detail.description}
               </p>
             </div>
           ) : null}
 
-          <div className="mt-8 rounded-3xl border border-white/10 bg-black/40 p-6 md:p-7">
+          <div className="res-border res-panel mt-8 rounded-3xl border p-6 md:p-7">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
+                <p className="res-text-secondary text-xs uppercase tracking-[0.22em]">
                   {completedRuns.length > 0 ? `Return · Visit ${nextRunNumber}` : "First visit"}
                 </p>
-                <p className="mt-2 text-2xl text-zinc-100">One seven-day visit</p>
+                <p className="res-text-primary mt-2 text-2xl">One seven-day visit</p>
               </div>
 
               <div className="text-right">
-                <p className="text-xs uppercase tracking-[0.18em] text-[#c8a96a]/70">
+                <p className="res-accent text-xs uppercase tracking-[0.18em]">
                   {HAS_RESONANCE_LAUNCH_DISCOUNT
                     ? RESONANCE_LAUNCH_LABEL
                     : "Seven-day room"}
                 </p>
                 <div className="mt-1 flex items-baseline justify-end gap-3">
                   {HAS_RESONANCE_LAUNCH_DISCOUNT ? (
-                    <span className="text-sm text-zinc-500 line-through">
+                    <span className="res-text-disabled text-sm line-through">
                       {RESONANCE_REGULAR_PRICE}
                     </span>
                   ) : null}
-                  <span className="text-3xl text-[#c8a96a]">
+                  <span className="res-accent text-3xl">
                     {RESONANCE_LAUNCH_PRICE}
                   </span>
                 </div>
               </div>
             </div>
 
-            <p className="mt-5 text-sm leading-7 text-zinc-300">
+            <p className="res-text-primary mt-5 text-sm leading-7">
               This purchase opens one fresh seven-day visit to {week.title}. Each day
               moves through private reflections, a Daily Mirror, and two follow-up
               questions. Day 7 also opens a Closing Mirror across the full visit. When
@@ -237,14 +237,14 @@ export default async function ResonancePurchasePage(props: Props) {
             </p>
 
             {completedRuns.length > 0 ? (
-              <p className="mt-4 text-sm leading-7 text-zinc-400">
+              <p className="res-text-secondary mt-4 text-sm leading-7">
                 Your earlier visits remain intact. After this visit is complete, Oremea
                 can compare it with an earlier visit without using the earlier one to
                 shape what you write now.
               </p>
             ) : null}
 
-            <p className="mt-4 text-sm leading-7 text-zinc-400">
+            <p className="res-text-secondary mt-4 text-sm leading-7">
               Use the same email address at Whop that belongs to this Oremea account so
               the successful payment can open the room automatically.
             </p>
@@ -255,7 +255,7 @@ export default async function ResonancePurchasePage(props: Props) {
                   <input type="hidden" name="weekNumber" value={week.week_number} />
                   <button
                     type="submit"
-                    className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10"
+                    className="res-action inline-flex rounded-xl border px-5 py-3 text-sm transition"
                   >
                     Purchase {week.title} · {RESONANCE_LAUNCH_PRICE}
                   </button>
@@ -263,19 +263,19 @@ export default async function ResonancePurchasePage(props: Props) {
               ) : checkoutHref ? (
                 <a
                   href={checkoutHref}
-                  className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#c8a96a] transition hover:bg-[#c8a96a]/10"
+                  className="res-action inline-flex rounded-xl border px-5 py-3 text-sm transition"
                 >
                   Purchase {week.title} · {RESONANCE_LAUNCH_PRICE}
                 </a>
               ) : (
-                <span className="inline-flex rounded-xl border border-white/10 px-5 py-3 text-sm text-zinc-500">
+                <span className="res-border res-text-disabled inline-flex rounded-xl border px-5 py-3 text-sm">
                   Checkout connection pending for this room
                 </span>
               )}
 
               <Link
                 href="/entry"
-                className="inline-flex rounded-xl border border-white/10 px-5 py-3 text-sm text-zinc-300 transition hover:border-white/20 hover:text-white"
+                className="res-secondary-action inline-flex rounded-xl border px-5 py-3 text-sm transition"
               >
                 Return to rooms
               </Link>
