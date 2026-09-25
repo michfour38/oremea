@@ -39,6 +39,29 @@
   --oremea-scrollbar: rgb(161 161 170 / 0.28);
   --oremea-scrollbar-hover: rgb(161 161 170 / 0.42);
 
+  /* Recognition palette */
+  --recognition-bg: #080808;
+  --recognition-surface: #0d0d0d;
+  --recognition-zinc: #e4e4e7;
+  --recognition-gold: #c8a96a;
+  --recognition-rail: #6f5a31;
+  --recognition-user-bubble: #18181b;
+  --recognition-user-border: rgb(255 255 255 / 0.08);
+  --recognition-divider: rgb(255 255 255 / 0.06);
+  --recognition-composer-bg: #11100d;
+  --recognition-composer-border: #4f4229;
+  --recognition-composer-focus: #9f8148;
+  --recognition-button: #b39558;
+  --recognition-button-hover: #c9aa69;
+  --recognition-error-bg: #17110d;
+  --recognition-error-border: #5c4433;
+  --recognition-error-text: #d7b49a;
+  --recognition-disabled-border: #27272a;
+  --recognition-disabled-bg: #18181b;
+  --recognition-disabled-text: #a1a1aa;
+  --recognition-shadow: rgb(0 0 0 / 0.25);
+
+  /* Resonance atmosphere */
   --resonance-archive-overlay:
     radial-gradient(circle at top, rgb(34 40 48 / 0.14) 0%, rgb(10 10 10 / 0.34) 40%, rgb(0 0 0 / 0.66) 100%),
     linear-gradient(to bottom, rgb(0 0 0 / 0.14), rgb(0 0 0 / 0.38), rgb(0 0 0 / 0.58));
@@ -52,6 +75,51 @@
   --brand-mid: 74 124 111;
   --brand-light: 209 231 224;
 }
+
+/* Recognition semantic roles */
+.recognition-theme {
+  color: var(--recognition-zinc);
+  background: var(--recognition-bg);
+  caret-color: var(--recognition-gold);
+}
+
+.rec-text { color: var(--recognition-zinc); }
+.rec-accent { color: var(--recognition-gold); }
+.rec-bg { background-color: var(--recognition-bg); }
+.rec-surface { background-color: var(--recognition-surface); }
+.rec-divider { border-color: var(--recognition-divider); }
+.rec-user-bubble {
+  color: var(--recognition-zinc);
+  background-color: var(--recognition-user-bubble);
+  border-color: var(--recognition-user-border);
+}
+.rec-assistant-message {
+  color: var(--recognition-zinc);
+  border-color: var(--recognition-rail);
+}
+.rec-error-panel {
+  color: var(--recognition-error-text);
+  background-color: var(--recognition-error-bg);
+  border-color: var(--recognition-error-border);
+}
+.rec-saved-panel,
+.rec-composer {
+  background-color: var(--recognition-composer-bg);
+  border-color: var(--recognition-composer-border);
+}
+.rec-composer:focus-within { border-color: var(--recognition-composer-focus); }
+.rec-primary-button {
+  color: var(--oremea-black);
+  background-color: var(--recognition-button);
+  border-color: var(--recognition-button);
+}
+.rec-primary-button:hover { background-color: var(--recognition-button-hover); }
+.rec-primary-button:disabled {
+  color: var(--recognition-disabled-text);
+  background-color: var(--recognition-disabled-bg);
+  border-color: var(--recognition-disabled-border);
+}
+.rec-composer-shadow { box-shadow: 0 -10px 40px var(--recognition-shadow); }
 
 /* Resonance product aliases */
 .resonance-theme {
@@ -77,7 +145,7 @@
   color: var(--product-text);
 }
 
-/* Semantic text roles */
+/* Resonance semantic text roles */
 .res-text { color: var(--product-text); }
 .res-text-primary { color: var(--product-text-primary); }
 .res-text-secondary { color: var(--product-text-secondary); }
@@ -87,7 +155,7 @@
 .res-alert { color: var(--product-alert); }
 .res-danger { color: var(--product-danger); }
 
-/* Semantic surfaces and borders */
+/* Resonance semantic surfaces and borders */
 .res-bg { background-color: var(--product-bg); }
 .res-panel { background-color: var(--product-panel); }
 .res-panel-strong { background-color: var(--product-panel-strong); }
@@ -111,7 +179,7 @@
   background-color: var(--product-danger-panel);
 }
 
-/* Semantic interactive roles */
+/* Resonance semantic interactive roles */
 .res-action {
   color: var(--product-accent);
   border-color: var(--oremea-gold-border-strong);
