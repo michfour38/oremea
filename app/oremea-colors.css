@@ -7,21 +7,37 @@
   --oremea-text-secondary: #e8e2d8;
   --oremea-text-disabled: #cfc6b8;
 
+  --oremea-zinc-400: rgb(212 212 216);
+  --oremea-zinc-500: rgb(190 190 199);
+  --oremea-zinc-600: rgb(161 161 170);
+
   --oremea-gold: #f0cf7a;
   --oremea-gold-hover: #ffe2a0;
   --oremea-gold-border: #d5b56e;
+  --oremea-gold-border-soft: rgb(213 181 110 / 0.55);
+  --oremea-gold-border-strong: rgb(213 181 110 / 0.75);
+  --oremea-gold-10: rgb(240 207 122 / 0.10);
+  --oremea-gold-15: rgb(240 207 122 / 0.15);
+  --oremea-gold-20: rgb(240 207 122 / 0.20);
+  --oremea-gold-ring: rgb(240 207 122 / 0.35);
 
   --oremea-panel: rgb(0 0 0 / 0.60);
   --oremea-panel-strong: rgb(0 0 0 / 0.75);
   --oremea-panel-soft: rgb(0 0 0 / 0.50);
   --oremea-border: rgb(255 255 255 / 0.22);
   --oremea-border-strong: rgb(255 255 255 / 0.32);
+  --oremea-white-5: rgb(255 255 255 / 0.05);
   --oremea-accent-panel: rgb(240 207 122 / 0.06);
 
   --oremea-alert: #fde68a;
   --oremea-danger: #fca5a5;
   --oremea-danger-border: rgb(248 113 113 / 0.35);
   --oremea-danger-panel: rgb(69 10 10 / 0.20);
+  --oremea-validation: #dc2626;
+  --oremea-validation-ring: rgb(220 38 38 / 0.18);
+
+  --oremea-scrollbar: rgb(161 161 170 / 0.28);
+  --oremea-scrollbar-hover: rgb(161 161 170 / 0.42);
 
   --resonance-archive-overlay:
     radial-gradient(circle at top, rgb(34 40 48 / 0.14) 0%, rgb(10 10 10 / 0.34) 40%, rgb(0 0 0 / 0.66) 100%),
@@ -78,11 +94,11 @@
 .res-panel-soft { background-color: var(--product-panel-soft); }
 .res-accent-panel {
   background-color: var(--product-accent-panel);
-  border-color: rgb(213 181 110 / 0.55);
+  border-color: var(--oremea-gold-border-soft);
 }
 .res-border { border-color: var(--product-border); }
 .res-border-strong { border-color: var(--product-border-strong); }
-.res-accent-border { border-color: rgb(213 181 110 / 0.75); }
+.res-accent-border { border-color: var(--oremea-gold-border-strong); }
 .res-danger-border { border-color: var(--product-danger-border); }
 .res-divider { border-color: var(--product-border); }
 .res-photo-overlay { background-color: var(--product-panel-strong); }
@@ -98,23 +114,23 @@
 /* Semantic interactive roles */
 .res-action {
   color: var(--product-accent);
-  border-color: rgb(213 181 110 / 0.75);
+  border-color: var(--oremea-gold-border-strong);
 }
 
 .res-action:hover {
   color: var(--product-accent-hover);
-  background-color: rgb(240 207 122 / 0.10);
+  background-color: var(--oremea-gold-10);
 }
 
 .res-action-soft {
   color: var(--product-accent);
-  border-color: rgb(213 181 110 / 0.75);
-  background-color: rgb(240 207 122 / 0.15);
+  border-color: var(--oremea-gold-border-strong);
+  background-color: var(--oremea-gold-15);
 }
 
 .res-action-soft:hover {
   color: var(--product-accent-hover);
-  background-color: rgb(240 207 122 / 0.20);
+  background-color: var(--oremea-gold-20);
 }
 
 .res-secondary-action {
@@ -125,7 +141,7 @@
 .res-secondary-action:hover {
   color: var(--product-text);
   border-color: var(--product-border-strong);
-  background-color: rgb(255 255 255 / 0.05);
+  background-color: var(--oremea-white-5);
 }
 
 .res-field {
@@ -136,8 +152,8 @@
 }
 
 .res-field:focus {
-  border-color: rgb(213 181 110 / 0.75);
-  box-shadow: 0 0 0 1px rgb(240 207 122 / 0.35);
+  border-color: var(--oremea-gold-border-strong);
+  box-shadow: 0 0 0 1px var(--oremea-gold-ring);
   outline: none;
 }
 
