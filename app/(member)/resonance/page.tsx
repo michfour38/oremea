@@ -133,8 +133,8 @@ export default async function ResonancePage() {
   return (
     <main
       data-resonance-root="true"
-      className="resonance-readable relative min-h-screen overflow-x-hidden text-[#f8f5ef]"
-      style={{ caretColor: "#C8A96A" }}
+      className="resonance-theme relative min-h-screen overflow-x-hidden"
+      style={{ caretColor: "var(--product-accent)" }}
     >
       <ResonanceInputFocus />
 
@@ -148,7 +148,7 @@ export default async function ResonancePage() {
         style={{ backgroundImage: `url(${backgrounds.desktop})` }}
       />
 
-      <div className="resonance-photo-overlay fixed inset-0 z-10" />
+      <div className="res-photo-overlay fixed inset-0 z-10" />
 
       <div className="relative z-20 min-h-screen">
         <MemberNav />
@@ -158,16 +158,16 @@ export default async function ResonancePage() {
             <header className="space-y-3">
               {content ? (
                 <>
-                  <p className="text-xs uppercase tracking-[0.22em] text-[#C8A96A]">
+                  <p className="res-accent text-xs uppercase tracking-[0.22em]">
                     Resonance · Day {content.dayNumber}
                   </p>
-                  <h1 className="text-4xl text-white">{content.weekTitle}</h1>
-                  <p className="text-zinc-400">{content.weekTheme}</p>
+                  <h1 className="res-text text-4xl">{content.weekTitle}</h1>
+                  <p className="res-text-secondary">{content.weekTheme}</p>
                 </>
               ) : (
                 <div className="space-y-3">
-                  <h1 className="text-4xl text-white">Resonance</h1>
-                  <p className="text-zinc-400">
+                  <h1 className="res-text text-4xl">Resonance</h1>
+                  <p className="res-text-secondary">
                     {contentLoadFailed
                       ? "This day's reflections could not be loaded yet."
                       : "This day's reflections are not available yet."}
