@@ -13,7 +13,7 @@
     @apply text-stone-800;
     margin: 0;
     padding: 0;
-    background: black;
+    background: var(--oremea-black);
   }
 
   *:focus-visible {
@@ -30,15 +30,15 @@
  */
 @layer utilities {
   .text-zinc-400 {
-    color: rgb(212 212 216);
+    color: var(--oremea-zinc-400);
   }
 
   .text-zinc-500 {
-    color: rgb(190 190 199);
+    color: var(--oremea-zinc-500);
   }
 
   .text-zinc-600 {
-    color: rgb(161 161 170);
+    color: var(--oremea-zinc-600);
   }
 }
 
@@ -56,7 +56,7 @@ body {
  */
 [data-oremea-error-marker="true"] {
   margin-left: 0.25rem;
-  color: #dc2626;
+  color: var(--oremea-validation);
   font-weight: 800;
   line-height: 1;
 }
@@ -64,8 +64,8 @@ body {
 input[data-oremea-invalid="true"],
 textarea[data-oremea-invalid="true"],
 select[data-oremea-invalid="true"] {
-  border-color: #dc2626 !important;
-  box-shadow: 0 0 0 2px rgb(220 38 38 / 0.18) !important;
+  border-color: var(--oremea-validation) !important;
+  box-shadow: 0 0 0 2px var(--oremea-validation-ring) !important;
 }
 
 [data-oremea-invalid-heading="true"] {
@@ -85,18 +85,18 @@ body::-webkit-scrollbar-track {
 
 html::-webkit-scrollbar-thumb,
 body::-webkit-scrollbar-thumb {
-  background: rgba(161, 161, 170, 0.28);
+  background: var(--oremea-scrollbar);
   border-radius: 9999px;
 }
 
 html::-webkit-scrollbar-thumb:hover,
 body::-webkit-scrollbar-thumb:hover {
-  background: rgba(161, 161, 170, 0.42);
+  background: var(--oremea-scrollbar-hover);
 }
 
 /* Firefox */
 html,
 body {
   scrollbar-width: thin;
-  scrollbar-color: rgba(161, 161, 170, 0.28) transparent;
+  scrollbar-color: var(--oremea-scrollbar) transparent;
 }
