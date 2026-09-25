@@ -64,7 +64,30 @@
 .res-border { border-color: var(--product-border); }
 .res-border-strong { border-color: var(--product-border-strong); }
 .res-accent-border { border-color: rgb(213 181 110 / 0.75); }
+.res-divider { border-color: var(--product-border); }
 .res-photo-overlay { background-color: var(--product-panel-strong); }
+
+/* Semantic interactive roles */
+.res-action {
+  color: var(--product-accent);
+  border-color: rgb(213 181 110 / 0.75);
+}
+
+.res-action:hover {
+  color: var(--product-accent-hover);
+  background-color: rgb(240 207 122 / 0.10);
+}
+
+.res-secondary-action {
+  color: var(--product-text-primary);
+  border-color: var(--product-border);
+}
+
+.res-secondary-action:hover {
+  color: var(--product-text);
+  border-color: var(--product-border-strong);
+  background-color: rgb(255 255 255 / 0.05);
+}
 
 /* Form/control defaults inside Resonance */
 .resonance-theme textarea,
