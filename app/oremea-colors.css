@@ -1,0 +1,170 @@
+:root {
+  /* Core Oremea palette */
+  --oremea-bg: #090909;
+  --oremea-black: #000000;
+  --oremea-text: #f8f5ef;
+  --oremea-text-primary: #f3efe7;
+  --oremea-text-secondary: #e8e2d8;
+  --oremea-text-disabled: #cfc6b8;
+
+  --oremea-zinc-400: rgb(212 212 216);
+  --oremea-zinc-500: rgb(190 190 199);
+  --oremea-zinc-600: rgb(161 161 170);
+
+  --oremea-gold: #f0cf7a;
+  --oremea-gold-hover: #ffe2a0;
+  --oremea-gold-border: #d5b56e;
+  --oremea-gold-border-soft: rgb(213 181 110 / 0.55);
+  --oremea-gold-border-strong: rgb(213 181 110 / 0.75);
+  --oremea-gold-10: rgb(240 207 122 / 0.10);
+  --oremea-gold-15: rgb(240 207 122 / 0.15);
+  --oremea-gold-20: rgb(240 207 122 / 0.20);
+  --oremea-gold-ring: rgb(240 207 122 / 0.35);
+
+  --oremea-panel: rgb(0 0 0 / 0.60);
+  --oremea-panel-strong: rgb(0 0 0 / 0.75);
+  --oremea-panel-soft: rgb(0 0 0 / 0.50);
+  --oremea-border: rgb(255 255 255 / 0.22);
+  --oremea-border-strong: rgb(255 255 255 / 0.32);
+  --oremea-white-5: rgb(255 255 255 / 0.05);
+  --oremea-accent-panel: rgb(240 207 122 / 0.06);
+
+  --oremea-alert: #fde68a;
+  --oremea-danger: #fca5a5;
+  --oremea-danger-border: rgb(248 113 113 / 0.35);
+  --oremea-danger-panel: rgb(69 10 10 / 0.20);
+  --oremea-validation: #dc2626;
+  --oremea-validation-ring: rgb(220 38 38 / 0.18);
+
+  --oremea-scrollbar: rgb(161 161 170 / 0.28);
+  --oremea-scrollbar-hover: rgb(161 161 170 / 0.42);
+
+  --resonance-archive-overlay:
+    radial-gradient(circle at top, rgb(34 40 48 / 0.14) 0%, rgb(10 10 10 / 0.34) 40%, rgb(0 0 0 / 0.66) 100%),
+    linear-gradient(to bottom, rgb(0 0 0 / 0.14), rgb(0 0 0 / 0.38), rgb(0 0 0 / 0.58));
+  --resonance-marketing-dim: rgb(0 0 0 / 0.15);
+  --resonance-marketing-overlay:
+    radial-gradient(circle at top, rgb(240 207 122 / 0.12), transparent 45%),
+    linear-gradient(to bottom, rgb(0 0 0 / 0.10), rgb(0 0 0 / 0.50));
+
+  /* Existing site brand values retained as tokens. */
+  --brand: 36 74 62;
+  --brand-mid: 74 124 111;
+  --brand-light: 209 231 224;
+}
+
+/* Resonance product aliases */
+.resonance-theme {
+  --product-bg: var(--oremea-bg);
+  --product-text: var(--oremea-text);
+  --product-text-primary: var(--oremea-text-primary);
+  --product-text-secondary: var(--oremea-text-secondary);
+  --product-text-disabled: var(--oremea-text-disabled);
+  --product-accent: var(--oremea-gold);
+  --product-accent-hover: var(--oremea-gold-hover);
+  --product-accent-border: var(--oremea-gold-border);
+  --product-panel: var(--oremea-panel);
+  --product-panel-strong: var(--oremea-panel-strong);
+  --product-panel-soft: var(--oremea-panel-soft);
+  --product-border: var(--oremea-border);
+  --product-border-strong: var(--oremea-border-strong);
+  --product-accent-panel: var(--oremea-accent-panel);
+  --product-alert: var(--oremea-alert);
+  --product-danger: var(--oremea-danger);
+  --product-danger-border: var(--oremea-danger-border);
+  --product-danger-panel: var(--oremea-danger-panel);
+
+  color: var(--product-text);
+}
+
+/* Semantic text roles */
+.res-text { color: var(--product-text); }
+.res-text-primary { color: var(--product-text-primary); }
+.res-text-secondary { color: var(--product-text-secondary); }
+.res-text-disabled { color: var(--product-text-disabled); }
+.res-accent { color: var(--product-accent); }
+.res-accent-hover:hover { color: var(--product-accent-hover); }
+.res-alert { color: var(--product-alert); }
+.res-danger { color: var(--product-danger); }
+
+/* Semantic surfaces and borders */
+.res-bg { background-color: var(--product-bg); }
+.res-panel { background-color: var(--product-panel); }
+.res-panel-strong { background-color: var(--product-panel-strong); }
+.res-panel-soft { background-color: var(--product-panel-soft); }
+.res-accent-panel {
+  background-color: var(--product-accent-panel);
+  border-color: var(--oremea-gold-border-soft);
+}
+.res-border { border-color: var(--product-border); }
+.res-border-strong { border-color: var(--product-border-strong); }
+.res-accent-border { border-color: var(--oremea-gold-border-strong); }
+.res-danger-border { border-color: var(--product-danger-border); }
+.res-divider { border-color: var(--product-border); }
+.res-photo-overlay { background-color: var(--product-panel-strong); }
+.res-archive-overlay { background: var(--resonance-archive-overlay); }
+.res-marketing-dim { background-color: var(--resonance-marketing-dim); }
+.res-marketing-overlay { background: var(--resonance-marketing-overlay); }
+.res-error-panel {
+  color: var(--product-danger);
+  border-color: var(--product-danger-border);
+  background-color: var(--product-danger-panel);
+}
+
+/* Semantic interactive roles */
+.res-action {
+  color: var(--product-accent);
+  border-color: var(--oremea-gold-border-strong);
+}
+
+.res-action:hover {
+  color: var(--product-accent-hover);
+  background-color: var(--oremea-gold-10);
+}
+
+.res-action-soft {
+  color: var(--product-accent);
+  border-color: var(--oremea-gold-border-strong);
+  background-color: var(--oremea-gold-15);
+}
+
+.res-action-soft:hover {
+  color: var(--product-accent-hover);
+  background-color: var(--oremea-gold-20);
+}
+
+.res-secondary-action {
+  color: var(--product-text-primary);
+  border-color: var(--product-border);
+}
+
+.res-secondary-action:hover {
+  color: var(--product-text);
+  border-color: var(--product-border-strong);
+  background-color: var(--oremea-white-5);
+}
+
+.res-field {
+  color: var(--product-text);
+  background-color: var(--product-panel-strong);
+  border-color: var(--product-border);
+  caret-color: var(--product-accent);
+}
+
+.res-field:focus {
+  border-color: var(--oremea-gold-border-strong);
+  box-shadow: 0 0 0 1px var(--oremea-gold-ring);
+  outline: none;
+}
+
+.resonance-theme textarea,
+.resonance-theme input,
+.resonance-theme select {
+  color: var(--product-text);
+}
+
+.resonance-theme textarea::placeholder,
+.resonance-theme input::placeholder {
+  color: var(--product-text-disabled);
+  opacity: 1;
+}

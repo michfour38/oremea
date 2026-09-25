@@ -98,8 +98,8 @@ export default function MirrorCard({
 
   if (!prompt.isUnlocked) {
     return (
-      <div className="rounded-3xl border border-zinc-800 bg-black/45 px-6 py-6 opacity-65 backdrop-blur-[2px]">
-        <p className="select-none text-sm leading-7 text-zinc-500 blur-[2px]">
+      <div className="res-border res-panel-soft rounded-3xl border px-6 py-6 opacity-65 backdrop-blur-[2px]">
+        <p className="res-text-disabled select-none text-sm leading-7 blur-[2px]">
           {prompt.content}
         </p>
       </div>
@@ -108,19 +108,19 @@ export default function MirrorCard({
 
   if (prompt.isCompleted && prompt.response) {
     return (
-      <div className="space-y-5 rounded-3xl border border-[#C8A96A]/30 bg-black/50 px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.22)] backdrop-blur-[3px]">
+      <div className="res-accent-border res-panel space-y-5 rounded-3xl border px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.22)] backdrop-blur-[3px]">
         <div className="space-y-1">
-          <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#C8A96A]">
+          <p className="res-accent text-xs font-medium uppercase tracking-[0.25em]">
             Deeper reflection
           </p>
         </div>
 
-        <p className="whitespace-pre-wrap text-base leading-8 text-zinc-200">
+        <p className="res-text-primary whitespace-pre-wrap text-base leading-8">
           {prompt.content}
         </p>
 
-        <div className="rounded-2xl border border-zinc-800 bg-black/55 px-5 py-4">
-          <p className="whitespace-pre-wrap text-base leading-8 text-zinc-300">
+        <div className="res-border res-panel rounded-2xl border px-5 py-4">
+          <p className="res-text-primary whitespace-pre-wrap text-base leading-8">
             {prompt.response}
           </p>
         </div>
@@ -129,14 +129,14 @@ export default function MirrorCard({
   }
 
   return (
-    <div className="space-y-5 rounded-3xl border border-[#C8A96A]/30 bg-black/50 px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.22)] backdrop-blur-[3px]">
+    <div className="res-accent-border res-panel space-y-5 rounded-3xl border px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.22)] backdrop-blur-[3px]">
       <div className="space-y-1">
-        <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#C8A96A]">
+        <p className="res-accent text-xs font-medium uppercase tracking-[0.25em]">
           Deeper reflection
         </p>
       </div>
 
-      <p className="whitespace-pre-wrap text-base leading-8 text-zinc-200">
+      <p className="res-text-primary whitespace-pre-wrap text-base leading-8">
         {prompt.content}
       </p>
 
@@ -154,15 +154,15 @@ export default function MirrorCard({
           }}
           placeholder={copy.placeholder}
           rows={6}
-          className="w-full resize-none rounded-2xl border border-zinc-700 bg-black/70 px-4 py-3 text-sm leading-7 text-zinc-100 caret-[#C8A96A] placeholder:text-zinc-500 focus:border-[#C8A96A]/65 focus:outline-none focus:ring-1 focus:ring-[#C8A96A]/35"
+          className="res-field w-full resize-none rounded-2xl border px-4 py-3 text-sm leading-7"
         />
 
         {submitError ? (
           <div
             aria-live="polite"
-            className="rounded-2xl border border-red-400/25 bg-red-950/20 px-4 py-3"
+            className="res-error-panel rounded-2xl border px-4 py-3"
           >
-            <p className="text-sm leading-6 text-red-300">{submitError}</p>
+            <p className="text-sm leading-6">{submitError}</p>
           </div>
         ) : null}
 
@@ -170,7 +170,7 @@ export default function MirrorCard({
           <button
             type="submit"
             disabled={!text.trim() || isSubmitting}
-            className="inline-flex min-w-[130px] items-center justify-center rounded-xl border border-[#C8A96A]/55 bg-[#C8A96A]/15 px-4 py-2 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/20 disabled:cursor-not-allowed disabled:opacity-40"
+            className="res-action-soft inline-flex min-w-[130px] items-center justify-center rounded-xl border px-4 py-2 text-sm transition disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isSubmitting ? <LoadingDots /> : saved ? "Saved" : "Save reflection"}
           </button>

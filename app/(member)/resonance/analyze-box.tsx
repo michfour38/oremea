@@ -24,7 +24,7 @@ export default function AnalyzeBox({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="text-xs text-zinc-600 transition hover:text-zinc-400"
+          className="res-text-disabled res-accent-hover text-xs transition"
         >
           Analysis retired
         </button>

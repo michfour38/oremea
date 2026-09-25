@@ -15,7 +15,7 @@ export default async function ResonanceEnterPage() {
     : `/sign-up?redirect_url=${encodeURIComponent(destination)}`;
 
   return (
-    <main id="top" className="resonance-readable relative min-h-screen overflow-x-hidden text-[#f8f5ef]">
+    <main id="top" className="resonance-theme relative min-h-screen overflow-x-hidden">
       <SiteNav />
 
       <div className="fixed inset-0 z-0">
@@ -27,7 +27,7 @@ export default async function ResonanceEnterPage() {
           className="absolute inset-0 hidden bg-cover bg-center bg-no-repeat md:block"
           style={{ backgroundImage: "url(/images/desktop/bg-entry.webp)" }}
         />
-        <div className="resonance-photo-overlay absolute inset-0" />
+        <div className="res-photo-overlay absolute inset-0" />
       </div>
 
       <div className="relative z-10 mx-auto max-w-5xl px-6 py-12 md:py-16">
@@ -38,59 +38,59 @@ export default async function ResonanceEnterPage() {
             className="mx-auto h-16 w-auto md:h-24"
           />
 
-          <p className="mt-8 text-sm uppercase tracking-[0.32em] text-[#e7c98b] md:text-base">
+          <p className="res-accent mt-8 text-sm uppercase tracking-[0.32em] md:text-base">
             Resonance by Oremea
           </p>
 
-          <h1 className="mt-4 font-serif text-4xl font-semibold leading-[0.98] tracking-tight md:text-6xl">
+          <h1 className="res-text mt-4 font-serif text-4xl font-semibold leading-[0.98] tracking-tight md:text-6xl">
             Stay with what becomes visible.
           </h1>
 
-          <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-zinc-100 md:text-lg">
+          <p className="res-text-primary mx-auto mt-6 max-w-2xl text-base leading-8 md:text-lg">
             Resonance is a private seven-stage reflection experience. Ten thematic
             rooms are available, and each visit opens one room to move through at your own pace.
           </p>
         </header>
 
-        <section className="mx-auto mt-12 max-w-3xl rounded-[2rem] border border-white/15 bg-black/45 p-7 backdrop-blur-[2px] md:p-9">
+        <section className="res-border res-panel mx-auto mt-12 max-w-3xl rounded-[2rem] border p-7 backdrop-blur-[2px] md:p-9">
           <div className="text-center">
-            <p className="text-xs uppercase tracking-[0.28em] text-[#e7c98b]">
+            <p className="res-accent text-xs uppercase tracking-[0.28em]">
               Ten rooms · any order
             </p>
-            <h2 className="mt-3 font-serif text-3xl text-white">
+            <h2 className="res-text mt-3 font-serif text-3xl">
               Choose your visits, then choose a room.
             </h2>
-            <p className="mt-4 text-sm text-zinc-100">
+            <p className="res-text-primary mt-4 text-sm">
               One room active at a time.
             </p>
           </div>
 
-          <p className="mx-auto mt-7 max-w-2xl text-center text-sm leading-7 text-zinc-100">
+          <p className="res-text-primary mx-auto mt-7 max-w-2xl text-center text-sm leading-7">
             {checkoutEnabled
               ? "The purchase step offers one, three, or four visits. Each unused visit stays available on the account until it is used to open a room. Room choice happens after payment, so the purchase is for Resonance visits rather than for a specific room."
               : "Choose the room that fits what is present now. Each purchase opens one fresh Resonance visit, while earlier completed visits remain preserved in the archive."}
           </p>
 
-          <div className="mt-8 border-t border-white/15 pt-8">
+          <div className="res-divider mt-8 border-t pt-8">
             <div className="mx-auto max-w-2xl text-center">
-              <p className="text-xs uppercase tracking-[0.24em] text-[#e7c98b]">
+              <p className="res-accent text-xs uppercase tracking-[0.24em]">
                 How a room unfolds
               </p>
-              <p className="mt-4 text-sm leading-7 text-zinc-100">
+              <p className="res-text-primary mt-4 text-sm leading-7">
                 Each room moves through seven guided reflection stages at your own pace.
               </p>
-              <p className="mt-4 text-sm leading-7 text-zinc-100">
+              <p className="res-text-primary mt-4 text-sm leading-7">
                 Across the first six stages, the Mirror reflects what is becoming visible
                 and offers two questions to take the reflection deeper.
               </p>
-              <p className="mt-4 text-sm leading-7 text-zinc-100">
+              <p className="res-text-primary mt-4 text-sm leading-7">
                 The final stage brings the room together in a Closing Mirror, reflecting
                 what persisted, shifted, sharpened, or became newly visible.
               </p>
             </div>
           </div>
 
-          <p className="mx-auto mt-7 max-w-2xl text-center text-sm leading-7 text-zinc-200">
+          <p className="res-text-secondary mx-auto mt-7 max-w-2xl text-center text-sm leading-7">
             Completed rooms remain in the Archive. A later visit can open a different
             room or return to one you have used before.
           </p>
@@ -98,7 +98,7 @@ export default async function ResonanceEnterPage() {
           <div className="mt-8 flex justify-center">
             <Link
               href={entryHref}
-              className="inline-flex rounded-xl border border-[#e7c98b]/70 px-6 py-3 text-sm text-[#e7c98b] transition hover:bg-[#e7c98b]/10"
+              className="res-action inline-flex rounded-xl border px-6 py-3 text-sm transition"
             >
               {checkoutEnabled
                 ? userId
@@ -112,11 +112,11 @@ export default async function ResonanceEnterPage() {
         </section>
 
         <section className="mx-auto mt-8 max-w-3xl space-y-4">
-          <details className="rounded-2xl border border-white/15 bg-black/35 p-5">
-            <summary className="cursor-pointer text-sm text-zinc-100">
+          <details className="res-border res-panel rounded-2xl border p-5">
+            <summary className="res-text-primary cursor-pointer text-sm">
               Returning to a room
             </summary>
-            <p className="mt-4 text-sm leading-7 text-zinc-200">
+            <p className="res-text-secondary mt-4 text-sm leading-7">
               Each return creates a separate visit. Earlier reflections, Mirrors, the two
               questions from each stage, and Closing Mirrors remain intact. Once the newer
               visit closes, the two visits can be viewed side by side so differences in the
@@ -125,11 +125,11 @@ export default async function ResonanceEnterPage() {
             </p>
           </details>
 
-          <details className="rounded-2xl border border-white/15 bg-black/35 p-5">
-            <summary className="cursor-pointer text-sm text-zinc-100">
+          <details className="res-border res-panel rounded-2xl border p-5">
+            <summary className="res-text-primary cursor-pointer text-sm">
               The role of Mirror
             </summary>
-            <p className="mt-4 text-sm leading-7 text-zinc-200">
+            <p className="res-text-secondary mt-4 text-sm leading-7">
               The Mirror reads each stage&apos;s participant-written reflections as one body
               of evidence, reflects what becomes visible across them, and offers two
               questions arising from that reflection. The Closing Mirror arrives after the

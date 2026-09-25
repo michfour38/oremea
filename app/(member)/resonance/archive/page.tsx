@@ -101,11 +101,6 @@ type SearchHit = {
 const archiveBackgroundDesktop = "/images/desktop/bg-archive.webp";
 const archiveBackgroundMobile = "/images/mobile/bg-archive.webp";
 
-const archiveOverlayStyle = {
-  background:
-    "radial-gradient(circle at top, rgba(34,40,48,0.14) 0%, rgba(10,10,10,0.34) 40%, rgba(0,0,0,0.66) 100%), linear-gradient(to bottom, rgba(0,0,0,0.14), rgba(0,0,0,0.38), rgba(0,0,0,0.58))",
-};
-
 function cleanMirrorOutput(text: string) {
   return text
     .replace(/\*\*The mirror shows:\*\*/gi, "")
@@ -134,38 +129,38 @@ function runSortTime(run: ResonanceWeekRun) {
 
 function DayArchiveCard({ day }: { day: DayGroup }) {
   return (
-    <details className="rounded-2xl border border-zinc-800/80 bg-black/35 px-5 py-5">
+    <details className="res-border res-panel-soft rounded-2xl border px-5 py-5">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
         <div>
-          <p className="text-base text-zinc-100">Day {day.dayNumber}</p>
-          <p className="mt-1 text-xs text-zinc-500">
+          <p className="res-text-primary text-base">Day {day.dayNumber}</p>
+          <p className="res-text-secondary mt-1 text-xs">
             {day.reflections.length}{" "}
             {day.reflections.length === 1 ? "reflection" : "reflections"}
             {day.guidance ? " · 2Q preserved" : ""}
           </p>
         </div>
-        <span className="text-xs text-zinc-500">Expand</span>
+        <span className="res-text-secondary text-xs">Expand</span>
       </summary>
 
-      <div className="mt-5 space-y-6 border-t border-zinc-800/70 pt-5">
+      <div className="res-divider mt-5 space-y-6 border-t pt-5">
         {day.reflections.length > 0 ? (
           <section className="space-y-4">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">
+            <p className="res-text-secondary text-[11px] uppercase tracking-[0.18em]">
               Reflections
             </p>
 
             {day.reflections.map((reflection) => (
               <div
                 key={reflection.id}
-                className="rounded-2xl border border-zinc-800/70 bg-black/30 px-4 py-4"
+                className="res-border res-panel-soft rounded-2xl border px-4 py-4"
               >
-                <p className="text-[11px] text-zinc-500">
+                <p className="res-text-secondary text-[11px]">
                   {formatArchiveDate(reflection.createdAt)}
                 </p>
-                <p className="mt-3 text-sm leading-7 text-zinc-400">
+                <p className="res-text-secondary mt-3 text-sm leading-7">
                   {reflection.question}
                 </p>
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-200">
+                <p className="res-text-primary mt-3 whitespace-pre-wrap text-sm leading-7">
                   {reflection.response}
                 </p>
               </div>
@@ -174,15 +169,15 @@ function DayArchiveCard({ day }: { day: DayGroup }) {
         ) : null}
 
         {day.guidance ? (
-          <section className="rounded-2xl border border-[#c8a96a]/35 bg-[#c8a96a]/[0.06] px-5 py-5">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-[#c8a96a]">
+          <section className="res-accent-panel rounded-2xl border px-5 py-5">
+            <p className="res-accent text-[11px] uppercase tracking-[0.2em]">
               2Q
             </p>
-            <div className="mt-4 space-y-5 text-sm leading-7 text-[#c8a96a]/90">
+            <div className="res-accent mt-4 space-y-5 text-sm leading-7">
               <div>
                 <p>{day.guidance.questionOne}</p>
                 {day.guidance.answerOne ? (
-                  <p className="mt-2 whitespace-pre-wrap text-zinc-300">
+                  <p className="res-text-primary mt-2 whitespace-pre-wrap">
                     {day.guidance.answerOne}
                   </p>
                 ) : null}
@@ -190,7 +185,7 @@ function DayArchiveCard({ day }: { day: DayGroup }) {
               <div>
                 <p>{day.guidance.questionTwo}</p>
                 {day.guidance.answerTwo ? (
-                  <p className="mt-2 whitespace-pre-wrap text-zinc-300">
+                  <p className="res-text-primary mt-2 whitespace-pre-wrap">
                     {day.guidance.answerTwo}
                   </p>
                 ) : null}
@@ -207,19 +202,19 @@ function RunArchiveCard({ group }: { group: RunGroup }) {
   return (
     <details
       open={group.status === "active"}
-      className="rounded-[2rem] border border-zinc-800/80 bg-black/40 px-6 py-6 backdrop-blur-[2px]"
+      className="res-border res-panel rounded-[2rem] border px-6 py-6 backdrop-blur-[2px]"
     >
       <summary className="cursor-pointer list-none">
         <div className="flex items-start justify-between gap-5">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-[#c8a96a]/65">
+            <p className="res-accent text-[11px] uppercase tracking-[0.2em]">
               Journey position {group.journeyPosition} · Week {group.weekNumber} · Visit {group.runNumber}
             </p>
-            <h2 className="mt-2 text-2xl text-white">{group.title}</h2>
-            <p className="mt-2 max-w-xl text-sm leading-7 text-zinc-400">
+            <h2 className="res-text mt-2 text-2xl">{group.title}</h2>
+            <p className="res-text-secondary mt-2 max-w-xl text-sm leading-7">
               {group.theme}
             </p>
-            <p className="mt-3 text-xs text-zinc-500">
+            <p className="res-text-secondary mt-3 text-xs">
               Began {formatArchiveDate(group.startedAt)}
               {group.completedAt
                 ? ` · Completed ${formatArchiveDate(group.completedAt)}`
@@ -227,24 +222,24 @@ function RunArchiveCard({ group }: { group: RunGroup }) {
             </p>
           </div>
 
-          <span className="shrink-0 rounded-full border border-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-zinc-400">
+          <span className="res-border res-text-secondary shrink-0 rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.16em]">
             {group.status}
           </span>
         </div>
       </summary>
 
-      <div className="mt-7 space-y-5 border-t border-zinc-800/80 pt-6">
+      <div className="res-divider mt-7 space-y-5 border-t pt-6">
         {group.days.map((day) => (
           <DayArchiveCard key={day.dayNumber} day={day} />
         ))}
 
         {group.mirror ? (
-          <section className="rounded-3xl border border-[#c8a96a]/40 bg-[#c8a96a]/[0.06] px-6 py-6">
+          <section className="res-accent-panel rounded-3xl border px-6 py-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-[#c8a96a]">
+              <p className="res-accent text-[11px] uppercase tracking-[0.22em]">
                 Cumulative Mirror
               </p>
-              <p className="text-xs text-zinc-500">
+              <p className="res-text-secondary text-xs">
                 {formatArchiveDate(group.mirror.createdAt)}
               </p>
             </div>
@@ -256,7 +251,7 @@ function RunArchiveCard({ group }: { group: RunGroup }) {
                 .map((paragraph, index) => (
                   <p
                     key={index}
-                    className="whitespace-pre-wrap text-sm leading-7 text-[#c8a96a]/90"
+                    className="res-accent whitespace-pre-wrap text-sm leading-7"
                   >
                     {paragraph}
                   </p>
@@ -264,7 +259,7 @@ function RunArchiveCard({ group }: { group: RunGroup }) {
             </div>
           </section>
         ) : group.status === "completed" ? (
-          <p className="text-sm text-zinc-500">
+          <p className="res-text-secondary text-sm">
             This completed visit does not have a preserved cumulative Mirror.
           </p>
         ) : null}
@@ -511,7 +506,7 @@ export default async function ArchivePage(props: Props) {
     : [];
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden text-white">
+    <main className="resonance-theme relative min-h-screen overflow-x-hidden">
       <div
         className="fixed inset-0 z-0 hidden bg-cover bg-center bg-no-repeat md:block"
         style={{ backgroundImage: `url(${archiveBackgroundDesktop})` }}
@@ -520,18 +515,15 @@ export default async function ArchivePage(props: Props) {
         className="fixed inset-0 z-0 block bg-cover bg-center bg-no-repeat md:hidden"
         style={{ backgroundImage: `url(${archiveBackgroundMobile})` }}
       />
-      <div
-        className="pointer-events-none fixed inset-0 z-10"
-        style={archiveOverlayStyle}
-      />
+      <div className="res-archive-overlay pointer-events-none fixed inset-0 z-10" />
 
       <div className="relative z-20 min-h-screen">
         <MemberNav />
 
         <div className="mx-auto max-w-3xl space-y-10 px-6 py-8 md:py-12">
           <header className="space-y-3">
-            <h1 className="text-3xl font-semibold text-white">What has stayed</h1>
-            <p className="max-w-xl text-sm leading-7 text-zinc-400">
+            <h1 className="res-text text-3xl font-semibold">What has stayed</h1>
+            <p className="res-text-secondary max-w-xl text-sm leading-7">
               Return to each Resonance visit as it was lived. Repeating a room creates
               a new visit while the earlier visit stays intact.
             </p>
@@ -541,9 +533,7 @@ export default async function ArchivePage(props: Props) {
             <Link
               href="/resonance/archive?view=journey"
               className={`rounded-full border px-4 py-2 text-sm transition ${
-                view === "journey"
-                  ? "border-[#c8a96a]/60 text-[#c8a96a]"
-                  : "border-white/10 text-zinc-400 hover:border-white/20 hover:text-white"
+                view === "journey" ? "res-action" : "res-secondary-action"
               }`}
             >
               Journey order
@@ -551,9 +541,7 @@ export default async function ArchivePage(props: Props) {
             <Link
               href="/resonance/archive?view=week"
               className={`rounded-full border px-4 py-2 text-sm transition ${
-                view === "week"
-                  ? "border-[#c8a96a]/60 text-[#c8a96a]"
-                  : "border-white/10 text-zinc-400 hover:border-white/20 hover:text-white"
+                view === "week" ? "res-action" : "res-secondary-action"
               }`}
             >
               Week order
@@ -561,9 +549,7 @@ export default async function ArchivePage(props: Props) {
             <Link
               href="/resonance/archive?view=search"
               className={`rounded-full border px-4 py-2 text-sm transition ${
-                view === "search"
-                  ? "border-[#c8a96a]/60 text-[#c8a96a]"
-                  : "border-white/10 text-zinc-400 hover:border-white/20 hover:text-white"
+                view === "search" ? "res-action" : "res-secondary-action"
               }`}
             >
               Search
@@ -578,7 +564,7 @@ export default async function ArchivePage(props: Props) {
                 ))}
               </div>
             ) : (
-              <div className="rounded-3xl border border-zinc-800/80 bg-black/45 px-5 py-5 text-sm text-zinc-400">
+              <div className="res-border res-panel res-text-secondary rounded-3xl border px-5 py-5 text-sm">
                 Nothing has been archived yet.
               </div>
             )
@@ -591,7 +577,7 @@ export default async function ArchivePage(props: Props) {
                   name="q"
                   defaultValue={searchParams?.q ?? ""}
                   placeholder="Search reflections, 2Q, or Mirrors..."
-                  className="w-full rounded-2xl border border-zinc-800/80 bg-black/45 px-4 py-3 text-sm text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-700"
+                  className="res-field w-full rounded-2xl border px-4 py-3 text-sm"
                 />
               </form>
 
@@ -601,17 +587,17 @@ export default async function ArchivePage(props: Props) {
                     {searchHits.map((hit) => (
                       <div
                         key={hit.key}
-                        className="rounded-2xl border border-zinc-800/80 bg-black/40 px-5 py-5"
+                        className="res-border res-panel rounded-2xl border px-5 py-5"
                       >
-                        <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">
+                        <p className="res-text-secondary text-[11px] uppercase tracking-[0.18em]">
                           {hit.kind} · Week {hit.weekNumber} · Visit {hit.runNumber}
                           {hit.dayNumber ? ` · Day ${hit.dayNumber}` : ""}
                         </p>
-                        <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-400">
+                        <p className="res-text-secondary mt-3 whitespace-pre-wrap text-sm leading-7">
                           {hit.title}
                         </p>
                         {hit.body ? (
-                          <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-200">
+                          <p className="res-text-primary mt-3 whitespace-pre-wrap text-sm leading-7">
                             {truncate(hit.body)}
                           </p>
                         ) : null}
@@ -619,22 +605,22 @@ export default async function ArchivePage(props: Props) {
                     ))}
                   </div>
                 ) : (
-                  <div className="rounded-3xl border border-zinc-800/80 bg-black/45 px-5 py-5 text-sm text-zinc-400">
+                  <div className="res-border res-panel res-text-secondary rounded-3xl border px-5 py-5 text-sm">
                     Nothing matched that search.
                   </div>
                 )
               ) : (
-                <div className="rounded-3xl border border-zinc-800/80 bg-black/45 px-5 py-5 text-sm text-zinc-400">
+                <div className="res-border res-panel res-text-secondary rounded-3xl border px-5 py-5 text-sm">
                   Search across your reflections, daily 2Q, and cumulative Mirrors.
                 </div>
               )}
             </section>
           )}
 
-          <div className="flex justify-end border-t border-zinc-800/80 pt-6">
+          <div className="res-divider flex justify-end border-t pt-6">
             <Link
               href="/entry"
-              className="text-sm text-zinc-400 underline underline-offset-4 transition hover:text-white"
+              className="res-text-secondary res-accent-hover text-sm underline underline-offset-4 transition"
             >
               Return to entry
             </Link>

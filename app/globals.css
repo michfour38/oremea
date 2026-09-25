@@ -1,14 +1,10 @@
+@import "./oremea-colors.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --brand: 36 74 62;
-    --brand-mid: 74 124 111;
-    --brand-light: 209 231 224;
-  }
-
   html {
     scroll-behavior: smooth;
   }
@@ -17,7 +13,7 @@
     @apply text-stone-800;
     margin: 0;
     padding: 0;
-    background: black;
+    background: var(--oremea-black);
   }
 
   *:focus-visible {
@@ -34,15 +30,15 @@
  */
 @layer utilities {
   .text-zinc-400 {
-    color: rgb(212 212 216);
+    color: var(--oremea-zinc-400);
   }
 
   .text-zinc-500 {
-    color: rgb(190 190 199);
+    color: var(--oremea-zinc-500);
   }
 
   .text-zinc-600 {
-    color: rgb(161 161 170);
+    color: var(--oremea-zinc-600);
   }
 }
 
@@ -54,77 +50,13 @@ body {
 }
 
 /*
- * Resonance contrast system.
- * Resonance uses textured photographic backgrounds, so its useful copy, labels,
- * controls, and panels need stronger contrast than flat Oremea surfaces. Keep
- * this scoped to the Resonance journey so other products retain their own visual
- * hierarchy while every Resonance step reads as one continuous experience.
- */
-.resonance-readable {
-  color: #f8f5ef;
-}
-
-.resonance-readable .resonance-photo-overlay {
-  background-color: rgb(0 0 0 / 0.75) !important;
-}
-
-.resonance-readable [class*="text-zinc-100"],
-.resonance-readable [class*="text-zinc-200"],
-.resonance-readable [class*="text-zinc-300"] {
-  color: #f3efe7 !important;
-}
-
-.resonance-readable [class*="text-zinc-400"],
-.resonance-readable [class*="text-zinc-500"] {
-  color: #e8e2d8 !important;
-}
-
-.resonance-readable [class*="text-[#c8a96a]"],
-.resonance-readable [class*="text-[#C8A96A]"],
-.resonance-readable [class*="text-[#e0c38b]"],
-.resonance-readable [class*="text-[#e7c98b]"] {
-  color: #f0cf7a !important;
-}
-
-.resonance-readable [class*="bg-black/35"],
-.resonance-readable [class*="bg-black/40"],
-.resonance-readable [class*="bg-black/45"],
-.resonance-readable [class*="bg-black/50"],
-.resonance-readable [class*="bg-black/55"] {
-  background-color: rgb(0 0 0 / 0.6) !important;
-}
-
-.resonance-readable [class*="border-white/10"],
-.resonance-readable [class*="border-white/15"] {
-  border-color: rgb(255 255 255 / 0.22) !important;
-}
-
-.resonance-readable [class*="border-[#c8a96a]"],
-.resonance-readable [class*="border-[#C8A96A]"],
-.resonance-readable [class*="border-[#e7c98b]"] {
-  border-color: rgb(213 181 110 / 0.75) !important;
-}
-
-.resonance-readable textarea,
-.resonance-readable input,
-.resonance-readable select {
-  color: #f8f5ef;
-}
-
-.resonance-readable textarea::placeholder,
-.resonance-readable input::placeholder {
-  color: #cfc6b8 !important;
-  opacity: 1;
-}
-
-/*
  * Oremea-wide validation navigation rule.
  * Every field identified as invalid receives the same unmistakable marker,
  * regardless of product, route, light surface, or dark surface.
  */
 [data-oremea-error-marker="true"] {
   margin-left: 0.25rem;
-  color: #dc2626;
+  color: var(--oremea-validation);
   font-weight: 800;
   line-height: 1;
 }
@@ -132,8 +64,8 @@ body {
 input[data-oremea-invalid="true"],
 textarea[data-oremea-invalid="true"],
 select[data-oremea-invalid="true"] {
-  border-color: #dc2626 !important;
-  box-shadow: 0 0 0 2px rgb(220 38 38 / 0.18) !important;
+  border-color: var(--oremea-validation) !important;
+  box-shadow: 0 0 0 2px var(--oremea-validation-ring) !important;
 }
 
 [data-oremea-invalid-heading="true"] {
@@ -153,18 +85,18 @@ body::-webkit-scrollbar-track {
 
 html::-webkit-scrollbar-thumb,
 body::-webkit-scrollbar-thumb {
-  background: rgba(161, 161, 170, 0.28);
+  background: var(--oremea-scrollbar);
   border-radius: 9999px;
 }
 
 html::-webkit-scrollbar-thumb:hover,
 body::-webkit-scrollbar-thumb:hover {
-  background: rgba(161, 161, 170, 0.42);
+  background: var(--oremea-scrollbar-hover);
 }
 
 /* Firefox */
 html,
 body {
   scrollbar-width: thin;
-  scrollbar-color: rgba(161, 161, 170, 0.28) transparent;
+  scrollbar-color: var(--oremea-scrollbar) transparent;
 }
