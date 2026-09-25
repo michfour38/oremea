@@ -15,8 +15,8 @@ export function CompassAccessOffer({
   );
 
   return (
-    <div className="rounded-[2rem] border border-[#2a2418] bg-[#10100f] p-6 text-stone-100">
-      <p className="mb-3 text-xs uppercase tracking-[0.34em] text-[#d8b15f]">
+    <div className="rounded-[2rem] border border-[var(--compass-map-border)] bg-[var(--compass-surface-strong)] p-6 text-[var(--compass-text)]">
+      <p className="comp-accent mb-3 text-xs uppercase tracking-[0.34em]">
         Compass Access
       </p>
 
@@ -24,7 +24,7 @@ export function CompassAccessOffer({
         Enter Compass month to month.
       </h1>
 
-      <p className="mt-4 text-sm leading-relaxed text-zinc-400">
+      <p className="comp-text-soft mt-4 text-sm leading-relaxed">
         Compass is {monthlyPrice} per month and can be cancelled anytime. Return,
         continue discussions, begin new sessions, and keep what you complete in
         your Archive after cancellation.
@@ -34,12 +34,12 @@ export function CompassAccessOffer({
         Enter Compass · {monthlyPrice}/month
       </button>
 
-      <div className="mt-8 border-t border-[#2a2418] pt-6">
-        <p className="text-sm font-medium text-stone-200">
+      <div className="mt-8 border-t border-[var(--compass-map-border)] pt-6">
+        <p className="comp-text-soft text-sm font-medium">
           Monthly membership
         </p>
 
-        <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+        <p className="comp-text-soft mt-2 text-sm leading-relaxed">
           {monthlyPrice} per month. Cancel anytime. Your saved Compass Archive
           remains yours after the membership ends.
         </p>
