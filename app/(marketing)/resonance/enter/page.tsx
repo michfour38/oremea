@@ -15,7 +15,7 @@ export default async function ResonanceEnterPage() {
     : `/sign-up?redirect_url=${encodeURIComponent(destination)}`;
 
   return (
-    <main id="top" className="relative min-h-screen overflow-x-hidden text-white">
+    <main id="top" className="resonance-readable relative min-h-screen overflow-x-hidden text-[#f8f5ef]">
       <SiteNav />
 
       <div className="fixed inset-0 z-0">
@@ -27,7 +27,7 @@ export default async function ResonanceEnterPage() {
           className="absolute inset-0 hidden bg-cover bg-center bg-no-repeat md:block"
           style={{ backgroundImage: "url(/images/desktop/bg-entry.webp)" }}
         />
-        <div className="absolute inset-0 bg-black/65" />
+        <div className="resonance-photo-overlay absolute inset-0" />
       </div>
 
       <div className="relative z-10 mx-auto max-w-5xl px-6 py-12 md:py-16">
