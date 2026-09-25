@@ -168,7 +168,7 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
   }
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-zinc-950 text-[#f8f5ef]">
+    <main className="resonance-theme res-bg relative min-h-screen overflow-x-hidden">
       <RoomTarget weekNumber={roomTarget?.weekNumber} />
       <div
         className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-40 md:hidden"
@@ -178,33 +178,33 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
         className="fixed inset-0 z-0 hidden bg-cover bg-center bg-no-repeat opacity-40 md:block"
         style={{ backgroundImage: "url(/images/desktop/bg-entry.webp)" }}
       />
-      <div className="fixed inset-0 z-10 bg-black/75" />
+      <div className="res-photo-overlay fixed inset-0 z-10" />
 
       <div className="relative z-20 min-h-screen">
         <MemberNav />
 
         <div className="mx-auto max-w-6xl px-6 py-12 md:py-16">
           <header className="max-w-3xl">
-            <h1 className="text-4xl font-light tracking-tight text-white md:text-5xl">
+            <h1 className="res-text text-4xl font-light tracking-tight md:text-5xl">
               Enter where you are
             </h1>
           </header>
 
           <section className="mt-14">
             <div className="max-w-3xl">
-              <p className="text-xs uppercase tracking-[0.3em] text-[#f0cf7a]">
+              <p className="res-accent text-xs uppercase tracking-[0.3em]">
                 Resonance
               </p>
-              <h2 className="mt-3 text-3xl font-light text-white">Which one do you choose?</h2>
+              <h2 className="res-text mt-3 text-3xl font-light">Which one do you choose?</h2>
               {creditFlow ? (
-                <div className="mt-5 rounded-2xl border border-[#d5b56e]/55 bg-black/60 p-5">
-                  <p className="text-lg font-medium text-[#f0cf7a]">{visitBalance} unused visit{visitBalance === 1 ? "" : "s"}</p>
-                  <p className="mt-2 text-base text-[#f3efe7]">Entering a room uses one visit. The other visits remain available for later.</p>
-                  {newCheckout ? <Link href="/resonance/visits" className="mt-3 inline-block text-base font-medium text-[#f0cf7a] underline decoration-[#f0cf7a]/70 underline-offset-4 hover:text-[#ffe2a0]">Buy visits</Link> : null}
+                <div className="res-accent-border res-panel mt-5 rounded-2xl border p-5">
+                  <p className="res-accent text-lg font-medium">{visitBalance} unused visit{visitBalance === 1 ? "" : "s"}</p>
+                  <p className="res-text-primary mt-2 text-base">Entering a room uses one visit. The other visits remain available for later.</p>
+                  {newCheckout ? <Link href="/resonance/visits" className="res-accent res-accent-hover mt-3 inline-block text-base font-medium underline underline-offset-4">Buy visits</Link> : null}
                 </div>
               ) : null}
-              {query.visitError ? <p role="alert" className="mt-4 text-base text-amber-100">That room could not be opened. Check for an active visit or an unused visit below. No additional visit was deducted for the failed request.</p> : null}
-              <p className="mt-4 text-base leading-8 text-[#f3efe7]">
+              {query.visitError ? <p role="alert" className="res-alert mt-4 text-base">That room could not be opened. Check for an active visit or an unused visit below. No additional visit was deducted for the failed request.</p> : null}
+              <p className="res-text-primary mt-4 text-base leading-8">
                 {creditFlow ? "Each visit opens one seven-day Resonance room." : "Each purchase opens one seven-day Resonance room."} There is no
                 required order. Choose the room containing the question that
                 currently has your attention. When the visit closes, it remains
@@ -213,40 +213,40 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
               </p>
             </div>
 
-            <details className="group mt-8 rounded-3xl border border-[#d5b56e]/45 bg-black/55 backdrop-blur-[2px]">
+            <details className="res-accent-border res-panel group mt-8 rounded-3xl border backdrop-blur-[2px]">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-5 px-6 py-5 md:px-7">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.22em] text-[#f0cf7a]">
+                  <p className="res-accent text-xs uppercase tracking-[0.22em]">
                     Choosing between them
                   </p>
-                  <h3 className="mt-2 text-xl text-white">Compare the rooms</h3>
+                  <h3 className="res-text mt-2 text-xl">Compare the rooms</h3>
                 </div>
-                <span className="text-[#f0cf7a] transition group-open:rotate-180">
+                <span className="res-accent transition group-open:rotate-180">
                   ↓
                 </span>
               </summary>
 
-              <div className="border-t border-white/15 px-6 py-6 md:px-7">
-                <p className="max-w-3xl text-sm leading-7 text-[#f3efe7]">
+              <div className="res-divider border-t px-6 py-6 md:px-7">
+                <p className="res-text-primary max-w-3xl text-sm leading-7">
                   Every room is complete on its own. The difference is the question
                   it holds under attention for seven days.
                 </p>
 
-                <div className="mt-6 overflow-hidden rounded-2xl border border-white/20">
+                <div className="res-border mt-6 overflow-hidden rounded-2xl border">
                   {weeks.map((week) => {
                     const detail = ROOM_DETAILS[week.week_number];
                     return (
                       <div
                         key={week.week_number}
-                        className="grid gap-1 border-b border-white/15 px-5 py-4 last:border-b-0 md:grid-cols-[220px_1fr] md:gap-6"
+                        className="res-divider grid gap-1 border-b px-5 py-4 last:border-b-0 md:grid-cols-[220px_1fr] md:gap-6"
                       >
                         <div>
-                          <p className="text-sm font-medium text-white">{week.title}</p>
-                          <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[#f0cf7a]">
+                          <p className="res-text text-sm font-medium">{week.title}</p>
+                          <p className="res-accent mt-1 text-xs uppercase tracking-[0.16em]">
                             {detail?.label ?? week.theme}
                           </p>
                         </div>
-                        <p className="text-sm leading-6 text-[#f3efe7]">
+                        <p className="res-text-primary text-sm leading-6">
                           {detail?.comparison ?? week.theme}
                         </p>
                       </div>
@@ -254,7 +254,7 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
                   })}
                 </div>
 
-                <p className="mt-5 text-sm leading-7 text-[#e8e2d8]">
+                <p className="res-text-secondary mt-5 text-sm leading-7">
                   There is no required order. Choose the room containing the question
                   that currently has your attention.
                 </p>
@@ -300,42 +300,42 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
                     id={`room-${week.week_number}`}
                     tabIndex={-1}
                     open={roomTarget ? roomTarget.weekNumber === week.week_number : isActive}
-                    className="group scroll-mt-6 rounded-3xl border border-white/20 bg-black/55 backdrop-blur-[2px]"
+                    className="res-border res-panel group scroll-mt-6 rounded-3xl border backdrop-blur-[2px]"
                   >
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-5 px-6 py-5 md:px-7">
                       <div>
-                        <p className="text-xs uppercase tracking-[0.22em] text-[#f0cf7a]">
+                        <p className="res-accent text-xs uppercase tracking-[0.22em]">
                           {detail?.label ?? week.theme}
                         </p>
-                        <h3 className="mt-2 text-xl text-white">{week.title}</h3>
+                        <h3 className="res-text mt-2 text-xl">{week.title}</h3>
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <span className="rounded-full border border-white/25 bg-black/25 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-[#eee8dd]">
+                        <span className="res-border res-panel-soft res-text-secondary rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.16em]">
                           {status}
                         </span>
-                        <span className="text-[#f0cf7a] transition group-open:rotate-180">
+                        <span className="res-accent transition group-open:rotate-180">
                           ↓
                         </span>
                       </div>
                     </summary>
 
-                    <div className="border-t border-white/15 px-6 py-6 md:px-7">
+                    <div className="res-divider border-t px-6 py-6 md:px-7">
                       {detail ? (
                         <div className="max-w-3xl">
-                          <p className="text-lg font-light leading-8 text-white">
+                          <p className="res-text text-lg font-light leading-8">
                             {detail.question}
                           </p>
-                          <p className="mt-3 text-sm leading-7 text-[#f3efe7]">
+                          <p className="res-text-primary mt-3 text-sm leading-7">
                             {detail.description}
                           </p>
-                          <p className="mt-4 text-sm leading-7 text-[#e8e2d8]">
-                            <span className="font-medium text-[#f0cf7a]">Choose this room when:</span>{" "}
+                          <p className="res-text-secondary mt-4 text-sm leading-7">
+                            <span className="res-accent font-medium">Choose this room when:</span>{" "}
                             {detail.chooseWhen}
                           </p>
                         </div>
                       ) : (
-                        <p className="max-w-3xl text-sm leading-7 text-[#f3efe7]">
+                        <p className="res-text-primary max-w-3xl text-sm leading-7">
                           {week.theme}
                         </p>
                       )}
@@ -344,7 +344,7 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
                         {isActive ? (
                           <Link
                             href="/resonance"
-                            className="inline-flex rounded-xl border border-[#d5b56e]/75 px-5 py-2.5 text-sm font-medium text-[#f0cf7a] transition hover:bg-[#c8a96a]/15 hover:text-[#ffe2a0]"
+                            className="res-action inline-flex rounded-xl border px-5 py-2.5 text-sm font-medium transition"
                           >
                             Continue {week.title}
                           </Link>
@@ -353,7 +353,7 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
                         {hasArchivedHistory ? (
                           <Link
                             href="/resonance/archive?view=journey"
-                            className="inline-flex rounded-xl border border-white/25 px-5 py-2.5 text-sm text-[#f3efe7] transition hover:border-white/45 hover:bg-white/5 hover:text-white"
+                            className="res-secondary-action inline-flex rounded-xl border px-5 py-2.5 text-sm transition"
                           >
                             View previous visit{weekRuns.length === 1 ? "" : "s"}
                           </Link>
@@ -364,14 +364,14 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
                             <input type="hidden" name="weekNumber" value={week.week_number} />
                             <input type="hidden" name="requestId" value={randomUUID()} />
                             <VisitSubmitButton>{nextRun > 1 ? `Start round ${nextRun} · Use one visit` : "Enter room · Use one visit"}</VisitSubmitButton>
-                            {nextRun > 1 ? <p className="mt-3 text-sm text-[#e8e2d8]">A fresh round. Previous reflections remain in the archive.</p> : null}
+                            {nextRun > 1 ? <p className="res-text-secondary mt-3 text-sm">A fresh round. Previous reflections remain in the archive.</p> : null}
                           </form>
                         ) : null}
 
                         {canPurchase ? (
                           <Link
                             href={newCheckout ? "/resonance/visits" : `/resonance/purchase?week=${week.week_number}`}
-                            className="inline-flex flex-wrap items-center rounded-xl border border-[#d5b56e]/75 px-5 py-2.5 text-sm font-medium text-[#f0cf7a] transition hover:bg-[#c8a96a]/15 hover:text-[#ffe2a0]"
+                            className="res-action inline-flex flex-wrap items-center rounded-xl border px-5 py-2.5 text-sm font-medium transition"
                           >
                             <span>
                               {newCheckout ? "Buy visits" : hasArchivedHistory
@@ -382,14 +382,14 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
                         ) : null}
 
                         {isLockedByActive ? (
-                          <p className="text-sm text-[#ded8cd]">
+                          <p className="res-text-disabled text-sm">
                             Complete {activeWeek?.title ?? "your active room"} before
                             opening another room.
                           </p>
                         ) : null}
 
                         {!week.is_published ? (
-                          <p className="text-sm text-[#ded8cd]">
+                          <p className="res-text-disabled text-sm">
                             This room will open when it is published.
                           </p>
                         ) : null}
