@@ -226,35 +226,35 @@ export default function MirrorOutput({
 
   return (
     <div className="space-y-6">
-      <section className="space-y-6 rounded-3xl border border-[#C8A96A]/30 bg-black/55 px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.22)] backdrop-blur-[3px]">
+      <section className="res-accent-border res-panel space-y-6 rounded-3xl border px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.22)] backdrop-blur-[3px]">
         <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#C8A96A]">
+          <p className="res-accent text-xs font-medium uppercase tracking-[0.25em]">
             Today&apos;s Mirror
           </p>
-          <p className="text-sm leading-7 text-zinc-400">
+          <p className="res-text-secondary text-sm leading-7">
             A reflection across what became visible today, followed by two questions to stay with.
           </p>
         </div>
 
         {dailyMirror && questions.length === 2 ? (
           <div className="space-y-8">
-            <div className="space-y-5 rounded-2xl border border-zinc-800 bg-black/45 px-5 py-5">
+            <div className="res-border res-panel-soft space-y-5 rounded-2xl border px-5 py-5">
               {cleanMirrorOutput(dailyMirror)
                 .split(/\n\s*\n/)
                 .filter(Boolean)
                 .map((paragraph, index) => (
                   <p
                     key={index}
-                    className="whitespace-pre-wrap text-base leading-8 text-zinc-200"
+                    className="res-text-primary whitespace-pre-wrap text-base leading-8"
                   >
                     {paragraph}
                   </p>
                 ))}
             </div>
 
-            <div className="space-y-6 border-t border-[#C8A96A]/20 pt-6">
+            <div className="res-accent-border space-y-6 border-t pt-6">
               <div className="space-y-3">
-                <p className="text-base leading-8 text-zinc-100">{questions[0]}</p>
+                <p className="res-text text-base leading-8">{questions[0]}</p>
                 <textarea
                   data-resonance-input="true"
                   value={answerOne}
@@ -264,12 +264,12 @@ export default function MirrorOutput({
                   }}
                   rows={4}
                   placeholder="Stay with this question..."
-                  className="w-full resize-none rounded-2xl border border-zinc-700 bg-black/70 px-4 py-3 text-sm leading-7 text-zinc-100 caret-[#C8A96A] placeholder:text-zinc-500 focus:border-[#C8A96A]/65 focus:outline-none focus:ring-1 focus:ring-[#C8A96A]/35"
+                  className="res-field w-full resize-none rounded-2xl border px-4 py-3 text-sm leading-7"
                 />
               </div>
 
               <div className="space-y-3">
-                <p className="text-base leading-8 text-zinc-100">{questions[1]}</p>
+                <p className="res-text text-base leading-8">{questions[1]}</p>
                 <textarea
                   data-resonance-input="true"
                   value={answerTwo}
@@ -279,7 +279,7 @@ export default function MirrorOutput({
                   }}
                   rows={4}
                   placeholder="Stay with this question..."
-                  className="w-full resize-none rounded-2xl border border-zinc-700 bg-black/70 px-4 py-3 text-sm leading-7 text-zinc-100 caret-[#C8A96A] placeholder:text-zinc-500 focus:border-[#C8A96A]/65 focus:outline-none focus:ring-1 focus:ring-[#C8A96A]/35"
+                  className="res-field w-full resize-none rounded-2xl border px-4 py-3 text-sm leading-7"
                 />
               </div>
 
@@ -288,7 +288,7 @@ export default function MirrorOutput({
                   type="button"
                   onClick={() => void saveAnswers()}
                   disabled={answersSaving || !answerOne.trim() || !answerTwo.trim()}
-                  className="inline-flex min-w-[110px] items-center justify-center rounded-xl border border-[#C8A96A]/55 bg-[#C8A96A]/15 px-4 py-2 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/20 disabled:cursor-not-allowed disabled:opacity-45"
+                  className="res-action-soft inline-flex min-w-[110px] items-center justify-center rounded-xl border px-4 py-2 text-sm transition disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   {answersSaving ? <LoadingDots /> : answersSaved ? "Saved" : "Save"}
                 </button>
@@ -301,7 +301,7 @@ export default function MirrorOutput({
               <div
                 role="alert"
                 aria-live="polite"
-                className="min-h-[112px] w-full rounded-2xl border border-red-400/30 bg-red-950/15 px-4 py-3 text-sm leading-7 text-red-300"
+                className="res-error-panel min-h-[112px] w-full rounded-2xl border px-4 py-3 text-sm leading-7"
               >
                 {questionsError}
               </div>
@@ -312,7 +312,7 @@ export default function MirrorOutput({
                 type="button"
                 onClick={() => void generateDailyMirror()}
                 disabled={questionsLoading}
-                className="inline-flex min-w-[180px] items-center justify-center rounded-xl border border-[#C8A96A]/55 bg-[#C8A96A]/15 px-4 py-2 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/20 disabled:cursor-not-allowed disabled:opacity-45"
+                className="res-action-soft inline-flex min-w-[180px] items-center justify-center rounded-xl border px-4 py-2 text-sm transition disabled:cursor-not-allowed disabled:opacity-45"
               >
                 {questionsLoading ? (
                   <LoadingDots />
@@ -327,7 +327,7 @@ export default function MirrorOutput({
         )}
 
         {answersError ? (
-          <p className="text-xs text-red-300">
+          <p className="res-danger text-xs">
             Your 2Q could not be saved. Please save it again.
           </p>
         ) : null}
@@ -342,12 +342,12 @@ export default function MirrorOutput({
       </section>
 
       {answersSaved && isVisitClose ? (
-        <section className="space-y-5 rounded-3xl border border-[#C8A96A]/30 bg-black/55 px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.22)] backdrop-blur-[3px]">
+        <section className="res-accent-border res-panel space-y-5 rounded-3xl border px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.22)] backdrop-blur-[3px]">
           <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#C8A96A]">
+            <p className="res-accent text-xs font-medium uppercase tracking-[0.25em]">
               Closing Mirror
             </p>
-            <p className="text-sm leading-7 text-zinc-400">
+            <p className="res-text-secondary text-sm leading-7">
               Your Mirror reflects this seven-day Resonance visit.
             </p>
           </div>
@@ -357,28 +357,28 @@ export default function MirrorOutput({
               <button
                 type="button"
                 onClick={() => setIsGeneratingMirror(true)}
-                className="inline-flex min-w-[150px] items-center justify-center rounded-xl border border-[#C8A96A]/55 bg-[#C8A96A]/15 px-4 py-2 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/20"
+                className="res-action-soft inline-flex min-w-[150px] items-center justify-center rounded-xl border px-4 py-2 text-sm transition"
               >
                 Open my Mirror
               </button>
             ) : (
-              <div className="rounded-2xl border border-zinc-800 bg-black/55 px-4 py-4">
-                <p className="text-sm text-zinc-300">Opening your Mirror...</p>
-                <div className="mt-4 text-[#C8A96A]">
+              <div className="res-border res-panel rounded-2xl border px-4 py-4">
+                <p className="res-text-primary text-sm">Opening your Mirror...</p>
+                <div className="res-accent mt-4">
                   <LoadingDots />
                 </div>
               </div>
             )
           ) : (
             <>
-              <div className="space-y-4 rounded-2xl border border-zinc-800 bg-black/45 px-5 py-5">
+              <div className="res-border res-panel-soft space-y-4 rounded-2xl border px-5 py-5">
                 {cleanMirrorOutput(mirror.output)
                   .split("\n\n")
                   .filter(Boolean)
                   .map((paragraph, index) => (
                     <p
                       key={index}
-                      className="whitespace-pre-wrap text-sm leading-7 text-zinc-300"
+                      className="res-text-primary whitespace-pre-wrap text-sm leading-7"
                     >
                       {paragraph}
                     </p>
@@ -387,12 +387,12 @@ export default function MirrorOutput({
 
               <form
                 action={completeResonanceWeekAction}
-                className="flex justify-end border-t border-zinc-800 pt-5"
+                className="res-divider flex justify-end border-t pt-5"
               >
                 <input type="hidden" name="weekNumber" value={weekNumber} />
                 <button
                   type="submit"
-                  className="min-w-[150px] rounded-xl border border-[#C8A96A]/55 bg-[#C8A96A]/15 px-5 py-3 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/20"
+                  className="res-action-soft min-w-[150px] rounded-xl border px-5 py-3 text-sm transition"
                 >
                   Complete visit
                 </button>
