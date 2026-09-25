@@ -35,8 +35,8 @@ export default async function VisitCompletionPage({ searchParams }: {
 
     return (
       <FunnelFrame>
-        <h1 className="text-4xl font-light">{heading}</h1>
-        <p className="mt-5 text-base leading-8 text-zinc-300">
+        <h1 className="res-text text-4xl font-light">{heading}</h1>
+        <p className="res-text-primary mt-5 text-base leading-8">
           {order.status === "paid"
             ? "Choose a room below. Unused visits remain on this account."
             : "Only confirmed payments add visits. Do not submit another charge while this is being checked."}
@@ -44,16 +44,16 @@ export default async function VisitCompletionPage({ searchParams }: {
         </p>
         <div className="mt-8 flex flex-wrap gap-6">
           {order.status === "failed" && order.kind === "initial" && order.whop_checkout_id ? (
-            <Link href={`/resonance/visits?order=${order.id}`} className="text-base text-[#e0c38b] underline">
+            <Link href={`/resonance/visits?order=${order.id}`} className="res-accent res-accent-hover text-base underline">
               Return to checkout
             </Link>
           ) : null}
           {order.status === "pending" || order.status === "unknown" ? (
-            <a href={`/resonance/complete?order=${order.id}`} className="text-base text-[#e0c38b] underline">
+            <a href={`/resonance/complete?order=${order.id}`} className="res-accent res-accent-hover text-base underline">
               Check payment status
             </a>
           ) : null}
-          <Link href="/entry" className="text-base text-[#e0c38b] underline">Choose my room</Link>
+          <Link href="/entry" className="res-accent res-accent-hover text-base underline">Choose my room</Link>
         </div>
       </FunnelFrame>
     );
@@ -64,17 +64,17 @@ export default async function VisitCompletionPage({ searchParams }: {
 
   return (
     <FunnelFrame>
-      <p className="text-sm uppercase tracking-[0.2em] text-[#c8a96a]">
+      <p className="res-accent text-sm uppercase tracking-[0.2em]">
         {order.quantity === 1 ? "Your visit is purchased" : `Your ${order.quantity} visits are purchased`}
       </p>
-      <h1 className="mt-3 text-4xl font-light">Complete ten?</h1>
-      <p className="mt-5 max-w-2xl text-base leading-8 text-zinc-300">
+      <h1 className="res-text mt-3 text-4xl font-light">Complete ten?</h1>
+      <p className="res-text-primary mt-5 max-w-2xl text-base leading-8">
         Your first purchase is secure. This page is only about whether you want to add more visits now.
         No extra purchase is required before choosing a room.
       </p>
 
       {query.error ? (
-        <p role="alert" className="mt-4 text-amber-100">
+        <p role="alert" className="res-alert mt-4">
           The additional purchase could not be started. Your original visits remain available.
         </p>
       ) : null}
@@ -93,7 +93,7 @@ export default async function VisitCompletionPage({ searchParams }: {
         canCharge={canCharge}
       />
 
-      <p className="mt-5 text-sm leading-7 text-zinc-400">
+      <p className="res-text-secondary mt-5 text-sm leading-7">
         {canCharge
           ? "Any accepted addition is a separate charge using the saved payment method. A bank may still require verification."
           : "A saved-payment addition is not available for this checkout. Your purchased visits can be used now."}
