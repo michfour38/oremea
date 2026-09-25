@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function CompassLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="compass-legibility">
+    <div className="compass-theme compass-legibility">
       <CompassMapOrderEnhancer />
       {children}
     </div>
