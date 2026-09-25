@@ -272,7 +272,7 @@ export default function RecognitionChat({
   }
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#090909] text-zinc-100">
+    <main className="min-h-screen overflow-x-hidden">
       <MemberNav />
 
       {messages.length > 0 ? (
@@ -281,7 +281,7 @@ export default function RecognitionChat({
             type="button"
             onClick={() => void startNewChat()}
             disabled={isSending || isStartingNewChat}
-            className="text-xs uppercase tracking-[0.16em] text-zinc-500 transition hover:text-[#e7c98b] disabled:cursor-not-allowed disabled:opacity-40"
+            className="rec-text text-xs uppercase tracking-[0.16em] transition hover:text-[var(--recognition-gold)] disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isStartingNewChat ? "Starting…" : "New chat"}
           </button>
@@ -313,15 +313,15 @@ export default function RecognitionChat({
         >
           {messages.length === 0 ? (
             <div className="mx-auto max-w-xl py-2 md:py-3">
-              <p className="text-xs uppercase tracking-[0.28em] text-[#b79a63]">
+              <p className="rec-accent text-xs uppercase tracking-[0.28em]">
                 Begin where you are
               </p>
-              <h1 className="mt-3 font-serif text-4xl leading-tight text-zinc-100 md:text-6xl">
+              <h1 className="rec-text mt-3 font-serif text-4xl leading-tight md:text-6xl">
                 {firstName
                   ? `${firstName}, what has your attention?`
                   : "What has your attention?"}
               </h1>
-              <p className="mt-4 max-w-xl font-serif text-xl leading-8 text-zinc-400">
+              <p className="rec-text mt-4 max-w-xl font-serif text-xl leading-8">
                 Bring what is here. Recognition stays with what you actually say,
                 remembers your own earlier words when they matter, and does not
                 decide where the conversation has to go.
@@ -341,8 +341,8 @@ export default function RecognitionChat({
                   <div
                     className={
                       message.role === "user"
-                        ? "whitespace-pre-wrap rounded-[1.45rem] border border-white/[0.08] bg-zinc-900 px-4 py-3 text-[15px] leading-6 text-zinc-200 md:px-5 md:text-base md:leading-7"
-                        : "whitespace-pre-wrap border-l border-[#6f5a31] pl-4 font-serif text-lg leading-8 text-[#e6dfd2] md:pl-5 md:text-xl md:leading-8"
+                        ? "rec-user-bubble whitespace-pre-wrap rounded-[1.45rem] border px-4 py-3 text-[15px] leading-6 md:px-5 md:text-base md:leading-7"
+                        : "rec-assistant-message whitespace-pre-wrap border-l pl-4 font-serif text-lg leading-8 md:pl-5 md:text-xl md:leading-8"
                     }
                   >
                     {message.content}
@@ -352,7 +352,7 @@ export default function RecognitionChat({
 
               {isSending ? (
                 <article className="mr-auto max-w-3xl">
-                  <div className="border-l border-[#6f5a31] py-1 pl-5 text-zinc-500 md:pl-7">
+                  <div className="rec-assistant-message border-l py-1 pl-5 md:pl-7">
                     <RecognitionDots />
                   </div>
                 </article>
@@ -362,17 +362,23 @@ export default function RecognitionChat({
           <div ref={bottomRef} />
         </div>
 
-        <div className="sticky bottom-0 z-20 -mx-5 border-t border-white/[0.06] bg-[#090909]/95 px-5 pb-5 pt-4 backdrop-blur-xl md:-mx-8 md:px-8 md:pb-7">
+        <div
+          className="rec-divider sticky bottom-0 z-20 -mx-5 border-t px-5 pb-5 pt-4 backdrop-blur-xl md:-mx-8 md:px-8 md:pb-7"
+          style={{
+            backgroundColor:
+              "color-mix(in srgb, var(--recognition-bg) 95%, transparent)",
+          }}
+        >
           <div className="mx-auto max-w-3xl">
             {error ? (
-              <div className="mb-3 rounded-2xl border border-[#5c4433] bg-[#17110d] px-4 py-3 text-sm leading-6 text-[#d7b49a]">
+              <div className="rec-error-panel mb-3 rounded-2xl border px-4 py-3 text-sm leading-6">
                 {error}
               </div>
             ) : null}
 
             {savedTurnAwaitingReply ? (
-              <div className="flex flex-col gap-3 rounded-[1.75rem] border border-[#4f4229] bg-[#11100d] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm leading-6 text-zinc-400">
+              <div className="rec-saved-panel flex flex-col gap-3 rounded-[1.75rem] border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="rec-text text-sm leading-6">
                   Your words are saved. Recognition can continue from exactly here.
                 </p>
                 <button
@@ -384,13 +390,13 @@ export default function RecognitionChat({
                       ? "Recognition is responding"
                       : "Continue reflection"
                   }
-                  className="shrink-0 rounded-full border border-[#b39558] bg-[#b39558] px-5 py-2 text-sm font-medium text-black transition hover:bg-[#c9aa69] disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900 disabled:text-zinc-600"
+                  className="rec-primary-button shrink-0 rounded-full border px-5 py-2 text-sm font-medium transition disabled:cursor-not-allowed"
                 >
                   Continue reflection
                 </button>
               </div>
             ) : (
-              <div className="overflow-hidden rounded-[1.75rem] border border-[#4f4229] bg-[#11100d] p-2 shadow-[0_-10px_40px_rgba(0,0,0,0.25)] focus-within:border-[#9f8148]">
+              <div className="rec-composer rec-composer-shadow overflow-hidden rounded-[1.75rem] border p-2">
                 <textarea
                   ref={inputRef}
                   value={draft}
@@ -413,7 +419,7 @@ export default function RecognitionChat({
                   disabled={isSending || isStartingNewChat}
                   placeholder="Write in your own words…"
                   style={{ backgroundColor: "transparent" }}
-                  className="max-h-56 min-h-[84px] w-full appearance-none resize-none rounded-[1.35rem] border-0 bg-transparent px-4 py-3 font-serif text-lg leading-8 text-zinc-100 outline-none placeholder:text-zinc-600 disabled:opacity-60 md:text-xl"
+                  className="rec-text max-h-56 min-h-[84px] w-full appearance-none resize-none rounded-[1.35rem] border-0 bg-transparent px-4 py-3 font-serif text-lg leading-8 outline-none disabled:opacity-60 md:text-xl"
                 />
                 <div className="flex items-center justify-end px-3 pb-2 pt-1">
                   <button
@@ -431,7 +437,7 @@ export default function RecognitionChat({
                           ? "Retry reflection"
                           : "Reflect"
                     }
-                    className="min-w-[82px] rounded-full border border-[#b39558] bg-[#b39558] px-5 py-2 text-sm font-medium text-black transition hover:bg-[#c9aa69] disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900 disabled:text-zinc-600"
+                    className="rec-primary-button min-w-[82px] rounded-full border px-5 py-2 text-sm font-medium transition disabled:cursor-not-allowed"
                   >
                     {isSending ? "Reflect" : pendingMessageId ? "Retry" : "Reflect"}
                   </button>
@@ -439,7 +445,7 @@ export default function RecognitionChat({
               </div>
             )}
 
-            <p className="mt-3 text-center text-[11px] leading-5 text-zinc-600">
+            <p className="rec-text mt-3 text-center text-[11px] leading-5">
               Recognition can challenge a distinction in your own words. It does
               not diagnose you, decide another person’s motives, or choose your
               next move.

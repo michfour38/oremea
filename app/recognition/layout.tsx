@@ -39,12 +39,7 @@ export default function RecognitionLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div
-      id="top"
-      className="recognition-theme"
-      data-recognition-root="true"
-      style={{ caretColor: "#C8A96A" }}
-    >
+    <div id="top" className="recognition-theme" data-recognition-root="true">
       <ReturnToTop />
       {children}
     </div>

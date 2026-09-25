@@ -104,25 +104,25 @@ export default async function RecognitionArchivePage(props: Props) {
   const memory = readRecognitionMemory(selectedThread?.memory_snapshot);
 
   return (
-    <main className="min-h-screen bg-[#090909] text-white">
+    <main className="min-h-screen">
       <MemberNav />
 
       <section className="mx-auto max-w-4xl px-5 py-12">
         <Link
           href="https://recognition.oremea.com/begin"
-          className="text-sm text-zinc-200 underline underline-offset-4 transition hover:text-[#d8b15f]"
+          className="rec-text text-sm underline underline-offset-4 transition hover:text-[var(--recognition-gold)]"
         >
           Return to Recognition
         </Link>
 
-        <header className="mt-10 border-b border-zinc-700/80 pb-8">
-          <p className="text-xs uppercase tracking-[0.32em] text-[#d8b15f]">
+        <header className="rec-divider mt-10 border-b pb-8">
+          <p className="rec-accent text-xs uppercase tracking-[0.32em]">
             Recognition Archive
           </p>
-          <h1 className="mt-5 font-serif text-4xl text-white md:text-6xl">
+          <h1 className="rec-text mt-5 font-serif text-4xl md:text-6xl">
             Your conversations stay here
           </h1>
-          <p className="mt-6 max-w-2xl text-base leading-8 text-zinc-300">
+          <p className="rec-text mt-6 max-w-2xl text-base leading-8">
             Starting a new chat does not overwrite the old one. Each conversation
             stays intact, so you can come back later and see exactly where it began
             and where it went.
@@ -133,14 +133,14 @@ export default async function RecognitionArchivePage(props: Props) {
           <section className="mt-10">
             <div className="flex items-end justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-[#d8b15f]">
+                <p className="rec-accent text-xs uppercase tracking-[0.22em]">
                   Chats
                 </p>
-                <h2 className="mt-2 font-serif text-3xl text-zinc-100">
+                <h2 className="rec-text mt-2 font-serif text-3xl">
                   Conversation history
                 </h2>
               </div>
-              <p className="text-sm text-zinc-500">
+              <p className="rec-text text-sm">
                 {threads.length} chat{threads.length === 1 ? "" : "s"}
               </p>
             </div>
@@ -155,22 +155,22 @@ export default async function RecognitionArchivePage(props: Props) {
                     href={`/recognition/archive?thread=${thread.id}`}
                     className={`rounded-[1.5rem] border px-5 py-4 transition ${
                       selected
-                        ? "border-[#7f693e] bg-[#15130f]"
-                        : "border-zinc-800 bg-black/20 hover:border-zinc-700"
+                        ? "border-[var(--recognition-composer-focus)] bg-[var(--recognition-composer-bg)]"
+                        : "border-[var(--recognition-user-border)] bg-[var(--recognition-surface)] hover:border-[var(--recognition-composer-border)]"
                     }`}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      <p className="text-xs uppercase tracking-[0.18em] text-[#b79a63]">
+                      <p className="rec-accent text-xs uppercase tracking-[0.18em]">
                         {thread.status === "active"
                           ? "Current chat"
                           : formatDate(thread.created_at)}
                       </p>
-                      <p className="text-xs text-zinc-600">
+                      <p className="rec-text text-xs">
                         {thread.message_count} saved message
                         {thread.message_count === 1 ? "" : "s"}
                       </p>
                     </div>
-                    <p className="mt-2 text-sm leading-6 text-zinc-300">
+                    <p className="rec-text mt-2 text-sm leading-6">
                       {preview(firstMessage?.content)}
                     </p>
                   </Link>
@@ -185,27 +185,27 @@ export default async function RecognitionArchivePage(props: Props) {
             <>
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.22em] text-[#d8b15f]">
+                  <p className="rec-accent text-xs uppercase tracking-[0.22em]">
                     {selectedThread.status === "active"
                       ? "Current chat"
                       : "Archived chat"}
                   </p>
-                  <h2 className="mt-2 font-serif text-3xl text-zinc-100">
+                  <h2 className="rec-text mt-2 font-serif text-3xl">
                     {formatDate(
                       selectedThread.messages[0]?.created_at ??
                         selectedThread.created_at,
                     )}
                   </h2>
                 </div>
-                <p className="text-sm text-zinc-500">
+                <p className="rec-text text-sm">
                   {selectedThread.message_count} saved message
                   {selectedThread.message_count === 1 ? "" : "s"}
                 </p>
               </div>
 
               {conversation.length === 0 ? (
-                <div className="mt-6 rounded-[2rem] border border-zinc-700 bg-[#11100D] p-6">
-                  <p className="text-base leading-7 text-zinc-300">
+                <div className="rec-saved-panel mt-6 rounded-[2rem] border p-6">
+                  <p className="rec-text text-base leading-7">
                     This chat has no messages yet.
                   </p>
                 </div>
@@ -215,7 +215,7 @@ export default async function RecognitionArchivePage(props: Props) {
                     <div className="text-center">
                       <Link
                         href={`/recognition/archive?thread=${selectedThread.id}&before=${oldestTurn}`}
-                        className="text-sm text-[#d8b15f] underline underline-offset-4"
+                        className="rec-accent text-sm underline underline-offset-4"
                       >
                         Load earlier conversation
                       </Link>
@@ -234,8 +234,8 @@ export default async function RecognitionArchivePage(props: Props) {
                       <p
                         className={`mb-2 text-[11px] uppercase tracking-[0.18em] ${
                           message.role === "user"
-                            ? "text-right text-zinc-600"
-                            : "text-[#9d8659]"
+                            ? "rec-text text-right"
+                            : "rec-accent"
                         }`}
                       >
                         {message.role === "user" ? "You" : "Recognition"} ·{" "}
@@ -244,8 +244,8 @@ export default async function RecognitionArchivePage(props: Props) {
                       <div
                         className={
                           message.role === "user"
-                            ? "whitespace-pre-wrap rounded-[1.5rem] border border-white/[0.08] bg-zinc-900 px-5 py-4 text-base leading-7 text-zinc-200"
-                            : "whitespace-pre-wrap border-l border-[#6f5a31] pl-5 font-serif text-xl leading-9 text-[#e6dfd2] md:pl-7 md:text-2xl"
+                            ? "rec-user-bubble whitespace-pre-wrap rounded-[1.5rem] border px-5 py-4 text-base leading-7"
+                            : "rec-assistant-message whitespace-pre-wrap border-l pl-5 font-serif text-xl leading-9 md:pl-7 md:text-2xl"
                         }
                       >
                         {message.content}
@@ -258,11 +258,11 @@ export default async function RecognitionArchivePage(props: Props) {
               {selectedThread.status === "active" ? (
                 <RecognitionMemoryControls initialAnchors={memory.anchors} />
               ) : (
-                <section className="mt-16 rounded-[2rem] border border-zinc-800 bg-black/20 p-6 md:p-8">
-                  <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
+                <section className="rec-saved-panel mt-16 rounded-[2rem] border p-6 md:p-8">
+                  <p className="rec-accent text-xs uppercase tracking-[0.22em]">
                     Archived memory
                   </p>
-                  <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-400">
+                  <p className="rec-text mt-3 max-w-2xl text-sm leading-7">
                     This chat is closed. Its messages remain unchanged here; new
                     Recognition replies use the current chat instead.
                   </p>
@@ -276,8 +276,8 @@ export default async function RecognitionArchivePage(props: Props) {
               />
             </>
           ) : (
-            <div className="rounded-[2rem] border border-zinc-700 bg-[#11100D] p-6">
-              <p className="text-base leading-7 text-zinc-300">
+            <div className="rec-saved-panel rounded-[2rem] border p-6">
+              <p className="rec-text text-base leading-7">
                 Your Recognition conversation has not started yet.
               </p>
             </div>

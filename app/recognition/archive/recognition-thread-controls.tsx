@@ -57,20 +57,20 @@ export default function RecognitionThreadControls({
   }
 
   return (
-    <section className="mt-10 rounded-[2rem] border border-zinc-800 bg-black/20 p-6 md:p-8">
-      <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
+    <section className="rec-user-bubble mt-10 rounded-[2rem] border p-6 md:p-8">
+      <p className="rec-accent text-xs uppercase tracking-[0.22em]">
         Delete chat
       </p>
-      <h2 className="mt-2 font-serif text-2xl text-zinc-100">
+      <h2 className="rec-text mt-2 font-serif text-2xl">
         Delete this conversation
       </h2>
-      <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-400">
+      <p className="rec-text mt-4 max-w-2xl text-sm leading-7">
         This removes only this Recognition chat and its messages. Other chats in
         your Archive stay exactly where they are.
       </p>
 
       {error ? (
-        <p className="mt-5 rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-300">
+        <p className="rec-error-panel mt-5 rounded-2xl border px-4 py-3 text-sm">
           {error}
         </p>
       ) : null}
@@ -79,7 +79,7 @@ export default function RecognitionThreadControls({
         type="button"
         disabled={isDeleting}
         onClick={() => void deleteConversation()}
-        className="mt-6 rounded-full border border-zinc-700 px-5 py-2.5 text-sm text-zinc-400 transition hover:border-[#8d7447] hover:text-[#e7c98b] disabled:cursor-not-allowed disabled:opacity-40"
+        className="rec-text mt-6 rounded-full border border-[var(--recognition-user-border)] px-5 py-2.5 text-sm transition hover:border-[var(--recognition-composer-focus)] hover:text-[var(--recognition-gold)] disabled:cursor-not-allowed disabled:opacity-40"
       >
         {isDeleting ? "Deleting…" : "Delete this chat"}
       </button>
