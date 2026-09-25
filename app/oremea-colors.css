@@ -1,0 +1,126 @@
+:root {
+  /* Core Oremea palette */
+  --oremea-bg: #090909;
+  --oremea-black: #000000;
+  --oremea-text: #f8f5ef;
+  --oremea-text-primary: #f3efe7;
+  --oremea-text-secondary: #e8e2d8;
+  --oremea-text-disabled: #cfc6b8;
+
+  --oremea-gold: #f0cf7a;
+  --oremea-gold-hover: #ffe2a0;
+  --oremea-gold-border: #d5b56e;
+
+  --oremea-panel: rgb(0 0 0 / 0.60);
+  --oremea-panel-strong: rgb(0 0 0 / 0.75);
+  --oremea-panel-soft: rgb(0 0 0 / 0.50);
+  --oremea-border: rgb(255 255 255 / 0.22);
+  --oremea-border-strong: rgb(255 255 255 / 0.32);
+
+  --oremea-danger: #fca5a5;
+  --oremea-danger-border: rgb(248 113 113 / 0.35);
+
+  /* Existing site brand values retained as tokens. */
+  --brand: 36 74 62;
+  --brand-mid: 74 124 111;
+  --brand-light: 209 231 224;
+}
+
+/*
+ * Product aliases. Pages reference semantic roles instead of raw colours.
+ * This lets the palette change once without hunting through route files.
+ */
+.resonance-theme,
+.resonance-readable {
+  --product-bg: var(--oremea-bg);
+  --product-text: var(--oremea-text);
+  --product-text-primary: var(--oremea-text-primary);
+  --product-text-secondary: var(--oremea-text-secondary);
+  --product-text-disabled: var(--oremea-text-disabled);
+  --product-accent: var(--oremea-gold);
+  --product-accent-hover: var(--oremea-gold-hover);
+  --product-accent-border: var(--oremea-gold-border);
+  --product-panel: var(--oremea-panel);
+  --product-panel-strong: var(--oremea-panel-strong);
+  --product-panel-soft: var(--oremea-panel-soft);
+  --product-border: var(--oremea-border);
+  --product-border-strong: var(--oremea-border-strong);
+
+  color: var(--product-text);
+}
+
+/* Semantic text roles */
+.res-text { color: var(--product-text); }
+.res-text-primary { color: var(--product-text-primary); }
+.res-text-secondary { color: var(--product-text-secondary); }
+.res-text-disabled { color: var(--product-text-disabled); }
+.res-accent { color: var(--product-accent); }
+.res-accent-hover:hover { color: var(--product-accent-hover); }
+
+/* Semantic surfaces and borders */
+.res-panel { background-color: var(--product-panel); }
+.res-panel-strong { background-color: var(--product-panel-strong); }
+.res-panel-soft { background-color: var(--product-panel-soft); }
+.res-border { border-color: var(--product-border); }
+.res-border-strong { border-color: var(--product-border-strong); }
+.res-accent-border { border-color: rgb(213 181 110 / 0.75); }
+.res-photo-overlay { background-color: var(--product-panel-strong); }
+
+/* Form/control defaults inside Resonance */
+.resonance-theme textarea,
+.resonance-theme input,
+.resonance-theme select,
+.resonance-readable textarea,
+.resonance-readable input,
+.resonance-readable select {
+  color: var(--product-text);
+}
+
+.resonance-theme textarea::placeholder,
+.resonance-theme input::placeholder,
+.resonance-readable textarea::placeholder,
+.resonance-readable input::placeholder {
+  color: var(--product-text-disabled);
+  opacity: 1;
+}
+
+/*
+ * Compatibility layer while pages are migrated one at a time.
+ * Remove these selectors after every Resonance route uses semantic classes.
+ */
+.resonance-readable [class*="text-zinc-100"],
+.resonance-readable [class*="text-zinc-200"],
+.resonance-readable [class*="text-zinc-300"] {
+  color: var(--product-text-primary) !important;
+}
+
+.resonance-readable [class*="text-zinc-400"],
+.resonance-readable [class*="text-zinc-500"] {
+  color: var(--product-text-secondary) !important;
+}
+
+.resonance-readable [class*="text-[#c8a96a]"],
+.resonance-readable [class*="text-[#C8A96A]"],
+.resonance-readable [class*="text-[#e0c38b]"],
+.resonance-readable [class*="text-[#e7c98b]"] {
+  color: var(--product-accent) !important;
+}
+
+.resonance-readable [class*="bg-black/35"],
+.resonance-readable [class*="bg-black/40"],
+.resonance-readable [class*="bg-black/45"],
+.resonance-readable [class*="bg-black/50"],
+.resonance-readable [class*="bg-black/55"] {
+  background-color: var(--product-panel) !important;
+}
+
+.resonance-readable [class*="border-white/10"],
+.resonance-readable [class*="border-white/15"] {
+  border-color: var(--product-border) !important;
+}
+
+.resonance-readable [class*="border-[#c8a96a]"],
+.resonance-readable [class*="border-[#C8A96A]"],
+.resonance-readable [class*="border-[#e7c98b]"] {
+  border-color: rgb(213 181 110 / 0.75) !important;
+}
