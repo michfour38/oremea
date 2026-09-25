@@ -45,6 +45,8 @@
   --product-panel-soft: var(--oremea-panel-soft);
   --product-border: var(--oremea-border);
   --product-border-strong: var(--oremea-border-strong);
+  --product-danger: var(--oremea-danger);
+  --product-danger-border: var(--oremea-danger-border);
 
   color: var(--product-text);
 }
@@ -56,14 +58,17 @@
 .res-text-disabled { color: var(--product-text-disabled); }
 .res-accent { color: var(--product-accent); }
 .res-accent-hover:hover { color: var(--product-accent-hover); }
+.res-danger { color: var(--product-danger); }
 
 /* Semantic surfaces and borders */
+.res-bg { background-color: var(--product-bg); }
 .res-panel { background-color: var(--product-panel); }
 .res-panel-strong { background-color: var(--product-panel-strong); }
 .res-panel-soft { background-color: var(--product-panel-soft); }
 .res-border { border-color: var(--product-border); }
 .res-border-strong { border-color: var(--product-border-strong); }
 .res-accent-border { border-color: rgb(213 181 110 / 0.75); }
+.res-danger-border { border-color: var(--product-danger-border); }
 .res-divider { border-color: var(--product-border); }
 .res-photo-overlay { background-color: var(--product-panel-strong); }
 
