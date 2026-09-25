@@ -26,6 +26,10 @@
   --resonance-archive-overlay:
     radial-gradient(circle at top, rgb(34 40 48 / 0.14) 0%, rgb(10 10 10 / 0.34) 40%, rgb(0 0 0 / 0.66) 100%),
     linear-gradient(to bottom, rgb(0 0 0 / 0.14), rgb(0 0 0 / 0.38), rgb(0 0 0 / 0.58));
+  --resonance-marketing-dim: rgb(0 0 0 / 0.15);
+  --resonance-marketing-overlay:
+    radial-gradient(circle at top, rgb(240 207 122 / 0.12), transparent 45%),
+    linear-gradient(to bottom, rgb(0 0 0 / 0.10), rgb(0 0 0 / 0.50));
 
   /* Existing site brand values retained as tokens. */
   --brand: 36 74 62;
@@ -87,6 +91,8 @@
 .res-divider { border-color: var(--product-border); }
 .res-photo-overlay { background-color: var(--product-panel-strong); }
 .res-archive-overlay { background: var(--resonance-archive-overlay); }
+.res-marketing-dim { background-color: var(--resonance-marketing-dim); }
+.res-marketing-overlay { background: var(--resonance-marketing-overlay); }
 .res-error-panel {
   color: var(--product-danger);
   border-color: var(--product-danger-border);
