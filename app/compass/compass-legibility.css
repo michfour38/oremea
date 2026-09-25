@@ -10,3 +10,138 @@
   color: var(--compass-text-soft) !important;
   opacity: 1;
 }
+
+.compass-main-backdrop {
+  background:
+    radial-gradient(
+      circle at top left,
+      var(--compass-atmosphere-gold),
+      transparent 28%
+    ),
+    linear-gradient(
+      180deg,
+      var(--compass-atmosphere-top),
+      var(--compass-bg)
+    );
+}
+
+.primary-button {
+  margin-top: 1rem;
+  width: 100%;
+  border-radius: 999px;
+  border: 1px solid var(--compass-gold);
+  background: linear-gradient(
+    180deg,
+    var(--compass-gold),
+    var(--compass-gold-dark)
+  );
+  padding: 0.95rem 1.2rem;
+  font-size: 0.92rem;
+  color: var(--compass-ink);
+  font-weight: 600;
+  transition: 180ms ease;
+}
+
+.primary-button:hover {
+  border-color: var(--compass-gold-hover);
+  background: linear-gradient(
+    180deg,
+    var(--compass-gold-hover),
+    var(--compass-gold-dark-hover)
+  );
+}
+
+.secondary-button {
+  margin-top: 0.25rem;
+  width: 100%;
+  border-radius: 999px;
+  border: 1px solid var(--compass-border-secondary);
+  background: var(--compass-surface-strong);
+  padding: 0.9rem 1.2rem;
+  font-size: 0.9rem;
+  color: var(--compass-text-muted);
+  transition: 180ms ease;
+}
+
+.secondary-button:hover {
+  border-color: var(--compass-border-hover);
+  color: var(--compass-text);
+}
+
+.selection-button {
+  border-radius: 1.2rem;
+  border: 1px solid var(--compass-border);
+  background: var(--compass-surface-soft);
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.92rem;
+  color: var(--compass-gold);
+  transition: 180ms ease;
+}
+
+.selection-button:hover {
+  border-color: var(--compass-gold);
+  background: color-mix(
+    in srgb,
+    var(--compass-surface-soft) 82%,
+    var(--compass-gold) 18%
+  );
+}
+
+.compass-textarea {
+  min-height: 170px;
+  width: 100%;
+  resize: none;
+  border-radius: 1.5rem;
+  border: 2px solid var(--compass-gold-border);
+  background: var(--compass-surface-warm);
+  padding: 1rem 1.2rem;
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--compass-text);
+  outline: none;
+  transition: 180ms ease;
+}
+
+.compass-textarea::placeholder {
+  color: var(--compass-text-muted);
+}
+
+.compass-descent-textarea::placeholder {
+  color: var(--compass-text);
+  opacity: 1;
+}
+
+.compass-textarea:focus {
+  border-color: var(--compass-gold);
+  background: var(--compass-surface-warm-focus);
+  box-shadow: 0 0 0 1px var(--compass-gold-ring);
+}
+
+.compass-process-layer {
+  background: linear-gradient(
+    180deg,
+    var(--compass-process-top) 0%,
+    var(--compass-process-mid) 16rem,
+    var(--compass-process-bottom) 44rem
+  );
+  box-shadow: 0 -24px 80px var(--compass-shadow);
+  -webkit-backdrop-filter: blur(2px) saturate(108%);
+  backdrop-filter: blur(2px) saturate(108%);
+}
+
+.compass-process-layer .compass-process-inner > section {
+  background: var(--compass-section);
+  -webkit-backdrop-filter: blur(6px) saturate(106%);
+  backdrop-filter: blur(6px) saturate(106%);
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .compass-process-layer {
+    background: var(--compass-process-fallback);
+  }
+
+  .compass-process-layer .compass-process-inner > section {
+    background: var(--compass-section-fallback);
+  }
+}
