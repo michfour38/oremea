@@ -61,6 +61,45 @@
   --recognition-disabled-text: #a1a1aa;
   --recognition-shadow: rgb(0 0 0 / 0.25);
 
+  /* Compass palette */
+  --compass-bg: #090909;
+  --compass-text: #f4f4f5;
+  --compass-text-soft: #e4e4e7;
+  --compass-text-muted: #a1a1aa;
+  --compass-gold: #d8b15f;
+  --compass-gold-hover: #e2c374;
+  --compass-gold-dark: #9f7332;
+  --compass-gold-dark-hover: #a87a38;
+  --compass-gold-soft: #e7c98b;
+  --compass-ink: #120d07;
+  --compass-surface: #0f0f0f;
+  --compass-surface-strong: #111111;
+  --compass-surface-soft: #131313;
+  --compass-surface-mid: #141414;
+  --compass-surface-warm: #18110b;
+  --compass-surface-warm-focus: #1f1710;
+  --compass-map-surface: #17130d;
+  --compass-map-border: #3a3224;
+  --compass-border: #27272a;
+  --compass-border-secondary: #3f3f46;
+  --compass-border-hover: #71717a;
+  --compass-border-subtle: rgb(255 255 255 / 0.07);
+  --compass-gold-border: rgb(216 177 95 / 0.45);
+  --compass-gold-ring: rgb(216 177 95 / 0.15);
+  --compass-error: rgb(253 230 138 / 0.80);
+  --compass-shadow: rgb(0 0 0 / 0.42);
+  --compass-card-shadow: rgb(0 0 0 / 0.30);
+  --compass-return-shadow: rgb(0 0 0 / 0.40);
+  --compass-atmosphere-gold: rgb(184 134 64 / 0.08);
+  --compass-atmosphere-top: rgb(16 16 16 / 0.96);
+  --compass-process-top: rgb(9 9 9 / 0.18);
+  --compass-process-mid: rgb(9 9 9 / 0.52);
+  --compass-process-bottom: rgb(9 9 9 / 0.96);
+  --compass-process-fallback: rgb(9 9 9 / 0.94);
+  --compass-section: rgb(15 15 15 / 0.62);
+  --compass-section-fallback: rgb(15 15 15 / 0.96);
+  --compass-return-bg: rgb(21 17 11 / 0.95);
+
   /* Resonance atmosphere */
   --resonance-archive-overlay:
     radial-gradient(circle at top, rgb(34 40 48 / 0.14) 0%, rgb(10 10 10 / 0.34) 40%, rgb(0 0 0 / 0.66) 100%),
@@ -120,6 +159,36 @@
   border-color: var(--recognition-disabled-border);
 }
 .rec-composer-shadow { box-shadow: 0 -10px 40px var(--recognition-shadow); }
+
+/* Compass semantic roles */
+.compass-theme {
+  color: var(--compass-text);
+  background: var(--compass-bg);
+  caret-color: var(--compass-gold);
+}
+.comp-text { color: var(--compass-text); }
+.comp-text-soft { color: var(--compass-text-soft); }
+.comp-text-muted { color: var(--compass-text-muted); }
+.comp-accent { color: var(--compass-gold); }
+.comp-accent-soft { color: var(--compass-gold-soft); }
+.comp-error { color: var(--compass-error); }
+.comp-bg { background-color: var(--compass-bg); }
+.comp-surface { background-color: var(--compass-surface); }
+.comp-surface-soft { background-color: var(--compass-surface-soft); }
+.comp-surface-mid { background-color: var(--compass-surface-mid); }
+.comp-card {
+  color: var(--compass-text);
+  background-color: var(--compass-surface);
+  border-color: var(--compass-border);
+}
+.comp-map-panel {
+  background-color: var(--compass-map-surface);
+  border-color: var(--compass-map-border);
+}
+.comp-border { border-color: var(--compass-border); }
+.comp-border-subtle { border-color: var(--compass-border-subtle); }
+.comp-accent-border { border-color: var(--compass-gold); }
+.comp-link-hover:hover { color: var(--compass-gold); }
 
 /* Resonance product aliases */
 .resonance-theme {
