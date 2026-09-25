@@ -166,7 +166,7 @@ export default async function ResonancePurchasePage(props: Props) {
   const isTester = userId === RESONANCE_TESTER_USER_ID;
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-zinc-950 text-white">
+    <main className="resonance-readable relative min-h-screen overflow-x-hidden bg-zinc-950 text-[#f8f5ef]">
       <div
         className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-40 md:hidden"
         style={{ backgroundImage: "url(/images/mobile/bg-entry.webp)" }}
@@ -175,7 +175,7 @@ export default async function ResonancePurchasePage(props: Props) {
         className="fixed inset-0 z-0 hidden bg-cover bg-center bg-no-repeat opacity-40 md:block"
         style={{ backgroundImage: "url(/images/desktop/bg-entry.webp)" }}
       />
-      <div className="fixed inset-0 z-10 bg-black/65" />
+      <div className="resonance-photo-overlay fixed inset-0 z-10" />
 
       <div className="relative z-20 min-h-screen">
         <MemberNav />
