@@ -133,7 +133,7 @@ export default async function ResonancePage() {
   return (
     <main
       data-resonance-root="true"
-      className="relative min-h-screen overflow-x-hidden text-white"
+      className="resonance-readable relative min-h-screen overflow-x-hidden text-[#f8f5ef]"
       style={{ caretColor: "#C8A96A" }}
     >
       <ResonanceInputFocus />
@@ -148,7 +148,7 @@ export default async function ResonancePage() {
         style={{ backgroundImage: `url(${backgrounds.desktop})` }}
       />
 
-      <div className="fixed inset-0 z-10 bg-black/55" />
+      <div className="resonance-photo-overlay fixed inset-0 z-10" />
 
       <div className="relative z-20 min-h-screen">
         <MemberNav />

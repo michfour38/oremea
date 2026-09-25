@@ -54,6 +54,70 @@ body {
 }
 
 /*
+ * Resonance contrast system.
+ * Resonance uses textured photographic backgrounds, so its useful copy, labels,
+ * controls, and panels need stronger contrast than flat Oremea surfaces. Keep
+ * this scoped to the Resonance journey so other products retain their own visual
+ * hierarchy while every Resonance step reads as one continuous experience.
+ */
+.resonance-readable {
+  color: #f8f5ef;
+}
+
+.resonance-readable .resonance-photo-overlay {
+  background-color: rgb(0 0 0 / 0.75) !important;
+}
+
+.resonance-readable [class*="text-zinc-100"],
+.resonance-readable [class*="text-zinc-200"],
+.resonance-readable [class*="text-zinc-300"] {
+  color: #f3efe7 !important;
+}
+
+.resonance-readable [class*="text-zinc-400"],
+.resonance-readable [class*="text-zinc-500"] {
+  color: #e8e2d8 !important;
+}
+
+.resonance-readable [class*="text-[#c8a96a]"],
+.resonance-readable [class*="text-[#C8A96A]"],
+.resonance-readable [class*="text-[#e0c38b]"],
+.resonance-readable [class*="text-[#e7c98b]"] {
+  color: #f0cf7a !important;
+}
+
+.resonance-readable [class*="bg-black/35"],
+.resonance-readable [class*="bg-black/40"],
+.resonance-readable [class*="bg-black/45"],
+.resonance-readable [class*="bg-black/50"],
+.resonance-readable [class*="bg-black/55"] {
+  background-color: rgb(0 0 0 / 0.6) !important;
+}
+
+.resonance-readable [class*="border-white/10"],
+.resonance-readable [class*="border-white/15"] {
+  border-color: rgb(255 255 255 / 0.22) !important;
+}
+
+.resonance-readable [class*="border-[#c8a96a]"],
+.resonance-readable [class*="border-[#C8A96A]"],
+.resonance-readable [class*="border-[#e7c98b]"] {
+  border-color: rgb(213 181 110 / 0.75) !important;
+}
+
+.resonance-readable textarea,
+.resonance-readable input,
+.resonance-readable select {
+  color: #f8f5ef;
+}
+
+.resonance-readable textarea::placeholder,
+.resonance-readable input::placeholder {
+  color: #cfc6b8 !important;
+  opacity: 1;
+}
+
+/*
  * Oremea-wide validation navigation rule.
  * Every field identified as invalid receives the same unmistakable marker,
  * regardless of product, route, light surface, or dark surface.
