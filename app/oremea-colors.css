@@ -93,6 +93,17 @@
   background-color: rgb(240 207 122 / 0.10);
 }
 
+.res-action-soft {
+  color: var(--product-accent);
+  border-color: rgb(213 181 110 / 0.75);
+  background-color: rgb(240 207 122 / 0.15);
+}
+
+.res-action-soft:hover {
+  color: var(--product-accent-hover);
+  background-color: rgb(240 207 122 / 0.20);
+}
+
 .res-secondary-action {
   color: var(--product-text-primary);
   border-color: var(--product-border);
