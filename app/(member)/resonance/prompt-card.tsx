@@ -65,8 +65,8 @@ export default function PromptCard({ prompt }: PromptCardProps) {
 
   if (!prompt.isUnlocked) {
     return (
-      <div className="rounded-3xl border border-zinc-800 bg-black/45 px-6 py-6 opacity-65 backdrop-blur-[2px]">
-        <p className="select-none text-sm leading-7 text-zinc-500 blur-[2px]">
+      <div className="res-border res-panel-soft rounded-3xl border px-6 py-6 opacity-65 backdrop-blur-[2px]">
+        <p className="res-text-disabled select-none text-sm leading-7 blur-[2px]">
           {prompt.content}
         </p>
       </div>
@@ -75,8 +75,8 @@ export default function PromptCard({ prompt }: PromptCardProps) {
 
   if (!prompt.isCompleted) {
     return (
-      <div className="space-y-5 rounded-3xl border border-zinc-700 bg-black/55 px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.24)] backdrop-blur-[3px]">
-        <p className="text-base leading-7 text-zinc-100">{prompt.content}</p>
+      <div className="res-border res-panel space-y-5 rounded-3xl border px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.24)] backdrop-blur-[3px]">
+        <p className="res-text-primary text-base leading-7">{prompt.content}</p>
 
         <form action={handleSubmit} className="space-y-4">
           <input type="hidden" name="promptId" value={prompt.id} />
@@ -86,15 +86,15 @@ export default function PromptCard({ prompt }: PromptCardProps) {
             name="response"
             placeholder="Write what feels true for you..."
             rows={4}
-            className="w-full resize-none rounded-2xl border border-zinc-700 bg-black/70 px-4 py-3 text-sm leading-7 text-zinc-100 caret-[#C8A96A] placeholder:text-zinc-500 focus:border-[#C8A96A]/65 focus:outline-none focus:ring-1 focus:ring-[#C8A96A]/35"
+            className="res-field w-full resize-none rounded-2xl border px-4 py-3 text-sm leading-7"
           />
 
           {submitError ? (
             <div
               aria-live="polite"
-              className="rounded-2xl border border-red-400/25 bg-red-950/20 px-4 py-3"
+              className="res-error-panel rounded-2xl border px-4 py-3"
             >
-              <p className="text-sm leading-6 text-red-300">{submitError}</p>
+              <p className="text-sm leading-6">{submitError}</p>
             </div>
           ) : null}
 
@@ -102,7 +102,7 @@ export default function PromptCard({ prompt }: PromptCardProps) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex min-w-[94px] items-center justify-center rounded-xl border border-[#C8A96A]/55 bg-[#C8A96A]/15 px-4 py-2 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/20 disabled:cursor-not-allowed disabled:opacity-45"
+              className="res-action-soft inline-flex min-w-[94px] items-center justify-center rounded-xl border px-4 py-2 text-sm transition disabled:cursor-not-allowed disabled:opacity-45"
             >
               {isSubmitting ? <LoadingDots /> : "Reflect"}
             </button>
@@ -113,8 +113,8 @@ export default function PromptCard({ prompt }: PromptCardProps) {
   }
 
   return (
-    <div className="space-y-5 rounded-3xl border border-[#C8A96A]/30 bg-black/50 px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.22)] backdrop-blur-[3px]">
-      <p className="text-base leading-7 text-zinc-100">{prompt.content}</p>
+    <div className="res-accent-border res-panel space-y-5 rounded-3xl border px-6 py-6 shadow-[0_18px_70px_rgba(0,0,0,0.22)] backdrop-blur-[3px]">
+      <p className="res-text-primary text-base leading-7">{prompt.content}</p>
 
       {showEdit ? (
         <form action={handleSubmit} className="space-y-4">
@@ -125,15 +125,15 @@ export default function PromptCard({ prompt }: PromptCardProps) {
             name="response"
             defaultValue={prompt.response ?? ""}
             rows={4}
-            className="w-full resize-none rounded-2xl border border-zinc-700 bg-black/70 px-4 py-3 text-sm leading-7 text-zinc-100 caret-[#C8A96A] placeholder:text-zinc-500 focus:border-[#C8A96A]/65 focus:outline-none focus:ring-1 focus:ring-[#C8A96A]/35"
+            className="res-field w-full resize-none rounded-2xl border px-4 py-3 text-sm leading-7"
           />
 
           {submitError ? (
             <div
               aria-live="polite"
-              className="rounded-2xl border border-red-400/25 bg-red-950/20 px-4 py-3"
+              className="res-error-panel rounded-2xl border px-4 py-3"
             >
-              <p className="text-sm leading-6 text-red-300">{submitError}</p>
+              <p className="text-sm leading-6">{submitError}</p>
             </div>
           ) : null}
 
@@ -144,14 +144,14 @@ export default function PromptCard({ prompt }: PromptCardProps) {
                 setShowEdit(false);
                 setSubmitError("");
               }}
-              className="text-sm text-zinc-500 underline underline-offset-4 transition hover:text-zinc-300"
+              className="res-text-secondary res-accent-hover text-sm underline underline-offset-4 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex min-w-[100px] items-center justify-center rounded-xl border border-[#C8A96A]/55 bg-[#C8A96A]/15 px-4 py-2 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/20 disabled:cursor-not-allowed disabled:opacity-45"
+              className="res-action-soft inline-flex min-w-[100px] items-center justify-center rounded-xl border px-4 py-2 text-sm transition disabled:cursor-not-allowed disabled:opacity-45"
             >
               {isSubmitting ? <LoadingDots /> : "Save edit"}
             </button>
@@ -159,8 +159,8 @@ export default function PromptCard({ prompt }: PromptCardProps) {
         </form>
       ) : (
         <>
-          <div className="rounded-2xl border border-zinc-800 bg-black/55 px-4 py-4">
-            <p className="whitespace-pre-wrap text-sm leading-7 text-zinc-300">
+          <div className="res-border res-panel rounded-2xl border px-4 py-4">
+            <p className="res-text-primary whitespace-pre-wrap text-sm leading-7">
               {prompt.response}
             </p>
           </div>
@@ -173,12 +173,12 @@ export default function PromptCard({ prompt }: PromptCardProps) {
                   setSubmitError("");
                   setShowEdit(true);
                 }}
-                className="rounded-xl border border-[#C8A96A]/40 px-4 py-2 text-sm text-[#C8A96A] transition hover:bg-[#C8A96A]/10"
+                className="res-action inline-flex rounded-xl border px-4 py-2 text-sm transition"
               >
                 Edit reflection
               </button>
             ) : (
-              <div className="rounded-full border border-[#C8A96A]/30 px-3 py-1 text-xs uppercase tracking-[0.18em] text-[#C8A96A]">
+              <div className="res-accent res-accent-border rounded-full border px-3 py-1 text-xs uppercase tracking-[0.18em]">
                 Completed
               </div>
             )}
