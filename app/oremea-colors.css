@@ -20,6 +20,7 @@
   --oremea-alert: #fde68a;
   --oremea-danger: #fca5a5;
   --oremea-danger-border: rgb(248 113 113 / 0.35);
+  --oremea-danger-panel: rgb(69 10 10 / 0.20);
 
   /* Existing site brand values retained as tokens. */
   --brand: 36 74 62;
@@ -49,6 +50,7 @@
   --product-alert: var(--oremea-alert);
   --product-danger: var(--oremea-danger);
   --product-danger-border: var(--oremea-danger-border);
+  --product-danger-panel: var(--oremea-danger-panel);
 
   color: var(--product-text);
 }
@@ -74,6 +76,11 @@
 .res-danger-border { border-color: var(--product-danger-border); }
 .res-divider { border-color: var(--product-border); }
 .res-photo-overlay { background-color: var(--product-panel-strong); }
+.res-error-panel {
+  color: var(--product-danger);
+  border-color: var(--product-danger-border);
+  background-color: var(--product-danger-panel);
+}
 
 /* Semantic interactive roles */
 .res-action {
@@ -95,6 +102,19 @@
   color: var(--product-text);
   border-color: var(--product-border-strong);
   background-color: rgb(255 255 255 / 0.05);
+}
+
+.res-field {
+  color: var(--product-text);
+  background-color: var(--product-panel-strong);
+  border-color: var(--product-border);
+  caret-color: var(--product-accent);
+}
+
+.res-field:focus {
+  border-color: rgb(213 181 110 / 0.75);
+  box-shadow: 0 0 0 1px rgb(240 207 122 / 0.35);
+  outline: none;
 }
 
 /* Form/control defaults inside Resonance */
