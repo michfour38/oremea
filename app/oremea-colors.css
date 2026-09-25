@@ -17,6 +17,7 @@
   --oremea-border: rgb(255 255 255 / 0.22);
   --oremea-border-strong: rgb(255 255 255 / 0.32);
 
+  --oremea-alert: #fde68a;
   --oremea-danger: #fca5a5;
   --oremea-danger-border: rgb(248 113 113 / 0.35);
 
@@ -45,6 +46,7 @@
   --product-panel-soft: var(--oremea-panel-soft);
   --product-border: var(--oremea-border);
   --product-border-strong: var(--oremea-border-strong);
+  --product-alert: var(--oremea-alert);
   --product-danger: var(--oremea-danger);
   --product-danger-border: var(--oremea-danger-border);
 
@@ -58,6 +60,7 @@
 .res-text-disabled { color: var(--product-text-disabled); }
 .res-accent { color: var(--product-accent); }
 .res-accent-hover:hover { color: var(--product-accent-hover); }
+.res-alert { color: var(--product-alert); }
 .res-danger { color: var(--product-danger); }
 
 /* Semantic surfaces and borders */
