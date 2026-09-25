@@ -48,7 +48,7 @@ function CheckoutAction({
 }) {
   if (!href) {
     return (
-      <span className="inline-flex rounded-xl border border-white/10 px-5 py-3 text-sm text-zinc-500">
+      <span className="rec-text inline-flex rounded-xl border border-[var(--recognition-user-border)] px-5 py-3 text-sm">
         Checkout connection pending
       </span>
     );
@@ -57,7 +57,7 @@ function CheckoutAction({
   return (
     <a
       href={href}
-      className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/10"
+      className="rec-accent inline-flex rounded-xl border border-[var(--recognition-gold)] px-5 py-3 text-sm transition hover:bg-[color-mix(in_srgb,var(--recognition-gold)_10%,transparent)]"
     >
       {label}
     </a>
@@ -118,7 +118,7 @@ export default async function RecognitionPurchasePage(props: Props) {
   ];
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-zinc-950 text-white">
+    <main className="relative min-h-screen overflow-x-hidden">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
@@ -131,18 +131,21 @@ export default async function RecognitionPurchasePage(props: Props) {
         className="fixed inset-0 z-0 hidden bg-cover bg-center bg-no-repeat opacity-40 md:block"
         style={{ backgroundImage: "url(/images/desktop/bg-entry.webp)" }}
       />
-      <div className="fixed inset-0 z-10 bg-black/70" />
+      <div
+        className="fixed inset-0 z-10"
+        style={{ backgroundColor: "color-mix(in srgb, var(--recognition-bg) 70%, transparent)" }}
+      />
 
       <section className="relative z-20 mx-auto max-w-4xl px-6 py-12 md:py-16">
         <header className="mt-12 max-w-3xl">
-          <p className="text-xs uppercase tracking-[0.3em] text-[#f1dfb4]/70">
+          <p className="rec-accent text-xs uppercase tracking-[0.3em]">
             Recognition · Help me see myself
           </p>
-          <h1 className="mt-4 font-serif text-4xl font-light tracking-tight md:text-6xl">
+          <h1 className="rec-text mt-4 font-serif text-4xl font-light tracking-tight md:text-6xl">
             A private AI discussion journal for thoughts that need more than a
             journal page
           </h1>
-          <p className="mt-6 max-w-2xl text-base leading-8 text-zinc-300">
+          <p className="rec-text mt-6 max-w-2xl text-base leading-8">
             Bring whatever has your attention. Recognition stays close to your
             own words and one live thread. It can notice distinctions,
             recurrence and unfinished thought without deciding what any of it
@@ -151,43 +154,43 @@ export default async function RecognitionPurchasePage(props: Props) {
         </header>
 
         {accessRequired ? (
-          <div className="mt-8 rounded-2xl border border-[#7b6338] bg-[#17130c] px-5 py-4 text-sm leading-7 text-[#e4d3ae]">
+          <div className="rec-saved-panel rec-text mt-8 rounded-2xl border px-5 py-4 text-sm leading-7">
             No active Recognition access was found for an email on this signed-in
             account. Use the same email at checkout, or sign in with the account
             that already has Recognition.
           </div>
         ) : null}
 
-        <section className="mt-10 rounded-3xl border border-[#c8a96a]/35 bg-black/45 p-6 md:p-8">
+        <section className="rec-saved-panel mt-10 rounded-3xl border p-6 md:p-8">
           <div className="flex flex-wrap items-end justify-between gap-5">
             <div>
-              <p className="text-xs uppercase tracking-[0.22em] text-[#c8a96a]">
+              <p className="rec-accent text-xs uppercase tracking-[0.22em]">
                 Monthly access
               </p>
-              <h2 className="mt-2 font-serif text-2xl text-zinc-100">
+              <h2 className="rec-text mt-2 font-serif text-2xl">
                 Ongoing Recognition
               </h2>
             </div>
             <div className="text-right">
               {regularPrice !== launchPrice ? (
-                <p className="text-sm text-zinc-500 line-through">
+                <p className="rec-text text-sm line-through">
                   {regularPrice}/month
                 </p>
               ) : null}
-              <p className="mt-1 text-3xl text-[#f1dfb4]">
+              <p className="rec-accent mt-1 text-3xl">
                 {launchPrice}
-                <span className="ml-1 text-sm text-zinc-500">/month</span>
+                <span className="rec-text ml-1 text-sm">/month</span>
               </p>
             </div>
           </div>
 
-          <p className="mt-5 text-sm leading-7 text-zinc-300">
+          <p className="rec-text mt-5 text-sm leading-7">
             There is no fixed question sequence and no required destination.
             Return whenever a thought needs somewhere to continue. Earlier
             participant-written evidence can return when it materially clarifies
             recurrence, correction, contrast or a distinction you are holding.
           </p>
-          <p className="mt-4 text-sm leading-7 text-zinc-400">
+          <p className="rec-text mt-4 text-sm leading-7">
             Your full private conversation remains available to you. You can
             inspect or remove carried-forward memory, clear remembered excerpts,
             or delete the conversation and start fresh without affecting access.
@@ -200,7 +203,7 @@ export default async function RecognitionPurchasePage(props: Props) {
             />
             <Link
               href="/sign-in?redirect_url=%2Fbegin"
-              className="text-sm text-zinc-400 underline underline-offset-4 transition hover:text-[#f1dfb4]"
+              className="rec-text text-sm underline underline-offset-4 transition hover:text-[var(--recognition-gold)]"
             >
               Already have access? Sign in
             </Link>
@@ -208,7 +211,7 @@ export default async function RecognitionPurchasePage(props: Props) {
         </section>
 
         <section className="mt-12">
-          <h2 className="font-serif text-3xl text-white">
+          <h2 className="rec-text font-serif text-3xl">
             How Recognition works
           </h2>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
@@ -228,21 +231,21 @@ export default async function RecognitionPurchasePage(props: Props) {
             ].map(([heading, copy]) => (
               <article
                 key={heading}
-                className="rounded-2xl border border-white/10 bg-black/35 p-5"
+                className="rec-user-bubble rounded-2xl border p-5"
               >
-                <h3 className="text-base text-[#f1dfb4]">{heading}</h3>
-                <p className="mt-3 text-sm leading-7 text-zinc-400">{copy}</p>
+                <h3 className="rec-accent text-base">{heading}</h3>
+                <p className="rec-text mt-3 text-sm leading-7">{copy}</p>
               </article>
             ))}
           </div>
         </section>
 
         <section className="mt-12 grid gap-5 md:grid-cols-2">
-          <div className="rounded-3xl border border-white/10 bg-black/35 p-6">
-            <h2 className="font-serif text-2xl text-white">
+          <div className="rec-user-bubble rounded-3xl border p-6">
+            <h2 className="rec-text font-serif text-2xl">
               Recognition may fit when
             </h2>
-            <ul className="mt-5 space-y-3 text-sm leading-7 text-zinc-300">
+            <ul className="rec-text mt-5 space-y-3 text-sm leading-7">
               <li>— Writing alone keeps circling the same thought.</li>
               <li>— A distinction is present but not yet clear.</li>
               <li>— You want reflection without advice or a prescribed route.</li>
@@ -251,19 +254,19 @@ export default async function RecognitionPurchasePage(props: Props) {
         </section>
 
         <section className="mt-12">
-          <h2 className="font-serif text-3xl text-white">
+          <h2 className="rec-text font-serif text-3xl">
             Recognition questions
           </h2>
           <div className="mt-6 space-y-4">
             {faq.map((item) => (
               <details
                 key={item.question}
-                className="rounded-2xl border border-white/10 bg-black/35 p-5"
+                className="rec-user-bubble rounded-2xl border p-5"
               >
-                <summary className="cursor-pointer text-sm text-[#f1dfb4]">
+                <summary className="rec-accent cursor-pointer text-sm">
                   {item.question}
                 </summary>
-                <p className="mt-4 text-sm leading-7 text-zinc-400">
+                <p className="rec-text mt-4 text-sm leading-7">
                   {item.answer}
                 </p>
               </details>
@@ -272,12 +275,12 @@ export default async function RecognitionPurchasePage(props: Props) {
         </section>
 
         <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
-          <p className="leading-7 text-zinc-500">
+          <p className="rec-text leading-7">
             Prices are shown and charged in US dollars
           </p>
           <Link
             href="https://recognition.oremea.com/archive"
-            className="text-zinc-400 underline underline-offset-4 transition hover:text-[#f1dfb4]"
+            className="rec-text underline underline-offset-4 transition hover:text-[var(--recognition-gold)]"
           >
             Open Recognition Archive
           </Link>
