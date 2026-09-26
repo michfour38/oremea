@@ -253,9 +253,11 @@ export default async function ResonanceEnterPage() {
                 <p className="res-text-primary mt-4 text-sm leading-7">
                   {room.description}
                 </p>
-                <p className="res-text-secondary mt-auto border-l border-[var(--product-accent-border)] pl-4 pt-6 text-sm leading-7">
-                  {room.buyerDecision}
-                </p>
+                <div className="mt-auto pt-6">
+                  <p className="res-text-secondary line-clamp-2 border-l border-[var(--product-accent-border)] pl-4 text-sm leading-7">
+                    {room.buyerDecision}
+                  </p>
+                </div>
               </article>
             ))}
           </div>
