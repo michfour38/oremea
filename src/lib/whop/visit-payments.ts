@@ -6,6 +6,7 @@ import {
 } from "./resonance-catalog";
 import { getOremeaCommerceOrigin, getWhopApiKey, whopApiRequest } from "./whop-api";
 
+// Apple Pay domain ownership is served from public/.well-known so embedded Whop checkout can expose Apple Pay on verified production domains.
 const checkoutSchema = z.object({
   id: z.string().min(1),
   company_id: z.string(),
