@@ -9,11 +9,9 @@ import { visitCheckoutEnabled } from "@/src/lib/resonance/visit-offers";
 // Keep this page as the single public Resonance funnel entry.
 export default async function ResonanceEnterPage() {
   const { userId } = await auth();
-  const publicCheckoutEnabled = visitCheckoutEnabled();
-  const checkoutEnabled = userId
-    ? await visitCheckoutAvailableFor(userId)
-    : publicCheckoutEnabled;
-  const destination = checkoutEnabled ? "/resonance/visits" : "/entry";
+  const checkoutEnabled = userId ? await visitCheckoutAvailableFor(userId) : false;
+  const funnelCheckoutEnabled = checkoutEnabled || (!userId && visitCheckoutEnabled());
+  const destination = funnelCheckoutEnabled ? "/resonance/visits" : "/entry";
   const entryHref = userId
     ? destination
     : `/sign-up?redirect_url=${encodeURIComponent(destination)}`;
@@ -70,7 +68,7 @@ export default async function ResonanceEnterPage() {
           </div>
 
           <p className="res-text-primary mx-auto mt-7 max-w-2xl text-center text-sm leading-7">
-            {checkoutEnabled
+            {funnelCheckoutEnabled
               ? "Choose one, three, or four visits. Each unused visit stays on your account until you use it to open a room. You choose the room after payment, so there is nothing else to decide before checkout."
               : "Choose the room that fits what is present now. Each purchase opens one fresh Resonance visit, while earlier completed visits remain preserved in the archive."}
           </p>
@@ -80,7 +78,7 @@ export default async function ResonanceEnterPage() {
               href={entryHref}
               className="res-action inline-flex rounded-xl border px-6 py-3 text-sm transition"
             >
-              {checkoutEnabled
+              {funnelCheckoutEnabled
                 ? userId
                   ? "Choose Resonance visits"
                   : "Create account and choose visits"
