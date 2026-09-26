@@ -18,7 +18,7 @@ const products = [
       "Private seven-day reflection visits with Daily Mirrors and a Closing Mirror. Buy visit capacity first, then choose each room only when you are ready.",
     bestFor:
       "Relational material you want to stay with over seven days without locking future room choices in advance.",
-    href: "/resonance-rooms",
+    href: "/resonance/enter",
     action: "Explore Resonance visits",
   },
   {

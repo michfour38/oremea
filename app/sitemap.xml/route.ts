@@ -4,7 +4,7 @@ const MAIN_ROUTES = [
   "/",
   "/explore",
   "/compare",
-  "/resonance-rooms",
+  "/resonance/enter",
   "/reviews",
   "/contact",
   "/terms",

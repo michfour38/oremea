@@ -161,10 +161,16 @@ for (const path of [
   "components/site/sections/explore-ecosystem.tsx",
   "components/site/sections/compare-resonance.tsx",
 ]) {
+  const source = readFileSync(path, "utf8");
   assert.match(
-    readFileSync(path, "utf8"),
+    source,
+    /\/resonance\/enter/,
+    `${path} must send prospects directly to the Resonance funnel entry.`,
+  );
+  assert.doesNotMatch(
+    source,
     /\/resonance-rooms/,
-    `${path} must send prospects to the public room chooser.`,
+    `${path} must not route prospects through the retired room catalogue.`,
   );
 }
 
@@ -191,12 +197,8 @@ assert.match(resonanceEnterPage, /seven-stage reflection experience/i);
 assert.match(resonanceEnterPage, /move through at your own pace/i);
 
 const resonanceRoomsPage = readFileSync("app/resonance-rooms/page.tsx", "utf8");
-assert.doesNotMatch(resonanceRoomsPage, /What it will not do|marketing\.limits/);
-assert.doesNotMatch(resonanceRoomsPage, /seven-day|seven days/i);
-assert.match(
-  resonanceRoomsPage,
-  /Open this room[\s\S]{0,180}Seven guided reflection stages · move at your own pace · no renewal/,
-);
+assert.match(resonanceRoomsPage, /permanentRedirect\("\/resonance\/enter"\)/);
+assert.doesNotMatch(resonanceRoomsPage, /RESONANCE_ROOM_MARKETING|Open this room|Get Resonance visits/);
 
 const compareResonance = readFileSync(
   "components/site/sections/compare-resonance.tsx",
@@ -217,17 +219,17 @@ assert.match(disclaimer, /do not diagnose personality, trauma, motives or hidden
 assert.match(disclaimer, /do not promise compatibility, reconciliation, emotional safety/i);
 
 assert.match(readFileSync("middleware.ts", "utf8"), /"\/resonance-rooms\(\.\*\)"/);
-assert.match(
-  readFileSync("app/sitemap.xml/route.ts", "utf8"),
-  /"\/resonance-rooms"/,
-);
+const sitemap = readFileSync("app/sitemap.xml/route.ts", "utf8");
+assert.match(sitemap, /"\/resonance\/enter"/);
+assert.doesNotMatch(sitemap, /"\/resonance-rooms"/);
 assert.match(
   readFileSync("components/site/sections/current-panel.tsx", "utf8"),
   /Private self-witnessing while a new one-to-one relationship is forming/,
 );
 
 const siteFooter = readFileSync("components/site/site-footer.tsx", "utf8");
-assert.match(siteFooter, /href="\/resonance-rooms"/);
+assert.match(siteFooter, /href="\/resonance\/enter"/);
+assert.doesNotMatch(siteFooter, /href="\/resonance-rooms"/);
 assert.doesNotMatch(siteFooter, /href="\/resonance"/);
 assert.doesNotMatch(siteFooter, /tel:/i);
 assert.doesNotMatch(siteFooter, /OREMEA_OPERATOR\.telephone/);

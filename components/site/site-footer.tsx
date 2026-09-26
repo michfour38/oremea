@@ -64,7 +64,7 @@ export function SiteFooter() {
               </Link>
 
               <Link
-                href="/resonance-rooms"
+                href="/resonance/enter"
                 className="transition hover:text-[#b79a63]"
               >
                 Resonance
