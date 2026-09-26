@@ -4,11 +4,15 @@ import { auth } from "@clerk/nextjs/server";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteNav } from "@/components/site/site-nav";
 import { visitCheckoutAvailableFor } from "@/src/lib/resonance/visit-access";
+import { visitCheckoutEnabled } from "@/src/lib/resonance/visit-offers";
 
-// Legacy visit-route contract marker: Choose the visits first. Choose the room next.
+// Keep this page as the single public Resonance funnel entry.
 export default async function ResonanceEnterPage() {
   const { userId } = await auth();
-  const checkoutEnabled = userId ? await visitCheckoutAvailableFor(userId) : false;
+  const publicCheckoutEnabled = visitCheckoutEnabled();
+  const checkoutEnabled = userId
+    ? await visitCheckoutAvailableFor(userId)
+    : publicCheckoutEnabled;
   const destination = checkoutEnabled ? "/resonance/visits" : "/entry";
   const entryHref = userId
     ? destination
@@ -67,35 +71,11 @@ export default async function ResonanceEnterPage() {
 
           <p className="res-text-primary mx-auto mt-7 max-w-2xl text-center text-sm leading-7">
             {checkoutEnabled
-              ? "The purchase step offers one, three, or four visits. Each unused visit stays available on the account until it is used to open a room. Room choice happens after payment, so the purchase is for Resonance visits rather than for a specific room."
+              ? "Choose one, three, or four visits. Each unused visit stays on your account until you use it to open a room. You choose the room after payment, so there is nothing else to decide before checkout."
               : "Choose the room that fits what is present now. Each purchase opens one fresh Resonance visit, while earlier completed visits remain preserved in the archive."}
           </p>
 
-          <div className="res-divider mt-8 border-t pt-8">
-            <div className="mx-auto max-w-2xl text-center">
-              <p className="res-accent text-xs uppercase tracking-[0.24em]">
-                How a room unfolds
-              </p>
-              <p className="res-text-primary mt-4 text-sm leading-7">
-                Each room moves through seven guided reflection stages at your own pace.
-              </p>
-              <p className="res-text-primary mt-4 text-sm leading-7">
-                Across the first six stages, the Mirror reflects what is becoming visible
-                and offers two questions to take the reflection deeper.
-              </p>
-              <p className="res-text-primary mt-4 text-sm leading-7">
-                The final stage brings the room together in a Closing Mirror, reflecting
-                what persisted, shifted, sharpened, or became newly visible.
-              </p>
-            </div>
-          </div>
-
-          <p className="res-text-secondary mx-auto mt-7 max-w-2xl text-center text-sm leading-7">
-            Completed rooms remain in the Archive. A later visit can open a different
-            room or return to one you have used before.
-          </p>
-
-          <div className="mt-8 flex justify-center">
+          <div className="mt-7 flex justify-center">
             <Link
               href={entryHref}
               className="res-action inline-flex rounded-xl border px-6 py-3 text-sm transition"
@@ -109,6 +89,30 @@ export default async function ResonanceEnterPage() {
                   : "Create account and choose a room"}
             </Link>
           </div>
+
+          <p className="res-text-secondary mx-auto mt-5 max-w-2xl text-center text-sm leading-7">
+            Completed rooms remain in the Archive. A later visit can open a different
+            room or return to one you have used before.
+          </p>
+
+          <details className="res-divider mt-8 border-t pt-6">
+            <summary className="res-text-primary cursor-pointer text-center text-sm">
+              What happens inside a room?
+            </summary>
+            <div className="mx-auto mt-5 max-w-2xl text-center">
+              <p className="res-text-primary text-sm leading-7">
+                Each room moves through seven guided reflection stages at your own pace.
+              </p>
+              <p className="res-text-primary mt-4 text-sm leading-7">
+                Across the first six stages, the Mirror reflects what is becoming visible
+                and offers two questions to take the reflection deeper.
+              </p>
+              <p className="res-text-primary mt-4 text-sm leading-7">
+                The final stage brings the room together in a Closing Mirror, reflecting
+                what persisted, shifted, sharpened, or became newly visible.
+              </p>
+            </div>
+          </details>
         </section>
 
         <section className="mx-auto mt-8 max-w-3xl space-y-4">
