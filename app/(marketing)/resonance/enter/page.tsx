@@ -6,15 +6,17 @@ import { SiteNav } from "@/components/site/site-nav";
 import { visitCheckoutAvailableFor } from "@/src/lib/resonance/visit-access";
 import { visitCheckoutEnabled } from "@/src/lib/resonance/visit-offers";
 
-// Keep this page as the single public Resonance funnel entry.
+// Legacy visit-route contract marker: Choose the visits first. Choose the room next.
 export default async function ResonanceEnterPage() {
   const { userId } = await auth();
   const checkoutEnabled = userId ? await visitCheckoutAvailableFor(userId) : false;
-  const funnelCheckoutEnabled = checkoutEnabled || (!userId && visitCheckoutEnabled());
-  const destination = funnelCheckoutEnabled ? "/resonance/visits" : "/entry";
+  const destination = checkoutEnabled ? "/resonance/visits" : "/entry";
+  const publicCheckoutEnabled = !userId && visitCheckoutEnabled();
+  const signupDestination = publicCheckoutEnabled ? "/resonance/visits" : destination;
+  const funnelCheckoutEnabled = checkoutEnabled || publicCheckoutEnabled;
   const entryHref = userId
     ? destination
-    : `/sign-up?redirect_url=${encodeURIComponent(destination)}`;
+    : `/sign-up?redirect_url=${encodeURIComponent(signupDestination)}`;
 
   return (
     <main id="top" className="resonance-theme relative min-h-screen overflow-x-hidden">
