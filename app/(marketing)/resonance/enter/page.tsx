@@ -242,7 +242,7 @@ export default async function ResonanceEnterPage() {
             {RESONANCE_ROOM_MARKETING.map((room) => (
               <article
                 key={room.id}
-                className="res-border res-panel rounded-3xl border p-6 md:p-7"
+                className="res-border res-panel flex h-full flex-col rounded-3xl border p-6 md:p-7"
               >
                 <p className="res-accent text-xs uppercase tracking-[0.2em]">
                   Room {room.weekNumber}
@@ -253,7 +253,7 @@ export default async function ResonanceEnterPage() {
                 <p className="res-text-primary mt-4 text-sm leading-7">
                   {room.description}
                 </p>
-                <p className="res-text-secondary mt-4 border-l border-[var(--product-accent-border)] pl-4 text-sm leading-7">
+                <p className="res-text-secondary mt-auto border-l border-[var(--product-accent-border)] pl-4 pt-6 text-sm leading-7">
                   {room.buyerDecision}
                 </p>
               </article>
