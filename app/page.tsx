@@ -22,7 +22,7 @@ const products = [
   },
   {
     name: "Resonance",
-    href: "/resonance-rooms",
+    href: "/resonance/enter",
     active: true,
     short:
       "Private seven-day reflection visits. Buy the visits first; choose each room only when you are ready to enter it.",
