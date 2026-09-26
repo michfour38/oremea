@@ -55,7 +55,7 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
 
                   <div className="mt-4 flex flex-wrap gap-4">
                     <Link
-                      href="/resonance-rooms"
+                      href="/resonance/enter"
                       className="rounded-full border border-[#e7c98b]/35 bg-[#e7c98b]/[0.05] px-5 py-2 text-sm text-[#e7c98b] transition hover:border-[#e7c98b]/70 hover:bg-[#e7c98b]/10"
                     >
                       Explore Resonance visits
@@ -116,7 +116,7 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
 
                 <div className="flex flex-wrap gap-4 pt-2">
                   <Link
-                    href="/resonance-rooms"
+                    href="/resonance/enter"
                     className="rounded-full border border-[#e7c98b]/35 bg-[#e7c98b]/[0.05] px-5 py-2 text-sm text-[#e7c98b] transition hover:border-[#e7c98b]/70 hover:bg-[#e7c98b]/10"
                   >
                     Explore Resonance visits
