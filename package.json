@@ -41,7 +41,7 @@
     "test:commerce-routing": "tsx scripts/verify-commerce-routing-contract.ts",
     "test:public-pricing": "tsx scripts/verify-public-pricing-contract.ts",
     "test:current": "tsx scripts/verify-current-invitation-contract.ts",
-    "test:dawn-truth": "tsx scripts/verify-dawn-truth-export-contract.ts",
+    "test:dawn-truth": "tsx scripts/verify-dawn-truth-export-contract.ts && tsx scripts/verify-dawn-commerce-metrics-contract.ts",
     "test:product-marketing": "tsx scripts/verify-product-marketing-contract.ts",
     "test:product-reset": "tsx scripts/verify-product-test-reset-contract.ts",
     "test:member-nav-product": "tsx scripts/verify-member-nav-product-contract.ts",

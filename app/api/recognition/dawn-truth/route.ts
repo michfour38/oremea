@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 
 import { NextResponse } from "next/server";
 
-import { oremeaProductTruthSnapshot } from "@/src/lib/oremea/product-truth";
+import { oremeaDawnTruthSnapshot } from "@/src/lib/oremea/dawn-truth";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     );
   }
 
-  return NextResponse.json(oremeaProductTruthSnapshot(), {
+  return NextResponse.json(await oremeaDawnTruthSnapshot(), {
     status: 200,
     headers: {
       ...routeHeaders,
