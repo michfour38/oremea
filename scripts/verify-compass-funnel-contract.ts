@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const access = readFileSync("app/compass/access/page.tsx", "utf8");
+const colors = readFileSync("app/oremea-colors.css", "utf8");
 const middleware = readFileSync("middleware.ts", "utf8");
 const flow = readFileSync(
   "src/lib/compass/session/compass-flow-contract.ts",
@@ -62,13 +63,23 @@ assert.doesNotMatch(
 );
 assert.doesNotMatch(
   access,
-  /c8a96a/i,
-  "Compass public funnel must use the single approved gold rather than mixed yellow-gold accents.",
+  /f1dfb4|c8a96a|f0cf7a|d5b56e/i,
+  "Compass public funnel must not carry legacy hard-coded yellow-gold values.",
 );
 assert.match(
   access,
-  /f1dfb4/i,
-  "Compass public funnel must retain the approved Oremea gold accent.",
+  /var\(--oremea-gold\)/,
+  "Compass public funnel must inherit the Oremea gold token rather than define its own gold.",
+);
+assert.match(
+  colors,
+  /--oremea-gold:\s*#cda434/i,
+  "Oremea brand gold must remain the owner-approved burnished gold #CDA434 unless deliberately changed.",
+);
+assert.match(
+  colors,
+  /--recognition-gold:\s*var\(--oremea-gold\)/,
+  "Recognition must inherit the shared Oremea gold rather than define a competing accent hue.",
 );
 
 const checkoutActionUses = access.match(/<CheckoutAction/g) ?? [];
@@ -105,4 +116,4 @@ assert.match(
   "Compass /begin must remain the product handoff after access is active.",
 );
 
-console.log("Compass goal-setting funnel, private-method, pricing and styling contract checks passed.");
+console.log("Compass goal-setting funnel, private-method, pricing and Oremea-gold contract checks passed.");
