@@ -2,11 +2,11 @@ import { timingSafeEqual } from "node:crypto";
 
 import { NextResponse } from "next/server";
 
-import { oremeaProductTruthSnapshot } from "@/src/lib/oremea/product-truth";
+import { oremeaDawnTruthSnapshot } from "@/src/lib/oremea/dawn-truth";
 
 export const dynamic = "force-dynamic";
 
-const ROUTE_HEADER = { "X-Oremea-Dawn-Truth": "v1" } as const;
+const ROUTE_HEADER = { "X-Oremea-Dawn-Truth": "v2" } as const;
 
 function sameSecret(left: string, right: string) {
   const a = Buffer.from(left);
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     );
   }
 
-  return NextResponse.json(oremeaProductTruthSnapshot(), {
+  return NextResponse.json(await oremeaDawnTruthSnapshot(), {
     status: 200,
     headers: {
       "Cache-Control": "no-store, max-age=0",
