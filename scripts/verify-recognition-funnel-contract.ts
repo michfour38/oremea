@@ -16,16 +16,21 @@ assert.match(
 );
 assert.match(
   purchase,
-  /After checkout/,
-  "The Recognition funnel must explain the post-checkout handoff.",
+  /After purchase/,
+  "The Recognition funnel must explain the post-purchase handoff.",
 );
-assert.match(purchase, /1 · Complete checkout/);
+assert.match(purchase, /1 · Purchase Recognition/);
 assert.match(purchase, /2 · Sign in with that email/);
 assert.match(purchase, /3 · Begin where you are/);
 assert.match(
   purchase,
-  /Recognition access follows the email attached to the active Whop[\s\S]*membership/,
-  "The funnel must explain the email identity that joins Whop access to Recognition.",
+  /Use the same email to purchase and sign in to Recognition/,
+  "The funnel must explain the one-email handoff without exposing payment infrastructure as another customer step.",
+);
+assert.doesNotMatch(
+  purchase,
+  /active Whop membership|secure Whop checkout|Once Whop has confirmed the membership/i,
+  "The customer-facing Recognition handoff must not make Whop a separate conceptual step.",
 );
 
 const checkoutActionUses = purchase.match(/<CheckoutAction/g) ?? [];
