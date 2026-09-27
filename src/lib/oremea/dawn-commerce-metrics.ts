@@ -9,6 +9,7 @@ export type DawnCommerceMetricOrder = {
   status: string;
   parent_id: string | null;
   offer_closed_at: Date | null;
+  affiliate_code?: string | null;
 };
 
 const coverage = {
@@ -16,7 +17,7 @@ const coverage = {
   checkoutFunnel: "order_created_to_payment_status",
   pageFunnelEvents: "not_collected",
   visitUsage: "resonance_visit_redemptions",
-  affiliateAttribution: "not_collected",
+  affiliateAttribution: "requested_referral_only_whop_confirms_commission",
   apiUsageCost: "usage_exposed_by_gateway_not_persisted",
   refundValue: "refund_amount_not_persisted",
   subscriptionRetention: "not_aggregated",
@@ -94,6 +95,16 @@ export function aggregateDawnCommerceMetrics(
     privacy: "aggregate_no_pii" as const,
     currency: "USD" as const,
     coverage,
+    affiliateEconomics: {
+      referredOrderStarts: orders.filter(order => Boolean(order.affiliate_code)).length,
+      referredSuccessfulOrders: successfulOrders.filter(order => Boolean(order.affiliate_code)).length,
+      referredGrossSalesCents: successfulOrders.filter(order => Boolean(order.affiliate_code)).reduce((sum, order) => sum + order.amount_cents, 0),
+      confirmedCommissionCents: null,
+      retainedRevenueCents: null,
+      feeSource: "whop_transaction_ledger_required",
+      attributionBasis: "requested_not_provider_confirmed",
+      financialExecution: false,
+    },
     resonanceVisits: {
       orderStarts: orders.length,
       initialOrderStarts: initialOrders.length,
@@ -173,6 +184,7 @@ export async function oremeaDawnCommerceMetrics() {
         status: true,
         parent_id: true,
         offer_closed_at: true,
+        affiliate_code: true,
       },
     }),
     prisma.resonance_visit_redemptions.count(),

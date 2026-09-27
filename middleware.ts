@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextRequest, type NextFetchEvent } from "next/server";
+import { AFFILIATE_COOKIE, affiliateCode } from "./src/lib/whop/affiliate-attribution";
 
 const RECOGNITION_HOST = "recognition.oremea.com";
 const COMPASS_HOST = "compass.oremea.com";
@@ -325,7 +326,7 @@ const isPublicRoute = createRouteMatcher([
   "/compass/access(.*)",
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
+const oremeaMiddleware = clerkMiddleware(async (auth, req) => {
   if (isCompassProtectedPath(req)) {
     await auth.protect();
   }
@@ -351,6 +352,25 @@ export default clerkMiddleware(async (auth, req) => {
     await auth.protect();
   }
 });
+
+export default async function middleware(req: NextRequest, event: NextFetchEvent) {
+  const host = getHostname(req);
+  const trustedHost = host === "oremea.com" || host.endsWith(".oremea.com") || host === "localhost";
+  const code = trustedHost && req.method === "GET" ? affiliateCode(req.nextUrl.searchParams.get("a")) : null;
+  // A session cookie bridges Oremea hosts and sign-in without inventing a
+  // longer attribution window. Whop remains authoritative for eligibility.
+  if (code) req.cookies.set(AFFILIATE_COOKIE, code);
+  const response = await oremeaMiddleware(req, event) ?? NextResponse.next();
+  if (code) {
+    const cookie = new NextResponse();
+    cookie.cookies.set(AFFILIATE_COOKIE, code, {
+      httpOnly: true, secure: host !== "localhost", sameSite: "lax", path: "/",
+      ...(host === "localhost" ? {} : { domain: ".oremea.com" }),
+    });
+    response.headers.append("set-cookie", cookie.headers.get("set-cookie")!);
+  }
+  return response;
+}
 
 export const config = {
   matcher: ["/((?!_next|.*\\..*).*)", "/(api|trpc)(.*)"],

@@ -63,7 +63,7 @@ const metrics = aggregateDawnCommerceMetrics(
 
 assert.equal(metrics.availability, "available");
 assert.equal(metrics.privacy, "aggregate_no_pii");
-assert.equal(metrics.coverage.affiliateAttribution, "not_collected");
+assert.equal(metrics.coverage.affiliateAttribution, "requested_referral_only_whop_confirms_commission");
 assert.equal(metrics.coverage.apiUsageCost, "usage_exposed_by_gateway_not_persisted");
 assert.equal(metrics.coverage.pageFunnelEvents, "not_collected");
 assert.equal(metrics.coverage.subscriptionRetention, "not_aggregated");

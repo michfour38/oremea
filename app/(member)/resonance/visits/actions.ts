@@ -3,6 +3,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { requestAffiliateCode } from "@/src/lib/whop/affiliate-request";
 import { acceptVisitAddition, declineVisitAddition, redeemVisit, startVisitPurchase } from "@/src/lib/resonance/visit-orders";
 import { visitCheckoutAvailableFor, visitCreditsAvailableFor } from "@/src/lib/resonance/visit-access";
 
@@ -14,7 +15,7 @@ export async function purchaseVisits(form: FormData) {
   if (!email || email.verification?.status !== "verified") redirect("/resonance/visits?error=email");
   let orderId: string | null = null;
   try {
-    orderId = await startVisitPurchase(user.id, email.emailAddress, Number(form.get("quantity")), String(form.get("requestId")));
+    orderId = await startVisitPurchase(user.id, email.emailAddress, Number(form.get("quantity")), String(form.get("requestId")), await requestAffiliateCode());
   } catch {
     // Do not expose raw provider errors or account data.
   }

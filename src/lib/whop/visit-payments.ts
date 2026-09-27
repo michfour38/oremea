@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { affiliateCode } from "./affiliate-attribution";
 
 import {
   loadResonanceWhopCatalog,
@@ -41,7 +42,7 @@ export async function whopVisitConfig(
 }
 
 export async function createVisitCheckout(
-  order: { id: string; whop_plan_id: string; amount_cents: number },
+  order: { id: string; whop_plan_id: string; amount_cents: number; affiliate_code?: string | null },
   config?: WhopVisitConfig,
 ) {
   const resolved = config ?? await whopVisitConfig();
@@ -54,6 +55,7 @@ export async function createVisitCheckout(
         company_id: resolved.companyId,
         plan_id: order.whop_plan_id,
         mode: "payment",
+        ...(affiliateCode(order.affiliate_code) ? { affiliate_code: affiliateCode(order.affiliate_code) } : {}),
         metadata: { oremea_visit_order: order.id },
         redirect_url: `${resolved.origin}/resonance/complete?order=${order.id}`,
       },

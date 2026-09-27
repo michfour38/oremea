@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { affiliateCode } from "../whop/affiliate-attribution";
 import { prisma } from "@/lib/prisma";
 import { additionalOffers, initialOffer, VISIT_PRICES } from "./visit-offers";
 import { matchesVisitOrder, matchesVisitRefund, uuidSchema, visitPaymentSchema, visitPaymentUpdate, visitRefundSchema } from "./visit-payment-contract";
@@ -19,7 +20,7 @@ export async function getVisitBalance(userId: string) {
   return result._sum.remaining_quantity ?? 0;
 }
 
-export async function startVisitPurchase(userId: string, email: string, quantity: number, requestId: string) {
+export async function startVisitPurchase(userId: string, email: string, quantity: number, requestId: string, referral?: string | null) {
   uuidSchema.parse(requestId);
   const offer = initialOffer(quantity);
   const catalog = await loadResonanceWhopCatalog();
@@ -31,6 +32,7 @@ export async function startVisitPurchase(userId: string, email: string, quantity
       id: requestId, user_id: userId, buyer_email: email.toLowerCase(),
       kind: offer.kind, quantity: offer.quantity, amount_cents: offer.amountCents,
       whop_plan_id: planId,
+      affiliate_code: affiliateCode(referral),
     },
   });
   if (order.user_id !== userId || order.quantity !== quantity || order.kind !== "initial") {
@@ -76,6 +78,7 @@ export async function acceptVisitAddition(userId: string, parentId: string, quan
       kind: offer.kind, quantity: offer.quantity, amount_cents: offer.amountCents,
       whop_plan_id: visitPlanIdFromCatalog(catalog, offer, parent.quantity),
       whop_member_id: parent.whop_member_id, whop_payment_method_id: parent.whop_payment_method_id,
+      affiliate_code: parent.affiliate_code,
       status: "pending",
     } });
     await tx.resonance_visit_orders.update({ where: { id: parent.id }, data: { offer_closed_at: new Date() } });

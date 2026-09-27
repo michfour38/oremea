@@ -41,7 +41,7 @@ assert.equal(snapshot.products.length, 13);
 
 for (const product of snapshot.products) {
   assert.ok(product.sourceRefs.length >= 2, `${product.id} must preserve source references`);
-  assert.equal(product.commerce.affiliateStatus, "off");
+  assert.equal(product.commerce.affiliateStatus, product.id === "the-current" ? "off" : "whop_managed");
   assert.ok(product.description.length > 20);
   if (product.canonicalStatus === "locked") {
     assert.equal(typeof product.canonicalUrl, "string");

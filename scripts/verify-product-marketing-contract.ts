@@ -48,7 +48,7 @@ for (const [id, marketing] of Object.entries(
   assert.ok(marketing.description.length > 70, `${id} needs specific copy`);
   assert.ok(marketing.chooseWhen.length > 50, `${id} needs selection guidance`);
   assert.equal(marketing.limits.length, 3, `${id} needs three explicit limits`);
-  assert.equal(product.commerce.affiliateStatus, "off");
+  assert.equal(product.commerce.affiliateStatus, product.id === "the-current" ? "off" : "whop_managed");
 }
 
 const resonanceCommerceUrls = RESONANCE_ROOM_MARKETING.map(

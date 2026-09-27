@@ -1,3 +1,5 @@
+import { affiliateCheckoutUrl } from "@/src/lib/whop/affiliate-attribution";
+import { requestAffiliateCode } from "@/src/lib/whop/affiliate-request";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 
@@ -39,7 +41,7 @@ export default async function CompassAccessPage() {
   const { userId } = await auth();
   const access = userId ? await getCompassAccessState(userId) : null;
   const subscriptionCheckout =
-    process.env.COMPASS_SUBSCRIPTION_CHECKOUT_URL?.trim() || null;
+    affiliateCheckoutUrl(process.env.COMPASS_SUBSCRIPTION_CHECKOUT_URL?.trim() || null, await requestAffiliateCode());
   const subscriptionFulfillmentConfigured =
     isCompassSubscriptionFulfillmentConfigured();
   const subscriptionCheckoutHref = !userId
