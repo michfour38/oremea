@@ -53,7 +53,7 @@ function CheckoutAction({
   return (
     <a
       href={href}
-      className="inline-flex rounded-xl border border-[#f1dfb4]/60 px-5 py-3 text-sm text-[#f1dfb4] transition hover:bg-[#f1dfb4]/10"
+      className="inline-flex rounded-xl border border-[color:var(--oremea-gold-border-strong)] px-5 py-3 text-sm text-[color:var(--oremea-gold)] transition hover:bg-[color:var(--oremea-gold-10)]"
     >
       {label}
     </a>
@@ -91,13 +91,13 @@ export default async function CompassAccessPage() {
       <section className="relative z-20 mx-auto max-w-4xl px-6 py-12 md:py-16">
         <Link
           href="https://www.oremea.com"
-          className="text-sm text-zinc-400 underline underline-offset-4 transition hover:text-[#f1dfb4]"
+          className="text-sm text-zinc-400 underline underline-offset-4 transition hover:text-[color:var(--oremea-gold)]"
         >
           ← Return to Oremea
         </Link>
 
         <header className="mt-12 max-w-3xl">
-          <p className="text-xs uppercase tracking-[0.3em] text-[#f1dfb4]">
+          <p className="text-xs uppercase tracking-[0.3em] text-[color:var(--oremea-gold)]">
             Compass · Goal setting & movement
           </p>
           <h1 className="mt-4 font-serif text-4xl font-light tracking-tight md:text-6xl">
@@ -113,7 +113,7 @@ export default async function CompassAccessPage() {
 
         <div className="mt-10">
           {access?.active ? (
-            <section className="rounded-3xl border border-[#f1dfb4]/35 bg-black/45 p-6 md:p-8">
+            <section className="rounded-3xl border border-[color:var(--oremea-gold-border-soft)] bg-black/45 p-6 md:p-8">
               <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
                 Access active
               </p>
@@ -131,23 +131,23 @@ export default async function CompassAccessPage() {
               </p>
               <Link
                 href="/begin"
-                className="mt-7 inline-flex rounded-xl border border-[#f1dfb4]/60 px-5 py-3 text-sm text-[#f1dfb4]"
+                className="mt-7 inline-flex rounded-xl border border-[color:var(--oremea-gold-border-strong)] px-5 py-3 text-sm text-[color:var(--oremea-gold)]"
               >
                 Continue Compass
               </Link>
             </section>
           ) : (
-            <section className="rounded-3xl border border-[#f1dfb4]/35 bg-black/45 p-6 md:p-8">
+            <section className="rounded-3xl border border-[color:var(--oremea-gold-border-soft)] bg-black/45 p-6 md:p-8">
               <div className="flex flex-wrap items-end justify-between gap-5">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.22em] text-[#f1dfb4]">
+                  <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--oremea-gold)]">
                     Monthly membership
                   </p>
                   <h2 className="mt-2 font-serif text-2xl text-zinc-100">
                     Keep Compass available while you work toward your goals
                   </h2>
                 </div>
-                <p className="text-3xl text-[#f1dfb4]">
+                <p className="text-3xl text-[color:var(--oremea-gold)]">
                   {price}
                   <span className="ml-1 text-sm text-zinc-500">/month</span>
                 </p>
@@ -180,7 +180,7 @@ export default async function CompassAccessPage() {
         {!access?.active ? (
           <>
             <section className="mt-12">
-              <p className="text-xs uppercase tracking-[0.28em] text-[#f1dfb4]">
+              <p className="text-xs uppercase tracking-[0.28em] text-[color:var(--oremea-gold)]">
                 From goal setting to movement
               </p>
               <div className="mt-6 grid gap-4 md:grid-cols-3">
@@ -202,7 +202,7 @@ export default async function CompassAccessPage() {
                     key={heading}
                     className="rounded-2xl border border-white/10 bg-black/35 p-5"
                   >
-                    <h3 className="text-base text-[#f1dfb4]">{heading}</h3>
+                    <h3 className="text-base text-[color:var(--oremea-gold)]">{heading}</h3>
                     <p className="mt-3 text-sm leading-7 text-zinc-300">{copy}</p>
                   </article>
                 ))}
@@ -237,7 +237,7 @@ export default async function CompassAccessPage() {
             </section>
 
             <section className="mt-12">
-              <p className="text-xs uppercase tracking-[0.28em] text-[#f1dfb4]">
+              <p className="text-xs uppercase tracking-[0.28em] text-[color:var(--oremea-gold)]">
                 After purchase
               </p>
               <h2 className="mt-3 font-serif text-3xl text-zinc-100">
@@ -259,7 +259,7 @@ export default async function CompassAccessPage() {
                     key={item.question}
                     className="rounded-2xl border border-white/10 bg-black/35 p-5"
                   >
-                    <summary className="cursor-pointer text-sm text-[#f1dfb4]">
+                    <summary className="cursor-pointer text-sm text-[color:var(--oremea-gold)]">
                       {item.question}
                     </summary>
                     <p className="mt-4 text-sm leading-7 text-zinc-300">
@@ -270,8 +270,8 @@ export default async function CompassAccessPage() {
               </div>
             </section>
 
-            <section className="mt-14 rounded-3xl border border-[#f1dfb4]/35 bg-black/45 p-6 text-center md:p-8">
-              <p className="text-xs uppercase tracking-[0.28em] text-[#f1dfb4]">
+            <section className="mt-14 rounded-3xl border border-[color:var(--oremea-gold-border-soft)] bg-black/45 p-6 text-center md:p-8">
+              <p className="text-xs uppercase tracking-[0.28em] text-[color:var(--oremea-gold)]">
                 The goal remains yours
               </p>
               <h2 className="mx-auto mt-3 max-w-2xl font-serif text-3xl text-zinc-100 md:text-4xl">
