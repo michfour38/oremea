@@ -14,24 +14,29 @@ export const dynamic = "force-dynamic";
 
 const compassFaq = [
   {
+    question: "Is Compass for setting and achieving goals?",
+    answer:
+      "Yes. Compass helps you clarify and set goals that are actually yours, understand why they matter, and keep the movement toward achieving them visible. It does not choose the goal or do the movement for you.",
+  },
+  {
     question: "Does Compass decide what I should do?",
     answer:
-      "No. Compass can clarify current reality, surface priorities, structure a Map, and keep the movement visible. The choice remains yours.",
+      "No. Compass can clarify current reality, surface priorities, structure a Map, and keep movement toward your goal visible. The choice remains yours.",
   },
   {
     question: "Are the seven why layers still part of Compass?",
     answer:
-      "Yes. After you choose the area that matters most, Compass keeps the full seven-layer why descent before the Core Reflection and continuing discussion.",
+      "Yes. After you choose the goal area that matters, Compass keeps the full seven-layer why descent before the Core Reflection and continuing discussion.",
+  },
+  {
+    question: "Does Compass guarantee that I will achieve a goal?",
+    answer:
+      "No. Compass supports goal setting, clarification, and structured movement toward achievement. What happens outside the conversation still depends on your choices, circumstances, and participation.",
   },
   {
     question: "Can I return to Compass later?",
     answer:
       "Yes. While membership is active, ongoing discussions and Map changes remain available. Your saved Compass Archive remains available after cancellation.",
-  },
-  {
-    question: "Is Compass a fixed action plan?",
-    answer:
-      "No. Compass structures navigation around what you actually say. It can help make a next movement visible without turning that movement into an instruction.",
   },
 ] as const;
 
@@ -98,16 +103,17 @@ export default async function CompassAccessPage() {
 
         <header className="mt-12 max-w-3xl">
           <p className="text-xs uppercase tracking-[0.3em] text-[#f1dfb4]/70">
-            Compass · Help me move
+            Compass · Goal setting & movement
           </p>
           <h1 className="mt-4 font-serif text-4xl font-light tracking-tight md:text-6xl">
-            Turn what matters into direction you can actually move with
+            Set goals that are actually yours — then work toward achieving them
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-8 text-zinc-300">
-            Compass helps make current reality, priorities, the reasons beneath a
-            goal, and the next workable movement visible without becoming the
-            chooser. Your Map keeps what matters in view while the decisions remain
-            yours.
+            Compass helps you clarify what you want, set a meaningful goal,
+            understand why it matters through all seven Why layers, and turn it
+            into a working Map for movement toward achievement. Compass can
+            structure the path without becoming the chooser. The goal, decisions,
+            and movement remain yours.
           </p>
         </header>
 
@@ -144,7 +150,7 @@ export default async function CompassAccessPage() {
                     Monthly membership
                   </p>
                   <h2 className="mt-2 font-serif text-2xl text-zinc-100">
-                    Keep Compass available while you need it
+                    Keep Compass available while you work toward your goals
                   </h2>
                 </div>
                 <p className="text-3xl text-[#f1dfb4]">
@@ -181,21 +187,21 @@ export default async function CompassAccessPage() {
           <>
             <section className="mt-12">
               <p className="text-xs uppercase tracking-[0.28em] text-[#c8a96a]">
-                What happens inside Compass
+                From goal setting to movement
               </p>
               <div className="mt-6 grid gap-4 md:grid-cols-3">
                 {[
                   [
-                    "1 · See the field",
-                    "Move across the areas of life that matter, then bring the one with the strongest pull into focus.",
+                    "1 · Clarify and choose the goal",
+                    "Look across the areas of life that matter, make what you want visible, and choose the goal area you want to work with now.",
                   ],
                   [
                     "2 · Go through all seven why layers",
                     "Compass keeps the complete seven-layer descent so the reason beneath the goal has room to become visible before the Core Reflection.",
                   ],
                   [
-                    "3 · Continue into movement",
-                    "The Core Reflection opens into discussion, while the Compass Map keeps participant-owned priorities and movement visible.",
+                    "3 · Work toward achieving it",
+                    "The Core Reflection opens into discussion, while the Compass Map keeps your goal, priorities, and participant-owned movement toward achievement visible.",
                   ],
                 ].map(([heading, copy]) => (
                   <article
@@ -215,10 +221,11 @@ export default async function CompassAccessPage() {
                   Compass may fit when
                 </p>
                 <ul className="mt-5 space-y-3 text-sm leading-7 text-zinc-300">
-                  <li>— several priorities are competing for authority</li>
+                  <li>— you want to set a meaningful goal but need help making it specific</li>
+                  <li>— several goals or priorities are competing for authority</li>
                   <li>— a goal matters but the reason beneath it is still unclear</li>
-                  <li>— discussion is useful, but movement now needs somewhere to land</li>
-                  <li>— what matters needs to stay visible after the conversation</li>
+                  <li>— you know what you want and need structure for working toward it</li>
+                  <li>— progress needs somewhere visible to return to and revise</li>
                 </ul>
               </div>
 
@@ -271,14 +278,15 @@ export default async function CompassAccessPage() {
 
             <section className="mt-14 rounded-3xl border border-[#c8a96a]/35 bg-black/45 p-6 text-center md:p-8">
               <p className="text-xs uppercase tracking-[0.28em] text-[#c8a96a]">
-                Movement remains yours
+                The goal remains yours
               </p>
               <h2 className="mx-auto mt-3 max-w-2xl font-serif text-3xl text-zinc-100 md:text-4xl">
-                When what matters is clear enough to move, keep it visible.
+                Set the goal. Understand why it matters. Keep moving toward it.
               </h2>
               <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-300">
-                Compass can help structure the navigation. The decision and the
-                movement outside the conversation remain yours.
+                Compass can help structure goal setting and the movement toward
+                achievement. The decisions and participation outside the conversation
+                remain yours.
               </p>
               <div className="mt-7 flex flex-wrap items-center justify-center gap-4">
                 <CheckoutAction
