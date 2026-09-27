@@ -157,15 +157,20 @@ export function AdditionalOfferPicker({
         </div>
       ) : null}
 
-      <form action={skipAddition} className="mt-6">
-        <input type="hidden" name="orderId" value={orderId} />
-        <button
-          type="submit"
-          className="res-text-primary res-accent-hover w-full py-2 text-center text-sm underline underline-offset-4"
+      <div className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
+        <form
+          action={skipAddition}
+          className="res-border res-panel pointer-events-auto w-full max-w-md rounded-full border px-4 py-2 shadow-2xl backdrop-blur-md"
         >
-          No thanks · Choose my room
-        </button>
-      </form>
+          <input type="hidden" name="orderId" value={orderId} />
+          <button
+            type="submit"
+            className="res-text-primary res-accent-hover w-full rounded-full px-4 py-2 text-center text-sm underline underline-offset-4"
+          >
+            No thanks · Choose my room
+          </button>
+        </form>
+      </div>
     </section>
   );
 }
