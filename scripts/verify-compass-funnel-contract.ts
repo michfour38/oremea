@@ -7,11 +7,27 @@ const flow = readFileSync(
   "src/lib/compass/session/compass-flow-contract.ts",
   "utf8",
 );
+const pricing = readFileSync("src/lib/oremea/pricing.ts", "utf8");
 
 assert.match(
   access,
   /affiliateCheckoutUrl\([\s\S]*COMPASS_SUBSCRIPTION_CHECKOUT_URL/,
   "Compass must preserve affiliate attribution through the existing checkout path.",
+);
+assert.match(
+  access,
+  /Set goals that are actually yours[\s\S]*work toward achieving them/,
+  "Compass funnel must state its goal-setting and goal-achievement purpose plainly.",
+);
+assert.match(
+  access,
+  /goal setting[\s\S]*movement toward[\s\S]*achievement/i,
+  "Compass must explain that it supports goal setting and movement toward achievement without promising outcomes.",
+);
+assert.match(
+  access,
+  /Does Compass guarantee that I will achieve a goal\?/,
+  "Compass funnel must set an honest boundary around goal achievement claims.",
 );
 assert.match(
   access,
@@ -35,8 +51,13 @@ assert.match(
 );
 assert.match(
   access,
-  /Compass can help structure the navigation[\s\S]*movement outside the conversation remain yours/,
-  "Compass funnel must preserve participant authority over movement.",
+  /The goal remains yours[\s\S]*decisions and participation outside the conversation[\s\S]*remain yours/,
+  "Compass funnel must preserve participant authority over goals and movement.",
+);
+assert.match(
+  pricing,
+  /compass:[\s\S]*launchPriceCents:\s*5000/,
+  "Compass central price must remain $50.00/month unless deliberately changed at the pricing authority.",
 );
 
 const checkoutActionUses = access.match(/<CheckoutAction/g) ?? [];
@@ -73,4 +94,4 @@ assert.match(
   "Compass /begin must remain the product handoff after access is active.",
 );
 
-console.log("Compass purchase funnel and seven-layer handoff contract checks passed.");
+console.log("Compass goal-setting funnel, pricing and seven-layer handoff contract checks passed.");
