@@ -10,6 +10,7 @@ model resonance_visit_orders {
   parent_id              String?   @unique @db.Uuid
   offer_closed_at        DateTime? @db.Timestamptz(6)
   whop_plan_id           String
+  affiliate_code         String?
   whop_checkout_id       String?   @unique
   whop_payment_id        String?   @unique
   whop_member_id         String?
@@ -47,4 +48,3 @@ model resonance_whop_catalog {
   created_at  DateTime @default(now()) @db.Timestamptz(6)
   updated_at  DateTime @updatedAt @db.Timestamptz(6)
 }
-

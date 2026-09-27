@@ -1,0 +1,39 @@
+import assert from "node:assert/strict";
+
+async function main() {
+  const state = globalThis as unknown as { prisma?: unknown };
+  const oldPrisma = state.prisma;
+  const oldFetch = globalThis.fetch;
+  const oldKey = process.env.WHOP_API_KEY;
+  process.env.WHOP_API_KEY = "fixture";
+  state.prisma = {
+    resonance_visit_orders: { findMany: async () => [{whop_payment_id:"pay_fixture"}] },
+    resonance_whop_catalog: { findUnique: async () => ({company_id:"biz_fixture",product_id:"prod_fixture",plans:{},webhook_id:null}) },
+  };
+  let companyId = "biz_fixture";
+  globalThis.fetch = async (url, init) => {
+    assert.equal(init?.method,"GET");
+    assert.doesNotMatch(String(url), /accounts|balance|transfers/);
+    if (String(url).includes("/fees?")) return Response.json({data:[{amount:3.27,currency:"usd",type:"payment_processing_percentage_fee",name:"private@example.test"}],page_info:{has_next_page:false}});
+    return Response.json({id:"pay_fixture",company:{id:companyId},currency:"usd",amount_after_fees:46.73,total:50,tax_amount:0,refunded_amount:null,user:{email:"private@example.test"}});
+  };
+  try {
+    const { observeWhopVisitEconomics } = await import("../src/lib/whop/affiliate-economics-observer");
+    const report = await observeWhopVisitEconomics();
+    assert.equal(report.observedPayments,1);
+    assert.equal(report.providerAmountAfterFeesCents,4673);
+    assert.equal(report.feeBreakdownCents.payment_processing_percentage_fee,327);
+    assert.equal(report.confirmedCommissionCents,null);
+    assert.equal(report.finalRetainedRevenueCents,null);
+    assert.doesNotMatch(JSON.stringify(report), /pay_fixture|biz_fixture|private@example/);
+    companyId = "biz_other";
+    const rejected = await observeWhopVisitEconomics();
+    assert.equal(rejected.observedPayments,0);
+    assert.equal(rejected.availability,"unavailable");
+  } finally {
+    state.prisma = oldPrisma; globalThis.fetch = oldFetch;
+    if (oldKey === undefined) delete process.env.WHOP_API_KEY; else process.env.WHOP_API_KEY = oldKey;
+  }
+  console.log("Whop economics observation is read-only, scoped, redacted and explicit about unverified net revenue.");
+}
+main().catch(error => {console.error(error);process.exitCode=1;});

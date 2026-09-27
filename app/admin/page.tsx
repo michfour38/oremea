@@ -75,19 +75,17 @@ export default async function AdminPage() {
             </p>
           </Link>
 
-          <div className="rounded-[2rem] border border-white/10 bg-black/35 p-7">
+          <Link href="/admin/affiliates" className="rounded-[2rem] border border-white/10 bg-black/35 p-7">
             <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
-              Admin foundation
+              Affiliates
             </p>
             <h2 className="mt-3 text-2xl font-light text-zinc-200">
-              More business tools can live here
+              Creator and affiliate management
             </h2>
             <p className="mt-3 text-sm leading-7 text-zinc-500">
-              The admin shell is now separate from customer navigation, so
-              registrations, reviews, product operations and reporting can be
-              added here without exposing them publicly.
+              Review commission policy, owner approval steps and measured Whop economics.
             </p>
-          </div>
+          </Link>
         </div>
       </section>
     </SiteShell>

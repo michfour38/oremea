@@ -1,3 +1,5 @@
+import { affiliateCheckoutUrl } from "@/src/lib/whop/affiliate-attribution";
+import { requestAffiliateCode } from "@/src/lib/whop/affiliate-request";
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -82,7 +84,7 @@ export default async function RecognitionPurchasePage(props: Props) {
   }
 
   const subscriptionCheckout =
-    process.env.RECOGNITION_SUBSCRIPTION_CHECKOUT_URL?.trim() || null;
+    affiliateCheckoutUrl(process.env.RECOGNITION_SUBSCRIPTION_CHECKOUT_URL?.trim() || null, await requestAffiliateCode());
   const launchPrice = formatRecognitionPrice(RECOGNITION_PRICING.launchPriceCents);
   const regularPrice = formatRecognitionPrice(RECOGNITION_PRICING.regularPriceCents);
   const accessRequired = searchParams?.access === "required";

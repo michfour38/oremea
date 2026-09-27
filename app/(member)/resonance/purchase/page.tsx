@@ -1,3 +1,5 @@
+import { affiliateCheckoutUrl } from "@/src/lib/whop/affiliate-attribution";
+import { requestAffiliateCode } from "@/src/lib/whop/affiliate-request";
 import { randomUUID } from "node:crypto";
 
 import Link from "next/link";
@@ -162,7 +164,7 @@ export default async function ResonancePurchasePage(props: Props) {
   const completedRuns = previousRuns.filter((run) => run.status === "completed");
   const nextRunNumber =
     previousRuns.reduce((highest, run) => Math.max(highest, run.runNumber), 0) + 1;
-  const checkoutHref = getResonanceCheckoutUrl(weekNumber);
+  const checkoutHref = affiliateCheckoutUrl(getResonanceCheckoutUrl(weekNumber), await requestAffiliateCode());
   const isTester = userId === RESONANCE_TESTER_USER_ID;
 
   return (

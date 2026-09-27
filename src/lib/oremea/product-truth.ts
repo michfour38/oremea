@@ -1,3 +1,4 @@
+import { OREMEA_AFFILIATE_POLICY } from "./affiliate-policy";
 import { OREMEA_PRICING } from "@/src/lib/oremea/pricing";
 
 export const OREMEA_PRODUCT_TRUTH_SCHEMA_VERSION = 2 as const;
@@ -133,7 +134,7 @@ type ResonanceProductTruth = {
       url: string;
       visibility: "visible";
       discoverStatus: "live";
-      affiliateStatus: "off";
+      affiliateStatus: "whop_managed";
     };
     sourceRefs: readonly string[];
   };
@@ -156,7 +157,7 @@ const resonanceProductTruth = Object.fromEntries(
         url: room.whopUrl,
         visibility: "visible",
         discoverStatus: "live",
-        affiliateStatus: "off",
+        affiliateStatus: "whop_managed",
       },
       sourceRefs: ["src/lib/oremea/pricing.ts", room.sourceRef],
     },
@@ -179,7 +180,7 @@ export const OREMEA_PRODUCT_TRUTH = {
       url: "https://whop.com/oremea/recognition/",
       visibility: "hidden",
       discoverStatus: "not_listed",
-      affiliateStatus: "off",
+      affiliateStatus: "whop_managed",
     },
     sourceRefs: [
       "src/lib/oremea/pricing.ts",
@@ -202,7 +203,7 @@ export const OREMEA_PRODUCT_TRUTH = {
       url: "https://whop.com/oremea/compass-e0/",
       visibility: "visible",
       discoverStatus: "live",
-      affiliateStatus: "off",
+      affiliateStatus: "whop_managed",
     },
     sourceRefs: [
       "src/lib/oremea/pricing.ts",
@@ -244,5 +245,6 @@ export function oremeaProductTruthSnapshot() {
     authority: "oremea_repository",
     truthScope: "current_only",
     products: Object.values(OREMEA_PRODUCT_TRUTH),
+    affiliatePolicy: OREMEA_AFFILIATE_POLICY,
   } as const;
 }
