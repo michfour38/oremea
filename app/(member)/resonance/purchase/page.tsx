@@ -247,8 +247,8 @@ export default async function ResonancePurchasePage(props: Props) {
             ) : null}
 
             <p className="res-text-secondary mt-4 text-sm leading-7">
-              Use the same email address at Whop that belongs to this Oremea account so
-              the successful payment can open the room automatically.
+              Use the same email address for this purchase and this Oremea account so
+              your room can open automatically after payment.
             </p>
 
             <div className="mt-7 flex flex-wrap gap-3">
