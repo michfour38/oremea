@@ -16,17 +16,12 @@ const compassFaq = [
   {
     question: "Is Compass for setting and achieving goals?",
     answer:
-      "Yes. Compass helps you clarify and set goals that are actually yours, understand why they matter, and keep the movement toward achieving them visible. It does not choose the goal or do the movement for you.",
+      "Yes. Compass helps you clarify and set goals that are actually yours, understand why they matter, and keep movement toward achieving them visible. It does not choose the goal or do the movement for you.",
   },
   {
     question: "Does Compass decide what I should do?",
     answer:
-      "No. Compass can clarify current reality, surface priorities, structure a Map, and keep movement toward your goal visible. The choice remains yours.",
-  },
-  {
-    question: "Are the seven why layers still part of Compass?",
-    answer:
-      "Yes. After you choose the goal area that matters, Compass keeps the full seven-layer why descent before the Core Reflection and continuing discussion.",
+      "No. Compass can help clarify current reality, surface priorities, and keep movement toward your goal visible. The choice remains yours.",
   },
   {
     question: "Does Compass guarantee that I will achieve a goal?",
@@ -36,7 +31,7 @@ const compassFaq = [
   {
     question: "Can I return to Compass later?",
     answer:
-      "Yes. While membership is active, ongoing discussions and Map changes remain available. Your saved Compass Archive remains available after cancellation.",
+      "Yes. While membership is active, ongoing discussions and saved progress remain available. Your saved Compass record remains available after cancellation.",
   },
 ] as const;
 
@@ -58,7 +53,7 @@ function CheckoutAction({
   return (
     <a
       href={href}
-      className="inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#f1dfb4] transition hover:bg-[#c8a96a]/10"
+      className="inline-flex rounded-xl border border-[#f1dfb4]/60 px-5 py-3 text-sm text-[#f1dfb4] transition hover:bg-[#f1dfb4]/10"
     >
       {label}
     </a>
@@ -102,24 +97,23 @@ export default async function CompassAccessPage() {
         </Link>
 
         <header className="mt-12 max-w-3xl">
-          <p className="text-xs uppercase tracking-[0.3em] text-[#f1dfb4]/70">
+          <p className="text-xs uppercase tracking-[0.3em] text-[#f1dfb4]">
             Compass · Goal setting & movement
           </p>
           <h1 className="mt-4 font-serif text-4xl font-light tracking-tight md:text-6xl">
             Set goals that are actually yours — then work toward achieving them
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-8 text-zinc-300">
-            Compass helps you clarify what you want, set a meaningful goal,
-            understand why it matters through all seven Why layers, and turn it
-            into a working Map for movement toward achievement. Compass can
-            structure the path without becoming the chooser. The goal, decisions,
-            and movement remain yours.
+            Compass helps you clarify what you want, choose a meaningful goal,
+            understand why it matters, and keep your next movement visible as you
+            work toward it. Compass can structure the path without becoming the
+            chooser. The goal, decisions, and movement remain yours.
           </p>
         </header>
 
         <div className="mt-10">
           {access?.active ? (
-            <section className="rounded-3xl border border-[#c8a96a]/35 bg-black/45 p-6 md:p-8">
+            <section className="rounded-3xl border border-[#f1dfb4]/35 bg-black/45 p-6 md:p-8">
               <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
                 Access active
               </p>
@@ -137,16 +131,16 @@ export default async function CompassAccessPage() {
               </p>
               <Link
                 href="/begin"
-                className="mt-7 inline-flex rounded-xl border border-[#c8a96a]/60 px-5 py-3 text-sm text-[#f1dfb4]"
+                className="mt-7 inline-flex rounded-xl border border-[#f1dfb4]/60 px-5 py-3 text-sm text-[#f1dfb4]"
               >
                 Continue Compass
               </Link>
             </section>
           ) : (
-            <section className="rounded-3xl border border-[#c8a96a]/35 bg-black/45 p-6 md:p-8">
+            <section className="rounded-3xl border border-[#f1dfb4]/35 bg-black/45 p-6 md:p-8">
               <div className="flex flex-wrap items-end justify-between gap-5">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.22em] text-[#c8a96a]">
+                  <p className="text-xs uppercase tracking-[0.22em] text-[#f1dfb4]">
                     Monthly membership
                   </p>
                   <h2 className="mt-2 font-serif text-2xl text-zinc-100">
@@ -160,8 +154,8 @@ export default async function CompassAccessPage() {
               </div>
 
               <p className="mt-5 text-sm leading-7 text-zinc-300">
-                Ongoing discussions and Map changes remain available while the
-                membership is active. Cancel anytime. Your saved Compass Archive
+                Ongoing discussions and saved progress remain available while the
+                membership is active. Cancel anytime. Your saved Compass record
                 remains available after cancellation.
               </p>
               <div className="mt-7 flex flex-wrap items-center gap-4">
@@ -186,22 +180,22 @@ export default async function CompassAccessPage() {
         {!access?.active ? (
           <>
             <section className="mt-12">
-              <p className="text-xs uppercase tracking-[0.28em] text-[#c8a96a]">
+              <p className="text-xs uppercase tracking-[0.28em] text-[#f1dfb4]">
                 From goal setting to movement
               </p>
               <div className="mt-6 grid gap-4 md:grid-cols-3">
                 {[
                   [
                     "1 · Clarify and choose the goal",
-                    "Look across the areas of life that matter, make what you want visible, and choose the goal area you want to work with now.",
+                    "Look across the areas of life that matter, make what you want visible, and choose the goal you want to work with now.",
                   ],
                   [
-                    "2 · Go through all seven why layers",
-                    "Compass keeps the complete seven-layer descent so the reason beneath the goal has room to become visible before the Core Reflection.",
+                    "2 · Understand why it matters",
+                    "Stay with the goal long enough to understand what gives it weight, what could pull against it, and what needs to remain visible.",
                   ],
                   [
                     "3 · Work toward achieving it",
-                    "The Core Reflection opens into discussion, while the Compass Map keeps your goal, priorities, and participant-owned movement toward achievement visible.",
+                    "Turn what becomes clear into practical direction you can return to, revise, and keep moving with as circumstances change.",
                   ],
                 ].map(([heading, copy]) => (
                   <article
@@ -243,7 +237,7 @@ export default async function CompassAccessPage() {
             </section>
 
             <section className="mt-12">
-              <p className="text-xs uppercase tracking-[0.28em] text-[#c8a96a]">
+              <p className="text-xs uppercase tracking-[0.28em] text-[#f1dfb4]">
                 After purchase
               </p>
               <h2 className="mt-3 font-serif text-3xl text-zinc-100">
@@ -276,8 +270,8 @@ export default async function CompassAccessPage() {
               </div>
             </section>
 
-            <section className="mt-14 rounded-3xl border border-[#c8a96a]/35 bg-black/45 p-6 text-center md:p-8">
-              <p className="text-xs uppercase tracking-[0.28em] text-[#c8a96a]">
+            <section className="mt-14 rounded-3xl border border-[#f1dfb4]/35 bg-black/45 p-6 text-center md:p-8">
+              <p className="text-xs uppercase tracking-[0.28em] text-[#f1dfb4]">
                 The goal remains yours
               </p>
               <h2 className="mx-auto mt-3 max-w-2xl font-serif text-3xl text-zinc-100 md:text-4xl">
@@ -304,7 +298,7 @@ export default async function CompassAccessPage() {
 
         <p className="mt-8 text-sm leading-7 text-zinc-500">
           Prices are shown and charged in US dollars. Compass renews monthly until
-          cancelled. Cancel anytime; your saved Archive remains yours.
+          cancelled. Cancel anytime; your saved Compass record remains yours.
         </p>
       </section>
     </main>
