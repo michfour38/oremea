@@ -37,6 +37,7 @@
     "test:whop-webhook": "tsx scripts/verify-whop-webhook-contract.ts",
     "test:compass": "npm run test:compass-descent && npm run test:compass-flow && npm run test:compass-resolution && npm run test:compass-pricing && npm run test:compass-access && npm run test:compass-archive && npm run test:compass-return && npm run test:whop-webhook",
     "test:recognition-pricing": "tsx scripts/verify-recognition-pricing-contract.ts",
+    "test:recognition-funnel": "tsx scripts/verify-recognition-funnel-contract.ts",
     "test:recognition-conversation": "tsx scripts/verify-recognition-conversation-contract.ts && tsx scripts/verify-recognition-ai-envelope-contract.ts && tsx scripts/verify-recognition-privacy-contract.ts && tsx scripts/verify-recognition-natural-question-contract.ts && tsx scripts/verify-recognition-product-identity-contract.ts",
     "test:commerce-routing": "tsx scripts/verify-commerce-routing-contract.ts",
     "test:public-pricing": "tsx scripts/verify-public-pricing-contract.ts",
@@ -45,7 +46,7 @@
     "test:product-marketing": "tsx scripts/verify-product-marketing-contract.ts",
     "test:product-reset": "tsx scripts/verify-product-test-reset-contract.ts",
     "test:member-nav-product": "tsx scripts/verify-member-nav-product-contract.ts",
-    "test:launch": "npm run test:central-pricing && npm run test:production-migrations && npm run test:backend-hygiene && npm run test:superseded-boundary && npm run test:participant-sovereignty && npm run test:ai-resilience && npm run test:resonance-content && npm run test:reviews && npm run test:public-product-routing && npm run test:recognition-pricing && npm run test:recognition-conversation && npm run test:commerce-routing && npm run test:public-pricing && npm run test:compass && npm run test:current && npm run test:dawn-truth && npm run test:product-marketing && npm run test:product-reset && npm run test:member-nav-product && npm run test:affiliates",
+    "test:launch": "npm run test:central-pricing && npm run test:production-migrations && npm run test:backend-hygiene && npm run test:superseded-boundary && npm run test:participant-sovereignty && npm run test:ai-resilience && npm run test:resonance-content && npm run test:reviews && npm run test:public-product-routing && npm run test:recognition-pricing && npm run test:recognition-funnel && npm run test:recognition-conversation && npm run test:commerce-routing && npm run test:public-pricing && npm run test:compass && npm run test:current && npm run test:dawn-truth && npm run test:product-marketing && npm run test:product-reset && npm run test:member-nav-product && npm run test:affiliates",
     "test:affiliates": "tsx scripts/verify-affiliate-contract.ts && tsx scripts/verify-affiliate-economics-observer.ts"
   },
   "prisma": {
