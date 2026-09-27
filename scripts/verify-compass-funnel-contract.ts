@@ -46,11 +46,6 @@ assert.match(
 );
 assert.match(
   access,
-  /2 · Go through all seven why layers/,
-  "Compass funnel must explicitly preserve the seven why layers.",
-);
-assert.match(
-  access,
   /The goal remains yours[\s\S]*decisions and participation outside the conversation[\s\S]*remain yours/,
   "Compass funnel must preserve participant authority over goals and movement.",
 );
@@ -58,6 +53,22 @@ assert.match(
   pricing,
   /compass:[\s\S]*launchPriceCents:\s*5000/,
   "Compass central price must remain $50.00/month unless deliberately changed at the pricing authority.",
+);
+
+assert.doesNotMatch(
+  access,
+  /seven why|seven-layer|core reflection|descent/i,
+  "Compass public funnel must not expose the internal reflection method.",
+);
+assert.doesNotMatch(
+  access,
+  /c8a96a/i,
+  "Compass public funnel must use the single approved gold rather than mixed yellow-gold accents.",
+);
+assert.match(
+  access,
+  /f1dfb4/i,
+  "Compass public funnel must retain the approved Oremea gold accent.",
 );
 
 const checkoutActionUses = access.match(/<CheckoutAction/g) ?? [];
@@ -75,12 +86,12 @@ assert.doesNotMatch(
 assert.match(
   flow,
   /COMPASS_DESCENT_LAYER_COUNT = 7 as const/,
-  "Compass must keep exactly seven accepted descent layers.",
+  "Compass must keep exactly seven accepted descent layers internally.",
 );
 assert.match(
   flow,
   /all seven Why layers/,
-  "Compass depth intro must retain all seven Why layers.",
+  "Compass internal depth flow must retain all seven Why layers.",
 );
 
 assert.match(
@@ -94,4 +105,4 @@ assert.match(
   "Compass /begin must remain the product handoff after access is active.",
 );
 
-console.log("Compass goal-setting funnel, pricing and seven-layer handoff contract checks passed.");
+console.log("Compass goal-setting funnel, private-method, pricing and styling contract checks passed.");
