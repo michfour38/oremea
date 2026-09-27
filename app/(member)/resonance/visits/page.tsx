@@ -66,7 +66,7 @@ export default async function VisitPurchasePage({ searchParams }: {
             data-whop-checkout-return-url={`${checkoutOrigin}/resonance/complete?order=${order.id}`} />
         </section>
       ) : (
-        <p role="status" className="res-text-primary mx-auto mt-8 max-w-xl text-base leading-8">This checkout could not be confirmed. No visits have been added for it. Contact support before retrying if Whop has shown a successful payment.</p>
+        <p role="status" className="res-text-primary mx-auto mt-8 max-w-xl text-base leading-8">This checkout could not be confirmed. No visits have been added for it. Contact support before retrying if you received a successful payment confirmation.</p>
       )}
     </FunnelFrame>
   );
