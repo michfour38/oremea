@@ -216,29 +216,28 @@ export default async function RecognitionPurchasePage(props: Props) {
 
         <section className="mt-12">
           <p className="rec-accent text-xs uppercase tracking-[0.28em]">
-            After checkout
+            After purchase
           </p>
           <h2 className="rec-text mt-3 font-serif text-3xl">
             Purchase once. Then move straight into the conversation.
           </h2>
           <p className="rec-text mt-4 max-w-2xl text-sm leading-7">
-            Recognition access follows the email attached to the active Whop
-            membership. Use that same email when you sign in to Oremea so the
-            purchase and the private conversation meet cleanly.
+            Use the same email to purchase and sign in to Recognition. That is
+            all that is needed to connect your access to your private conversation.
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {[
               [
-                "1 · Complete checkout",
-                "Purchase Recognition through the secure Whop checkout using the email you want attached to access.",
+                "1 · Purchase Recognition",
+                "Use the email you want attached to your Recognition access.",
               ],
               [
                 "2 · Sign in with that email",
-                "Return to Recognition and sign in with the same email used for the active membership.",
+                "Return to Recognition and sign in with the same email you used when purchasing.",
               ],
               [
                 "3 · Begin where you are",
-                "Once Whop has confirmed the membership, Recognition opens into your continuing private conversation.",
+                "As soon as your access is confirmed, Recognition opens into your continuing private conversation.",
               ],
             ].map(([heading, copy]) => (
               <article
