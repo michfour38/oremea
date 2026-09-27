@@ -83,8 +83,10 @@ export default async function RecognitionPurchasePage(props: Props) {
     }
   }
 
-  const subscriptionCheckout =
-    affiliateCheckoutUrl(process.env.RECOGNITION_SUBSCRIPTION_CHECKOUT_URL?.trim() || null, await requestAffiliateCode());
+  const subscriptionCheckout = affiliateCheckoutUrl(
+    process.env.RECOGNITION_SUBSCRIPTION_CHECKOUT_URL?.trim() || null,
+    await requestAffiliateCode(),
+  );
   const launchPrice = formatRecognitionPrice(RECOGNITION_PRICING.launchPriceCents);
   const regularPrice = formatRecognitionPrice(RECOGNITION_PRICING.regularPriceCents);
   const accessRequired = searchParams?.access === "required";
@@ -213,6 +215,44 @@ export default async function RecognitionPurchasePage(props: Props) {
         </section>
 
         <section className="mt-12">
+          <p className="rec-accent text-xs uppercase tracking-[0.28em]">
+            After checkout
+          </p>
+          <h2 className="rec-text mt-3 font-serif text-3xl">
+            Purchase once. Then move straight into the conversation.
+          </h2>
+          <p className="rec-text mt-4 max-w-2xl text-sm leading-7">
+            Recognition access follows the email attached to the active Whop
+            membership. Use that same email when you sign in to Oremea so the
+            purchase and the private conversation meet cleanly.
+          </p>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {[
+              [
+                "1 · Complete checkout",
+                "Purchase Recognition through the secure Whop checkout using the email you want attached to access.",
+              ],
+              [
+                "2 · Sign in with that email",
+                "Return to Recognition and sign in with the same email used for the active membership.",
+              ],
+              [
+                "3 · Begin where you are",
+                "Once Whop has confirmed the membership, Recognition opens into your continuing private conversation.",
+              ],
+            ].map(([heading, copy]) => (
+              <article
+                key={heading}
+                className="rec-user-bubble rounded-2xl border p-5"
+              >
+                <h3 className="rec-accent text-base">{heading}</h3>
+                <p className="rec-text mt-3 text-sm leading-7">{copy}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-12">
           <h2 className="rec-text font-serif text-3xl">
             How Recognition works
           </h2>
@@ -273,6 +313,31 @@ export default async function RecognitionPurchasePage(props: Props) {
                 </p>
               </details>
             ))}
+          </div>
+        </section>
+
+        <section className="rec-saved-panel mt-14 rounded-3xl border p-6 text-center md:p-8">
+          <p className="rec-accent text-xs uppercase tracking-[0.28em]">
+            Begin where you are
+          </p>
+          <h2 className="rec-text mx-auto mt-3 max-w-2xl font-serif text-3xl md:text-4xl">
+            If the thought is still circling, give it somewhere to continue.
+          </h2>
+          <p className="rec-text mx-auto mt-4 max-w-2xl text-sm leading-7">
+            Recognition does not need a polished question or a finished story.
+            Bring the words you have now. The conversation can begin there.
+          </p>
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-4">
+            <CheckoutAction
+              href={subscriptionCheckout}
+              label={`Open Recognition · ${launchPrice}/month`}
+            />
+            <Link
+              href="/sign-in?redirect_url=%2Fbegin"
+              className="rec-text text-sm underline underline-offset-4 transition hover:text-[var(--recognition-gold)]"
+            >
+              Already have access? Sign in
+            </Link>
           </div>
         </section>
 
