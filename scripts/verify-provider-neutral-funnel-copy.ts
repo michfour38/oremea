@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 const customerFacingFunnelFiles = [
   "app/recognition/purchase/page.tsx",
   "app/compass/access/page.tsx",
+  "app/(marketing)/resonance/creator/page.tsx",
   "app/(member)/resonance/purchase/page.tsx",
   "app/(member)/resonance/visits/page.tsx",
 ];
