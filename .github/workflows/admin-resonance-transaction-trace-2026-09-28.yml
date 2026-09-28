@@ -87,64 +87,64 @@ jobs:
               raise SystemExit("admin status anchor not found")
           text = text.replace(anchor, replacement, 1)
 
-          old_table = '''          <div className="mt-5 overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                      <caption className="mb-2 text-left">Latest ten orders — identifiers and settlement state only</caption>
-                      <thead><tr><th>Order</th><th>Status</th><th>Visits / unused</th><th>Checkout</th><th>Payment</th></tr></thead>
-                      <tbody>{status.recentOrders.map((order) => (
-                        <tr key={order.id}><td className="py-2">{order.id}</td><td>{order.status}</td><td>{order.quantity} / {order.remaining_quantity}</td><td>{order.whop_checkout_id ?? "—"}</td><td>{order.whop_payment_id ?? "—"}</td></tr>
-                      ))}</tbody>
-                    </table>
-                  </div>'''
+          marker = "Latest ten orders — identifiers and settlement state only"
+          marker_pos = text.find(marker)
+          if marker_pos < 0:
+              raise SystemExit("recent order table caption not found")
+          start = text.rfind('          <div className="mt-5 overflow-x-auto">', 0, marker_pos)
+          if start < 0:
+              raise SystemExit("recent order table start not found")
+          end = text.find("          </div>", marker_pos)
+          if end < 0:
+              raise SystemExit("recent order table end not found")
+          end += len("          </div>")
           new_table = '''          <div className="mt-5 overflow-x-auto">
-                    <table className="w-full min-w-[1180px] text-left text-xs">
-                      <caption className="mb-2 text-left">
-                        Latest ten orders — owner-only lifecycle trace, without buyer email
-                      </caption>
-                      <thead>
-                        <tr>
-                          <th>Created / paid</th>
-                          <th>Order / parent</th>
-                          <th>Lane / amount</th>
-                          <th>Requested referral</th>
-                          <th>Status</th>
-                          <th>Visits</th>
-                          <th>Checkout</th>
-                          <th>Payment</th>
-                        </tr>
-                      </thead>
-                      <tbody>{status.recentOrders.map((order) => (
-                        <tr key={order.id} className="align-top">
-                          <td className="py-2 pr-4">
-                            <div>{traceTime(order.created_at)}</div>
-                            <div className="mt-1 text-zinc-600">Paid {traceTime(order.paid_at)}</div>
-                          </td>
-                          <td className="py-2 pr-4">
-                            <div>{order.id}</div>
-                            <div className="mt-1 text-zinc-600">Parent {order.parent_id ?? "—"}</div>
-                          </td>
-                          <td className="py-2 pr-4">
-                            <div>{planLabels.get(order.whop_plan_id) ?? "Unknown plan"}</div>
-                            <div className="mt-1 text-zinc-500">{order.kind} · {formatOremeaPrice(order.amount_cents)}</div>
-                            <div className="mt-1 text-zinc-600">{order.whop_plan_id}</div>
-                          </td>
-                          <td className="py-2 pr-4">{order.affiliate_code ?? "Direct / none"}</td>
-                          <td className="py-2 pr-4">{order.status}</td>
-                          <td className="py-2 pr-4">
-                            {order.quantity} bought · {order._count.redemptions} redeemed · {order.remaining_quantity} unused
-                          </td>
-                          <td className="py-2 pr-4">{order.whop_checkout_id ?? "—"}</td>
-                          <td className="py-2">{order.whop_payment_id ?? "—"}</td>
-                        </tr>
-                      ))}</tbody>
-                    </table>
-                    <p className="mt-3 text-xs leading-5 text-zinc-600">
-                      Requested referral is the code Oremea carried into checkout. Whop remains the source of truth for actual affiliate attribution and commission.
-                    </p>
-                  </div>'''
-          if old_table not in text:
-              raise SystemExit("recent order table block not found")
-          text = text.replace(old_table, new_table, 1)
+            <table className="w-full min-w-[1180px] text-left text-xs">
+              <caption className="mb-2 text-left">
+                Latest ten orders — owner-only lifecycle trace, without buyer email
+              </caption>
+              <thead>
+                <tr>
+                  <th>Created / paid</th>
+                  <th>Order / parent</th>
+                  <th>Lane / amount</th>
+                  <th>Requested referral</th>
+                  <th>Status</th>
+                  <th>Visits</th>
+                  <th>Checkout</th>
+                  <th>Payment</th>
+                </tr>
+              </thead>
+              <tbody>{status.recentOrders.map((order) => (
+                <tr key={order.id} className="align-top">
+                  <td className="py-2 pr-4">
+                    <div>{traceTime(order.created_at)}</div>
+                    <div className="mt-1 text-zinc-600">Paid {traceTime(order.paid_at)}</div>
+                  </td>
+                  <td className="py-2 pr-4">
+                    <div>{order.id}</div>
+                    <div className="mt-1 text-zinc-600">Parent {order.parent_id ?? "—"}</div>
+                  </td>
+                  <td className="py-2 pr-4">
+                    <div>{planLabels.get(order.whop_plan_id) ?? "Unknown plan"}</div>
+                    <div className="mt-1 text-zinc-500">{order.kind} · {formatOremeaPrice(order.amount_cents)}</div>
+                    <div className="mt-1 text-zinc-600">{order.whop_plan_id}</div>
+                  </td>
+                  <td className="py-2 pr-4">{order.affiliate_code ?? "Direct / none"}</td>
+                  <td className="py-2 pr-4">{order.status}</td>
+                  <td className="py-2 pr-4">
+                    {order.quantity} bought · {order._count.redemptions} redeemed · {order.remaining_quantity} unused
+                  </td>
+                  <td className="py-2 pr-4">{order.whop_checkout_id ?? "—"}</td>
+                  <td className="py-2">{order.whop_payment_id ?? "—"}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+            <p className="mt-3 text-xs leading-5 text-zinc-600">
+              Requested referral is the code Oremea carried into checkout. Whop remains the source of truth for actual affiliate attribution and commission.
+            </p>
+          </div>'''
+          text = text[:start] + new_table + text[end:]
 
           helper_anchor = '''function Status({
           '''
