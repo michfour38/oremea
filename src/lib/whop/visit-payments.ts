@@ -2,10 +2,6 @@ import { z } from "zod";
 import { affiliateCode } from "./affiliate-attribution";
 
 import {
-  loadCreatorStarterWhopCatalog,
-  type CreatorStarterWhopCatalog,
-} from "./creator-starter-catalog";
-import {
   loadResonanceWhopCatalog,
   type ResonanceWhopCatalog,
 } from "./resonance-catalog";
@@ -37,19 +33,6 @@ export async function whopVisitConfig(
 ): Promise<WhopVisitConfig> {
   const apiKey = getWhopApiKey();
   const resolvedCatalog = catalog ?? await loadResonanceWhopCatalog();
-  return {
-    apiKey,
-    companyId: resolvedCatalog.companyId,
-    productId: resolvedCatalog.productId,
-    origin: getOremeaCommerceOrigin(),
-  };
-}
-
-export async function whopCreatorStarterConfig(
-  catalog?: CreatorStarterWhopCatalog,
-): Promise<WhopVisitConfig> {
-  const apiKey = getWhopApiKey();
-  const resolvedCatalog = catalog ?? await loadCreatorStarterWhopCatalog();
   return {
     apiKey,
     companyId: resolvedCatalog.companyId,

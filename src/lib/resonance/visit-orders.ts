@@ -1,10 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { affiliateCode } from "../whop/affiliate-attribution";
 import { prisma } from "@/lib/prisma";
-import { CREATOR_ACQUISITION_POLICY } from "../oremea/creator-acquisition-economics";
 import { additionalOffers, initialOffer, VISIT_PRICES } from "./visit-offers";
 import { matchesVisitOrder, matchesVisitRefund, uuidSchema, visitPaymentSchema, visitPaymentUpdate, visitRefundSchema } from "./visit-payment-contract";
-import { chargeVisitOrder, createVisitCheckout, whopCreatorStarterConfig, whopVisitConfig } from "../whop/visit-payments";
+import { chargeVisitOrder, createVisitCheckout, whopVisitConfig } from "../whop/visit-payments";
 import { loadCreatorStarterWhopCatalog } from "../whop/creator-starter-catalog";
 import { loadResonanceWhopCatalog, visitPlanIdFromCatalog } from "../whop/resonance-catalog";
 import { lockResonanceAccount } from "./resonance-account-lock";
@@ -20,28 +19,6 @@ export async function getVisitBalance(userId: string) {
     _sum: { remaining_quantity: true },
   });
   return result._sum.remaining_quantity ?? 0;
-}
-
-export async function creatorStarterEligibility(userId: string) {
-  const [entitlement, paidVisitOrder, purchasedRun] = await Promise.all([
-    prisma.oremea_entitlements.findFirst({
-      where: { user_id: userId },
-      select: { id: true },
-    }),
-    prisma.resonance_visit_orders.findFirst({
-      where: { user_id: userId, status: { in: ["paid", "refunded"] } },
-      select: { id: true },
-    }),
-    prisma.resonance_week_runs.findFirst({
-      where: { user_id: userId, purchased_at: { not: null } },
-      select: { id: true },
-    }),
-  ]);
-
-  if (entitlement) return { eligible: false, reason: "existing_oremea_access" } as const;
-  if (paidVisitOrder) return { eligible: false, reason: "existing_resonance_purchase" } as const;
-  if (purchasedRun) return { eligible: false, reason: "existing_resonance_purchase" } as const;
-  return { eligible: true, reason: null } as const;
 }
 
 export async function startVisitPurchase(userId: string, email: string, quantity: number, requestId: string, referral?: string | null) {
@@ -74,89 +51,6 @@ export async function startVisitPurchase(userId: string, email: string, quantity
   } catch {
     await prisma.resonance_visit_orders.updateMany({
       where: { id: order.id, status: "pending" }, data: { status: "unknown" },
-    });
-  }
-  return order.id;
-}
-
-export async function startCreatorStarterPurchase(
-  userId: string,
-  email: string,
-  requestId: string,
-  referral?: string | null,
-) {
-  uuidSchema.parse(requestId);
-  const creatorReferral = affiliateCode(referral);
-  if (!creatorReferral) throw new Error("A creator invitation is required.");
-
-  const catalog = await loadCreatorStarterWhopCatalog();
-  const paymentConfig = await whopCreatorStarterConfig(catalog);
-
-  // Resume the exact existing creator-starter checkout instead of creating a
-  // second uncertain charge. A settled/refunded starter can never be repeated.
-  const existing = await prisma.resonance_visit_orders.findFirst({
-    where: { user_id: userId, whop_plan_id: catalog.planId },
-    orderBy: { created_at: "desc" },
-  });
-  if (existing) {
-    if (existing.status === "paid" || existing.status === "refunded") {
-      throw new Error("The creator starter is available only once.");
-    }
-    if (
-      existing.kind !== "initial" ||
-      existing.quantity !== 1 ||
-      existing.amount_cents !== CREATOR_ACQUISITION_POLICY.customerPriceCents
-    ) {
-      throw new Error("The existing creator starter checkout is invalid.");
-    }
-    return existing.id;
-  }
-
-  const eligibility = await creatorStarterEligibility(userId);
-  if (!eligibility.eligible) {
-    throw new Error("The creator starter is for a new Oremea customer.");
-  }
-
-  const order = await prisma.resonance_visit_orders.upsert({
-    where: { id: requestId },
-    update: {},
-    create: {
-      id: requestId,
-      user_id: userId,
-      buyer_email: email.toLowerCase(),
-      kind: "initial",
-      quantity: 1,
-      amount_cents: CREATOR_ACQUISITION_POLICY.customerPriceCents,
-      whop_plan_id: catalog.planId,
-      affiliate_code: creatorReferral,
-    },
-  });
-  if (
-    order.user_id !== userId ||
-    order.kind !== "initial" ||
-    order.quantity !== 1 ||
-    order.whop_plan_id !== catalog.planId ||
-    order.affiliate_code !== creatorReferral
-  ) {
-    throw new Error("This creator starter checkout belongs to another request.");
-  }
-
-  const claim = await prisma.resonance_visit_orders.updateMany({
-    where: { id: order.id, status: "created" },
-    data: { status: "pending" },
-  });
-  if (!claim.count) return order.id;
-
-  try {
-    const checkoutId = await createVisitCheckout(order, paymentConfig);
-    await prisma.resonance_visit_orders.update({
-      where: { id: order.id },
-      data: { whop_checkout_id: checkoutId },
-    });
-  } catch {
-    await prisma.resonance_visit_orders.updateMany({
-      where: { id: order.id, status: "pending" },
-      data: { status: "unknown" },
     });
   }
   return order.id;

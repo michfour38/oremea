@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { SiteShell } from "@/components/site/site-shell";
 import { requireAdminPage } from "@/lib/auth/require-admin";
-import { getCreatorStarterWhopProvisioningStatus } from "@/src/lib/whop/creator-starter-catalog";
 import { getResonanceWhopProvisioningStatus } from "@/src/lib/whop/resonance-catalog";
 import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
 
@@ -22,16 +21,10 @@ export default async function ResonanceCommerceAdminPage({
 }) {
   await requireAdminPage();
   const query = await searchParams;
-  const [status, creatorStarter] = await Promise.all([
-    getResonanceWhopProvisioningStatus(),
-    getCreatorStarterWhopProvisioningStatus(),
-  ]);
+  const status = await getResonanceWhopProvisioningStatus();
   const planLabels = new Map<string, string>();
   for (const plan of status.plans) {
     if (plan.id) planLabels.set(plan.id, plan.label);
-  }
-  if (creatorStarter.planId) {
-    planLabels.set(creatorStarter.planId, "Creator Resonance Starter");
   }
 
   return (
@@ -51,17 +44,15 @@ export default async function ResonanceCommerceAdminPage({
           Visit-credit checkout
         </h1>
         <p className="mt-5 max-w-2xl text-sm leading-7 text-zinc-400">
-          Private setup for the Resonance visit product, fixed-price plans, the
-          isolated Creator Resonance Starter, and the existing Oremea Whop
-          webhook. Provisioning does not enable public checkout or approve a
-          creator commission.
+          Private setup for the Resonance visit product, fixed-price plans and
+          existing Oremea Whop webhook. Provisioning does not enable public
+          checkout or approve a creator commission.
         </p>
 
         {query.status === "ready" ? (
           <p className="mt-6 rounded-2xl border border-emerald-300/20 bg-emerald-300/5 p-4 text-sm text-emerald-100">
-            Resonance commerce and the isolated creator starter are provisioned.
-            Public checkout and named creator commission remain controlled
-            separately.
+            Resonance commerce is provisioned. Public checkout and named creator
+            commissions remain controlled separately.
           </p>
         ) : null}
         {query.status === "error" ? (
@@ -88,11 +79,6 @@ export default async function ResonanceCommerceAdminPage({
             detail={status.catalogConfigured ? `${status.planCount} / 11` : "Not provisioned"}
           />
           <Status
-            label="Creator starter"
-            ready={creatorStarter.configured}
-            detail={creatorStarter.configured ? `${formatOremeaPrice(creatorStarter.amountCents)} · isolated product` : "Not provisioned"}
-          />
-          <Status
             label="Existing webhook"
             ready={Boolean(status.webhookId)}
             detail={status.webhookId ? "Connected" : "Not verified"}
@@ -104,17 +90,16 @@ export default async function ResonanceCommerceAdminPage({
             Resonance visits product: {status.productId}
           </p>
         ) : null}
-        {creatorStarter.productId ? (
-          <p className="mt-2 text-xs text-zinc-600">
-            Creator starter product: {creatorStarter.productId}
-          </p>
-        ) : null}
 
         <div className="mt-8 rounded-2xl border border-white/10 p-5 text-sm">
           <h2 className="text-xl">Private commerce audit</h2>
           <p className="mt-3">Public visit credits: {status.visitsEnabled ? "ON" : "OFF"} · Public checkout: {status.checkoutEnabled ? "ON" : "OFF"}</p>
           <p>Company: {status.companyId ?? "Not configured"}</p>
           <p>Paid orders: {status.paidOrders} · Redeemed visits: {status.redemptions}</p>
+          <p role={status.unresolvedOrders ? "alert" : "status"} className={status.unresolvedOrders ? "mt-3 text-amber-200" : "mt-3 text-zinc-500"}>
+            Unresolved checkouts older than 30 minutes: {status.unresolvedOrders}.
+            {status.unresolvedOrders ? " Reconcile them against Whop payments and webhooks before retrying any charge." : ""}
+          </p>
           <div className="mt-5 overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead><tr><th>Offer</th><th>Amount</th><th>Stored Whop plan</th></tr></thead>
@@ -177,11 +162,9 @@ export default async function ResonanceCommerceAdminPage({
           </h2>
           <p className="mt-3 text-sm leading-7 text-zinc-400">
             This reuses Oremea-marked resources when they already exist, creates
-            only missing hidden resources, verifies every approved amount and
-            one-time term, and extends the existing webhook. The creator starter
-            is a separate hidden product so its acquisition economics cannot
-            leak into the normal Resonance backend. Provisioning fails closed on
-            mismatches and never assigns an individual creator rate.
+            only missing hidden visit plans, verifies every approved amount and
+            one-time term, and extends the existing webhook. Provisioning fails
+            closed on mismatches and never assigns an individual creator rate.
           </p>
 
           <ProvisionForm enabled={status.apiKeyConfigured}>

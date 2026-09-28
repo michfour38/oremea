@@ -4,7 +4,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requestAffiliateCode } from "@/src/lib/whop/affiliate-request";
-import { acceptVisitAddition, declineVisitAddition, redeemVisit, startCreatorStarterPurchase, startVisitPurchase } from "@/src/lib/resonance/visit-orders";
+import { acceptVisitAddition, declineVisitAddition, redeemVisit, startVisitPurchase } from "@/src/lib/resonance/visit-orders";
 import { visitCheckoutAvailableFor, visitCreditsAvailableFor } from "@/src/lib/resonance/visit-access";
 import { getResonanceRoomTarget } from "@/src/lib/resonance/room-entry";
 
@@ -36,30 +36,6 @@ export async function purchaseVisits(form: FormData) {
   }
   if (!orderId) redirect(withRoom("/resonance/visits?error=checkout", roomTarget?.weekNumber));
   redirect(withRoom(`/resonance/visits?order=${orderId}`, roomTarget?.weekNumber));
-}
-
-export async function purchaseCreatorStarter(form: FormData) {
-  const user = await currentUser();
-  if (!user) redirect("/sign-in?redirect_url=%2Fresonance%2Fcreator");
-  if (!(await visitCheckoutAvailableFor(user.id))) redirect("/resonance/creator?error=unavailable");
-  const email = user.emailAddresses.find((item) => item.id === user.primaryEmailAddressId);
-  if (!email || email.verification?.status !== "verified") redirect("/resonance/creator?error=email");
-  const referral = await requestAffiliateCode();
-  if (!referral) redirect("/resonance/creator?error=invite");
-
-  let orderId: string | null = null;
-  try {
-    orderId = await startCreatorStarterPurchase(
-      user.id,
-      email.emailAddress,
-      String(form.get("requestId")),
-      referral,
-    );
-  } catch {
-    // Keep provider, eligibility and account details private.
-  }
-  if (!orderId) redirect("/resonance/creator?error=unavailable");
-  redirect(`/resonance/visits?order=${orderId}`);
 }
 
 export async function addVisits(form: FormData) {

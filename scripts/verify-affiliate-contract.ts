@@ -8,8 +8,6 @@ import { createVisitCheckout } from "../src/lib/whop/visit-payments";
 async function main() {
   assert.equal(OREMEA_AFFILIATE_POLICY.standardRate, 0.3);
   assert.equal(OREMEA_AFFILIATE_POLICY.approvedCreatorRate, 0.4);
-  assert.equal(OREMEA_AFFILIATE_POLICY.creatorAcquisition.firstSaleRate, 1);
-  assert.equal(OREMEA_AFFILIATE_POLICY.creatorAcquisition.backendRate, 0.4);
   assert.equal(OREMEA_AFFILIATE_POLICY.dawnIncomeAllocation, 0);
   for (const invalid of [null, undefined, "", "a&rate=40", "https://evil.test", "x".repeat(101)]) assert.equal(affiliateCode(invalid), null);
   assert.equal(affiliateCheckoutUrl("https://whop.com/checkout/plan_x/?redirect_url=x", "creator.one"), "https://whop.com/checkout/plan_x/?redirect_url=x&a=creator.one");
