@@ -125,7 +125,11 @@ assert.match(roomById["resonance-vision"].buyerDecision, /what that future would
 assert.match(roomById["resonance-vision"].description, /ordinary days, rhythms, responsibilities, decisions, resources/i);
 assert.match(roomById["resonance-vision"].chooseWhen, /same life in practice/i);
 assert.doesNotMatch(roomById["resonance-vision"].description, /manifest|destiny|guarantee|predict/i);
-assert.match(roomById["resonance-gathering"].description, /allowing unresolved or separate material/i);
+assert.match(roomById["resonance-gathering"].headline, /without forcing one story/i);
+assert.match(roomById["resonance-gathering"].buyerDecision, /which deserve to stay separate/i);
+assert.match(roomById["resonance-gathering"].description, /tests connection without manufacturing it/i);
+assert.match(roomById["resonance-gathering"].chooseWhen, /fuller picture/i);
+assert.doesNotMatch(roomById["resonance-gathering"].description, /everything happens for a reason|grand meaning|one true story/i);
 assert.match(roomById["resonance-becoming"].description, /low-capacity versions and return after a lapse/i);
 
 const productTruthDescriptions = Object.fromEntries(

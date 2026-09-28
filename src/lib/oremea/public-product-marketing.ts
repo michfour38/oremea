@@ -197,13 +197,13 @@ export const OREMEA_PUBLIC_PRODUCT_MARKETING = {
   "resonance-gathering": {
     id: "resonance-gathering",
     category: "Resonance room 9",
-    headline: "Gather without forcing coherence",
+    headline: "Clarity without forcing one story",
     buyerDecision:
-      "What belongs together in what I have noticed, and what should remain separate?",
+      "Sometimes the work is not finding one answer. It is seeing which pieces genuinely belong together—and which deserve to stay separate.",
     description:
-      "Gathering lets different pieces be heard beside one another. It can test what genuinely connects while allowing unresolved or separate material to stay that way.",
+      "Gathering gives different experiences, contradictions, recurring threads and unfinished material room to sit beside one another. It tests connection without manufacturing it, holds competing truths without flattening either one, and helps sort what to keep noticing, act on, support or leave alone for now.",
     chooseWhen:
-      "Choose Gathering when several relational experiences are present and you want to hear their relationship without forcing one story.",
+      "Enter Gathering when you have many pieces and want a fuller picture without turning complexity into one grand explanation. The room does not impose meaning, require every piece to connect or depend on completing another Resonance room first.",
     limits: [
       "No grand meaning imposed on the whole.",
       "No requirement that every piece connect.",

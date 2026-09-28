@@ -103,12 +103,12 @@ const ROOM_DETAILS: Record<number, RoomDetail> = {
   },
   9: {
     label: "Integration",
-    question: "What belongs together in the way I understand myself?",
+    question: "Clarity does not require one neat story.",
     description:
-      "Bring different experiences, contexts, contradictions, interpretations, and pieces of information into the same picture. Explore what connects, what remains distinct, and how much explanatory weight each part of your story can reasonably carry.",
+      "When several experiences, decisions, contradictions and unfinished thoughts are alive at once, the pressure to find the one explanation can become its own kind of distortion. Gathering lets the pieces sit beside one another long enough to discover what genuinely connects, what is only similar, what remains true in tension with something else, what feels complete, what still needs action, and what is allowed to stay separate. Integration here is not compression. It is a fuller picture with the distinctions still intact.",
     chooseWhen:
-      "You already have many pieces and want to understand how they belong together without forcing them into one simple answer.",
-    comparison: "What belongs together in the larger picture?",
+      "you have gathered a lot of insight but do not want to force it into one grand lesson—or when several true things need to be held together without pretending they say the same thing. Gathering does not impose meaning or require every piece to connect.",
+    comparison: "Gather the pieces. Keep the distinctions.",
   },
   10: {
     label: "Embodiment",
