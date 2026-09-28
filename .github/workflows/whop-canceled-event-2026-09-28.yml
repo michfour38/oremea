@@ -1,0 +1,77 @@
+name: Whop canceled payment webhook guard 2026-09-28
+
+on:
+  push:
+    branches:
+      - fix/whop-payment-canceled-webhook-2026-09-28
+
+permissions:
+  contents: write
+
+jobs:
+  patch-validate-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Require payment.canceled in Resonance webhook provisioning
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          catalog = Path('src/lib/whop/resonance-catalog.ts')
+          text = catalog.read_text()
+          old = '  "payment.failed",\n  "refund.created",'
+          new = '  "payment.failed",\n  "payment.canceled",\n  "refund.created",'
+          if old not in text:
+              raise SystemExit('Required webhook event block did not match expected source')
+          catalog.write_text(text.replace(old, new, 1))
+
+          test = Path('scripts/verify-resonance-provisioning-contract.ts')
+          text = test.read_text()
+          old = 'events: ["payment.succeeded", "payment.failed", "refund.created", "refund.updated"]'
+          new = 'events: ["payment.succeeded", "payment.failed", "payment.canceled", "refund.created", "refund.updated"]'
+          if old not in text:
+              raise SystemExit('Provisioning fixture event list did not match expected source')
+          text = text.replace(old, new, 1)
+          marker = '    const page = readFileSync("app/(member)/resonance/visits/page.tsx", "utf8");'
+          guard = '''    const catalogSource = readFileSync("src/lib/whop/resonance-catalog.ts", "utf8");\n    assert.match(\n      catalogSource,\n      /REQUIRED_WEBHOOK_EVENTS[\\s\\S]*payment\\.succeeded[\\s\\S]*payment\\.failed[\\s\\S]*payment\\.canceled[\\s\\S]*refund\\.created[\\s\\S]*refund\\.updated/,\n      "The provisioned Whop webhook must subscribe to canceled payments as well as success, failure and refunds.",\n    );\n'''
+          if marker not in text:
+              raise SystemExit('Provisioning test insertion point did not match expected source')
+          test.write_text(text.replace(marker, guard + marker, 1))
+          PY
+
+      - name: Validate complete Oremea application
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run test:launch
+          npm run typecheck
+          npm run build
+
+      - name: Commit exact tested source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/whop-canceled-event-2026-09-28.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/lib/whop/resonance-catalog.ts scripts/verify-resonance-provisioning-contract.ts .github/workflows/whop-canceled-event-2026-09-28.yml
+          git diff --cached --quiet && exit 0
+          git commit -m "fix: subscribe Resonance webhook to canceled payments"
+          git push origin HEAD:fix/whop-payment-canceled-webhook-2026-09-28
