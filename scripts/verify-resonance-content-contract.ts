@@ -80,4 +80,87 @@ assert.doesNotMatch(
   "Superseded Resonance teacher names must not re-enter current seed authority.",
 );
 
+const weekByNumber = new Map(
+  RESONANCE_CONTENT.map((week) => [week.week_number, week] as const),
+);
+const weekText = (weekNumber: number) =>
+  JSON.stringify(weekByNumber.get(weekNumber));
+
+assert.match(
+  weekText(2),
+  /what information would make you revise it/i,
+  "Mirror must preserve a deliberate disconfirmation check rather than treating a first read as settled.",
+);
+assert.doesNotMatch(
+  weekText(2),
+  /what do you tend to notice more: things that fit it, things that challenge it/i,
+  "Superseded Mirror confirmation wording must not return.",
+);
+
+assert.match(
+  weekText(3),
+  /help actually reduces your load/i,
+  "Garden must distinguish help that reduces load from help that creates coordination work.",
+);
+assert.match(
+  weekText(3),
+  /hand over the whole job/i,
+  "Garden must preserve whole-job transfer, including invisible coordination work.",
+);
+
+assert.match(
+  weekText(4),
+  /approval, pressure, obligation, or expectation/i,
+  "Bearing must preserve the distinction between endorsed direction and externally controlled pressure.",
+);
+
+assert.match(
+  weekText(5),
+  /what else besides desire can create similar sensations/i,
+  "Pulse must treat bodily intensity as information that still needs context.",
+);
+assert.match(
+  weekText(5),
+  /what more information showed me/i,
+  "Pulse must preserve the move from sensation and first interpretation toward reality-testing.",
+);
+assert.doesNotMatch(
+  weekText(5),
+  /how does your body feel different when you are interested in something versus when you want distance from it/i,
+  "Superseded Pulse body-equals-meaning wording must not return.",
+);
+
+assert.equal(
+  weekByNumber.get(6)?.theme,
+  "Strong reactions, context, and present choice",
+  "Shadow must remain grounded in present context and choice rather than a hidden-origin theory.",
+);
+assert.match(
+  weekText(6),
+  /what information would help you check whether the reaction fits what is happening now/i,
+  "Shadow must preserve present-context checking before action.",
+);
+assert.doesNotMatch(
+  weekText(6),
+  /older memories|internal protection and defensive strategies/i,
+  "Superseded Shadow origin-story and defensive-theory wording must not return.",
+);
+
+assert.match(
+  weekText(7),
+  /what action would match that particular problem/i,
+  "Forge must preserve repair that matches the actual problem rather than treating apology as sufficient.",
+);
+assert.doesNotMatch(
+  weekText(7),
+  /what would you like the other person to do to repair this/i,
+  "Superseded generic Forge repair wording must not return.",
+);
+
+assert.match(
+  weekText(10),
+  /what recurring moment could become the cue for the action/i,
+  "Becoming must preserve a concrete cue-to-action bridge rather than relying on intention alone.",
+);
+
 console.log("Resonance content contract checks passed.");
