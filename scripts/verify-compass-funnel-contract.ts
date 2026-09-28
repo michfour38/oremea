@@ -22,8 +22,18 @@ assert.match(
 );
 assert.match(
   access,
-  /what you really want[\s\S]*why it matters[\s\S]*next move/i,
-  "Compass must connect the pain point to clarity, meaning and movement.",
+  /what you really want/i,
+  "Compass funnel must help the buyer recognise the question of what they actually want.",
+);
+assert.match(
+  access,
+  /why it\s*matters/i,
+  "Compass funnel must connect the goal to why it matters.",
+);
+assert.match(
+  access,
+  /next\s*move/i,
+  "Compass funnel must connect clarity to a next movement.",
 );
 assert.match(
   access,
