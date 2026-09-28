@@ -64,7 +64,6 @@
     "@trpc/client": "^11.0.0-rc.370",
     "@trpc/react-query": "^11.0.0-rc.370",
     "@trpc/server": "^11.0.0-rc.370",
-    "ai": "^3.1.0",
     "next": "^15.5.24",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
