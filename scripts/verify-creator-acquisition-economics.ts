@@ -37,6 +37,20 @@ assert.equal(acquisition.deliveryReserveCents, 500);
 assert.equal(acquisition.acquisitionInvestmentCents, 1203);
 assert.ok(acquisition.acquisitionInvestmentCents <= 1500);
 
+// Existing Resonance post-purchase funnel can move a $50 starter buyer to the
+// $400 ten-visit total with a separate $350 backend purchase. At 40% backend
+// commission the creator can reach $190 across those two sales, while the $350
+// backend still leaves >$92 for nine visits' delivery after a 20% contribution
+// reserve, stacked fee reserve and 5% refund/dispute reserve.
+assert.equal(backend.resonanceCompleteTenFromStarter.priceCents, 35000);
+assert.equal(backend.resonanceCompleteTenFromStarter.creatorCommissionCents, 14000);
+assert.equal(backend.resonanceCompleteTenFromStarter.creatorEarningsIncludingStarterCents, 19000);
+assert.equal(backend.resonanceCompleteTenFromStarter.maxDeliveryBudgetCents, 9262);
+assert.ok(
+  backend.resonanceCompleteTenFromStarter.maxDeliveryBudgetCents /
+    backend.resonanceCompleteTenFromStarter.remainingVisits > 1000,
+);
+
 // Even if a referred subscription cancels after month one, 40% recurring
 // commission must leave a positive delivery budget AND a 20% contribution
 // reserve under the same conservative provider-fee stress model.
