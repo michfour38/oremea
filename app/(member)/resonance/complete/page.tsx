@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { RESONANCE_ROOM_MARKETING } from "@/src/lib/oremea/public-product-marketing";
 import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
 import { additionalOffers, VISIT_PRICES } from "@/src/lib/resonance/visit-offers";
+import { getResonanceRoomTarget } from "@/src/lib/resonance/room-entry";
 import { visitCheckoutAvailableFor, visitCreditsAvailableFor } from "@/src/lib/resonance/visit-access";
 import { getVisitOrder } from "@/src/lib/resonance/visit-orders";
 import { addVisits } from "../visits/actions";
@@ -19,17 +20,20 @@ function CompleteTenAction({
   quantity,
   amountCents,
   canCharge,
+  roomWeekNumber,
   label = "Complete ten",
 }: {
   orderId: string;
   quantity: number;
   amountCents: number;
   canCharge: boolean;
+  roomWeekNumber?: number;
   label?: string;
 }) {
   return (
     <form action={addVisits} className="mx-auto w-full max-w-md">
       <input type="hidden" name="orderId" value={orderId} />
+      {roomWeekNumber ? <input type="hidden" name="room" value={roomWeekNumber} /> : null}
       <input type="hidden" name="quantity" value={quantity} />
       <VisitSubmitButton disabled={!canCharge}>
         {label} · Pay {formatOremeaPrice(amountCents)}
@@ -39,20 +43,22 @@ function CompleteTenAction({
 }
 
 export default async function VisitCompletionPage({ searchParams }: {
-  searchParams: Promise<{ order?: string; error?: string }>;
+  searchParams: Promise<{ order?: string; error?: string; room?: string | string[] }>;
 }) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
   if (!(await visitCreditsAvailableFor(userId))) notFound();
 
   const query = await searchParams;
+  const roomTarget = getResonanceRoomTarget(query.room);
+  const roomSuffix = roomTarget ? `&room=${roomTarget.weekNumber}` : "";
   const order = query.order ? await getVisitOrder(userId, query.order) : null;
   if (!order) notFound();
 
   const child = order.kind === "initial"
     ? await prisma.resonance_visit_orders.findUnique({ where: { parent_id: order.id } })
     : null;
-  if (child) redirect(`/resonance/complete?order=${child.id}`);
+  if (child) redirect(`/resonance/complete?order=${child.id}${roomSuffix}`);
 
   if (order.status !== "paid" || order.kind !== "initial" || order.offer_closed_at) {
     const heading = order.status === "paid" ? "Your visits are ready."
@@ -71,7 +77,7 @@ export default async function VisitCompletionPage({ searchParams }: {
         </p>
         <div className="mt-8 flex flex-wrap gap-6">
           {order.status === "failed" && order.kind === "initial" && order.whop_checkout_id ? (
-            <Link href={`/resonance/visits?order=${order.id}`} className="res-accent res-accent-hover text-base underline">
+            <Link href={`/resonance/visits?order=${order.id}${roomSuffix}`} className="res-accent res-accent-hover text-base underline">
               Return to checkout
             </Link>
           ) : null}
@@ -80,7 +86,7 @@ export default async function VisitCompletionPage({ searchParams }: {
               Check payment status
             </a>
           ) : null}
-          <Link href="/entry" className="res-accent res-accent-hover text-base underline">Choose my room</Link>
+          <Link href={roomTarget?.entryPath ?? "/entry"} className="res-accent res-accent-hover text-base underline">{roomTarget ? `Continue to ${roomTarget.name}` : "Choose my room"}</Link>
         </div>
       </FunnelFrame>
     );
@@ -123,6 +129,7 @@ export default async function VisitCompletionPage({ searchParams }: {
             amountCents: offer.amountCents,
           }))}
           canCharge={canCharge}
+          roomWeekNumber={roomTarget?.weekNumber}
         />
 
         <p className="res-text-secondary mx-auto mt-5 max-w-2xl text-center text-sm leading-7">
@@ -148,6 +155,7 @@ export default async function VisitCompletionPage({ searchParams }: {
               quantity={complete.quantity}
               amountCents={complete.amountCents}
               canCharge={canCharge}
+          roomWeekNumber={roomTarget?.weekNumber}
             />
           </div>
         </section>
@@ -177,6 +185,7 @@ export default async function VisitCompletionPage({ searchParams }: {
               quantity={complete.quantity}
               amountCents={complete.amountCents}
               canCharge={canCharge}
+          roomWeekNumber={roomTarget?.weekNumber}
               label="Keep all ten available"
             />
           </div>
@@ -212,6 +221,7 @@ export default async function VisitCompletionPage({ searchParams }: {
               quantity={complete.quantity}
               amountCents={complete.amountCents}
               canCharge={canCharge}
+          roomWeekNumber={roomTarget?.weekNumber}
               label="Complete the ten-room set"
             />
           </div>
@@ -243,6 +253,7 @@ export default async function VisitCompletionPage({ searchParams }: {
               quantity={complete.quantity}
               amountCents={complete.amountCents}
               canCharge={canCharge}
+          roomWeekNumber={roomTarget?.weekNumber}
               label="Complete ten now"
             />
           </div>

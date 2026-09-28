@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteNav } from "@/components/site/site-nav";
 import { RESONANCE_ROOM_MARKETING } from "@/src/lib/oremea/public-product-marketing";
+import { RESONANCE_ROOM_NAMES } from "@/src/lib/resonance/room-entry";
 import { visitCheckoutAvailableFor } from "@/src/lib/resonance/visit-access";
 import { visitCheckoutEnabled } from "@/src/lib/resonance/visit-offers";
 
@@ -238,38 +239,29 @@ export default async function ResonanceEnterPage() {
             </p>
           </div>
 
-          <div className="mt-10 grid gap-5 md:grid-cols-2">
-            {RESONANCE_ROOM_MARKETING.map((room) => (
-              <article
-                key={room.id}
-                className="res-border res-panel flex h-full flex-col rounded-3xl border p-6 md:p-7"
-              >
-                <p className="res-accent text-xs uppercase tracking-[0.2em]">
-                  Room {room.weekNumber}
-                </p>
-                <h3 className="res-text mt-3 font-serif text-2xl">
-                  {room.headline}
-                </h3>
-                <p className="res-text-primary mt-4 text-sm leading-7">
-                  {room.description}
-                </p>
-                <div className="mt-auto pt-6">
-                  <div className="flex h-14 items-center border-l border-[var(--product-accent-border)] pl-4">
-                    <p className="res-text-secondary line-clamp-2 text-sm leading-7">
-                      {room.buyerDecision}
-                    </p>
+          <div className="mt-10 space-y-4">
+            {RESONANCE_ROOM_MARKETING.map((room) => {
+              const roomName = RESONANCE_ROOM_NAMES[room.weekNumber];
+              return (
+                <details key={room.id} className="res-border res-panel group rounded-3xl border backdrop-blur-[2px]">
+                  <summary className="flex cursor-pointer list-none items-start justify-between gap-5 px-6 py-5 md:px-7">
+                    <div>
+                      <p className="res-accent text-xs uppercase tracking-[0.2em]">Room {room.weekNumber} · {roomName}</p>
+                      <h3 className="res-text mt-3 font-serif text-2xl">{room.headline}</h3>
+                      <p className="res-text-secondary mt-3 text-sm leading-7">{room.buyerDecision}</p>
+                    </div>
+                    <span className="res-accent mt-1 shrink-0 transition group-open:rotate-180">↓</span>
+                  </summary>
+                  <div className="res-divider border-t px-6 py-6 md:px-7">
+                    <div className="max-w-3xl">
+                      <p className="res-text-primary text-sm leading-7">{room.description}</p>
+                      <p className="res-text-secondary mt-4 text-sm leading-7"><span className="res-accent font-medium">Enter this room when:</span>{" "}{room.chooseWhen}</p>
+                    </div>
+                    <Link href={`/entry?room=${room.weekNumber}`} className="res-action mt-6 inline-flex rounded-xl border px-5 py-2.5 text-sm font-medium transition">Choose {roomName} →</Link>
                   </div>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          <div className="mt-10 flex justify-center">
-            <FunnelAction
-              href={entryHref}
-              signedIn={Boolean(userId)}
-              checkoutReady={funnelCheckoutEnabled}
-            />
+                </details>
+              );
+            })}
           </div>
         </section>
 

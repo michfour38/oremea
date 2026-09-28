@@ -371,11 +371,11 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
 
                         {canPurchase ? (
                           <Link
-                            href={newCheckout ? "/resonance/visits" : `/resonance/purchase?week=${week.week_number}`}
+                            href={newCheckout ? `/resonance/visits?room=${week.week_number}` : `/resonance/purchase?week=${week.week_number}`}
                             className="res-action inline-flex flex-wrap items-center rounded-xl border px-5 py-2.5 text-sm font-medium transition"
                           >
                             <span>
-                              {newCheckout ? "Buy visits" : hasArchivedHistory
+                              {newCheckout ? `Choose visits for ${week.title}` : hasArchivedHistory
                                 ? `Purchase ${week.title} again`
                                 : `Purchase ${week.title}`}
                             </span>

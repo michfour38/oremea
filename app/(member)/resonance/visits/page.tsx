@@ -4,6 +4,7 @@ import Script from "next/script";
 import { notFound, redirect } from "next/navigation";
 import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
 import { INITIAL_QUANTITIES, VISIT_PRICES } from "@/src/lib/resonance/visit-offers";
+import { getResonanceRoomTarget } from "@/src/lib/resonance/room-entry";
 import { visitCheckoutAvailableFor, visitCreditsAvailableFor } from "@/src/lib/resonance/visit-access";
 import { getVisitOrder } from "@/src/lib/resonance/visit-orders";
 import { whopVisitConfig } from "@/src/lib/whop/visit-payments";
@@ -14,15 +15,18 @@ import { purchaseVisits } from "./actions";
 export const dynamic = "force-dynamic";
 
 export default async function VisitPurchasePage({ searchParams }: {
-  searchParams: Promise<{ order?: string; error?: string }>;
+  searchParams: Promise<{ order?: string; error?: string; room?: string | string[] }>;
 }) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in?redirect_url=%2Fresonance%2Fvisits");
-  if (!(await visitCreditsAvailableFor(userId))) notFound();
   const query = await searchParams;
+  const roomTarget = getResonanceRoomTarget(query.room);
+  const roomQuery = roomTarget ? `?room=${roomTarget.weekNumber}` : "";
+  const roomSuffix = roomTarget ? `&room=${roomTarget.weekNumber}` : "";
+  const { userId } = await auth();
+  if (!userId) redirect(`/sign-in?redirect_url=${encodeURIComponent(`/resonance/visits${roomQuery}`)}`);
+  if (!(await visitCreditsAvailableFor(userId))) notFound();
   const order = query.order ? await getVisitOrder(userId, query.order) : null;
   if (query.order && (!order || order.kind !== "initial")) notFound();
-  if (order?.status === "paid") redirect(`/resonance/complete?order=${order.id}`);
+  if (order?.status === "paid") redirect(`/resonance/complete?order=${order.id}${roomSuffix}`);
   const checkoutEnabled = await visitCheckoutAvailableFor(userId);
   // A declined initial payment can be retried inside the same provider checkout.
   // Unknown outcomes stay blocked to avoid submitting a second uncertain charge.
@@ -50,6 +54,7 @@ export default async function VisitPurchasePage({ searchParams }: {
               <p className="res-accent mt-4 text-3xl">{formatOremeaPrice(VISIT_PRICES[quantity])}</p>
               <p className="res-text-secondary mb-6 mt-2 text-sm">{quantity === 3 ? "About " : ""}{formatOremeaPrice(VISIT_PRICES[quantity] / quantity)} per visit</p>
               <input type="hidden" name="quantity" value={quantity} />
+              {roomTarget ? <input type="hidden" name="room" value={roomTarget.weekNumber} /> : null}
               <input type="hidden" name="requestId" value={randomUUID()} />
               <VisitSubmitButton disabled={!checkoutEnabled}>Choose {quantity}</VisitSubmitButton>
             </form>
@@ -63,7 +68,7 @@ export default async function VisitPurchasePage({ searchParams }: {
             data-whop-checkout-session={order.whop_checkout_id} data-whop-checkout-theme="dark"
             data-whop-checkout-prefill-email={order.buyer_email} data-whop-checkout-disable-email="true"
             data-whop-checkout-setup-future-usage="off_session"
-            data-whop-checkout-return-url={`${checkoutOrigin}/resonance/complete?order=${order.id}`} />
+            data-whop-checkout-return-url={`${checkoutOrigin}/resonance/complete?order=${order.id}${roomSuffix}`} />
         </section>
       ) : (
         <p role="status" className="res-text-primary mx-auto mt-8 max-w-xl text-base leading-8">This checkout could not be confirmed. No visits have been added for it. Contact support before retrying if you received a successful payment confirmation.</p>
