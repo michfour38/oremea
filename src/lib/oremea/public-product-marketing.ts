@@ -107,13 +107,13 @@ export const OREMEA_PUBLIC_PRODUCT_MARKETING = {
   "resonance-bearing": {
     id: "resonance-bearing",
     category: "Resonance room 4",
-    headline: "See what your choices reveal",
+    headline: "Everything cannot come first",
     buyerDecision:
-      "What do my real choices, priorities and trade-offs show matters now?",
+      "When several things genuinely matter, clarity comes from seeing what your real choices are already protecting, delaying or costing.",
     description:
-      "Bearing makes values and integrity visible through choices, allocations and trade-offs. It clarifies orientation without turning that orientation into an execution plan.",
+      "Bearing puts stated priorities beside lived decisions: where time, attention and resources go, what gets less, what changes under pressure, and where words and actions stop pointing in the same direction. It makes current orientation visible without declaring a single choice to be your ‘true values’ or a verdict on your character.",
     chooseWhen:
-      "Choose Bearing when stated values and lived priorities need to be heard together.",
+      "Enter Bearing when important priorities are competing, a decision keeps wobbling, or your lived choices no longer seem to match what you say matters. It helps make the trade-offs and decision ownership visible without deciding what should win or turning clarity into an execution plan.",
     limits: [
       "No moral ranking of values.",
       "No instruction about which value should win.",
