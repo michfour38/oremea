@@ -47,7 +47,7 @@ assert.match(
 );
 assert.match(
   access,
-  /The goal remains yours[\s\S]*decisions and participation outside the conversation[\s\S]*remain yours/,
+  /The goal remains yours[\s\S]*decisions that belong to you/,
   "Compass funnel must preserve participant authority over goals and movement.",
 );
 assert.match(
@@ -56,6 +56,16 @@ assert.match(
   "Compass central price must remain $50.00/month unless deliberately changed at the pricing authority.",
 );
 
+assert.doesNotMatch(
+  access,
+  /COMPASS_PRICING|formatCompassPrice|\$\s*\d|\/month|monthly membership|prices are shown/i,
+  "Compass public funnel must remain price-free; current pricing belongs on the provider purchase surface.",
+);
+assert.match(
+  access,
+  /View Compass access/,
+  "Compass public funnel must send ready buyers to the current access options without duplicating price copy.",
+);
 assert.doesNotMatch(
   access,
   /seven why|seven-layer|core reflection|descent/i,
@@ -116,4 +126,4 @@ assert.match(
   "Compass /begin must remain the product handoff after access is active.",
 );
 
-console.log("Compass goal-setting funnel, private-method, pricing and Oremea-gold contract checks passed.");
+console.log("Compass goal-setting funnel, price-free public copy, private-method and Oremea-gold contract checks passed.");
