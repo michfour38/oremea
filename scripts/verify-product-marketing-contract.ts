@@ -97,7 +97,11 @@ assert.match(roomById["resonance-mirror"].description, /pattern can become visib
 assert.match(roomById["resonance-mirror"].chooseWhen, /belongs to your participation/i);
 assert.match(roomById["resonance-mirror"].limits.join(" "), /No invented motive/i);
 assert.doesNotMatch(roomById["resonance-mirror"].description, /attachment style|trauma response|diagnos/i);
-assert.doesNotMatch(roomById["resonance-garden"].description, /compatibility/i);
+assert.match(roomById["resonance-garden"].headline, /care that can keep working/i);
+assert.match(roomById["resonance-garden"].description, /time, attention, labour, energy, resources and rest/i);
+assert.match(roomById["resonance-garden"].chooseWhen, /capacity and limits/i);
+assert.match(roomById["resonance-garden"].limits.join(" "), /No compatibility scoring/i);
+assert.doesNotMatch(roomById["resonance-garden"].description, /compatibility|selfish|martyr|trauma|attachment/i);
 assert.match(roomById["resonance-bearing"].description, /choices, allocations and trade-offs/i);
 assert.match(roomById["resonance-pulse"].description, /desire, attraction, aliveness/i);
 assert.doesNotMatch(roomById["resonance-pulse"].description, /values|alignment/i);

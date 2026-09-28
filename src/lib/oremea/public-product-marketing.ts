@@ -89,13 +89,13 @@ export const OREMEA_PUBLIC_PRODUCT_MARKETING = {
   "resonance-garden": {
     id: "resonance-garden",
     category: "Resonance room 3",
-    headline: "Notice how care moves",
+    headline: "Care that can keep working",
     buyerDecision:
-      "What gives, costs, restores and circulates care in my relationships?",
+      "Care can be genuine and still leave one person carrying more than can be sustained.",
     description:
-      "Garden helps you examine care, capacity, nourishment and reciprocity through what is actually happening, including what can be sustained.",
+      "Care has a footprint in time, attention, labour, energy, resources and rest. Some support gives capacity back. Some helping quietly becomes expected. The Garden makes that movement visible so giving and receiving can be heard as lived arrangements rather than ideals about who cares more.",
     chooseWhen:
-      "Choose Garden when care is present but its cost, flow or reciprocity needs clearer attention.",
+      "Enter The Garden when care is present but the way it moves needs clearer attention—what restores, what drains, what is being carried, what needs to be asked for, and what can actually be repeated. It does not score reciprocity or turn capacity and limits into a moral judgment.",
     limits: [
       "No compatibility scoring.",
       "No proof that care should continue.",
