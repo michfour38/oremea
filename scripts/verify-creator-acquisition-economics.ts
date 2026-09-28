@@ -63,9 +63,32 @@ const admin = fs.readFileSync(
   path.join(process.cwd(), "app/admin/affiliates/page.tsx"),
   "utf8",
 );
-assert.match(admin, /WHOP_RESONANCE_CREATOR_STARTER_PRODUCT_ID/);
-assert.match(admin, /WHOP_RESONANCE_CREATOR_STARTER_PLAN_ID/);
-assert.match(admin, /never set the normal Resonance product\/catalog/i);
-assert.match(admin, /one real attributable purchase/i);
+const starterCatalog = fs.readFileSync(
+  path.join(process.cwd(), "src/lib/whop/creator-starter-catalog.ts"),
+  "utf8",
+);
+const normalCatalog = fs.readFileSync(
+  path.join(process.cwd(), "src/lib/whop/resonance-catalog.ts"),
+  "utf8",
+);
+const provisionAction = fs.readFileSync(
+  path.join(process.cwd(), "app/admin/resonance-commerce/actions.ts"),
+  "utf8",
+);
 
-console.log("Creator acquisition economics contract verified.");
+assert.match(starterCatalog, /resonance-creator-starter-v1/);
+assert.match(starterCatalog, /Creator Resonance Starter/);
+assert.match(starterCatalog, /visibility:\s*"hidden"/);
+assert.match(starterCatalog, /global_affiliate_status:\s*"disabled"/);
+assert.match(starterCatalog, /member_affiliate_status:\s*"disabled"/);
+assert.match(starterCatalog, /CREATOR_ACQUISITION_POLICY\.customerPriceCents/);
+assert.doesNotMatch(starterCatalog, /RESONANCE_WHOP_CATALOG_KEY/);
+assert.match(normalCatalog, /resonance-visits-v1/);
+assert.match(provisionAction, /provisionResonanceWhopCatalog\(\)/);
+assert.match(provisionAction, /provisionCreatorStarterWhopCatalog\(\)/);
+assert.match(admin, /dedicated acquisition product only/i);
+assert.match(admin, /never set the normal Resonance product\/catalog/i);
+assert.match(admin, /one real attributable starter purchase/i);
+assert.match(admin, /separate real backend\/add-on attribution test/i);
+
+console.log("Creator acquisition economics and isolation contract verified.");
