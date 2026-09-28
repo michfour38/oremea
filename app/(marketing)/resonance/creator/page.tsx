@@ -1,36 +1,23 @@
-import { randomUUID } from "node:crypto";
-
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteNav } from "@/components/site/site-nav";
-import { purchaseVisits } from "@/app/(member)/resonance/visits/actions";
-import { OREMEA_PRICING, formatOremeaPrice } from "@/src/lib/oremea/pricing";
 import { visitCheckoutAvailableFor } from "@/src/lib/resonance/visit-access";
 import { visitCheckoutEnabled } from "@/src/lib/resonance/visit-offers";
 import { requestAffiliateCode } from "@/src/lib/whop/affiliate-request";
 
 export const dynamic = "force-dynamic";
 
-const starterPrice = formatOremeaPrice(
-  OREMEA_PRICING.resonance.visitPricesCents[1],
-);
-
-export default async function CreatorResonancePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
+export default async function CreatorResonancePage() {
   const { userId } = await auth();
-  const query = await searchParams;
   const referral = await requestAffiliateCode();
   const checkoutReady = userId
     ? await visitCheckoutAvailableFor(userId)
     : visitCheckoutEnabled();
 
-  const canBuy = Boolean(referral && checkoutReady);
-  const signInHref = `/sign-up?redirect_url=${encodeURIComponent("/resonance/creator")}`;
+  const funnelHref = "/resonance/visits";
+  const signUpHref = `/sign-up?redirect_url=${encodeURIComponent(funnelHref)}`;
 
   return (
     <main id="top" className="resonance-theme relative min-h-screen overflow-x-hidden">
@@ -57,54 +44,38 @@ export default async function CreatorResonancePage({
           </p>
 
           <div className="res-border res-panel mx-auto mt-9 max-w-xl rounded-[2rem] border p-7 md:p-9">
-            <p className="res-text text-2xl font-light">One Resonance visit</p>
-            <p className="res-accent mt-3 text-4xl">{starterPrice}</p>
-            <p className="res-text-secondary mt-3 text-sm leading-7">
-              One visit opens one room. Choose the room after purchase. Move through
-              its seven stages at your own pace. The completed visit remains in your Archive.
+            <p className="res-text text-2xl font-light">Enter the normal Resonance funnel</p>
+            <p className="res-text-secondary mt-4 text-sm leading-7">
+              Creator invitations do not change the customer offer. Choose from the same
+              Resonance visit options, prices and Complete Ten path available to every customer.
             </p>
-
-            {query.error ? (
-              <p role="alert" className="res-alert mt-5 text-sm leading-6">
-                {query.error === "email"
-                  ? "Verify the primary email on this account before purchasing."
-                  : query.error === "invite"
-                    ? "This creator invitation is no longer connected. Return through the creator's original Oremea link."
-                    : "Checkout could not be opened. No payment has been confirmed."}
-              </p>
-            ) : null}
 
             {!referral ? (
               <p className="res-text-primary mt-5 text-sm leading-7">
-                This page needs the creator&apos;s original invitation link before checkout can open.
+                This page needs the creator&apos;s original invitation link so attribution can follow the normal funnel.
               </p>
             ) : !checkoutReady ? (
               <p className="res-text-primary mt-5 text-sm leading-7">
-                This invitation is not open for checkout yet.
+                Resonance checkout is not open yet.
               </p>
             ) : userId ? (
-              <form action={purchaseVisits} className="mt-6">
-                <input type="hidden" name="requestId" value={randomUUID()} />
-                <input type="hidden" name="quantity" value="1" />
-                <button
-                  type="submit"
-                  disabled={!canBuy}
-                  className="res-action-soft inline-flex w-full items-center justify-center rounded-xl border px-6 py-3 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Begin one Resonance visit · {starterPrice}
-                </button>
-              </form>
-            ) : (
               <Link
-                href={signInHref}
+                href={funnelHref}
                 className="res-action-soft mt-6 inline-flex w-full items-center justify-center rounded-xl border px-6 py-3 text-sm font-medium transition"
               >
-                Create account to begin · {starterPrice}
+                Continue to Resonance
+              </Link>
+            ) : (
+              <Link
+                href={signUpHref}
+                className="res-action-soft mt-6 inline-flex w-full items-center justify-center rounded-xl border px-6 py-3 text-sm font-medium transition"
+              >
+                Create account to continue
               </Link>
             )}
 
             <p className="res-text-secondary mt-4 text-xs leading-6">
-              One-time purchase. Creator referrals use the same Resonance price as every other customer.
+              Same customer pricing. Affiliate attribution stays in the background.
             </p>
           </div>
         </header>
@@ -117,8 +88,8 @@ export default async function CreatorResonancePage({
                 "A conversation, rupture, expectation, fear, need or unanswered relational pattern can be enough to begin.",
               ],
               [
-                "Choose the territory next",
-                "There are ten rooms and no required order. The visit is capacity first; the room is selected only when you are ready to enter it.",
+                "Choose the territory",
+                "There are ten rooms and no required order. Choose what matches what is actually present now.",
               ],
               [
                 "Keep authorship",
@@ -136,12 +107,12 @@ export default async function CreatorResonancePage({
         <section className="res-border res-panel mx-auto mt-16 max-w-4xl rounded-[2rem] border p-7 md:p-10">
           <p className="res-accent text-xs uppercase tracking-[0.28em]">What happens after the yes</p>
           <h2 className="res-text mt-3 font-serif text-3xl md:text-4xl">
-            Purchase the visit. Then choose where it belongs.
+            Same Resonance. Same funnel. Creator attribution follows quietly.
           </h2>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {[
-              ["1 · Add one visit", `Purchase one Resonance visit for ${starterPrice}.`],
-              ["2 · Choose one room", "Select the relational territory that matches what is actually present now."],
+              ["1 · Choose visits", "Use the normal Resonance visit chooser and pricing ladder."],
+              ["2 · Choose the room", "Select the relational territory that matches what is actually present now."],
               ["3 · Move through it", "Work through the seven stages at your own pace. The completed visit remains preserved in the Archive."],
             ].map(([heading, copy]) => (
               <article key={heading} className="res-border res-panel-soft rounded-3xl border p-6">
@@ -152,34 +123,22 @@ export default async function CreatorResonancePage({
           </div>
         </section>
 
-        <section className="mx-auto mt-16 max-w-3xl text-center">
-          <h2 className="res-text font-serif text-3xl md:text-4xl">
-            Begin with the material that is already here.
-          </h2>
-          <p className="res-text-primary mx-auto mt-5 max-w-2xl text-base leading-8">
-            No polished question is required. No complete explanation is required. The room can begin with the words already available.
-          </p>
-
-          {userId && canBuy ? (
-            <form action={purchaseVisits} className="mx-auto mt-8 max-w-md">
-              <input type="hidden" name="requestId" value={randomUUID()} />
-              <input type="hidden" name="quantity" value="1" />
-              <button
-                type="submit"
-                className="res-action-soft inline-flex w-full items-center justify-center rounded-xl border px-6 py-3 text-sm font-medium transition"
-              >
-                Begin one Resonance visit · {starterPrice}
-              </button>
-            </form>
-          ) : !userId && referral && checkoutReady ? (
+        {referral && checkoutReady ? (
+          <section className="mx-auto mt-16 max-w-3xl text-center">
+            <h2 className="res-text font-serif text-3xl md:text-4xl">
+              Begin with the material that is already here.
+            </h2>
+            <p className="res-text-primary mx-auto mt-5 max-w-2xl text-base leading-8">
+              No polished question is required. No complete explanation is required. The room can begin with the words already available.
+            </p>
             <Link
-              href={signInHref}
+              href={userId ? funnelHref : signUpHref}
               className="res-action-soft mt-8 inline-flex rounded-xl border px-6 py-3 text-sm font-medium transition"
             >
-              Create account to begin · {starterPrice}
+              Continue to Resonance
             </Link>
-          ) : null}
-        </section>
+          </section>
+        ) : null}
       </div>
 
       <SiteFooter />
