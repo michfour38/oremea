@@ -25,7 +25,7 @@ export default async function AffiliateAdminPage() {
     </ol>
     <p>DAWN observes aggregate economics only. It cannot approve creators, change rates, pay affiliates, transfer money, reserve income, or change Whop financial settings. DAWN receives no income allocation.</p>
     <h2 className="text-xl">Measured provider economics</h2>
-    <p>Read-only sample of the latest 25 Resonance visit payments. Fee categories come from Whop. Missing or incomplete values are not treated as zero. Whop’s amount after fees is not presented as final retained revenue: commission, tax, refund and dispute reconciliation must be complete first.</p>
+    <p>Read-only sample of the latest 25 Resonance visit payments. Fee categories come from Whop. Payment details and fees are read independently; partial coverage is shown explicitly. Missing or incomplete values are not treated as zero. Whop’s amount after fees is not presented as final retained revenue: commission, tax, refund and dispute reconciliation must be complete first.</p>
     <pre className="overflow-x-auto rounded-xl border border-white/10 p-4 text-xs">{JSON.stringify(economics, null, 2)}</pre>
     <p>Verify an actual attributable sale for each approved arrangement before relying on reported commission. Saved-card additional purchases require a separate attribution check.</p>
   </section></SiteShell>;

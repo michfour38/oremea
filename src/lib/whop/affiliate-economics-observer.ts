@@ -6,7 +6,6 @@ import { WhopApiError, whopApiRequest } from "./whop-api";
 const paymentSchema = z.object({
   id: z.string(), company: z.object({ id: z.string() }), currency: z.string(),
   amount_after_fees: z.number().finite(), total: z.number().finite().nullable(),
-  tax_amount: z.number().finite().nullable(), refunded_amount: z.number().finite().nullable(),
 });
 const feesSchema = z.object({
   data: z.array(z.object({ amount: z.number().finite(), currency: z.string(), type: z.string() })),
@@ -38,7 +37,7 @@ async function readProvider<T>(stage: "payment" | "fees", path: string, schema: 
       diagnostic.reason = "http_error";
       diagnostic.status = error.status;
       // Only a scope name, never the provider's body, path, IDs or customer data.
-      const scope = error.details.message?.match(/(?:for the |requires?\s+)([a-z_]+(?::[a-z_]+){1,3})\s+scope/i)?.[1];
+      const scope = error.details.message?.replace(/\\:/g, ":").match(/\b([a-z_]+(?::[a-z_]+){1,3})\b/i)?.[1];
       if (scope) diagnostic.missingScope = scope;
     } else if (error instanceof z.ZodError) {
       diagnostic.reason = "schema_mismatch";
@@ -57,7 +56,7 @@ export async function observeWhopVisitEconomics(options: { includeDiagnostics?: 
     source: "whop_payment_and_fee_records", scope: "latest_25_resonance_visit_payments",
     availability: "available", observedAt: new Date().toISOString(), currency: "USD",
     financialExecution: false, morePaymentsExist: rows.length > 25,
-    observedPayments: 0, unavailablePayments: 0,
+    observedPayments: 0, observedFeePayments: 0, unavailablePayments: 0,
     providerAmountAfterFeesCents: 0, providerGrossCents: 0,
     confirmedCommissionCents: null, finalRetainedRevenueCents: null,
     reconciliation: "commission_tax_refund_dispute_reconciliation_required",
@@ -71,15 +70,30 @@ export async function observeWhopVisitEconomics(options: { includeDiagnostics?: 
     const results = await Promise.allSettled(rows.slice(offset, Math.min(offset + 5, 25)).map(async row => {
       const id = row.whop_payment_id!;
       if (!/^pay_[a-zA-Z0-9]+$/.test(id)) throw new Error("Invalid payment identifier.");
-      const [rawPayment, rawFees] = await Promise.all([
-        readProvider("payment", `payments/${id}`, paymentSchema), readProvider("fees", `payments/${id}/fees?first=100`, feesSchema),
+      const [paymentResult, feesResult] = await Promise.allSettled([
+        readProvider("payment", `payments/${id}`, paymentSchema),
+        readProvider("fees", `payments/${id}/fees?first=100`, feesSchema),
       ]);
-      const payment = paymentSchema.parse(rawPayment);
-      const fees = feesSchema.parse(rawFees);
-      if (payment.id !== id || payment.company.id !== catalog.companyId || payment.currency !== "usd" || payment.total === null || fees.page_info.has_next_page || fees.data.some(fee => fee.currency !== "usd")) {
+      const failures: Diagnostic[] = [];
+      const diagnostic = (error: unknown): Diagnostic => error instanceof ObservationFailure
+        ? error.diagnostic : { stage: "validation", reason: "request_failed" };
+      const payment = paymentResult.status === "fulfilled" ? paymentResult.value : null;
+      const fees = feesResult.status === "fulfilled" ? feesResult.value : null;
+      if (paymentResult.status === "rejected") failures.push(diagnostic(paymentResult.reason));
+      if (feesResult.status === "rejected") failures.push(diagnostic(feesResult.reason));
+      if ((payment && (payment.id !== id || payment.company.id !== catalog.companyId || payment.currency !== "usd" || payment.total === null)) ||
+          (fees && (fees.page_info.has_next_page || fees.data.some(fee => fee.currency !== "usd")))) {
         throw new ObservationFailure({ stage: "validation", reason: "incomplete_or_mismatched" });
       }
-      return { payment, fees };
+      // Payment IDs here were settled by the signature-verified, company-checked
+      // webhook. A 403 on the broader customer/detail read must not discard an
+      // independently authorized fee read for that settled payment. Never use
+      // this fallback for a mismatch, malformed detail payload or missing payment.
+      if (!payment && !(paymentResult.status === "rejected" && paymentResult.reason instanceof ObservationFailure && paymentResult.reason.diagnostic.status === 403)) {
+        throw new ObservationFailure(failures[0]);
+      }
+      return { payment, fees, failures };
+
     }));
     for (const result of results) {
       if (result.status === "rejected") {
@@ -89,10 +103,16 @@ export async function observeWhopVisitEconomics(options: { includeDiagnostics?: 
         }
         continue;
       }
-      report.observedPayments++;
-      report.providerAmountAfterFeesCents += Math.round(result.value.payment.amount_after_fees * 100);
-      report.providerGrossCents += Math.round(result.value.payment.total! * 100);
-      for (const fee of result.value.fees.data) {
+      if (result.value.failures.length) report.unavailablePayments++;
+      if (options.includeDiagnostics) diagnostics.push(...result.value.failures.slice(0, Math.max(0, 5 - diagnostics.length)));
+      if (result.value.payment) {
+        report.observedPayments++;
+        report.providerAmountAfterFeesCents += Math.round(result.value.payment.amount_after_fees * 100);
+        report.providerGrossCents += Math.round(result.value.payment.total! * 100);
+      }
+      if (result.value.fees) report.observedFeePayments++;
+
+      for (const fee of result.value.fees?.data ?? []) {
         // Provider-defined types only; names/descriptions may contain PII.
         const type = /^[a-z][a-z0-9_]{0,99}$/.test(fee.type) && !["constructor", "prototype", "__proto__"].includes(fee.type) ? fee.type : "unclassified_fee";
         report.feeBreakdownCents[type] = (report.feeBreakdownCents[type] ?? 0) + Math.round(fee.amount * 100);
@@ -103,13 +123,13 @@ export async function observeWhopVisitEconomics(options: { includeDiagnostics?: 
       break;
     }
   }
-  if (report.unavailablePayments) report.availability = report.observedPayments ? "partial" : "unavailable";
+  if (report.unavailablePayments) report.availability = (report.observedPayments || report.observedFeePayments) ? "partial" : "unavailable";
   return {
     ...report,
     // No successful observations is unknown, not zero revenue or zero fees.
     providerAmountAfterFeesCents: report.observedPayments ? report.providerAmountAfterFeesCents : null,
     providerGrossCents: report.observedPayments ? report.providerGrossCents : null,
-    feeBreakdownCents: report.observedPayments ? report.feeBreakdownCents : null,
+    feeBreakdownCents: report.observedFeePayments ? report.feeBreakdownCents : null,
     ...(options.includeDiagnostics ? { diagnostics } : {}),
   };
 }
