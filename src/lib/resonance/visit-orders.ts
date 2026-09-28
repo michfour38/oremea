@@ -1,9 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { affiliateCode } from "../whop/affiliate-attribution";
 import { prisma } from "@/lib/prisma";
+import { CREATOR_ACQUISITION_POLICY } from "../oremea/creator-acquisition-economics";
 import { additionalOffers, initialOffer, VISIT_PRICES } from "./visit-offers";
 import { matchesVisitOrder, matchesVisitRefund, uuidSchema, visitPaymentSchema, visitPaymentUpdate, visitRefundSchema } from "./visit-payment-contract";
-import { chargeVisitOrder, createVisitCheckout, whopVisitConfig } from "../whop/visit-payments";
+import { chargeVisitOrder, createVisitCheckout, whopCreatorStarterConfig, whopVisitConfig } from "../whop/visit-payments";
+import { loadCreatorStarterWhopCatalog } from "../whop/creator-starter-catalog";
 import { loadResonanceWhopCatalog, visitPlanIdFromCatalog } from "../whop/resonance-catalog";
 import { lockResonanceAccount } from "./resonance-account-lock";
 
@@ -18,6 +20,28 @@ export async function getVisitBalance(userId: string) {
     _sum: { remaining_quantity: true },
   });
   return result._sum.remaining_quantity ?? 0;
+}
+
+export async function creatorStarterEligibility(userId: string) {
+  const [entitlement, paidVisitOrder, purchasedRun] = await Promise.all([
+    prisma.oremea_entitlements.findFirst({
+      where: { user_id: userId },
+      select: { id: true },
+    }),
+    prisma.resonance_visit_orders.findFirst({
+      where: { user_id: userId, status: { in: ["paid", "refunded"] } },
+      select: { id: true },
+    }),
+    prisma.resonance_week_runs.findFirst({
+      where: { user_id: userId, purchased_at: { not: null } },
+      select: { id: true },
+    }),
+  ]);
+
+  if (entitlement) return { eligible: false, reason: "existing_oremea_access" } as const;
+  if (paidVisitOrder) return { eligible: false, reason: "existing_resonance_purchase" } as const;
+  if (purchasedRun) return { eligible: false, reason: "existing_resonance_purchase" } as const;
+  return { eligible: true, reason: null } as const;
 }
 
 export async function startVisitPurchase(userId: string, email: string, quantity: number, requestId: string, referral?: string | null) {
@@ -50,6 +74,89 @@ export async function startVisitPurchase(userId: string, email: string, quantity
   } catch {
     await prisma.resonance_visit_orders.updateMany({
       where: { id: order.id, status: "pending" }, data: { status: "unknown" },
+    });
+  }
+  return order.id;
+}
+
+export async function startCreatorStarterPurchase(
+  userId: string,
+  email: string,
+  requestId: string,
+  referral?: string | null,
+) {
+  uuidSchema.parse(requestId);
+  const creatorReferral = affiliateCode(referral);
+  if (!creatorReferral) throw new Error("A creator invitation is required.");
+
+  const catalog = await loadCreatorStarterWhopCatalog();
+  const paymentConfig = await whopCreatorStarterConfig(catalog);
+
+  // Resume the exact existing creator-starter checkout instead of creating a
+  // second uncertain charge. A settled/refunded starter can never be repeated.
+  const existing = await prisma.resonance_visit_orders.findFirst({
+    where: { user_id: userId, whop_plan_id: catalog.planId },
+    orderBy: { created_at: "desc" },
+  });
+  if (existing) {
+    if (existing.status === "paid" || existing.status === "refunded") {
+      throw new Error("The creator starter is available only once.");
+    }
+    if (
+      existing.kind !== "initial" ||
+      existing.quantity !== 1 ||
+      existing.amount_cents !== CREATOR_ACQUISITION_POLICY.customerPriceCents
+    ) {
+      throw new Error("The existing creator starter checkout is invalid.");
+    }
+    return existing.id;
+  }
+
+  const eligibility = await creatorStarterEligibility(userId);
+  if (!eligibility.eligible) {
+    throw new Error("The creator starter is for a new Oremea customer.");
+  }
+
+  const order = await prisma.resonance_visit_orders.upsert({
+    where: { id: requestId },
+    update: {},
+    create: {
+      id: requestId,
+      user_id: userId,
+      buyer_email: email.toLowerCase(),
+      kind: "initial",
+      quantity: 1,
+      amount_cents: CREATOR_ACQUISITION_POLICY.customerPriceCents,
+      whop_plan_id: catalog.planId,
+      affiliate_code: creatorReferral,
+    },
+  });
+  if (
+    order.user_id !== userId ||
+    order.kind !== "initial" ||
+    order.quantity !== 1 ||
+    order.whop_plan_id !== catalog.planId ||
+    order.affiliate_code !== creatorReferral
+  ) {
+    throw new Error("This creator starter checkout belongs to another request.");
+  }
+
+  const claim = await prisma.resonance_visit_orders.updateMany({
+    where: { id: order.id, status: "created" },
+    data: { status: "pending" },
+  });
+  if (!claim.count) return order.id;
+
+  try {
+    const checkoutId = await createVisitCheckout(order, paymentConfig);
+    await prisma.resonance_visit_orders.update({
+      where: { id: order.id },
+      data: { whop_checkout_id: checkoutId },
+    });
+  } catch {
+    await prisma.resonance_visit_orders.updateMany({
+      where: { id: order.id, status: "pending" },
+      data: { status: "unknown" },
     });
   }
   return order.id;
@@ -119,20 +226,36 @@ export async function declineVisitAddition(userId: string, parentId: string) {
   });
 }
 
+async function expectedVisitProductForPlan(planId: string) {
+  if (!planId) throw new Error("Visit payment is missing a plan.");
+  const normal = await loadResonanceWhopCatalog();
+  if (Object.values(normal.plans).includes(planId)) {
+    return { companyId: normal.companyId, productId: normal.productId };
+  }
+
+  const starter = await loadCreatorStarterWhopCatalog().catch(() => null);
+  if (starter?.planId === planId) {
+    if (starter.companyId !== normal.companyId) {
+      throw new Error("Creator starter company does not match Resonance commerce.");
+    }
+    return { companyId: starter.companyId, productId: starter.productId };
+  }
+
+  throw new Error("Visit payment plan is not part of the approved Resonance catalogs.");
+}
+
 /** Called only after signature verification in the Whop webhook route. */
 export async function applyVisitPaymentEvent(type: string, data: unknown) {
   const parsed = visitPaymentSchema.safeParse(data);
   if (!parsed.success) throw new Error("Invalid visit payment event.");
   const payment = parsed.data;
-  const catalog = await loadResonanceWhopCatalog();
-  const companyId = catalog.companyId;
-  const productId = catalog.productId;
+  const expected = await expectedVisitProductForPlan(payment.plan?.id ?? "");
   return prisma.$transaction(async (tx) => {
     const found = await tx.resonance_visit_orders.findUnique({ where: { id: payment.metadata.oremea_visit_order } });
     if (!found) throw new Error("Visit order not found.");
     await lockResonanceAccount(tx, found.user_id);
     const order = await tx.resonance_visit_orders.findUniqueOrThrow({ where: { id: found.id } });
-    if (!matchesVisitOrder(payment, order, companyId, productId)) throw new Error("Visit payment does not match the order.");
+    if (!matchesVisitOrder(payment, order, expected.companyId, expected.productId)) throw new Error("Visit payment does not match the order.");
     const update = visitPaymentUpdate(type, payment, order);
     return update ? tx.resonance_visit_orders.update({ where: { id: order.id }, data: update }) : order;
   });
@@ -141,9 +264,7 @@ export async function applyVisitPaymentEvent(type: string, data: unknown) {
 /** Refund payloads differ from payment payloads. Verify their signed envelope too. */
 export async function applyVisitRefundEvent(event: unknown) {
   const refund = visitRefundSchema.parse(event);
-  const catalog = await loadResonanceWhopCatalog();
-  const companyId = catalog.companyId;
-  const productId = catalog.productId;
+  const expected = await expectedVisitProductForPlan(refund.data.payment.plan?.id ?? "");
   return prisma.$transaction(async (tx) => {
     const found = await tx.resonance_visit_orders.findUnique({ where: {
       id: refund.data.payment.metadata.oremea_visit_order,
@@ -151,7 +272,7 @@ export async function applyVisitRefundEvent(event: unknown) {
     if (!found) throw new Error("Visit order not found.");
     await lockResonanceAccount(tx, found.user_id);
     const order = await tx.resonance_visit_orders.findUniqueOrThrow({ where: { id: found.id } });
-    if (!matchesVisitRefund(refund, order, companyId, productId)) throw new Error("Refund does not match the order.");
+    if (!matchesVisitRefund(refund, order, expected.companyId, expected.productId)) throw new Error("Refund does not match the order.");
     if (refund.data.status !== "succeeded" || order.status === "refunded") return order;
     // A partial or full refund freezes this order's unused credits for review.
     // Already-entered rooms and earlier reflections are preserved.
