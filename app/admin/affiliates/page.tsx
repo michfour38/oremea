@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function AffiliateAdminPage() {
   await requireAdminPage();
   const catalog = await loadResonanceWhopCatalog().catch(() => null);
-  const economics = await observeWhopVisitEconomics().catch(() => ({ availability: "unavailable" }));
+  const economics = await observeWhopVisitEconomics({ includeDiagnostics: true }).catch(() => ({ availability: "unavailable" }));
   const whop = catalog ? `https://whop.com/dashboard/${encodeURIComponent(catalog.companyId)}/affiliates/` : null;
   return <SiteShell><section className="mx-auto max-w-4xl space-y-6 px-6 py-12">
     <Link href="/admin">← Oremea Admin</Link>

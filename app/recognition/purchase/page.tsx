@@ -219,7 +219,7 @@ export default async function RecognitionPurchasePage(props: Props) {
             After purchase
           </p>
           <h2 className="rec-text mt-3 font-serif text-3xl">
-            Purchase once. Then move straight into the conversation.
+            Complete checkout. Then move straight into the conversation.
           </h2>
           <p className="rec-text mt-4 max-w-2xl text-sm leading-7">
             Use the same email to purchase and sign in to Recognition. That is
