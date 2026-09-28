@@ -88,7 +88,10 @@ assert.match(OREMEA_PRODUCT_TRUTH.compass.description, /next movement/i);
 const roomById = Object.fromEntries(
   RESONANCE_ROOM_MARKETING.map((room) => [room.id, room]),
 );
-assert.match(roomById["resonance-hearth"].description, /concrete cues and participation/i);
+assert.match(roomById["resonance-hearth"].headline, /belonging/i);
+assert.match(roomById["resonance-hearth"].buyerDecision, /remain yourself/i);
+assert.match(roomById["resonance-hearth"].description, /welcome, attention, space, boundaries and mutual effort/i);
+assert.doesNotMatch(roomById["resonance-hearth"].description, /diagnos|verdict|hidden motive/i);
 assert.match(roomById["resonance-mirror"].limits.join(" "), /No invented motive/i);
 assert.doesNotMatch(roomById["resonance-garden"].description, /compatibility/i);
 assert.match(roomById["resonance-bearing"].description, /choices, allocations and trade-offs/i);
