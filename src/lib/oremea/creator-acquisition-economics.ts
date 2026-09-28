@@ -71,6 +71,13 @@ export function creatorCommissionReserveCents(
   return ceilRate(amountCents, rate);
 }
 
+export function refundDisputeReserveCents(amountCents: number) {
+  return ceilRate(
+    amountCents,
+    CREATOR_ECONOMICS_RESERVE.refundDisputeReserveRate,
+  );
+}
+
 export function targetContributionReserveCents(amountCents: number) {
   return ceilRate(
     amountCents,
@@ -82,17 +89,22 @@ export function maxDeliveryBudgetCents({
   amountCents,
   creatorRate,
   recurring = false,
+  includeRefundDisputeReserve = false,
 }: {
   amountCents: number;
   creatorRate: number;
   recurring?: boolean;
+  includeRefundDisputeReserve?: boolean;
 }) {
   return Math.max(
     0,
     amountCents -
       creatorCommissionReserveCents(amountCents, creatorRate) -
       conservativeProviderFeeReserveCents(amountCents, { recurring }) -
-      targetContributionReserveCents(amountCents),
+      targetContributionReserveCents(amountCents) -
+      (includeRefundDisputeReserve
+        ? refundDisputeReserveCents(amountCents)
+        : 0),
   );
 }
 
@@ -105,24 +117,21 @@ export function creatorAcquisitionStressCase() {
   const providerFeeReserveCents = conservativeProviderFeeReserveCents(
     amountCents,
   );
-  const refundDisputeReserveCents = ceilRate(
-    amountCents,
-    CREATOR_ECONOMICS_RESERVE.refundDisputeReserveRate,
-  );
+  const refundReserveCents = refundDisputeReserveCents(amountCents);
   const deliveryReserveCents =
     CREATOR_ACQUISITION_POLICY.firstVisitDeliveryReserveCents;
   const contributionCents =
     amountCents -
     creatorCommissionCents -
     providerFeeReserveCents -
-    refundDisputeReserveCents -
+    refundReserveCents -
     deliveryReserveCents;
 
   return {
     amountCents,
     creatorCommissionCents,
     providerFeeReserveCents,
-    refundDisputeReserveCents,
+    refundDisputeReserveCents: refundReserveCents,
     deliveryReserveCents,
     contributionCents,
     acquisitionInvestmentCents: Math.max(0, -contributionCents),
@@ -132,7 +141,27 @@ export function creatorAcquisitionStressCase() {
 
 export function creatorBackendStressCases() {
   const backendRate = CREATOR_ACQUISITION_POLICY.creatorBackendRate;
+  const resonanceCompleteTenAmountCents =
+    OREMEA_PRICING.resonance.visitPricesCents[10] -
+    CREATOR_ACQUISITION_POLICY.customerPriceCents;
+  const resonanceCompleteTenCreatorCommissionCents =
+    creatorCommissionReserveCents(resonanceCompleteTenAmountCents, backendRate);
+
   return {
+    resonanceCompleteTenFromStarter: {
+      priceCents: resonanceCompleteTenAmountCents,
+      creatorRate: backendRate,
+      creatorCommissionCents: resonanceCompleteTenCreatorCommissionCents,
+      creatorEarningsIncludingStarterCents:
+        CREATOR_ACQUISITION_POLICY.customerPriceCents +
+        resonanceCompleteTenCreatorCommissionCents,
+      maxDeliveryBudgetCents: maxDeliveryBudgetCents({
+        amountCents: resonanceCompleteTenAmountCents,
+        creatorRate: backendRate,
+        includeRefundDisputeReserve: true,
+      }),
+      remainingVisits: 9,
+    },
     recognitionFirstMonth: {
       priceCents: OREMEA_PRICING.recognition.standardPriceCents,
       creatorRate: backendRate,
