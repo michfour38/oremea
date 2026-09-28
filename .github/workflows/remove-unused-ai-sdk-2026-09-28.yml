@@ -1,0 +1,82 @@
+name: Remove unused AI SDK 2026-09-28
+
+on:
+  push:
+    branches:
+      - security/remove-unused-ai-sdk-2026-09-28
+
+permissions:
+  contents: write
+
+jobs:
+  remove-validate-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Prove no source imports the Vercel AI SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --exclude-dir=node_modules --exclude=package.json --exclude=package-lock.json --exclude='*.md' --exclude='remove-unused-ai-sdk-2026-09-28.yml' "from ['\"]ai['\"]|require\(['\"]ai['\"]\)|@ai-sdk|generateText|streamText|useChat" app src lib components scripts prisma config middleware.ts 2>/dev/null; then
+            echo "AI SDK source usage found; refusing removal."
+            exit 1
+          fi
+
+      - name: Remove direct AI SDK dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          npm uninstall ai
+
+      - name: Audit production runtime tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm audit --omit=dev --json > /tmp/runtime-audit.json || true
+          node <<'NODE'
+          const fs = require('fs');
+          const audit = JSON.parse(fs.readFileSync('/tmp/runtime-audit.json', 'utf8'));
+          const counts = audit.metadata?.vulnerabilities ?? {};
+          const rows = Object.entries(audit.vulnerabilities ?? {})
+            .map(([name, value]) => ({ name, severity: value.severity, range: value.range, fixAvailable: value.fixAvailable }))
+            .sort((a,b) => ['critical','high','moderate','low','info'].indexOf(a.severity) - ['critical','high','moderate','low','info'].indexOf(b.severity));
+          console.log('NO_AI_RUNTIME_AUDIT_COUNTS=' + JSON.stringify(counts));
+          console.log('NO_AI_RUNTIME_AUDIT_DETAIL=' + JSON.stringify(rows, null, 2));
+          if ((counts.critical ?? 0) !== 0) throw new Error('Critical runtime vulnerabilities remain');
+          const aiChain = rows.filter((row) => row.name === 'ai' || row.name === 'jsondiffpatch' || row.name.startsWith('@ai-sdk/') || row.name === 'svelte');
+          if (aiChain.length) throw new Error('AI SDK vulnerability chain remains: ' + aiChain.map((r) => r.name).join(','));
+          NODE
+
+      - name: Validate complete Oremea application
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run test:launch
+          npm run typecheck
+          npm run build
+
+      - name: Commit exact tested dependency tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/remove-unused-ai-sdk-2026-09-28.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json .github/workflows/remove-unused-ai-sdk-2026-09-28.yml
+          git diff --cached --quiet && exit 0
+          git commit -m "security: remove unused Vercel AI SDK"
+          git push origin HEAD:security/remove-unused-ai-sdk-2026-09-28
