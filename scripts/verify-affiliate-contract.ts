@@ -8,8 +8,9 @@ import { createVisitCheckout } from "../src/lib/whop/visit-payments";
 async function main() {
   assert.equal(OREMEA_AFFILIATE_POLICY.standardRate, 0.3);
   assert.equal(OREMEA_AFFILIATE_POLICY.approvedCreatorRate, 0.4);
-  assert.equal(OREMEA_AFFILIATE_POLICY.creatorAcquisition.firstSaleRate, 1);
+  assert.equal(OREMEA_AFFILIATE_POLICY.creatorAcquisition.firstSaleRate, 0.4);
   assert.equal(OREMEA_AFFILIATE_POLICY.creatorAcquisition.backendRate, 0.4);
+  assert.equal(OREMEA_AFFILIATE_POLICY.creatorSpecificDiscount, false);
   assert.equal(OREMEA_AFFILIATE_POLICY.dawnIncomeAllocation, 0);
   for (const invalid of [null, undefined, "", "a&rate=40", "https://evil.test", "x".repeat(101)]) assert.equal(affiliateCode(invalid), null);
   assert.equal(affiliateCheckoutUrl("https://whop.com/checkout/plan_x/?redirect_url=x", "creator.one"), "https://whop.com/checkout/plan_x/?redirect_url=x&a=creator.one");
@@ -17,6 +18,7 @@ async function main() {
   assert.equal(affiliateCheckoutUrl("https://whop.com/checkout/plan_x/", null), "https://whop.com/checkout/plan_x/");
   const costs = {platformAndPaymentCents:175,affiliateProcessingCents:25,taxAndRemittanceCents:0,refundsAndDisputesCents:0};
   assert.equal(affiliateEconomics(5000,"standard",costs).commissionCents,1500);
+  assert.equal(affiliateEconomics(5000,"approved_creator",costs).commissionCents,2000);
   assert.equal(affiliateEconomics(5000,"approved_creator",costs).retainedRevenueCents,2800);
   assert.equal(affiliateEconomics(5000,"direct",costs).commissionCents,0);
   assert.equal(affiliateEconomics(5000,"standard",{...costs,platformAndPaymentCents:null}).retainedRevenueCents,null);
@@ -43,6 +45,6 @@ async function main() {
     assert.equal(calls[1].affiliate_code,"creator.fixture");
     assert.equal(Object.hasOwn(calls[2],"affiliate_code"),false);
   } finally { globalThis.fetch = originalFetch; }
-  console.log("Affiliate referral, policy and economics contracts passed; provider execution still requires an attributable payment test.");
+  console.log("Affiliate referral, unified 30/40 policy and economics contracts passed; provider execution still requires an attributable payment test.");
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });
