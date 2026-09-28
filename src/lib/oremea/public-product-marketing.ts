@@ -143,13 +143,13 @@ export const OREMEA_PUBLIC_PRODUCT_MARKETING = {
   "resonance-shadow": {
     id: "resonance-shadow",
     category: "Resonance room 6",
-    headline: "Meet what happens under pressure",
+    headline: "When reaction arrives before choice",
     buyerDecision:
-      "What happens in my participation when reaction becomes stronger?",
+      "A strong reaction can make sense and still take over more of the moment than you want it to.",
     description:
-      "Shadow helps you notice strong reactions and familiar moves under pressure using the evidence you bring, without turning them into a theory about your psyche.",
+      "Shadow slows a strong or familiar reaction down enough to see what changed, what the response helped with, what it cost, what is different now and where another choice may be available. It stays with the evidence you bring rather than explaining the reaction with a hidden wound or theory about your psyche.",
     chooseWhen:
-      "Choose Shadow when a reaction feels larger, faster or more familiar than the moment alone explains.",
+      "Enter Shadow when a reaction feels stronger, faster or more familiar than you want it to be. The room helps you examine usefulness, cost and present choice without assuming trauma, defence, projection or a hidden cause.",
     limits: [
       "No assumed trauma, defence or hidden wound.",
       "No projection theory.",
