@@ -172,11 +172,11 @@ jobs:
             assert.match(adminTrace, /Creator Resonance Starter/);
             assert.match(adminTrace, /order\\._count\\.redemptions/);
             assert.doesNotMatch(adminTrace, /order\\.buyer_email/);
-            const catalogSource = readFileSync("src/lib/whop/resonance-catalog.ts", "utf8");
+            const traceCatalogSource = readFileSync("src/lib/whop/resonance-catalog.ts", "utf8");
             for (const field of ["amount_cents", "parent_id", "affiliate_code", "whop_plan_id", "paid_at", "created_at"]) {
-              assert.match(catalogSource, new RegExp(`${field}: true`));
+              assert.match(traceCatalogSource, new RegExp(`${field}: true`));
             }
-            assert.match(catalogSource, /_count: \\{ select: \\{ redemptions: true \\} \\}/);
+            assert.match(traceCatalogSource, /_count: \\{ select: \\{ redemptions: true \\} \\}/);
             '''
           text = text[:marker_pos] + insert + text[marker_pos:]
           text = text.replace(
