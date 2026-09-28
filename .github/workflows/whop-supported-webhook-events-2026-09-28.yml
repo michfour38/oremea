@@ -64,12 +64,12 @@ jobs:
               raise SystemExit("webhook fixture event list not found")
           text = text.replace(fixture_old, fixture_new, 1)
 
-          assertion_old = '''    const catalogSource = readFileSync("src/lib/whop/resonance-catalog.ts", "utf8");
-            assert.match(
-              catalogSource,
-              /REQUIRED_WEBHOOK_EVENTS[\\s\\S]*payment\\.succeeded[\\s\\S]*payment\\.failed[\\s\\S]*payment\\.canceled[\\s\\S]*refund\\.created[\\s\\S]*refund\\.updated/,
-              "The provisioned Whop webhook must subscribe to canceled payments as well as success, failure and refunds.",
-            );'''
+          start_marker = '    const catalogSource = readFileSync("src/lib/whop/resonance-catalog.ts", "utf8");'
+          end_marker = '    const page = readFileSync("app/(member)/resonance/visits/page.tsx", "utf8");'
+          start = text.find(start_marker)
+          end = text.find(end_marker, start)
+          if start < 0 or end < 0:
+              raise SystemExit("canceled-payment contract range not found")
           assertion_new = '''    const catalogSource = readFileSync("src/lib/whop/resonance-catalog.ts", "utf8");
             const requiredEventsBlock = catalogSource.match(/const REQUIRED_WEBHOOK_EVENTS = \\[([\\s\\S]*?)\\] as const;/)?.[1] ?? "";
             assert.match(requiredEventsBlock, /payment\\.succeeded/);
@@ -86,10 +86,9 @@ jobs:
               webhookRoute,
               /payment\\.canceled/,
               "The route may remain tolerant of a legacy or unexpected canceled-payment payload.",
-            );'''
-          if assertion_old not in text:
-              raise SystemExit("old canceled-payment contract block not found")
-          test.write_text(text.replace(assertion_old, assertion_new, 1))
+            );
+          '''
+          test.write_text(text[:start] + assertion_new + text[end:])
           PY
 
       - name: Validate Resonance provider contract
