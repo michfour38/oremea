@@ -58,12 +58,12 @@ const ROOM_DETAILS: Record<number, RoomDetail> = {
   },
   4: {
     label: "Alignment",
-    question: "What am I actually oriented by?",
+    question: "Everything cannot come first.",
     description:
-      "Explore what matters to you through the priorities, trade-offs, boundaries, and choices that give those values practical authority. Pay particular attention to what happens when several things you genuinely value cannot all be maximised at once.",
+      "Several things can matter deeply and still compete for the same time, attention, energy or resources. Bearing puts stated priorities beside lived decisions so the trade-offs become easier to see: what keeps getting protected, what is repeatedly deferred, what changes under pressure, and where someone else’s input may be carrying more authority than you meant to give it. One choice is not a verdict on your character. The room is interested in the direction your choices are creating now.",
     chooseWhen:
-      "You know several things matter and want greater clarity about what actually guides your choices.",
-    comparison: "What actually has authority when I choose?",
+      "several important things are competing, a decision keeps wobbling, or what you say matters and what your life is currently giving priority to no longer seem to point the same way. Bearing clarifies direction without deciding what should win or turning that clarity into an action plan.",
+    comparison: "What gets protected, delayed or traded away makes current direction visible.",
   },
   5: {
     label: "Attraction",

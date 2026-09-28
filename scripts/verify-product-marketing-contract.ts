@@ -102,7 +102,10 @@ assert.match(roomById["resonance-garden"].description, /time, attention, labour,
 assert.match(roomById["resonance-garden"].chooseWhen, /capacity and limits/i);
 assert.match(roomById["resonance-garden"].limits.join(" "), /No compatibility scoring/i);
 assert.doesNotMatch(roomById["resonance-garden"].description, /compatibility|selfish|martyr|trauma|attachment/i);
-assert.match(roomById["resonance-bearing"].description, /choices, allocations and trade-offs/i);
+assert.match(roomById["resonance-bearing"].headline, /everything cannot come first/i);
+assert.match(roomById["resonance-bearing"].description, /stated priorities beside lived decisions/i);
+assert.match(roomById["resonance-bearing"].chooseWhen, /decision ownership/i);
+assert.doesNotMatch(roomById["resonance-bearing"].description, /execution plan|moral ranking|should win/i);
 assert.match(roomById["resonance-pulse"].description, /desire, attraction, aliveness/i);
 assert.doesNotMatch(roomById["resonance-pulse"].description, /values|alignment/i);
 assert.match(roomById["resonance-shadow"].description, /strong reactions and familiar moves/i);
