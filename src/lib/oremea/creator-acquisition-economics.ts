@@ -4,7 +4,7 @@ const ceilRate = (amountCents: number, rate: number) =>
   Math.ceil(amountCents * rate);
 
 /**
- * Deliberately conservative reserve model for creator acquisition.
+ * Deliberately conservative reserve model for approved creator referrals.
  *
  * This is NOT a representation of a provider invoice. Oremea's read-only Whop
  * economics observer remains the source for observed provider records. These
@@ -32,20 +32,6 @@ export const CREATOR_ECONOMICS_RESERVE = {
   fixedPaymentCents: 30,
   refundDisputeReserveRate: 0.05,
   targetContributionMarginRate: 0.20,
-} as const;
-
-export const CREATOR_ACQUISITION_POLICY = {
-  schemaVersion: 1,
-  acquisitionProductKey: "resonance_creator_starter",
-  customerPriceCents: OREMEA_PRICING.resonance.visitPricesCents[1],
-  creatorFrontEndRate: 1,
-  creatorBackendRate: 0.40,
-  standardAffiliateRate: 0.30,
-  firstVisitDeliveryReserveCents: 500,
-  dedicatedHiddenProviderProductRequired: true,
-  neverApplyFrontEndRateToStandardResonanceCatalog: true,
-  ownerApprovalRequired: true,
-  financialExecution: false,
 } as const;
 
 export function conservativeProviderFeeReserveCents(
@@ -108,75 +94,52 @@ export function maxDeliveryBudgetCents({
   );
 }
 
-export function creatorAcquisitionStressCase() {
-  const amountCents = CREATOR_ACQUISITION_POLICY.customerPriceCents;
-  const creatorCommissionCents = creatorCommissionReserveCents(
-    amountCents,
-    CREATOR_ACQUISITION_POLICY.creatorFrontEndRate,
-  );
-  const providerFeeReserveCents = conservativeProviderFeeReserveCents(
-    amountCents,
-  );
-  const refundReserveCents = refundDisputeReserveCents(amountCents);
-  const deliveryReserveCents =
-    CREATOR_ACQUISITION_POLICY.firstVisitDeliveryReserveCents;
-  const contributionCents =
-    amountCents -
-    creatorCommissionCents -
-    providerFeeReserveCents -
-    refundReserveCents -
-    deliveryReserveCents;
-
-  return {
-    amountCents,
-    creatorCommissionCents,
-    providerFeeReserveCents,
-    refundDisputeReserveCents: refundReserveCents,
-    deliveryReserveCents,
-    contributionCents,
-    acquisitionInvestmentCents: Math.max(0, -contributionCents),
-    commissionBasisAssumption: "gross_sale_stress_case",
-  } as const;
-}
-
-export function creatorBackendStressCases() {
-  const backendRate = CREATOR_ACQUISITION_POLICY.creatorBackendRate;
+export function approvedCreatorStressCases() {
+  const creatorRate = 0.40;
+  const resonanceOneVisitAmountCents = OREMEA_PRICING.resonance.visitPricesCents[1];
   const resonanceCompleteTenAmountCents =
     OREMEA_PRICING.resonance.visitPricesCents[10] -
-    CREATOR_ACQUISITION_POLICY.customerPriceCents;
+    resonanceOneVisitAmountCents;
   const resonanceCompleteTenCreatorCommissionCents =
-    creatorCommissionReserveCents(resonanceCompleteTenAmountCents, backendRate);
+    creatorCommissionReserveCents(resonanceCompleteTenAmountCents, creatorRate);
 
   return {
-    resonanceCompleteTenFromStarter: {
+    resonanceOneVisit: {
+      priceCents: resonanceOneVisitAmountCents,
+      creatorRate,
+      creatorCommissionCents: creatorCommissionReserveCents(resonanceOneVisitAmountCents, creatorRate),
+      maxDeliveryBudgetCents: maxDeliveryBudgetCents({
+        amountCents: resonanceOneVisitAmountCents,
+        creatorRate,
+        includeRefundDisputeReserve: true,
+      }),
+    },
+    resonanceCompleteTenFromOne: {
       priceCents: resonanceCompleteTenAmountCents,
-      creatorRate: backendRate,
+      creatorRate,
       creatorCommissionCents: resonanceCompleteTenCreatorCommissionCents,
-      creatorEarningsIncludingStarterCents:
-        CREATOR_ACQUISITION_POLICY.customerPriceCents +
-        resonanceCompleteTenCreatorCommissionCents,
       maxDeliveryBudgetCents: maxDeliveryBudgetCents({
         amountCents: resonanceCompleteTenAmountCents,
-        creatorRate: backendRate,
+        creatorRate,
         includeRefundDisputeReserve: true,
       }),
       remainingVisits: 9,
     },
     recognitionFirstMonth: {
       priceCents: OREMEA_PRICING.recognition.standardPriceCents,
-      creatorRate: backendRate,
+      creatorRate,
       maxDeliveryBudgetCents: maxDeliveryBudgetCents({
         amountCents: OREMEA_PRICING.recognition.standardPriceCents,
-        creatorRate: backendRate,
+        creatorRate,
         recurring: true,
       }),
     },
     compassFirstMonth: {
       priceCents: OREMEA_PRICING.compass.standardPriceCents,
-      creatorRate: backendRate,
+      creatorRate,
       maxDeliveryBudgetCents: maxDeliveryBudgetCents({
         amountCents: OREMEA_PRICING.compass.standardPriceCents,
-        creatorRate: backendRate,
+        creatorRate,
         recurring: true,
       }),
     },

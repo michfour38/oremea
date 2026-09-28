@@ -88,8 +88,9 @@ async function main() {
     const adminTrace = readFileSync("app/admin/resonance-commerce/page.tsx", "utf8");
   assert.match(adminTrace, /owner-only lifecycle trace/);
   assert.match(adminTrace, /Requested referral/);
+  assert.match(adminTrace, /Unresolved checkouts older than 30 minutes/);
   assert.match(adminTrace, /Whop remains the source of truth for actual affiliate attribution and commission/);
-  assert.match(adminTrace, /Creator Resonance Starter/);
+  assert.doesNotMatch(adminTrace, /Creator Resonance Starter/);
   assert.match(adminTrace, /order\._count\.redemptions/);
   assert.doesNotMatch(adminTrace, /order\.buyer_email/);
   const traceCatalogSource = readFileSync("src/lib/whop/resonance-catalog.ts", "utf8");

@@ -424,6 +424,14 @@ export async function getResonanceWhopProvisioningStatus() {
     },
   });
   const paidOrders = await prisma.resonance_visit_orders.count({ where: { status: "paid" } });
+  // A checkout still waiting after thirty minutes needs provider reconciliation.
+  // This is observation only: an uncertain saved-card charge must never retry.
+  const unresolvedOrders = await prisma.resonance_visit_orders.count({
+    where: {
+      status: { in: ["pending", "unknown"] },
+      created_at: { lt: new Date(Date.now() - 30 * 60 * 1000) },
+    },
+  });
   const redemptions = await prisma.resonance_visit_redemptions.count();
   return {
     visitsEnabled: process.env.RESONANCE_VISITS_ENABLED === "true",
@@ -432,7 +440,7 @@ export async function getResonanceWhopProvisioningStatus() {
     plans: planSpecs().map((spec) => ({ ...spec,
       id: catalog ? z.record(z.string()).parse(catalog.plans)[spec.key] ?? null : null,
     })),
-    recentOrders, paidOrders, redemptions,
+    recentOrders, paidOrders, unresolvedOrders, redemptions,
     apiKeyConfigured: Boolean(process.env.WHOP_API_KEY?.trim()),
     catalogConfigured: Boolean(catalog),
     productId: catalog?.product_id ?? null,
