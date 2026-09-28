@@ -215,13 +215,13 @@ export const OREMEA_PUBLIC_PRODUCT_MARKETING = {
   "resonance-becoming": {
     id: "resonance-becoming",
     category: "Resonance room 10",
-    headline: "Let understanding become lived",
+    headline: "Can it survive a bad day?",
     buyerDecision:
-      "What could this understanding become through repeatable, lived practice?",
+      "Insight changes less than a practice you can still return to when life is busy, energy is low or yesterday did not go to plan.",
     description:
-      "Becoming stays with embodiment, repetition and lived continuation. It includes low-capacity versions and return after a lapse so practice does not become a moral test.",
+      "Becoming turns one chosen understanding into visible, repeatable practice. It works with realistic frequency, environmental support, a lower-capacity version, keepable agreements and return after a lapse—so continuation is designed for real life rather than perfect conditions.",
     chooseWhen:
-      "Choose Becoming when something understood is ready to be carried in a form you can actually live.",
+      "Enter Becoming when you know what you mean but want to see it become something you actually live. The room helps make the practice small enough to continue and easy enough to resume without turning a missed day into a moral verdict or a reason to start over from zero.",
     limits: [
       "No streak, surveillance or accountability theatre.",
       "No moral failure attached to a lapse.",
