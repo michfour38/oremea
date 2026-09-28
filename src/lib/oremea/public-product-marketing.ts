@@ -179,13 +179,13 @@ export const OREMEA_PUBLIC_PRODUCT_MARKETING = {
   "resonance-vision": {
     id: "resonance-vision",
     category: "Resonance room 8",
-    headline: "Give the future a concrete shape",
+    headline: "Can the future survive an ordinary Tuesday?",
     buyerDecision:
-      "What kind of shared relationship life am I actually trying to design?",
+      "Longing can tell you that you want a future. Design shows you what that future would actually ask of the people living it.",
     description:
-      "Vision helps you make a possible shared life concrete through rhythms, responsibilities, decisions, resources and tests, so imagination can meet reality.",
+      "Vision turns a possible shared life into ordinary days, rhythms, responsibilities, decisions, resources, backup plans and small tests. It makes assumptions concrete enough to examine before imagination is mistaken for an agreement or a workable system.",
     chooseWhen:
-      "Choose Vision when a future together needs more detail than longing alone can provide.",
+      "Enter Vision when ‘someday’ sounds good but the daily architecture is still blurry—or when people agree on the future in principle and need to discover whether they mean the same life in practice. Vision does not manifest, predict or promise an outcome.",
     limits: [
       "No manifestation promise.",
       "No prediction that a future will happen.",
