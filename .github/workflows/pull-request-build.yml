@@ -76,11 +76,13 @@ jobs:
               "app/(member)/entry/",
               "app/(member)/resonance/",
               "src/lib/resonance/",
+              "prisma/seeds/resonance-content/",
               "docs/resonance-",
           )
           resonance_files = {
               "src/lib/oremea/public-product-marketing.ts",
               "scripts/verify-product-marketing-contract.ts",
+              "scripts/verify-resonance-content-contract.ts",
               "scripts/verify-resonance-room-funnel-contract.ts",
           }
 
