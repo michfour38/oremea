@@ -77,13 +77,14 @@ const middleware = fs.readFileSync(
   "utf8",
 );
 
-// The creator landing remains an attribution-friendly invitation, but checkout
-// must use the normal Resonance product and central price. No active UI or admin
-// action may create/provision the retired hidden starter offer.
-assert.match(creatorLanding, /purchaseVisits/);
-assert.match(creatorLanding, /OREMEA_PRICING\.resonance\.visitPricesCents\[1\]/);
-assert.match(creatorLanding, /name="quantity" value="1"/);
-assert.match(creatorLanding, /same Resonance price as every other customer/i);
+// Creator traffic gets a branded invitation/attribution bridge only. It must
+// enter the exact same /resonance/visits chooser as every other customer; the
+// creator page must not preselect one visit or create an alternate checkout.
+assert.match(creatorLanding, /const funnelHref = "\/resonance\/visits"/);
+assert.match(creatorLanding, /same[\s\S]*Resonance visit options, prices and Complete Ten path/i);
+assert.match(creatorLanding, /Same Resonance\. Same funnel/i);
+assert.doesNotMatch(creatorLanding, /purchaseVisits/);
+assert.doesNotMatch(creatorLanding, /name="quantity"/);
 assert.doesNotMatch(creatorLanding, /purchaseCreatorStarter/);
 assert.doesNotMatch(creatorLanding, /creatorStarterEligibility/);
 assert.doesNotMatch(creatorLanding, /CREATOR_ACQUISITION_POLICY/);
@@ -105,4 +106,4 @@ assert.match(admin, /no creator-only discount and no 100% first-sale offer/i);
 assert.match(admin, /Remove any 100% first-sale override/i);
 assert.match(middleware, /"\/resonance\/creator\(\.\*\)"/);
 
-console.log("Creator economics unified: normal customer pricing, 30% standard affiliates, 40% approved creators, no 100% first-sale path.");
+console.log("Creator economics unified: one Resonance funnel, normal pricing, 30% standard affiliates, 40% approved creators, no 100% first-sale path.");
