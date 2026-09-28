@@ -7,7 +7,7 @@ const middleware = readFileSync("middleware.ts", "utf8");
 assert.match(
   purchase,
   /affiliateCheckoutUrl\([\s\S]*RECOGNITION_SUBSCRIPTION_CHECKOUT_URL/,
-  "Recognition checkout must preserve Whop affiliate attribution instead of creating a parallel checkout path.",
+  "Recognition checkout must preserve affiliate attribution instead of creating a parallel checkout path.",
 );
 assert.match(
   purchase,
@@ -16,33 +16,59 @@ assert.match(
 );
 assert.match(
   purchase,
+  /Ever noticed how the same thought can keep following you around/,
+  "Recognition funnel must open with a human, recognition-first hook rather than product documentation.",
+);
+assert.match(
+  purchase,
+  /That is Recognition[\s\S]*private AI discussion journal/,
+  "Recognition must state its product identity plainly after the human problem is established.",
+);
+assert.match(
+  purchase,
+  /Not another voice rushing in to tell you what your own thought means/,
+  "Recognition must build trust by preserving participant authorship rather than promising interpretation.",
+);
+assert.match(
+  purchase,
   /After purchase/,
   "The Recognition funnel must explain the post-purchase handoff.",
 );
-assert.match(purchase, /1 · Purchase Recognition/);
-assert.match(purchase, /2 · Sign in with that email/);
-assert.match(purchase, /3 · Begin where you are/);
 assert.match(
   purchase,
-  /Use the same email to purchase and sign in to Recognition/,
+  /Use the same email for your purchase and Oremea sign-in/,
   "The funnel must explain the one-email handoff without exposing payment infrastructure as another customer step.",
+);
+assert.match(
+  purchase,
+  /View Recognition access/,
+  "Recognition must send ready buyers to the current access options without duplicating price copy.",
 );
 assert.doesNotMatch(
   purchase,
-  /active Whop membership|secure Whop checkout|Once Whop has confirmed the membership/i,
-  "The customer-facing Recognition handoff must not make Whop a separate conceptual step.",
+  /RECOGNITION_PRICING|formatRecognitionPrice|\$\s*\d|\/month|monthly access|prices are shown/i,
+  "Recognition public funnel must remain price-free; current pricing belongs on the provider purchase surface.",
+);
+assert.doesNotMatch(
+  purchase,
+  /active Whop membership|secure Whop checkout|Once Whop has confirmed the membership|Whop purchase/i,
+  "The customer-facing Recognition funnel must not make the payment provider a separate conceptual step.",
+);
+assert.doesNotMatch(
+  purchase,
+  /resonance\.oremea\.com|compass\.oremea\.com|href="\/resonance|href="\/compass/i,
+  "Recognition must not force a buyer into another product funnel before Recognition delivers its own value.",
+);
+assert.match(
+  purchase,
+  /rec-saved-panel[\s\S]*text-center[\s\S]*text-left/,
+  "Recognition framed conversion cards must keep headings and CTAs centered while explanatory copy remains left-aligned.",
 );
 
 const checkoutActionUses = purchase.match(/<CheckoutAction/g) ?? [];
 assert.ok(
   checkoutActionUses.length >= 2,
-  "Recognition must offer checkout near the decision point and again after the buyer has read the funnel.",
-);
-
-assert.doesNotMatch(
-  purchase,
-  /resonance\.oremea\.com|compass\.oremea\.com|href="\/resonance|href="\/compass/i,
-  "Recognition must not force a buyer into another product funnel before Recognition delivers its own value.",
+  "Recognition must offer access near the decision point and again after the buyer has read the funnel.",
 );
 
 assert.match(
@@ -56,4 +82,4 @@ assert.match(
   "Recognition /begin must remain the product handoff after access is active.",
 );
 
-console.log("Recognition purchase funnel handoff contract checks passed.");
+console.log("Recognition conversational, price-free, participant-owned funnel contract checks passed.");
