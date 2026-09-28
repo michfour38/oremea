@@ -7,6 +7,7 @@ const priceFreeSurfaces = [
   "app/(marketing)/resonance/enter/page.tsx",
   "app/(member)/entry/page.tsx",
   "app/compass/access/page.tsx",
+  "app/recognition/purchase/page.tsx",
   "components/site/sections/compare-recognition.tsx",
   "components/site/sections/compare-resonance.tsx",
   "components/site/sections/compare-compass.tsx",
@@ -49,10 +50,6 @@ for (const file of priceFreeSurfaces) {
 }
 
 const funnelPricing = [
-  {
-    file: "app/recognition/purchase/page.tsx",
-    pattern: /formatRecognitionPrice\(RECOGNITION_PRICING\.launchPriceCents\)/,
-  },
   {
     file: "app/(member)/resonance/visits/page.tsx",
     pattern: /formatOremeaPrice\(VISIT_PRICES\[quantity\]\)/,
