@@ -17,13 +17,23 @@ assert.match(
 );
 assert.match(
   access,
-  /Set goals that are actually yours[\s\S]*work toward achieving them/,
-  "Compass funnel must state its goal-setting and goal-achievement purpose plainly.",
+  /Ever noticed how a goal can really matter to you[\s\S]*still keep slipping away/,
+  "Compass funnel must open with a recognisable human goal-setting pain point.",
 );
 assert.match(
   access,
-  /goal setting[\s\S]*movement toward[\s\S]*achievement/i,
-  "Compass must explain that it supports goal setting and movement toward achievement without promising outcomes.",
+  /what you really want/i,
+  "Compass funnel must help the buyer recognise the question of what they actually want.",
+);
+assert.match(
+  access,
+  /why it\s*matters/i,
+  "Compass funnel must connect the goal to why it matters.",
+);
+assert.match(
+  access,
+  /next\s*move/i,
+  "Compass funnel must connect clarity to a next movement.",
 );
 assert.match(
   access,
@@ -47,7 +57,7 @@ assert.match(
 );
 assert.match(
   access,
-  /The goal remains yours[\s\S]*decisions and participation outside the conversation[\s\S]*remain yours/,
+  /does not take from you[\s\S]*authority to act, revise, wait, or choose differently/i,
   "Compass funnel must preserve participant authority over goals and movement.",
 );
 assert.match(
@@ -56,6 +66,16 @@ assert.match(
   "Compass central price must remain $50.00/month unless deliberately changed at the pricing authority.",
 );
 
+assert.doesNotMatch(
+  access,
+  /COMPASS_PRICING|formatCompassPrice|\$\s*\d|\/month|monthly membership|prices are shown/i,
+  "Compass public funnel must remain price-free; current pricing belongs on the provider purchase surface.",
+);
+assert.match(
+  access,
+  /View Compass access/,
+  "Compass public funnel must send ready buyers to the current access options without duplicating price copy.",
+);
 assert.doesNotMatch(
   access,
   /seven why|seven-layer|core reflection|descent/i,
@@ -88,6 +108,12 @@ assert.ok(
   "Compass must offer conversion near the decision point and again after the buyer has read the funnel.",
 );
 
+const centeredCtaRows = access.match(/justify-center/g) ?? [];
+assert.ok(
+  centeredCtaRows.length >= 3,
+  "Compass CTA buttons must remain centered in the active-access, primary and closing conversion sections.",
+);
+
 assert.doesNotMatch(
   access,
   /resonance\.oremea\.com|recognition\.oremea\.com|href="\/resonance|href="\/recognition/i,
@@ -116,4 +142,4 @@ assert.match(
   "Compass /begin must remain the product handoff after access is active.",
 );
 
-console.log("Compass goal-setting funnel, private-method, pricing and Oremea-gold contract checks passed.");
+console.log("Compass conversational funnel, centered CTAs, price-free public copy, private-method and Oremea-gold contract checks passed.");
