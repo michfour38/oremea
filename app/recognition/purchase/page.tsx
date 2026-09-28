@@ -251,7 +251,7 @@ export default async function RecognitionPurchasePage(props: Props) {
 
         <section className="mt-16">
           <p className="rec-accent text-xs uppercase tracking-[0.28em]">
-            What working with Recognition feels like
+            How Recognition works in real life
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {[
