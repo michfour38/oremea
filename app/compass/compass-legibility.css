@@ -9,3 +9,8 @@
   color: #d4d4d8 !important;
   opacity: 1;
 }
+
+/* Framed funnel cards keep labels, headlines and CTAs centered while explanatory copy reads naturally. */
+.compass-legibility section.text-center > p:not(.uppercase) {
+  text-align: left;
+}
