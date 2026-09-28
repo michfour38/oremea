@@ -1,0 +1,59 @@
+name: Optimize Hearth KLT copy
+
+on:
+  push:
+    branches:
+      - copy/resonance-hearth-klt-2026-09-28
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: copy/resonance-hearth-klt-2026-09-28
+      - name: Tighten Hearth copy
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              'app/(member)/entry/page.tsx': {
+                  '"There is a difference between being included and being able to remain yourself."': '"Being welcomed is not the same as being able to remain yourself."',
+                  '"Some connections make it easy to join in. In others, you can find yourself reading the room, editing what you say, carrying more of the conversation, or deciding how much of yourself can show up before you have even named what feels different. The Hearth gives those differences somewhere to become visible through the ordinary evidence of welcome, attention, conversational space, boundaries, mutual effort, and what changes in your own participation when connection feels easier or harder to inhabit."': '"Some connections let you settle in without much effort. In others, you can find yourself reading the room, editing what you say, carrying more of the exchange, or deciding how much of yourself can show up. The Hearth stays with that difference long enough for the evidence of welcome, attention, conversational space, boundaries and mutual effort to become easier to see—without turning any of it into a verdict about you or anyone else."',
+                  '"you want to understand what helps you move closer, what makes you hold back, and where connection leaves enough room for you to remain yourself. The Hearth does not decide who belongs in your life. It gives the evidence you are already living enough room to become visible."': '"you want clearer evidence of what helps you move closer, what makes you hold back, and where connection leaves enough room for you to remain yourself. The Hearth does not decide who belongs in your life; it helps you notice what connection is actually asking of you."',
+                  '"Where does connection leave room for me to remain myself?"': '"Belonging that leaves room for you to remain yourself."',
+              },
+              'src/lib/oremea/public-product-marketing.ts': {
+                  'headline: "Remain yourself inside connection"': 'headline: "Belonging without losing yourself"',
+                  '"There is a difference between being included and being able to remain yourself."': '"Being welcomed is not the same as being able to remain yourself."',
+                  '"Some connections make it easy to join in. In others, you can find yourself reading the room, editing what you say, carrying more of the conversation, or deciding how much of yourself can show up. The Hearth gives those differences somewhere to become visible through the ordinary evidence of welcome, attention, space, boundaries and mutual effort."': '"Some connections let you settle in without much effort. In others, you can find yourself reading the room, editing what you say, carrying more of the exchange, or deciding how much of yourself can show up. The Hearth stays with that difference long enough for welcome, attention, space, boundaries and mutual effort to become easier to see."',
+                  '"Enter The Hearth when you want to understand what helps you move closer, what makes you hold back, and where connection leaves enough room for you to remain yourself. The room does not decide who belongs in your life; it helps your own evidence become easier to see."': '"Enter The Hearth when you want clearer evidence of what helps you move closer, what makes you hold back, and where connection leaves enough room for you to remain yourself. The room does not decide who belongs in your life; it helps you notice what connection is actually asking of you."',
+              },
+          }
+
+          for filename, mapping in replacements.items():
+              path = Path(filename)
+              text = path.read_text()
+              for old, new in mapping.items():
+                  if old not in text:
+                      raise SystemExit(f'Missing expected copy in {filename}: {old[:80]}')
+                  text = text.replace(old, new, 1)
+              path.write_text(text)
+          PY
+      - name: Verify typecheck
+        run: |
+          npm ci
+          npm run typecheck
+      - name: Commit optimized copy
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/hearth-klt-optimize.yml
+          git add 'app/(member)/entry/page.tsx' src/lib/oremea/public-product-marketing.ts
+          git commit -m "Optimize The Hearth KLT copy"
+          git push origin HEAD:copy/resonance-hearth-klt-2026-09-28
