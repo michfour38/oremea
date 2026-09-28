@@ -307,6 +307,7 @@ const isPublicRoute = createRouteMatcher([
   "/oremea(.*)",
   "/compare(.*)",
   "/resonance-rooms(.*)",
+  "/resonance/creator(.*)",
   "/contact(.*)",
   "/api/contact",
   "/feedback(.*)",
