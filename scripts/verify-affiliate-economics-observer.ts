@@ -22,7 +22,7 @@ async function main() {
     const report = await observeWhopVisitEconomics();
     assert.equal(report.observedPayments,1);
     assert.equal(report.providerAmountAfterFeesCents,4673);
-    assert.equal(report.feeBreakdownCents.payment_processing_percentage_fee,327);
+    assert.equal(report.feeBreakdownCents?.payment_processing_percentage_fee,327);
     assert.equal(report.confirmedCommissionCents,null);
     assert.equal(report.finalRetainedRevenueCents,null);
     assert.doesNotMatch(JSON.stringify(report), /pay_fixture|biz_fixture|private@example/);
@@ -30,6 +30,19 @@ async function main() {
     const rejected = await observeWhopVisitEconomics();
     assert.equal(rejected.observedPayments,0);
     assert.equal(rejected.availability,"unavailable");
+    assert.equal(rejected.providerGrossCents,null);
+    assert.equal(rejected.providerAmountAfterFeesCents,null);
+    assert.equal(rejected.feeBreakdownCents,null);
+    assert.ok(!("diagnostics" in rejected), "DAWN receives aggregates only");
+    globalThis.fetch = async () => Response.json({error:{message:"Business account API key is not authorized for the member:email:read scope. private@example.test",code:"forbidden"}}, {status:403});
+    const denied = await observeWhopVisitEconomics({includeDiagnostics:true});
+    assert.ok("diagnostics" in denied);
+    assert.deepEqual(denied.diagnostics?.[0], {stage:"payment",reason:"http_error",status:403,missingScope:"member:email:read"});
+    assert.doesNotMatch(JSON.stringify(denied), /private@example|pay_fixture|biz_fixture/);
+    globalThis.fetch = async () => Response.json({});
+    const malformed = await observeWhopVisitEconomics({includeDiagnostics:true});
+    assert.ok("diagnostics" in malformed);
+    assert.equal(malformed.diagnostics?.[0].reason,"schema_mismatch");
   } finally {
     state.prisma = oldPrisma; globalThis.fetch = oldFetch;
     if (oldKey === undefined) delete process.env.WHOP_API_KEY; else process.env.WHOP_API_KEY = oldKey;

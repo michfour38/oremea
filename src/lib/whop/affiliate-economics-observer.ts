@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { loadResonanceWhopCatalog } from "./resonance-catalog";
-import { whopApiRequest } from "./whop-api";
+import { WhopApiError, whopApiRequest } from "./whop-api";
 
 const paymentSchema = z.object({
   id: z.string(), company: z.object({ id: z.string() }), currency: z.string(),
@@ -17,7 +17,38 @@ const feesSchema = z.object({
  * Whop fees can include commission-related costs; never subtract an estimated
  * commission again from amount_after_fees. No account/balance endpoint is used.
  */
-export async function observeWhopVisitEconomics() {
+type Diagnostic = {
+  stage: "payment" | "fees" | "validation";
+  reason: "http_error" | "schema_mismatch" | "incomplete_or_mismatched" | "request_failed";
+  status?: number;
+  missingScope?: string;
+  fields?: string[];
+};
+
+class ObservationFailure extends Error {
+  constructor(readonly diagnostic: Diagnostic) { super("Provider economics unavailable."); }
+}
+
+async function readProvider<T>(stage: "payment" | "fees", path: string, schema: z.ZodType<T>): Promise<T> {
+  try {
+    return schema.parse(await whopApiRequest(path));
+  } catch (error) {
+    const diagnostic: Diagnostic = { stage, reason: "request_failed" };
+    if (error instanceof WhopApiError) {
+      diagnostic.reason = "http_error";
+      diagnostic.status = error.status;
+      // Only a scope name, never the provider's body, path, IDs or customer data.
+      const scope = error.details.message?.match(/(?:for the |requires?\s+)([a-z_]+(?::[a-z_]+){1,3})\s+scope/i)?.[1];
+      if (scope) diagnostic.missingScope = scope;
+    } else if (error instanceof z.ZodError) {
+      diagnostic.reason = "schema_mismatch";
+      diagnostic.fields = [...new Set(error.issues.map(issue => issue.path.filter(part => typeof part === "string").join(".")))].slice(0, 10);
+    }
+    throw new ObservationFailure(diagnostic);
+  }
+}
+
+export async function observeWhopVisitEconomics(options: { includeDiagnostics?: boolean } = {}) {
   const rows = await prisma.resonance_visit_orders.findMany({
     where: { whop_payment_id: { not: null }, status: { in: ["paid", "refunded"] } },
     select: { whop_payment_id: true }, orderBy: { created_at: "desc" }, take: 26,
@@ -32,6 +63,7 @@ export async function observeWhopVisitEconomics() {
     reconciliation: "commission_tax_refund_dispute_reconciliation_required",
     feeBreakdownCents: {} as Record<string, number>,
   };
+  const diagnostics: Diagnostic[] = [];
   if (!rows.length) return report;
   const catalog = await loadResonanceWhopCatalog();
   // Limit outbound concurrency and omit every customer/payment identifier.
@@ -40,17 +72,23 @@ export async function observeWhopVisitEconomics() {
       const id = row.whop_payment_id!;
       if (!/^pay_[a-zA-Z0-9]+$/.test(id)) throw new Error("Invalid payment identifier.");
       const [rawPayment, rawFees] = await Promise.all([
-        whopApiRequest(`payments/${id}`), whopApiRequest(`payments/${id}/fees?first=100`),
+        readProvider("payment", `payments/${id}`, paymentSchema), readProvider("fees", `payments/${id}/fees?first=100`, feesSchema),
       ]);
       const payment = paymentSchema.parse(rawPayment);
       const fees = feesSchema.parse(rawFees);
       if (payment.id !== id || payment.company.id !== catalog.companyId || payment.currency !== "usd" || payment.total === null || fees.page_info.has_next_page || fees.data.some(fee => fee.currency !== "usd")) {
-        throw new Error("Incomplete or mismatched provider economics.");
+        throw new ObservationFailure({ stage: "validation", reason: "incomplete_or_mismatched" });
       }
       return { payment, fees };
     }));
     for (const result of results) {
-      if (result.status === "rejected") { report.unavailablePayments++; continue; }
+      if (result.status === "rejected") {
+        report.unavailablePayments++;
+        if (options.includeDiagnostics && diagnostics.length < 5) {
+          diagnostics.push(result.reason instanceof ObservationFailure ? result.reason.diagnostic : { stage: "validation", reason: "request_failed" });
+        }
+        continue;
+      }
       report.observedPayments++;
       report.providerAmountAfterFeesCents += Math.round(result.value.payment.amount_after_fees * 100);
       report.providerGrossCents += Math.round(result.value.payment.total! * 100);
@@ -66,5 +104,12 @@ export async function observeWhopVisitEconomics() {
     }
   }
   if (report.unavailablePayments) report.availability = report.observedPayments ? "partial" : "unavailable";
-  return report;
+  return {
+    ...report,
+    // No successful observations is unknown, not zero revenue or zero fees.
+    providerAmountAfterFeesCents: report.observedPayments ? report.providerAmountAfterFeesCents : null,
+    providerGrossCents: report.observedPayments ? report.providerGrossCents : null,
+    feeBreakdownCents: report.observedPayments ? report.feeBreakdownCents : null,
+    ...(options.includeDiagnostics ? { diagnostics } : {}),
+  };
 }
