@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireAdminAction } from "@/lib/auth/require-admin";
-import { provisionCreatorStarterWhopCatalog } from "@/src/lib/whop/creator-starter-catalog";
 import {
   provisionResonanceWhopCatalog,
   ResonanceProvisioningError,
@@ -25,15 +24,13 @@ export async function provisionResonanceCommerce(
   await requireAdminAction();
 
   try {
-    // Provision the ordinary Resonance visit catalog first. The creator starter
-    // then reuses only the verified company/webhook while keeping its product
-    // and plan completely separate from normal Resonance backend commerce.
+    // Launch authority: one normal Resonance catalog for direct, affiliate and
+    // approved-creator traffic. Creator compensation is configured in Whop at
+    // 30% standard / 40% specifically approved; no special first-sale product
+    // is provisioned here.
     await provisionResonanceWhopCatalog();
-    await provisionCreatorStarterWhopCatalog();
   } catch (error) {
     if (error instanceof ResonanceProvisioningError) {
-      // Return redacted details only to the admin who invoked the action.
-      // Never put provider messages in URLs, logs, cookies, or public pages.
       return {
         stage: error.stage,
         code: error.code,
