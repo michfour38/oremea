@@ -85,12 +85,12 @@ const ROOM_DETAILS: Record<number, RoomDetail> = {
   },
   7: {
     label: "Conflict & Repair",
-    question: "What happens between us when something comes under pressure?",
+    question: "An apology is not the same thing as repair.",
     description:
-      "Examine the actual issue in conflict, what each person is trying to establish, what gets added through escalation, what remains after rupture, where responsibility belongs, and what repair would genuinely need to address.",
+      "Conflict can leave several stories tangled together: what happened, what each person meant, what followed, what belongs to whom, and whether anything has actually changed. Forge slows the exchange down enough to separate those pieces without inventing the other person’s inner world. It makes responsibility more specific, repair more observable, and participation more honest—because changed words matter, but changed participation is what gives repair somewhere to live.",
     chooseWhen:
-      "An argument, rupture, unresolved conflict, accountability, or repair has your attention.",
-    comparison: "What happens between people under pressure?",
+      "a conflict or rupture is still taking up space and you need clearer ground for what is yours to own, what is not, what repair would need to look like in behaviour, and what you will choose if that repair is not available. Forge does not force reconciliation, manufacture remorse, or mediate the relationship.",
+    comparison: "Repair becomes real when participation changes.",
   },
   8: {
     label: "Creation",

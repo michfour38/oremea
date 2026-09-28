@@ -115,7 +115,11 @@ assert.match(roomById["resonance-shadow"].headline, /reaction arrives before cho
 assert.match(roomById["resonance-shadow"].description, /usefulness|helped with/i);
 assert.match(roomById["resonance-shadow"].description, /where another choice may be available/i);
 assert.doesNotMatch(roomById["resonance-shadow"].description, /projection|disowned|trauma|defence mechanism/i);
-assert.match(roomById["resonance-forge"].description, /conflict, rupture, honesty and repair/i);
+assert.match(roomById["resonance-forge"].headline, /repair has to become visible/i);
+assert.match(roomById["resonance-forge"].buyerDecision, /what changes afterward/i);
+assert.match(roomById["resonance-forge"].description, /what belongs to each person/i);
+assert.match(roomById["resonance-forge"].chooseWhen, /if repair is not available/i);
+assert.doesNotMatch(roomById["resonance-forge"].description, /forgive|reconcile|their motive|their intention/i);
 assert.match(roomById["resonance-vision"].description, /rhythms, responsibilities, decisions, resources and tests/i);
 assert.match(roomById["resonance-gathering"].description, /allowing unresolved or separate material/i);
 assert.match(roomById["resonance-becoming"].description, /low-capacity versions and return after a lapse/i);
