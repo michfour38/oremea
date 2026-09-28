@@ -6,6 +6,7 @@ const priceFreeSurfaces = [
   "app/resonance-rooms/page.tsx",
   "app/(marketing)/resonance/enter/page.tsx",
   "app/(member)/entry/page.tsx",
+  "app/compass/access/page.tsx",
   "components/site/sections/compare-recognition.tsx",
   "components/site/sections/compare-resonance.tsx",
   "components/site/sections/compare-compass.tsx",
@@ -42,7 +43,7 @@ for (const file of priceFreeSurfaces) {
     assert.doesNotMatch(
       source,
       pattern,
-      `${file} must remain price-free; pricing belongs inside a purchase funnel.`,
+      `${file} must remain price-free; pricing belongs on the intended purchase surface.`,
     );
   }
 }
@@ -51,10 +52,6 @@ const funnelPricing = [
   {
     file: "app/recognition/purchase/page.tsx",
     pattern: /formatRecognitionPrice\(RECOGNITION_PRICING\.launchPriceCents\)/,
-  },
-  {
-    file: "app/compass/access/page.tsx",
-    pattern: /formatCompassPrice\(COMPASS_PRICING\.launchPriceCents\)/,
   },
   {
     file: "app/(member)/resonance/visits/page.tsx",
@@ -70,7 +67,7 @@ for (const { file, pattern } of funnelPricing) {
   assert.match(
     readFileSync(file, "utf8"),
     pattern,
-    `${file} must keep pricing inside the purchase funnel.`,
+    `${file} must keep its current purchase-surface pricing contract.`,
   );
 }
 
@@ -92,4 +89,4 @@ for (const legacy of [
   assert.doesNotMatch(combined, legacy, `Pricing surfaces still contain legacy copy matching ${legacy}.`);
 }
 
-console.log("Public marketing is price-free; prices remain inside purchase funnels.");
+console.log("Configured public surfaces remain price-free; purchase-surface pricing contracts stay explicit where currently intended.");
