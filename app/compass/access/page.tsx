@@ -241,7 +241,7 @@ export default async function CompassAccessPage() {
                 After purchase
               </p>
               <h2 className="mt-3 font-serif text-3xl text-zinc-100">
-                Purchase once. Then return to Compass.
+                Complete checkout. Then return to Compass.
               </h2>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-300">
                 Use the same email for your purchase and Oremea sign-in. As soon as
