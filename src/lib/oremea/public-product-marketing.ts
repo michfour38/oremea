@@ -161,17 +161,17 @@ export const OREMEA_PUBLIC_PRODUCT_MARKETING = {
   "resonance-forge": {
     id: "resonance-forge",
     category: "Resonance room 7",
-    headline: "Stay honest through rupture and repair",
+    headline: "Repair has to become visible",
     buyerDecision:
-      "What happens in conflict, and what would repair need to change in participation?",
+      "An apology can matter. What changes afterward tells you whether repair is actually happening.",
     description:
-      "Forge stays with conflict, rupture, honesty and repair. It helps you examine what happened and what changed participation could require without inventing the other person's motives.",
+      "Forge separates what happened, what followed, what belongs to each person and what repair would need to change in participation. It keeps explanations, intentions and remorse from standing in for evidence, while leaving room for accountability without forced reconciliation.",
     chooseWhen:
-      "Choose Forge when conflict or rupture needs honest attention and repair is a question, not a promise.",
+      "Enter Forge when a conflict or rupture still needs honest attention and you want clearer ground for responsibility, repair and what happens if repair is not available. It does not invent the other person’s motives, manufacture remorse or mediate the relationship.",
     limits: [
       "Not therapy or mediation.",
       "No forced reconciliation.",
-      "No invented account of another person's intent.",
+      "No invented account of another person’s intent.",
     ],
     public: true,
     weekNumber: 7,
