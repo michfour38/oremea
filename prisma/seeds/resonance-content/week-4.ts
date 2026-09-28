@@ -125,7 +125,7 @@ export const WEEK_4: ResonanceWeekSeed = {
           prompt_order: 2,
           type: "thread_prompt",
           label: null,
-          content: "Do you ever ask other people what you should do even when you already know what you want? When does that happen?",
+          content: "When a decision matters, how can you tell whether a direction is genuinely yours or whether approval, pressure, obligation, or expectation is doing more of the steering?",
         },
         {
           prompt_order: 3,

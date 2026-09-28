@@ -61,7 +61,7 @@ export const WEEK_10: ResonanceWeekSeed = {
           prompt_order: 3,
           type: "thread_prompt",
           label: null,
-          content: "What could remind you at the right moment?",
+          content: "What recurring moment could become the cue for the action, so you do not have to rely on remembering it from scratch?",
         },
         {
           prompt_order: 4,
@@ -73,7 +73,7 @@ export const WEEK_10: ResonanceWeekSeed = {
           prompt_order: 5,
           type: "mirror_exercise",
           label: null,
-          content: "Design one repeatable practice: the reminder → the action → how often → how long it takes → what you want it to help you do more reliably.",
+          content: "Design one repeatable practice: when or where the cue happens → the action I will take → how often → how long it takes → what I want it to help me do more reliably.",
         },
       ],
     },

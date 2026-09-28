@@ -14,7 +14,7 @@ export const WEEK_3: ResonanceWeekSeed = {
           prompt_order: 1,
           type: "thread_prompt",
           label: null,
-          content: "What kind of help or care actually leaves you with more energy, time, or room to think afterward?",
+          content: "What kind of help actually reduces your load rather than giving you another thing to explain, organise, remind, check, or finish?",
         },
         {
           prompt_order: 2,
@@ -137,7 +137,7 @@ export const WEEK_3: ResonanceWeekSeed = {
           prompt_order: 4,
           type: "thread_prompt",
           label: null,
-          content: "What changes when the person who usually handles something can hand the whole job over for a while?",
+          content: "What changes when the person who usually handles something can hand over the whole job—including noticing it, planning it, doing it, and following it through?",
         },
         {
           prompt_order: 5,
