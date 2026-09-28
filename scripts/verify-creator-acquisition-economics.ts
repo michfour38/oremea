@@ -91,6 +91,10 @@ const visitPayments = fs.readFileSync(
   path.join(process.cwd(), "src/lib/whop/visit-payments.ts"),
   "utf8",
 );
+const middleware = fs.readFileSync(
+  path.join(process.cwd(), "middleware.ts"),
+  "utf8",
+);
 
 // The acquisition plan must be a separate hidden product and catalog row.
 assert.match(starterCatalog, /resonance-creator-starter-v1/);
@@ -104,7 +108,9 @@ assert.match(normalCatalog, /resonance-visits-v1/);
 assert.match(provisionAction, /provisionResonanceWhopCatalog\(\)/);
 assert.match(provisionAction, /provisionCreatorStarterWhopCatalog\(\)/);
 
-// Creator traffic gets one first decision, not the normal package chooser.
+// Creator traffic gets one first decision, not the normal package chooser, and
+// the acquisition page itself is public so a creator can introduce Oremea before
+// account creation.
 assert.match(creatorLanding, /One Resonance visit/);
 assert.match(creatorLanding, /Begin one Resonance visit/);
 assert.match(creatorLanding, /one-time purchase/i);
@@ -113,6 +119,7 @@ assert.match(creatorLanding, /requestAffiliateCode/);
 assert.doesNotMatch(creatorLanding, /3 visits/i);
 assert.doesNotMatch(creatorLanding, /4 visits/i);
 assert.doesNotMatch(creatorLanding, /Complete Ten/i);
+assert.match(middleware, /"\/resonance\/creator\(\.\*\)"/);
 
 // The purchase action requires a creator referral and uses only the isolated
 // creator-starter purchase function.
