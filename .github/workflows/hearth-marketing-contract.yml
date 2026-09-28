@@ -1,0 +1,48 @@
+name: Align Hearth marketing contract
+
+on:
+  push:
+    branches:
+      - copy/resonance-hearth-klt-2026-09-28
+
+permissions:
+  contents: write
+
+jobs:
+  align:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: copy/resonance-hearth-klt-2026-09-28
+      - name: Update Hearth contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/verify-product-marketing-contract.ts')
+          text = path.read_text()
+          old = 'assert.match(roomById["resonance-hearth"].description, /concrete cues and participation/i);'
+          new = '\n'.join([
+              'assert.match(roomById["resonance-hearth"].headline, /belonging/i);',
+              'assert.match(roomById["resonance-hearth"].buyerDecision, /remain yourself/i);',
+              'assert.match(roomById["resonance-hearth"].description, /welcome, attention, space, boundaries and mutual effort/i);',
+              'assert.doesNotMatch(roomById["resonance-hearth"].description, /diagnos|verdict|hidden motive/i);',
+          ])
+          if old not in text:
+              raise SystemExit('Old Hearth marketing assertion not found')
+          path.write_text(text.replace(old, new, 1))
+          PY
+      - name: Verify marketing contract
+        run: |
+          npm ci
+          npm run test:product-marketing
+          npm run typecheck
+      - name: Commit aligned contract
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/hearth-marketing-contract.yml
+          git add scripts/verify-product-marketing-contract.ts
+          git commit -m "Align Hearth marketing copy contract"
+          git push origin HEAD:copy/resonance-hearth-klt-2026-09-28
