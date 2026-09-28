@@ -49,12 +49,12 @@ const ROOM_DETAILS: Record<number, RoomDetail> = {
   },
   3: {
     label: "Nourishment",
-    question: "What sustains me in connection?",
+    question: "Care can be genuine and still be unsustainable.",
     description:
-      "Follow how care, attention, labour, resources, capacity, and consequence move between people. Notice what genuinely restores life, what you naturally provide, and what allows care to circulate sustainably.",
+      "Care is not only intention. It has a footprint in time, attention, labour, energy, resources and rest. Some support gives capacity back. Some giving feels freely chosen. Some quietly becomes expected. The Garden makes that movement visible so you can notice what restores, what drains, what is being carried, and whether the way care moves between people can actually keep working.",
     chooseWhen:
-      "Giving, receiving, capacity, reciprocity, care, or who carries what has your attention.",
-    comparison: "What sustains the people and capacity inside connection?",
+      "care is present but the arrangement around it needs clearer attention. The Garden does not decide who is generous, selfish, loving or ungrateful. It helps make the practical flow visible enough to see what can continue, what needs to be shared or clarified, and what may need to change.",
+    comparison: "Care that gives capacity back instead of quietly consuming it.",
   },
   4: {
     label: "Alignment",
