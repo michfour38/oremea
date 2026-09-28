@@ -43,6 +43,14 @@ export default async function AffiliateAdminPage() {
       <p className="text-sm opacity-75">That reserve stress-tests creator commission on gross sale, stacked provider-fee reserves, a 5% refund/dispute reserve, and a {formatOremeaPrice(acquisition.deliveryReserveCents)} first-visit delivery reserve. It is intentionally harsher than a normal domestic transaction and is not a provider invoice.</p>
     </div>
 
+    <h2 className="text-xl">The backend makes the acquisition work</h2>
+    <div className="space-y-2 rounded-xl border border-white/10 p-4">
+      <p>If the $50 starter buyer accepts the existing Complete Ten offer, the separate backend purchase is {formatOremeaPrice(backend.resonanceCompleteTenFromStarter.priceCents)}.</p>
+      <p>At 40%, creator commission on that backend purchase is {formatOremeaPrice(backend.resonanceCompleteTenFromStarter.creatorCommissionCents)}.</p>
+      <p>Total creator earnings across starter + Complete Ten can therefore reach {formatOremeaPrice(backend.resonanceCompleteTenFromStarter.creatorEarningsIncludingStarterCents)} for that customer before any later subscription commissions.</p>
+      <p>After the 40% backend commission, stacked provider-fee reserve, 5% refund/dispute reserve and a 20% Oremea contribution reserve, the remaining delivery-cost budget for the other nine visits is {formatOremeaPrice(backend.resonanceCompleteTenFromStarter.maxDeliveryBudgetCents)}.</p>
+    </div>
+
     <h2 className="text-xl">One-month subscription safety floor</h2>
     <p>At the {policy.approvedCreatorRate * 100}% creator backend rate and a 20% contribution target, the maximum delivery-cost budgets under the same conservative provider-fee reserve are:</p>
     <ul className="list-disc space-y-2 pl-6">
