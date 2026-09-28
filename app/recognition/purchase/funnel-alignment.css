@@ -1,0 +1,17 @@
+.recognition-purchase-funnel section.rec-saved-panel {
+  text-align: center;
+}
+
+.recognition-purchase-funnel section.rec-saved-panel .text-left {
+  text-align: center !important;
+}
+
+.recognition-purchase-funnel article.rec-user-bubble,
+.recognition-purchase-funnel div.rec-user-bubble {
+  text-align: center;
+}
+
+.recognition-purchase-funnel article.rec-user-bubble .text-left,
+.recognition-purchase-funnel div.rec-user-bubble .text-left {
+  text-align: center !important;
+}
