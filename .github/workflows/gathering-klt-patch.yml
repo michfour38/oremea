@@ -1,0 +1,98 @@
+name: Gathering KLT copy patch
+
+on:
+  push:
+    branches:
+      - copy/resonance-gathering-klt-2026-09-28
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: copy/resonance-gathering-klt-2026-09-28
+      - name: Apply Gathering copy
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          entry = Path('app/(member)/entry/page.tsx')
+          text = entry.read_text()
+          replacement = "\n".join([
+              '  9: {',
+              '    label: "Integration",',
+              '    question: "Clarity does not require one neat story.",',
+              '    description:',
+              '      "When several experiences, decisions, contradictions and unfinished thoughts are alive at once, the pressure to find the one explanation can become its own kind of distortion. Gathering lets the pieces sit beside one another long enough to discover what genuinely connects, what is only similar, what remains true in tension with something else, what feels complete, what still needs action, and what is allowed to stay separate. Integration here is not compression. It is a fuller picture with the distinctions still intact.",',
+              '    chooseWhen:',
+              '      "you have gathered a lot of insight but do not want to force it into one grand lesson—or when several true things need to be held together without pretending they say the same thing. Gathering does not impose meaning or require every piece to connect.",',
+              '    comparison: "Gather the pieces. Keep the distinctions.",',
+              '  },',
+              '  10: {',
+          ])
+          text, count = re.subn(r'  9: \{.*?\n  \},\n  10: \{', replacement, text, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit('Gathering entry copy block not found')
+          entry.write_text(text)
+
+          marketing = Path('src/lib/oremea/public-product-marketing.ts')
+          text = marketing.read_text()
+          replacement = "\n".join([
+              '  "resonance-gathering": {',
+              '    id: "resonance-gathering",',
+              '    category: "Resonance room 9",',
+              '    headline: "Clarity without forcing one story",',
+              '    buyerDecision:',
+              '      "Sometimes the work is not finding one answer. It is seeing which pieces genuinely belong together—and which deserve to stay separate.",',
+              '    description:',
+              '      "Gathering gives different experiences, contradictions, recurring threads and unfinished material room to sit beside one another. It tests connection without manufacturing it, holds competing truths without flattening either one, and helps sort what to keep noticing, act on, support or leave alone for now.",',
+              '    chooseWhen:',
+              '      "Enter Gathering when you have many pieces and want a fuller picture without turning complexity into one grand explanation. The room does not impose meaning, require every piece to connect or depend on completing another Resonance room first.",',
+              '    limits: [',
+              '      "No grand meaning imposed on the whole.",',
+              '      "No requirement that every piece connect.",',
+              '      "No dependency on completing another room first.",',
+              '    ],',
+              '    public: true,',
+              '    weekNumber: 9,',
+              '  },',
+              '  "resonance-becoming": {',
+          ])
+          text, count = re.subn(r'  "resonance-gathering": \{.*?\n  \},\n  "resonance-becoming": \{', replacement, text, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit('Gathering public marketing block not found')
+          marketing.write_text(text)
+
+          contract = Path('scripts/verify-product-marketing-contract.ts')
+          text = contract.read_text()
+          old = 'assert.match(roomById["resonance-gathering"].description, /allowing unresolved or separate material/i);'
+          new = "\n".join([
+              'assert.match(roomById["resonance-gathering"].headline, /without forcing one story/i);',
+              'assert.match(roomById["resonance-gathering"].buyerDecision, /which deserve to stay separate/i);',
+              'assert.match(roomById["resonance-gathering"].description, /tests connection without manufacturing it/i);',
+              'assert.match(roomById["resonance-gathering"].chooseWhen, /fuller picture/i);',
+              'assert.doesNotMatch(roomById["resonance-gathering"].description, /everything happens for a reason|grand meaning|one true story/i);',
+          ])
+          if old not in text:
+              raise SystemExit('Gathering marketing contract anchor not found')
+          contract.write_text(text.replace(old, new, 1))
+          PY
+      - name: Verify Gathering marketing and types
+        run: |
+          npm ci
+          npm run test:product-marketing
+          npm run typecheck
+      - name: Commit tested Gathering copy
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/gathering-klt-patch.yml
+          git add 'app/(member)/entry/page.tsx' src/lib/oremea/public-product-marketing.ts scripts/verify-product-marketing-contract.ts
+          git commit -m "Rewrite Gathering as KLT conversion copy"
+          git push origin HEAD:copy/resonance-gathering-klt-2026-09-28
