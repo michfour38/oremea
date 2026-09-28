@@ -76,12 +76,12 @@ const ROOM_DETAILS: Record<number, RoomDetail> = {
   },
   6: {
     label: "Protection",
-    question: "What happens in me when something feels threatened?",
+    question: "Sometimes reaction arrives before choice.",
     description:
-      "Notice the signals, meanings, evidence, and protective responses that become available when something important feels at risk. Hold intuition, history, emotion, evidence, uncertainty, and protection under enough light to see more of the picture at once.",
+      "Under pressure, a familiar response can move quickly enough to feel like the only response available. It may help in the moment and still leave a cost afterward. Shadow slows that sequence down without deciding where it came from. It makes room to notice what changed, what the reaction helped with, what became harder to see, what is actually true now, and where a response that once made sense may no longer need to make every decision.",
     chooseWhen:
-      "Particular moments change your internal state strongly and you want to understand what happens inside you.",
-    comparison: "What happens inside me when something feels threatened?",
+      "a reaction feels stronger, faster or more familiar than you want it to be and you want to understand its usefulness, its cost, and whether another response is available now. Shadow does not assume trauma, a hidden wound, a defence mechanism or a diagnosis. The reaction can be respected without being handed the final say.",
+    comparison: "Notice the reaction. Keep the choice.",
   },
   7: {
     label: "Conflict & Repair",

@@ -111,8 +111,10 @@ assert.match(roomById["resonance-pulse"].buyerDecision, /wanting something does 
 assert.match(roomById["resonance-pulse"].description, /time, information and real contact/i);
 assert.match(roomById["resonance-pulse"].chooseWhen, /without rushing its meaning/i);
 assert.doesNotMatch(roomById["resonance-pulse"].description, /values|alignment|destiny|compatibility/i);
-assert.match(roomById["resonance-shadow"].description, /strong reactions and familiar moves/i);
-assert.doesNotMatch(roomById["resonance-shadow"].description, /projection|disowned|trauma/i);
+assert.match(roomById["resonance-shadow"].headline, /reaction arrives before choice/i);
+assert.match(roomById["resonance-shadow"].description, /usefulness|helped with/i);
+assert.match(roomById["resonance-shadow"].description, /where another choice may be available/i);
+assert.doesNotMatch(roomById["resonance-shadow"].description, /projection|disowned|trauma|defence mechanism/i);
 assert.match(roomById["resonance-forge"].description, /conflict, rupture, honesty and repair/i);
 assert.match(roomById["resonance-vision"].description, /rhythms, responsibilities, decisions, resources and tests/i);
 assert.match(roomById["resonance-gathering"].description, /allowing unresolved or separate material/i);
