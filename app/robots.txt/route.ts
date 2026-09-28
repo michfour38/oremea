@@ -17,6 +17,7 @@ const PRIVATE_PATHS = [
   "/recognition/archive",
   "/compass/archive",
   "/compass/map",
+  "/resonance/creator",
   "/resonance/enter",
   "/resonance/resume",
   "/current",
