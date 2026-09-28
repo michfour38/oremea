@@ -112,12 +112,12 @@ const ROOM_DETAILS: Record<number, RoomDetail> = {
   },
   10: {
     label: "Embodiment",
-    question: "What becomes established through the way I live?",
+    question: "The practice has to survive the day the ideal version of you does not show up.",
     description:
-      "Look at what your everyday expression, repeated participation, surrounding conditions, lived practice, and accumulated consequences are already making more established over time. Notice how living something also changes what you understand about it.",
+      "Understanding can feel complete long before it has changed an ordinary day. Becoming brings one chosen piece down into visible practice: something small enough to repeat, supported by the environment around it, adjustable when capacity drops, and clear enough to return to after a lapse. A missed day is information about a missed day—not proof of laziness, failure or who you are. The room is interested in what can keep becoming real through the way you actually live.",
     chooseWhen:
-      "You understand plenty intellectually and want to see what your actual life is practising into existence.",
-    comparison: "What is repetition already making more established?",
+      "you understand something clearly but want to see it become repeatable in real life—or when a practice keeps disappearing because it only works under ideal conditions. Becoming helps make the action keepable, including a lower-capacity version and a way back after interruption, without streaks, surveillance or moral scoring.",
+    comparison: "Make it small enough to live. Make returning part of the practice.",
   },
 };
 

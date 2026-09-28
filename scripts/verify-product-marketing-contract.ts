@@ -130,7 +130,12 @@ assert.match(roomById["resonance-gathering"].buyerDecision, /which deserve to st
 assert.match(roomById["resonance-gathering"].description, /tests connection without manufacturing it/i);
 assert.match(roomById["resonance-gathering"].chooseWhen, /fuller picture/i);
 assert.doesNotMatch(roomById["resonance-gathering"].description, /everything happens for a reason|grand meaning|one true story/i);
-assert.match(roomById["resonance-becoming"].description, /low-capacity versions and return after a lapse/i);
+assert.match(roomById["resonance-becoming"].headline, /survive a bad day/i);
+assert.match(roomById["resonance-becoming"].buyerDecision, /still return to/i);
+assert.match(roomById["resonance-becoming"].description, /lower-capacity version/i);
+assert.match(roomById["resonance-becoming"].description, /return after a lapse/i);
+assert.match(roomById["resonance-becoming"].chooseWhen, /missed day into a moral verdict/i);
+assert.doesNotMatch(roomById["resonance-becoming"].description, /discipline|willpower|lazy|failure|streak/i);
 
 const productTruthDescriptions = Object.fromEntries(
   Object.entries(OREMEA_PRODUCT_TRUTH).map(([id, product]) => [
