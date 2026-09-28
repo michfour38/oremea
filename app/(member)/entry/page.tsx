@@ -31,12 +31,12 @@ const ROOM_DETAILS: Record<number, RoomDetail> = {
   1: {
     label: "Belonging",
     question:
-      "There is a difference between being included and being able to remain yourself.",
+      "Being welcomed is not the same as being able to remain yourself.",
     description:
-      "Some connections make it easy to join in. In others, you can find yourself reading the room, editing what you say, carrying more of the conversation, or deciding how much of yourself can show up before you have even named what feels different. The Hearth gives those differences somewhere to become visible through the ordinary evidence of welcome, attention, conversational space, boundaries, mutual effort, and what changes in your own participation when connection feels easier or harder to inhabit.",
+      "Some connections let you settle in without much effort. In others, you can find yourself reading the room, editing what you say, carrying more of the exchange, or deciding how much of yourself can show up. The Hearth stays with that difference long enough for the evidence of welcome, attention, conversational space, boundaries and mutual effort to become easier to see—without turning any of it into a verdict about you or anyone else.",
     chooseWhen:
-      "you want to understand what helps you move closer, what makes you hold back, and where connection leaves enough room for you to remain yourself. The Hearth does not decide who belongs in your life. It gives the evidence you are already living enough room to become visible.",
-    comparison: "Where does connection leave room for me to remain myself?",
+      "you want clearer evidence of what helps you move closer, what makes you hold back, and where connection leaves enough room for you to remain yourself. The Hearth does not decide who belongs in your life; it helps you notice what connection is actually asking of you.",
+    comparison: "Belonging that leaves room for you to remain yourself.",
   },
   2: {
     label: "Patterns",

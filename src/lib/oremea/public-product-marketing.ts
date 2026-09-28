@@ -53,13 +53,13 @@ export const OREMEA_PUBLIC_PRODUCT_MARKETING = {
   "resonance-hearth": {
     id: "resonance-hearth",
     category: "Resonance room 1",
-    headline: "Remain yourself inside connection",
+    headline: "Belonging without losing yourself",
     buyerDecision:
-      "There is a difference between being included and being able to remain yourself.",
+      "Being welcomed is not the same as being able to remain yourself.",
     description:
-      "Some connections make it easy to join in. In others, you can find yourself reading the room, editing what you say, carrying more of the conversation, or deciding how much of yourself can show up. The Hearth gives those differences somewhere to become visible through the ordinary evidence of welcome, attention, space, boundaries and mutual effort.",
+      "Some connections let you settle in without much effort. In others, you can find yourself reading the room, editing what you say, carrying more of the exchange, or deciding how much of yourself can show up. The Hearth stays with that difference long enough for welcome, attention, space, boundaries and mutual effort to become easier to see.",
     chooseWhen:
-      "Enter The Hearth when you want to understand what helps you move closer, what makes you hold back, and where connection leaves enough room for you to remain yourself. The room does not decide who belongs in your life; it helps your own evidence become easier to see.",
+      "Enter The Hearth when you want clearer evidence of what helps you move closer, what makes you hold back, and where connection leaves enough room for you to remain yourself. The room does not decide who belongs in your life; it helps you notice what connection is actually asking of you.",
     limits: [
       "No guaranteed emotional safety.",
       "No diagnosis of why belonging is difficult.",
