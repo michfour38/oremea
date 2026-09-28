@@ -19,6 +19,7 @@ export function AdditionalOfferPicker({
   completeTotalCents,
   smallerOffers,
   canCharge,
+  roomWeekNumber,
 }: {
   orderId: string;
   currentQuantity: number;
@@ -28,6 +29,7 @@ export function AdditionalOfferPicker({
   completeTotalCents: number;
   smallerOffers: SmallerOffer[];
   canCharge: boolean;
+  roomWeekNumber?: number;
 }) {
   const [showFewer, setShowFewer] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -72,6 +74,7 @@ export function AdditionalOfferPicker({
 
         <form action={addVisits} className="mt-6">
           <input type="hidden" name="orderId" value={orderId} />
+          {roomWeekNumber ? <input type="hidden" name="room" value={roomWeekNumber} /> : null}
           <input type="hidden" name="quantity" value={completeQuantity} />
           <VisitSubmitButton disabled={!canCharge}>
             Complete ten · Pay {formatOremeaPrice(completeAmountCents)}
@@ -145,6 +148,7 @@ export function AdditionalOfferPicker({
 
           <form action={addVisits} className="mt-6">
             <input type="hidden" name="orderId" value={orderId} />
+          {roomWeekNumber ? <input type="hidden" name="room" value={roomWeekNumber} /> : null}
             <input type="hidden" name="quantity" value={selected.quantity} />
             <button
               type="submit"
@@ -163,6 +167,7 @@ export function AdditionalOfferPicker({
           className="res-border res-panel pointer-events-auto w-full max-w-md rounded-full border px-4 py-2 shadow-2xl backdrop-blur-md"
         >
           <input type="hidden" name="orderId" value={orderId} />
+          {roomWeekNumber ? <input type="hidden" name="room" value={roomWeekNumber} /> : null}
           <button
             type="submit"
             className="res-text-primary res-accent-hover w-full rounded-full px-4 py-2 text-center text-sm underline underline-offset-4"
