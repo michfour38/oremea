@@ -17,13 +17,13 @@ assert.match(
 );
 assert.match(
   access,
-  /Set goals that are actually yours[\s\S]*work toward achieving them/,
-  "Compass funnel must state its goal-setting and goal-achievement purpose plainly.",
+  /Ever noticed how a goal can really matter to you[\s\S]*still keep slipping away/,
+  "Compass funnel must open with a recognisable human goal-setting pain point.",
 );
 assert.match(
   access,
-  /goal setting[\s\S]*movement toward[\s\S]*achievement/i,
-  "Compass must explain that it supports goal setting and movement toward achievement without promising outcomes.",
+  /what you really want[\s\S]*why it matters[\s\S]*next move/i,
+  "Compass must connect the pain point to clarity, meaning and movement.",
 );
 assert.match(
   access,
@@ -47,7 +47,7 @@ assert.match(
 );
 assert.match(
   access,
-  /The goal remains yours[\s\S]*decisions that belong to you/,
+  /does not take from you[\s\S]*authority to act, revise, wait, or choose differently/i,
   "Compass funnel must preserve participant authority over goals and movement.",
 );
 assert.match(
@@ -98,6 +98,12 @@ assert.ok(
   "Compass must offer conversion near the decision point and again after the buyer has read the funnel.",
 );
 
+const centeredCtaRows = access.match(/justify-center/g) ?? [];
+assert.ok(
+  centeredCtaRows.length >= 3,
+  "Compass CTA buttons must remain centered in the active-access, primary and closing conversion sections.",
+);
+
 assert.doesNotMatch(
   access,
   /resonance\.oremea\.com|recognition\.oremea\.com|href="\/resonance|href="\/recognition/i,
@@ -126,4 +132,4 @@ assert.match(
   "Compass /begin must remain the product handoff after access is active.",
 );
 
-console.log("Compass goal-setting funnel, price-free public copy, private-method and Oremea-gold contract checks passed.");
+console.log("Compass conversational funnel, centered CTAs, price-free public copy, private-method and Oremea-gold contract checks passed.");
