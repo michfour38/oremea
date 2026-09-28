@@ -93,7 +93,7 @@ export const OREMEA_PUBLIC_PRODUCT_MARKETING = {
     buyerDecision:
       "Care can be genuine and still leave one person carrying more than can be sustained.",
     description:
-      "Care has a footprint in time, attention, labour, energy, resources and rest. Some support gives capacity back. Some helping quietly becomes expected. The Garden makes that movement visible so giving and receiving can be heard as lived arrangements rather than ideals about who cares more.",
+      "Care has a footprint in time, attention, labour, energy, resources and rest. Some support gives capacity back. Some help still leaves the work of noticing, explaining, reminding, checking or finishing with the person being helped. The Garden makes that movement visible so giving and receiving can be heard as lived arrangements rather than ideals about who cares more.",
     chooseWhen:
       "Enter The Garden when care is present but the way it moves needs clearer attention—what restores, what drains, what is being carried, what needs to be asked for, and what can actually be repeated. It does not score reciprocity or turn capacity and limits into a moral judgment.",
     limits: [
@@ -111,7 +111,7 @@ export const OREMEA_PUBLIC_PRODUCT_MARKETING = {
     buyerDecision:
       "When several things genuinely matter, clarity comes from seeing what your real choices are already protecting, delaying or costing.",
     description:
-      "Bearing puts stated priorities beside lived decisions: where time, attention and resources go, what gets less, what changes under pressure, and where words and actions stop pointing in the same direction. It makes current orientation visible without declaring a single choice to be your ‘true values’ or a verdict on your character.",
+      "Bearing puts stated priorities beside lived decisions: where time, attention and resources go, what gets less, what changes under pressure, whose expectations are shaping the choice, and where words and actions stop pointing in the same direction. It makes current orientation visible without declaring a single choice to be your ‘true values’ or a verdict on your character.",
     chooseWhen:
       "Enter Bearing when important priorities are competing, a decision keeps wobbling, or your lived choices no longer seem to match what you say matters. It helps make the trade-offs and decision ownership visible without deciding what should win or turning clarity into an execution plan.",
     limits: [
@@ -129,7 +129,7 @@ export const OREMEA_PUBLIC_PRODUCT_MARKETING = {
     buyerDecision:
       "Wanting something does not tell you what to do with it.",
     description:
-      "Attraction can arrive faster than certainty. Pulse gives desire enough room for time, information and real contact to catch up—so what draws you in, what imagination adds, what changes with pace and what remains can be seen without turning the feeling into a verdict.",
+      "Attraction can arrive faster than certainty. Pulse gives desire enough room for time, information and real contact to catch up—so what draws you in, what the body signals, what imagination adds, what context changes and what remains can be seen without turning intensity into a verdict.",
     chooseWhen:
       "Enter Pulse when someone or something has your attention and you want to stay with the aliveness without rushing its meaning. Pulse does not decide compatibility, destiny, identity or hidden motive; it helps desire meet reality before choice.",
     limits: [
@@ -147,7 +147,7 @@ export const OREMEA_PUBLIC_PRODUCT_MARKETING = {
     buyerDecision:
       "A strong reaction can make sense and still take over more of the moment than you want it to.",
     description:
-      "Shadow slows a strong or familiar reaction down enough to see what changed, what the response helped with, what it cost, what is different now and where another choice may be available. It stays with the evidence you bring rather than explaining the reaction with a hidden wound or theory about your psyche.",
+      "Shadow slows a strong or familiar reaction down enough to see what changed, what it seems to be responding to, what it helps with, what it costs, what information is actually available now and where another choice may be available. It stays with the evidence you bring rather than explaining the reaction with a hidden wound or theory about your psyche.",
     chooseWhen:
       "Enter Shadow when a reaction feels stronger, faster or more familiar than you want it to be. The room helps you examine usefulness, cost and present choice without assuming trauma, defence, projection or a hidden cause.",
     limits: [
@@ -165,7 +165,7 @@ export const OREMEA_PUBLIC_PRODUCT_MARKETING = {
     buyerDecision:
       "An apology can matter. What changes afterward tells you whether repair is actually happening.",
     description:
-      "Forge separates what happened, what followed, what belongs to each person and what repair would need to change in participation. It keeps explanations, intentions and remorse from standing in for evidence, while leaving room for accountability without forced reconciliation.",
+      "Forge separates what happened, what followed, what belongs to each person and what kind of repair would actually match the problem. It keeps explanations, intentions and remorse from standing in for evidence, while leaving room for accountability without forced reconciliation.",
     chooseWhen:
       "Enter Forge when a conflict or rupture still needs honest attention and you want clearer ground for responsibility, repair and what happens if repair is not available. It does not invent the other person’s motives, manufacture remorse or mediate the relationship.",
     limits: [
@@ -219,7 +219,7 @@ export const OREMEA_PUBLIC_PRODUCT_MARKETING = {
     buyerDecision:
       "Insight changes less than a practice you can still return to when life is busy, energy is low or yesterday did not go to plan.",
     description:
-      "Becoming turns one chosen understanding into visible, repeatable practice. It works with realistic frequency, environmental support, a lower-capacity version, keepable agreements and return after a lapse—so continuation is designed for real life rather than perfect conditions.",
+      "Becoming turns one chosen understanding into visible, repeatable practice. It works with a recurring cue, realistic frequency, environmental support, a lower-capacity version, keepable agreements and return after a lapse—so continuation is designed for real life rather than perfect conditions.",
     chooseWhen:
       "Enter Becoming when you know what you mean but want to see it become something you actually live. The room helps make the practice small enough to continue and easy enough to resume without turning a missed day into a moral verdict or a reason to start over from zero.",
     limits: [
