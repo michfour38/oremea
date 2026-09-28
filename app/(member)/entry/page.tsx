@@ -30,12 +30,13 @@ type RoomDetail = {
 const ROOM_DETAILS: Record<number, RoomDetail> = {
   1: {
     label: "Belonging",
-    question: "Where do I feel able to be myself?",
+    question:
+      "Being welcomed is not the same as being able to remain yourself.",
     description:
-      "Explore what allows you to arrive, participate, be seen, trust, and remain in relationship with yourself around other people. Notice both the spaces where belonging comes easily and what changes when the room feels less able to hold your full participation.",
+      "Some connections let you settle in without much effort. In others, you can find yourself reading the room, editing what you say, carrying more of the exchange, or deciding how much of yourself can show up. The Hearth stays with that difference long enough for the evidence of welcome, attention, conversational space, boundaries and mutual effort to become easier to see—without turning any of it into a verdict about you or anyone else.",
     chooseWhen:
-      "Belonging, welcome, trust, fitting in, or remaining yourself around others has your attention.",
-    comparison: "Is there room for me to remain myself here?",
+      "you want clearer evidence of what helps you move closer, what makes you hold back, and where connection leaves enough room for you to remain yourself. The Hearth does not decide who belongs in your life; it helps you notice what connection is actually asking of you.",
+    comparison: "Belonging that leaves room for you to remain yourself.",
   },
   2: {
     label: "Patterns",
