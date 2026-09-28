@@ -161,10 +161,11 @@ jobs:
 
           test = Path("scripts/verify-resonance-provisioning-contract.ts")
           text = test.read_text()
-          anchor = '''    assert.match(completion, /\\/resonance\\/visits\\?order=\\$\\{order.id\\}/);
-            console.log("Provisioning reuses the company/catalog without financial endpoints; conflict, missing ID, wrong price and decline recovery guards passed (mocked provider/storage).");'''
-          replacement = '''    assert.match(completion, /\\/resonance\\/visits\\?order=\\$\\{order.id\\}/);
-            const adminTrace = readFileSync("app/admin/resonance-commerce/page.tsx", "utf8");
+          console_old = 'console.log("Provisioning reuses the company/catalog without financial endpoints; conflict, missing ID, wrong price and decline recovery guards passed (mocked provider/storage).");'
+          marker_pos = text.find(console_old)
+          if marker_pos < 0:
+              raise SystemExit("provisioning test console marker not found")
+          insert = '''const adminTrace = readFileSync("app/admin/resonance-commerce/page.tsx", "utf8");
             assert.match(adminTrace, /owner-only lifecycle trace/);
             assert.match(adminTrace, /Requested referral/);
             assert.match(adminTrace, /Whop remains the source of truth for actual affiliate attribution and commission/);
@@ -176,10 +177,14 @@ jobs:
               assert.match(catalogSource, new RegExp(`${field}: true`));
             }
             assert.match(catalogSource, /_count: \\{ select: \\{ redemptions: true \\} \\}/);
-            console.log("Provisioning reuses the company/catalog without financial endpoints; conflict, missing ID, wrong price, decline recovery, and owner-only transaction trace guards passed (mocked provider/storage).");'''
-          if anchor not in text:
-              raise SystemExit("provisioning test anchor not found")
-          test.write_text(text.replace(anchor, replacement, 1))
+            '''
+          text = text[:marker_pos] + insert + text[marker_pos:]
+          text = text.replace(
+              console_old,
+              'console.log("Provisioning reuses the company/catalog without financial endpoints; conflict, missing ID, wrong price, decline recovery, and owner-only transaction trace guards passed (mocked provider/storage).");',
+              1,
+          )
+          test.write_text(text)
           PY
 
       - name: Validate Resonance trace contract
