@@ -11,15 +11,16 @@
   --oremea-zinc-500: rgb(190 190 199);
   --oremea-zinc-600: rgb(161 161 170);
 
-  --oremea-gold: #f0cf7a;
-  --oremea-gold-hover: #ffe2a0;
-  --oremea-gold-border: #d5b56e;
-  --oremea-gold-border-soft: rgb(213 181 110 / 0.55);
-  --oremea-gold-border-strong: rgb(213 181 110 / 0.75);
-  --oremea-gold-10: rgb(240 207 122 / 0.10);
-  --oremea-gold-15: rgb(240 207 122 / 0.15);
-  --oremea-gold-20: rgb(240 207 122 / 0.20);
-  --oremea-gold-ring: rgb(240 207 122 / 0.35);
+  /* One Oremea gold source of truth. Product accents derive from this hue. */
+  --oremea-gold: #cda434;
+  --oremea-gold-hover: #cda434;
+  --oremea-gold-border: #cda434;
+  --oremea-gold-border-soft: rgb(205 164 52 / 0.55);
+  --oremea-gold-border-strong: rgb(205 164 52 / 0.75);
+  --oremea-gold-10: rgb(205 164 52 / 0.10);
+  --oremea-gold-15: rgb(205 164 52 / 0.15);
+  --oremea-gold-20: rgb(205 164 52 / 0.20);
+  --oremea-gold-ring: rgb(205 164 52 / 0.35);
 
   --oremea-panel: rgb(0 0 0 / 0.60);
   --oremea-panel-strong: rgb(0 0 0 / 0.75);
@@ -27,7 +28,7 @@
   --oremea-border: rgb(255 255 255 / 0.22);
   --oremea-border-strong: rgb(255 255 255 / 0.32);
   --oremea-white-5: rgb(255 255 255 / 0.05);
-  --oremea-accent-panel: rgb(240 207 122 / 0.06);
+  --oremea-accent-panel: rgb(205 164 52 / 0.06);
 
   --oremea-alert: #fde68a;
   --oremea-danger: #fca5a5;
@@ -43,16 +44,16 @@
   --recognition-bg: #080808;
   --recognition-surface: #0d0d0d;
   --recognition-zinc: #e4e4e7;
-  --recognition-gold: #c8a96a;
-  --recognition-rail: #6f5a31;
+  --recognition-gold: var(--oremea-gold);
+  --recognition-rail: rgb(205 164 52 / 0.45);
   --recognition-user-bubble: #18181b;
   --recognition-user-border: rgb(255 255 255 / 0.08);
   --recognition-divider: rgb(255 255 255 / 0.06);
   --recognition-composer-bg: #11100d;
-  --recognition-composer-border: #4f4229;
-  --recognition-composer-focus: #9f8148;
-  --recognition-button: #b39558;
-  --recognition-button-hover: #c9aa69;
+  --recognition-composer-border: rgb(205 164 52 / 0.30);
+  --recognition-composer-focus: var(--oremea-gold);
+  --recognition-button: var(--oremea-gold);
+  --recognition-button-hover: var(--oremea-gold);
   --recognition-error-bg: #17110d;
   --recognition-error-border: #5c4433;
   --recognition-error-text: #d7b49a;
@@ -67,7 +68,7 @@
     linear-gradient(to bottom, rgb(0 0 0 / 0.14), rgb(0 0 0 / 0.38), rgb(0 0 0 / 0.58));
   --resonance-marketing-dim: rgb(0 0 0 / 0.15);
   --resonance-marketing-overlay:
-    radial-gradient(circle at top, rgb(240 207 122 / 0.12), transparent 45%),
+    radial-gradient(circle at top, rgb(205 164 52 / 0.12), transparent 45%),
     linear-gradient(to bottom, rgb(0 0 0 / 0.10), rgb(0 0 0 / 0.50));
 
   /* Existing site brand values retained as tokens. */
