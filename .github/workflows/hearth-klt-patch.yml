@@ -1,0 +1,102 @@
+name: Hearth KLT copy patch
+
+on:
+  push:
+    branches:
+      - copy/resonance-hearth-klt-2026-09-28
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: copy/resonance-hearth-klt-2026-09-28
+      - name: Apply Hearth copy
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          entry = Path('app/(member)/entry/page.tsx')
+          text = entry.read_text()
+          old = '''  1: {
+    label: "Belonging",
+    question: "Where do I feel able to be myself?",
+    description:
+      "Explore what allows you to arrive, participate, be seen, trust, and remain in relationship with yourself around other people. Notice both the spaces where belonging comes easily and what changes when the room feels less able to hold your full participation.",
+    chooseWhen:
+      "Belonging, welcome, trust, fitting in, or remaining yourself around others has your attention.",
+    comparison: "Is there room for me to remain myself here?",
+  },'''
+          new = '''  1: {
+    label: "Belonging",
+    question:
+      "There is a difference between being included and being able to remain yourself.",
+    description:
+      "Some connections make it easy to join in. In others, you can find yourself reading the room, editing what you say, carrying more of the conversation, or deciding how much of yourself can show up before you have even named what feels different. The Hearth gives those differences somewhere to become visible through the ordinary evidence of welcome, attention, conversational space, boundaries, mutual effort, and what changes in your own participation when connection feels easier or harder to inhabit.",
+    chooseWhen:
+      "you want to understand what helps you move closer, what makes you hold back, and where connection leaves enough room for you to remain yourself. The Hearth does not decide who belongs in your life. It gives the evidence you are already living enough room to become visible.",
+    comparison: "Where does connection leave room for me to remain myself?",
+  },'''
+          if old not in text:
+              raise SystemExit('Hearth entry copy block not found')
+          entry.write_text(text.replace(old, new, 1))
+
+          marketing = Path('src/lib/oremea/public-product-marketing.ts')
+          text = marketing.read_text()
+          old = '''  "resonance-hearth": {
+    id: "resonance-hearth",
+    category: "Resonance room 1",
+    headline: "Begin with belonging",
+    buyerDecision:
+      "Where can safety, presence and belonging begin in connection?",
+    description:
+      "The Hearth helps you notice the concrete cues and participation that make belonging more or less available, without promising safety as an outcome.",
+    chooseWhen:
+      "Choose The Hearth when you want to stay with arrival, welcome, presence and belonging.",
+    limits: [
+      "No guaranteed emotional safety.",
+      "No diagnosis of why belonging is difficult.",
+      "No pressure to disclose more than you choose.",
+    ],
+    public: true,
+    weekNumber: 1,
+  },'''
+          new = '''  "resonance-hearth": {
+    id: "resonance-hearth",
+    category: "Resonance room 1",
+    headline: "Remain yourself inside connection",
+    buyerDecision:
+      "There is a difference between being included and being able to remain yourself.",
+    description:
+      "Some connections make it easy to join in. In others, you can find yourself reading the room, editing what you say, carrying more of the conversation, or deciding how much of yourself can show up. The Hearth gives those differences somewhere to become visible through the ordinary evidence of welcome, attention, space, boundaries and mutual effort.",
+    chooseWhen:
+      "Enter The Hearth when you want to understand what helps you move closer, what makes you hold back, and where connection leaves enough room for you to remain yourself. The room does not decide who belongs in your life; it helps your own evidence become easier to see.",
+    limits: [
+      "No guaranteed emotional safety.",
+      "No diagnosis of why belonging is difficult.",
+      "No pressure to disclose more than you choose.",
+    ],
+    public: true,
+    weekNumber: 1,
+  },'''
+          if old not in text:
+              raise SystemExit('Hearth public marketing block not found')
+          marketing.write_text(text.replace(old, new, 1))
+          PY
+      - name: Verify typecheck
+        run: |
+          npm ci
+          npm run typecheck
+      - name: Commit tested copy
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/hearth-klt-patch.yml
+          git add 'app/(member)/entry/page.tsx' src/lib/oremea/public-product-marketing.ts
+          git commit -m "Rewrite The Hearth as KLT conversion copy"
+          git push origin HEAD:copy/resonance-hearth-klt-2026-09-28
