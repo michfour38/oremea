@@ -106,8 +106,11 @@ assert.match(roomById["resonance-bearing"].headline, /everything cannot come fir
 assert.match(roomById["resonance-bearing"].description, /stated priorities beside lived decisions/i);
 assert.match(roomById["resonance-bearing"].chooseWhen, /decision ownership/i);
 assert.doesNotMatch(roomById["resonance-bearing"].description, /execution plan|moral ranking|should win/i);
-assert.match(roomById["resonance-pulse"].description, /desire, attraction, aliveness/i);
-assert.doesNotMatch(roomById["resonance-pulse"].description, /values|alignment/i);
+assert.match(roomById["resonance-pulse"].headline, /desire meet reality/i);
+assert.match(roomById["resonance-pulse"].buyerDecision, /wanting something does not tell you what to do with it/i);
+assert.match(roomById["resonance-pulse"].description, /time, information and real contact/i);
+assert.match(roomById["resonance-pulse"].chooseWhen, /without rushing its meaning/i);
+assert.doesNotMatch(roomById["resonance-pulse"].description, /values|alignment|destiny|compatibility/i);
 assert.match(roomById["resonance-shadow"].description, /strong reactions and familiar moves/i);
 assert.doesNotMatch(roomById["resonance-shadow"].description, /projection|disowned|trauma/i);
 assert.match(roomById["resonance-forge"].description, /conflict, rupture, honesty and repair/i);
