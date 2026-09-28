@@ -74,7 +74,19 @@ async function main() {
     const completion = readFileSync("app/(member)/resonance/complete/page.tsx", "utf8");
     assert.match(completion, /order.status === "failed" && order.kind === "initial"/);
     assert.match(completion, /\/resonance\/visits\?order=\$\{order.id\}/);
-    console.log("Provisioning reuses the company/catalog without financial endpoints; conflict, missing ID, wrong price and decline recovery guards passed (mocked provider/storage).");
+    const adminTrace = readFileSync("app/admin/resonance-commerce/page.tsx", "utf8");
+  assert.match(adminTrace, /owner-only lifecycle trace/);
+  assert.match(adminTrace, /Requested referral/);
+  assert.match(adminTrace, /Whop remains the source of truth for actual affiliate attribution and commission/);
+  assert.match(adminTrace, /Creator Resonance Starter/);
+  assert.match(adminTrace, /order\._count\.redemptions/);
+  assert.doesNotMatch(adminTrace, /order\.buyer_email/);
+  const traceCatalogSource = readFileSync("src/lib/whop/resonance-catalog.ts", "utf8");
+  for (const field of ["amount_cents", "parent_id", "affiliate_code", "whop_plan_id", "paid_at", "created_at"]) {
+    assert.match(traceCatalogSource, new RegExp(`${field}: true`));
+  }
+  assert.match(traceCatalogSource, /_count: \{ select: \{ redemptions: true \} \}/);
+  console.log("Provisioning reuses the company/catalog without financial endpoints; conflict, missing ID, wrong price, decline recovery, and owner-only transaction trace guards passed (mocked provider/storage).");
   } finally {
     testGlobal.prisma = originalPrisma;
     globalThis.fetch = originalFetch;

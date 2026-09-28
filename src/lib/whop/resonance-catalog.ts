@@ -404,8 +404,22 @@ export async function getResonanceWhopProvisioningStatus() {
   });
   const recentOrders = await prisma.resonance_visit_orders.findMany({
     orderBy: { created_at: "desc" }, take: 10,
-    select: { id: true, kind: true, quantity: true, remaining_quantity: true,
-      status: true, whop_payment_id: true, whop_checkout_id: true },
+    select: {
+      id: true,
+      kind: true,
+      quantity: true,
+      amount_cents: true,
+      remaining_quantity: true,
+      status: true,
+      parent_id: true,
+      affiliate_code: true,
+      whop_plan_id: true,
+      whop_payment_id: true,
+      whop_checkout_id: true,
+      paid_at: true,
+      created_at: true,
+      _count: { select: { redemptions: true } },
+    },
   });
   const paidOrders = await prisma.resonance_visit_orders.count({ where: { status: "paid" } });
   const redemptions = await prisma.resonance_visit_redemptions.count();
