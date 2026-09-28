@@ -1,0 +1,112 @@
+name: Whop supported webhook events 2026-09-28
+
+on:
+  push:
+    branches:
+      - fix/whop-supported-webhook-events-2026-09-28
+
+permissions:
+  contents: write
+
+jobs:
+  patch-validate-commit:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: fix/whop-supported-webhook-events-2026-09-28
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Align required events with current Whop API
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          catalog = Path("src/lib/whop/resonance-catalog.ts")
+          text = catalog.read_text()
+          old = '''const REQUIRED_WEBHOOK_EVENTS = [
+            "payment.succeeded",
+            "payment.failed",
+            "payment.canceled",
+            "refund.created",
+            "refund.updated",
+          ] as const;'''
+          new = '''const REQUIRED_WEBHOOK_EVENTS = [
+            "payment.succeeded",
+            "payment.failed",
+            // Whop's current v1 webhook event enum does not expose
+            // payment.canceled. Keep the webhook route tolerant of that legacy/
+            // unexpected payload, but never require an unsupported provider event.
+            "refund.created",
+            "refund.updated",
+          ] as const;'''
+          if old not in text:
+              raise SystemExit("required webhook event block not found")
+          catalog.write_text(text.replace(old, new, 1))
+
+          test = Path("scripts/verify-resonance-provisioning-contract.ts")
+          text = test.read_text()
+          fixture_old = 'events: ["payment.succeeded", "payment.failed", "payment.canceled", "refund.created", "refund.updated"]'
+          fixture_new = 'events: ["payment.succeeded", "payment.failed", "refund.created", "refund.updated"]'
+          if fixture_old not in text:
+              raise SystemExit("webhook fixture event list not found")
+          text = text.replace(fixture_old, fixture_new, 1)
+
+          assertion_old = '''    const catalogSource = readFileSync("src/lib/whop/resonance-catalog.ts", "utf8");
+            assert.match(
+              catalogSource,
+              /REQUIRED_WEBHOOK_EVENTS[\\s\\S]*payment\\.succeeded[\\s\\S]*payment\\.failed[\\s\\S]*payment\\.canceled[\\s\\S]*refund\\.created[\\s\\S]*refund\\.updated/,
+              "The provisioned Whop webhook must subscribe to canceled payments as well as success, failure and refunds.",
+            );'''
+          assertion_new = '''    const catalogSource = readFileSync("src/lib/whop/resonance-catalog.ts", "utf8");
+            const requiredEventsBlock = catalogSource.match(/const REQUIRED_WEBHOOK_EVENTS = \\[([\\s\\S]*?)\\] as const;/)?.[1] ?? "";
+            assert.match(requiredEventsBlock, /payment\\.succeeded/);
+            assert.match(requiredEventsBlock, /payment\\.failed/);
+            assert.match(requiredEventsBlock, /refund\\.created/);
+            assert.match(requiredEventsBlock, /refund\\.updated/);
+            assert.doesNotMatch(
+              requiredEventsBlock,
+              /["']payment\\.canceled["']/,
+              "Do not send unsupported payment.canceled in Whop's required webhook event list.",
+            );
+            const webhookRoute = readFileSync("app/api/webhooks/whop/route.ts", "utf8");
+            assert.match(
+              webhookRoute,
+              /payment\\.canceled/,
+              "The route may remain tolerant of a legacy or unexpected canceled-payment payload.",
+            );'''
+          if assertion_old not in text:
+              raise SystemExit("old canceled-payment contract block not found")
+          test.write_text(text.replace(assertion_old, assertion_new, 1))
+          PY
+
+      - name: Validate Resonance provider contract
+        run: npm run test:resonance-visits
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Validate complete Oremea application
+        run: npm run build
+
+      - name: Commit exact tested source
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/whop-supported-webhook-events-2026-09-28.yml
+          git add src/lib/whop/resonance-catalog.ts scripts/verify-resonance-provisioning-contract.ts
+          git commit -m "fix: align Whop webhook events with provider API"
+          git push
