@@ -5,10 +5,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getRecognitionConversationAccess } from "@/src/lib/recognition/recognition-conversation-access";
-import {
-  RECOGNITION_PRICING,
-  formatRecognitionPrice,
-} from "@/src/lib/recognition/recognition-pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -27,12 +23,12 @@ const faq = [
   {
     question: "Does Recognition tell me what my thoughts mean?",
     answer:
-      "No. It can place your own words and distinctions beside one another, but meaning and choices remain yours.",
+      "No. Recognition can help you stay with what you are saying long enough for something to become clearer, but the meaning and any choices that follow remain yours.",
   },
   {
-    question: "Is there a fixed prompt sequence?",
+    question: "Do I need to know what question to ask?",
     answer:
-      "No. You bring whatever has your attention, and Recognition follows one live thread from what you actually say.",
+      "No. Start with the thought as it is. It can be messy, unfinished, contradictory or badly worded. Recognition does not need a polished story before the conversation can begin.",
   },
   {
     question: "What happens to my conversation?",
@@ -51,7 +47,7 @@ function CheckoutAction({
   if (!href) {
     return (
       <span className="rec-text inline-flex rounded-xl border border-[var(--recognition-user-border)] px-5 py-3 text-sm">
-        Checkout connection pending
+        Access connection pending
       </span>
     );
   }
@@ -69,6 +65,7 @@ function CheckoutAction({
 export default async function RecognitionPurchasePage(props: Props) {
   const searchParams = await props.searchParams;
   const user = await currentUser();
+
   if (user) {
     const emails = user.emailAddresses
       .map((item) => item.emailAddress.trim().toLowerCase())
@@ -87,8 +84,6 @@ export default async function RecognitionPurchasePage(props: Props) {
     process.env.RECOGNITION_SUBSCRIPTION_CHECKOUT_URL?.trim() || null,
     await requestAffiliateCode(),
   );
-  const launchPrice = formatRecognitionPrice(RECOGNITION_PRICING.launchPriceCents);
-  const regularPrice = formatRecognitionPrice(RECOGNITION_PRICING.regularPriceCents);
   const accessRequired = searchParams?.access === "required";
   const structuredData = [
     {
@@ -96,16 +91,9 @@ export default async function RecognitionPurchasePage(props: Props) {
       "@type": "Product",
       name: "Recognition",
       description:
-        "A private AI discussion journal for thoughts that need more than a journal page.",
+        "A private AI discussion journal for thoughts that keep circling and need somewhere to become clearer.",
       url: "https://recognition.oremea.com/",
       brand: { "@type": "Brand", name: "Oremea" },
-      offers: {
-        "@type": "Offer",
-        url: "https://whop.com/oremea/recognition/",
-        priceCurrency: RECOGNITION_PRICING.currency,
-        price: (RECOGNITION_PRICING.standardPriceCents / 100).toFixed(2),
-        availability: "https://schema.org/InStock",
-      },
     },
     {
       "@context": "https://schema.org",
@@ -146,65 +134,57 @@ export default async function RecognitionPurchasePage(props: Props) {
             Recognition · Help me see myself
           </p>
           <h1 className="rec-text mt-4 font-serif text-4xl font-light tracking-tight md:text-6xl">
-            A private AI discussion journal for thoughts that need more than a
-            journal page
+            Ever noticed how the same thought can keep following you around — even after you have written about it, replayed it, and told yourself to let it go?
           </h1>
           <p className="rec-text mt-6 max-w-2xl text-base leading-8">
-            Bring whatever has your attention. Recognition stays close to your
-            own words and one live thread. It can notice distinctions,
-            recurrence and unfinished thought without deciding what any of it
-            means for you.
+            You open the notes app. You write another page. You replay the conversation
+            one more time in the shower, in the car, while trying to sleep. You can explain
+            what happened. You can probably explain everybody else&apos;s side too. And somehow
+            the thought is still there.
+          </p>
+          <p className="rec-text mt-4 max-w-2xl text-base leading-8">
+            And maybe what you want is not advice. Not a five-step plan. Not somebody
+            deciding what the thought means before you have even finished saying it.
+            Maybe you just want somewhere private to keep talking until you can actually
+            hear what you are saying.
+          </p>
+          <p className="rec-text mt-4 max-w-2xl text-base leading-8">
+            That is Recognition. A private AI discussion journal for the thoughts that
+            need more than another lap around your own head.
           </p>
         </header>
 
         {accessRequired ? (
           <div className="rec-saved-panel rec-text mt-8 rounded-2xl border px-5 py-4 text-sm leading-7">
             No active Recognition access was found for an email on this signed-in
-            account. Use the same email at checkout, or sign in with the account
+            account. Use the same email when purchasing, or sign in with the account
             that already has Recognition.
           </div>
         ) : null}
 
-        <section className="rec-saved-panel mt-10 rounded-3xl border p-6 md:p-8">
-          <div className="flex flex-wrap items-end justify-between gap-5">
-            <div>
-              <p className="rec-accent text-xs uppercase tracking-[0.22em]">
-                Monthly access
-              </p>
-              <h2 className="rec-text mt-2 font-serif text-2xl">
-                Ongoing Recognition
-              </h2>
-            </div>
-            <div className="text-right">
-              {regularPrice !== launchPrice ? (
-                <p className="rec-text text-sm line-through">
-                  {regularPrice}/month
-                </p>
-              ) : null}
-              <p className="rec-accent mt-1 text-3xl">
-                {launchPrice}
-                <span className="rec-text ml-1 text-sm">/month</span>
-              </p>
-            </div>
+        <section className="rec-saved-panel mt-10 rounded-3xl border p-6 text-center md:p-8">
+          <p className="rec-accent text-xs uppercase tracking-[0.22em]">
+            Recognition access
+          </p>
+          <h2 className="rec-text mx-auto mt-2 max-w-2xl font-serif text-2xl md:text-3xl">
+            What if the thought did not need solving yet — just somewhere to become clearer?
+          </h2>
+          <div className="mx-auto mt-5 max-w-2xl space-y-4 text-left">
+            <p className="rec-text text-sm leading-7">
+              Recognition is there for the thought that is not finished simply because
+              a journal page ended. Come back when the wording changes, when something
+              new becomes noticeable, or when the same thing is still asking for your
+              attention days later.
+            </p>
+            <p className="rec-text text-sm leading-7">
+              You do not have to arrive with the right question. Bring the sentence you
+              keep repeating, the thing you cannot quite name, the irritation that feels
+              too small to explain, or the story you have told so many times that you can
+              no longer tell which part still matters.
+            </p>
           </div>
-
-          <p className="rec-text mt-5 text-sm leading-7">
-            There is no fixed question sequence and no required destination.
-            Return whenever a thought needs somewhere to continue. Earlier
-            participant-written evidence can return when it materially clarifies
-            recurrence, correction, contrast or a distinction you are holding.
-          </p>
-          <p className="rec-text mt-4 text-sm leading-7">
-            Your full private conversation remains available to you. You can
-            inspect or remove carried-forward memory, clear remembered excerpts,
-            or delete the conversation and start fresh without affecting access.
-          </p>
-
-          <div className="mt-7 flex flex-wrap items-center gap-4">
-            <CheckoutAction
-              href={subscriptionCheckout}
-              label={`Open Recognition · ${launchPrice}/month`}
-            />
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-4">
+            <CheckoutAction href={subscriptionCheckout} label="View Recognition access" />
             <Link
               href="/sign-in?redirect_url=%2Fbegin"
               className="rec-text text-sm underline underline-offset-4 transition hover:text-[var(--recognition-gold)]"
@@ -214,89 +194,160 @@ export default async function RecognitionPurchasePage(props: Props) {
           </div>
         </section>
 
-        <section className="mt-12">
+        <section className="mt-16 max-w-3xl">
           <p className="rec-accent text-xs uppercase tracking-[0.28em]">
-            After purchase
+            Sound familiar?
           </p>
-          <h2 className="rec-text mt-3 font-serif text-3xl">
-            Complete checkout. Then move straight into the conversation.
+          <h2 className="rec-text mt-3 font-serif text-3xl md:text-4xl">
+            You have thought about it so much that thinking harder is no longer helping
           </h2>
-          <p className="rec-text mt-4 max-w-2xl text-sm leading-7">
-            Use the same email to purchase and sign in to Recognition. That is
-            all that is needed to connect your access to your private conversation.
+          <div className="rec-text mt-6 space-y-5 text-sm leading-7 md:text-base md:leading-8">
+            <p>
+              There is a particular kind of thought that does not feel dramatic enough
+              to ask for help with, but refuses to become quiet. A sentence somebody said.
+              A decision that should feel settled. A reaction that does not quite make
+              sense. A pattern you can describe perfectly and still somehow cannot see
+              while you are inside it.
+            </p>
+            <p>
+              So you keep going back over it. You add context. You explain why you reacted
+              the way you did. You argue the other side. You tell yourself you are being
+              ridiculous. Then you decide you are definitely not being ridiculous. Then
+              you start the whole thing again from a slightly different angle.
+            </p>
+            <p>
+              The problem is not always that there is no insight. Sometimes there is so
+              much explanation that the one thing that matters is buried underneath it.
+            </p>
+          </div>
+        </section>
+
+        <section className="mt-16 max-w-3xl">
+          <p className="rec-accent text-xs uppercase tracking-[0.28em]">
+            That is the space Recognition is built for
+          </p>
+          <h2 className="rec-text mt-3 font-serif text-3xl md:text-4xl">
+            Not another voice rushing in to tell you what your own thought means
+          </h2>
+          <div className="rec-text mt-6 space-y-5 text-sm leading-7 md:text-base md:leading-8">
+            <p>
+              Sometimes advice is useful. Sometimes a plan is exactly what is needed.
+              Recognition is for the moment before that — when what would help most is
+              enough room for the thought to become visible without somebody else taking
+              authorship of it.
+            </p>
+            <p>
+              This is not therapy, diagnosis, coaching or crisis support. Recognition
+              does not need to turn what you say into a lesson, a label, a prescription,
+              or an action plan. It can stay with the conversation without trying to win
+              it, fix it, or finish it for you.
+            </p>
+            <p>
+              The aim is much simpler: to help you see yourself clearly enough that what
+              becomes visible still feels like yours when you leave.
+            </p>
+          </div>
+        </section>
+
+        <section className="mt-16">
+          <p className="rec-accent text-xs uppercase tracking-[0.28em]">
+            What working with Recognition feels like
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {[
               [
-                "1 · Purchase Recognition",
-                "Use the email you want attached to your Recognition access.",
+                "Bring the thought as it is",
+                "Messy is fine. Half a sentence is fine. Changing your mind halfway through is fine. Recognition begins with what is actually there, not with a polished version of it.",
               ],
               [
-                "2 · Sign in with that email",
-                "Return to Recognition and sign in with the same email you used when purchasing.",
+                "Stay long enough to hear yourself",
+                "There is no pressure to arrive at an answer quickly. The conversation can remain with what has your attention until something becomes clearer in your own language.",
               ],
               [
-                "3 · Begin where you are",
-                "As soon as your access is confirmed, Recognition opens into your continuing private conversation.",
+                "Keep the meaning yours",
+                "Recognition can support reflection without claiming authority over what your words mean, what matters most, or what you should do next.",
               ],
             ].map(([heading, copy]) => (
               <article
                 key={heading}
-                className="rec-user-bubble rounded-2xl border p-5"
+                className="rec-user-bubble rounded-2xl border p-5 text-center"
               >
                 <h3 className="rec-accent text-base">{heading}</h3>
-                <p className="rec-text mt-3 text-sm leading-7">{copy}</p>
+                <p className="rec-text mt-3 text-left text-sm leading-7">{copy}</p>
               </article>
             ))}
           </div>
         </section>
 
-        <section className="mt-12">
-          <h2 className="rec-text font-serif text-3xl">
-            How Recognition works
-          </h2>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {[
-              [
-                "Bring one live thought",
-                "Begin with whatever has your attention, in your own language.",
-              ],
-              [
-                "Stay with the evidence",
-                "Recognition can question an absolute or place two of your statements beside one another.",
-              ],
-              [
-                "Keep authorship",
-                "A conversation may end with one thing becoming visible. Meaning, choice and action remain yours.",
-              ],
-            ].map(([heading, copy]) => (
-              <article
-                key={heading}
-                className="rec-user-bubble rounded-2xl border p-5"
-              >
-                <h3 className="rec-accent text-base">{heading}</h3>
-                <p className="rec-text mt-3 text-sm leading-7">{copy}</p>
-              </article>
-            ))}
+        <section className="mt-16 grid gap-5 md:grid-cols-2">
+          <div className="rec-user-bubble rounded-3xl border p-6 text-center">
+            <p className="rec-accent text-xs uppercase tracking-[0.22em]">
+              Recognition may feel familiar if...
+            </p>
+            <ul className="rec-text mt-5 space-y-3 text-left text-sm leading-7">
+              <li>— you keep replaying the same conversation after everyone else has moved on</li>
+              <li>— journaling helps you write more but not necessarily see more</li>
+              <li>— you keep saying “I do not know why this is bothering me so much”</li>
+              <li>— you can explain the situation but still cannot find the snag</li>
+              <li>— you want reflection without being handed a diagnosis or solution</li>
+              <li>— you need somewhere private to change your mind without defending it</li>
+            </ul>
           </div>
-        </section>
 
-        <section className="mt-12 grid gap-5 md:grid-cols-2">
-          <div className="rec-user-bubble rounded-3xl border p-6">
-            <h2 className="rec-text font-serif text-2xl">
-              Recognition may fit when
-            </h2>
-            <ul className="rec-text mt-5 space-y-3 text-sm leading-7">
-              <li>— Writing alone keeps circling the same thought.</li>
-              <li>— A distinction is present but not yet clear.</li>
-              <li>— You want reflection without advice or a prescribed route.</li>
+          <div className="rec-user-bubble rounded-3xl border p-6 text-center">
+            <p className="rec-accent text-xs uppercase tracking-[0.22em]">
+              What Recognition does not do
+            </p>
+            <ul className="rec-text mt-5 space-y-3 text-left text-sm leading-7">
+              <li>— diagnose or treat you</li>
+              <li>— decide what your thoughts secretly mean</li>
+              <li>— turn every conversation into a task list</li>
+              <li>— tell you which decision to make</li>
+              <li>— require a fixed path or perfect question</li>
+              <li>— replace appropriate human or professional support when that is what is needed</li>
             </ul>
           </div>
         </section>
 
-        <section className="mt-12">
+        <section className="mt-16 max-w-3xl">
+          <p className="rec-accent text-xs uppercase tracking-[0.28em]">
+            And no, every conversation does not need a breakthrough
+          </p>
+          <h2 className="rec-text mt-3 font-serif text-3xl md:text-4xl">
+            Sometimes seeing one thing more clearly is enough for today
+          </h2>
+          <div className="rec-text mt-6 space-y-5 text-sm leading-7 md:text-base md:leading-8">
+            <p>
+              Not every thought contains a hidden revelation. Not every difficult feeling
+              needs to become a project. Some conversations end because one sentence became
+              clearer, one assumption loosened, or one distinction finally had enough room
+              to be noticed.
+            </p>
+            <p>
+              Recognition does not need to manufacture certainty to justify the
+              conversation. The point is not to force an answer. The point is to make
+              participation in your own thinking easier to see.
+            </p>
+          </div>
+        </section>
+
+        <section className="mt-16">
+          <p className="rec-accent text-xs uppercase tracking-[0.28em]">
+            After purchase
+          </p>
+          <h2 className="rec-text mt-3 font-serif text-3xl">
+            Purchase. Come back. Start with the thought already on your mind.
+          </h2>
+          <p className="rec-text mt-4 max-w-2xl text-sm leading-7">
+            Use the same email for your purchase and Oremea sign-in. As soon as access is
+            confirmed, return to Recognition and begin. No prompt preparation needed.
+            Bring the words you have now.
+          </p>
+        </section>
+
+        <section className="mt-16">
           <h2 className="rec-text font-serif text-3xl">
-            Recognition questions
+            Questions that usually come up before starting
           </h2>
           <div className="mt-6 space-y-4">
             {faq.map((item) => (
@@ -315,22 +366,20 @@ export default async function RecognitionPurchasePage(props: Props) {
           </div>
         </section>
 
-        <section className="rec-saved-panel mt-14 rounded-3xl border p-6 text-center md:p-8">
+        <section className="rec-saved-panel mt-16 rounded-3xl border p-6 text-center md:p-8">
           <p className="rec-accent text-xs uppercase tracking-[0.28em]">
-            Begin where you are
+            Maybe the thought does not need another lap
           </p>
           <h2 className="rec-text mx-auto mt-3 max-w-2xl font-serif text-3xl md:text-4xl">
-            If the thought is still circling, give it somewhere to continue.
+            Maybe it needs somewhere private to become clear enough to recognise
           </h2>
-          <p className="rec-text mx-auto mt-4 max-w-2xl text-sm leading-7">
-            Recognition does not need a polished question or a finished story.
-            Bring the words you have now. The conversation can begin there.
+          <p className="rec-text mx-auto mt-4 max-w-2xl text-left text-sm leading-7">
+            Recognition does not need a polished question or a finished story. Bring the
+            words that are already circling. If there is something there to see, the
+            conversation can make room for it without deciding for you what it has to mean.
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-4">
-            <CheckoutAction
-              href={subscriptionCheckout}
-              label={`Open Recognition · ${launchPrice}/month`}
-            />
+            <CheckoutAction href={subscriptionCheckout} label="View Recognition access" />
             <Link
               href="/sign-in?redirect_url=%2Fbegin"
               className="rec-text text-sm underline underline-offset-4 transition hover:text-[var(--recognition-gold)]"
@@ -340,10 +389,7 @@ export default async function RecognitionPurchasePage(props: Props) {
           </div>
         </section>
 
-        <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
-          <p className="rec-text leading-7">
-            Prices are shown and charged in US dollars
-          </p>
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm">
           <Link
             href="https://recognition.oremea.com/archive"
             className="rec-text underline underline-offset-4 transition hover:text-[var(--recognition-gold)]"
