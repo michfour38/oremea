@@ -39,6 +39,24 @@ async function main() {
     assert.ok("diagnostics" in denied);
     assert.deepEqual(denied.diagnostics?.[0], {stage:"payment",reason:"http_error",status:403,missingScope:"member:email:read"});
     assert.doesNotMatch(JSON.stringify(denied), /private@example|pay_fixture|biz_fixture/);
+    globalThis.fetch = async (url) => String(url).includes("/fees?")
+      ? Response.json({data:[{amount:2.87,currency:"usd",type:"payment_processing_percentage_fee"}],page_info:{has_next_page:false}})
+      : Response.json({error:{message:"Not authorized for member\\:email\\:read scope"}}, {status:403});
+    const partial = await observeWhopVisitEconomics({includeDiagnostics:true});
+    assert.equal(partial.availability,"partial");
+    assert.equal(partial.observedFeePayments,1);
+    assert.equal(partial.providerGrossCents,null);
+    assert.equal(partial.feeBreakdownCents?.payment_processing_percentage_fee,287);
+    assert.ok("diagnostics" in partial);
+    assert.equal(partial.diagnostics?.[0].missingScope,"member:email:read");
+    globalThis.fetch = async (url) => String(url).includes("/fees?")
+      ? Response.json({error:{message:"Forbidden"}}, {status:403})
+      : Response.json({id:"pay_fixture",company:{id:"biz_fixture"},currency:"usd",amount_after_fees:47.13,total:50});
+    const paymentOnly = await observeWhopVisitEconomics();
+    assert.equal(paymentOnly.availability,"partial");
+    assert.equal(paymentOnly.providerGrossCents,5000);
+    assert.equal(paymentOnly.feeBreakdownCents,null);
+    assert.equal(paymentOnly.finalRetainedRevenueCents,null);
     globalThis.fetch = async () => Response.json({});
     const malformed = await observeWhopVisitEconomics({includeDiagnostics:true});
     assert.ok("diagnostics" in malformed);
