@@ -26,6 +26,13 @@ export default async function ResonanceCommerceAdminPage({
     getResonanceWhopProvisioningStatus(),
     getCreatorStarterWhopProvisioningStatus(),
   ]);
+  const planLabels = new Map<string, string>();
+  for (const plan of status.plans) {
+    if (plan.id) planLabels.set(plan.id, plan.label);
+  }
+  if (creatorStarter.planId) {
+    planLabels.set(creatorStarter.planId, "Creator Resonance Starter");
+  }
 
   return (
     <SiteShell>
@@ -117,14 +124,51 @@ export default async function ResonanceCommerceAdminPage({
             </table>
           </div>
           <div className="mt-5 overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <caption className="mb-2 text-left">Latest ten orders — identifiers and settlement state only</caption>
-              <thead><tr><th>Order</th><th>Status</th><th>Visits / unused</th><th>Checkout</th><th>Payment</th></tr></thead>
-              <tbody>{status.recentOrders.map((order) => (
-                <tr key={order.id}><td className="py-2">{order.id}</td><td>{order.status}</td><td>{order.quantity} / {order.remaining_quantity}</td><td>{order.whop_checkout_id ?? "—"}</td><td>{order.whop_payment_id ?? "—"}</td></tr>
-              ))}</tbody>
-            </table>
-          </div>
+  <table className="w-full min-w-[1180px] text-left text-xs">
+    <caption className="mb-2 text-left">
+      Latest ten orders — owner-only lifecycle trace, without buyer email
+    </caption>
+    <thead>
+      <tr>
+        <th>Created / paid</th>
+        <th>Order / parent</th>
+        <th>Lane / amount</th>
+        <th>Requested referral</th>
+        <th>Status</th>
+        <th>Visits</th>
+        <th>Checkout</th>
+        <th>Payment</th>
+      </tr>
+    </thead>
+    <tbody>{status.recentOrders.map((order) => (
+      <tr key={order.id} className="align-top">
+        <td className="py-2 pr-4">
+          <div>{traceTime(order.created_at)}</div>
+          <div className="mt-1 text-zinc-600">Paid {traceTime(order.paid_at)}</div>
+        </td>
+        <td className="py-2 pr-4">
+          <div>{order.id}</div>
+          <div className="mt-1 text-zinc-600">Parent {order.parent_id ?? "—"}</div>
+        </td>
+        <td className="py-2 pr-4">
+          <div>{planLabels.get(order.whop_plan_id) ?? "Unknown plan"}</div>
+          <div className="mt-1 text-zinc-500">{order.kind} · {formatOremeaPrice(order.amount_cents)}</div>
+          <div className="mt-1 text-zinc-600">{order.whop_plan_id}</div>
+        </td>
+        <td className="py-2 pr-4">{order.affiliate_code ?? "Direct / none"}</td>
+        <td className="py-2 pr-4">{order.status}</td>
+        <td className="py-2 pr-4">
+          {order.quantity} bought · {order._count.redemptions} redeemed · {order.remaining_quantity} unused
+        </td>
+        <td className="py-2 pr-4">{order.whop_checkout_id ?? "—"}</td>
+        <td className="py-2">{order.whop_payment_id ?? "—"}</td>
+      </tr>
+    ))}</tbody>
+  </table>
+  <p className="mt-3 text-xs leading-5 text-zinc-600">
+    Requested referral is the code Oremea carried into checkout. Whop remains the source of truth for actual affiliate attribution and commission.
+  </p>
+</div>
         </div>
 
         <div className="mt-8 rounded-[2rem] border border-white/10 bg-black/40 p-6 md:p-8">
@@ -154,6 +198,11 @@ export default async function ResonanceCommerceAdminPage({
       </section>
     </SiteShell>
   );
+}
+
+function traceTime(value: Date | null) {
+  if (!value) return "—";
+  return value.toISOString().replace("T", " ").replace(".000Z", "Z");
 }
 
 function Status({
