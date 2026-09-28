@@ -5,22 +5,16 @@ import Link from "next/link";
 
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteNav } from "@/components/site/site-nav";
-import { purchaseCreatorStarter } from "@/app/(member)/resonance/visits/actions";
-import { CREATOR_ACQUISITION_POLICY } from "@/src/lib/oremea/creator-acquisition-economics";
-import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
-import {
-  creatorStarterEligibility,
-} from "@/src/lib/resonance/visit-orders";
-import {
-  visitCheckoutAvailableFor,
-} from "@/src/lib/resonance/visit-access";
+import { purchaseVisits } from "@/app/(member)/resonance/visits/actions";
+import { OREMEA_PRICING, formatOremeaPrice } from "@/src/lib/oremea/pricing";
+import { visitCheckoutAvailableFor } from "@/src/lib/resonance/visit-access";
 import { visitCheckoutEnabled } from "@/src/lib/resonance/visit-offers";
 import { requestAffiliateCode } from "@/src/lib/whop/affiliate-request";
 
 export const dynamic = "force-dynamic";
 
 const starterPrice = formatOremeaPrice(
-  CREATOR_ACQUISITION_POLICY.customerPriceCents,
+  OREMEA_PRICING.resonance.visitPricesCents[1],
 );
 
 export default async function CreatorResonancePage({
@@ -34,11 +28,8 @@ export default async function CreatorResonancePage({
   const checkoutReady = userId
     ? await visitCheckoutAvailableFor(userId)
     : visitCheckoutEnabled();
-  const eligibility = userId
-    ? await creatorStarterEligibility(userId)
-    : { eligible: true as const, reason: null };
 
-  const canBuy = Boolean(referral && checkoutReady && eligibility.eligible);
+  const canBuy = Boolean(referral && checkoutReady);
   const signInHref = `/sign-up?redirect_url=${encodeURIComponent("/resonance/creator")}`;
 
   return (
@@ -85,27 +76,16 @@ export default async function CreatorResonancePage({
 
             {!referral ? (
               <p className="res-text-primary mt-5 text-sm leading-7">
-                This page needs the creator&apos;s original invitation link before the starter can open.
+                This page needs the creator&apos;s original invitation link before checkout can open.
               </p>
             ) : !checkoutReady ? (
               <p className="res-text-primary mt-5 text-sm leading-7">
                 This invitation is not open for checkout yet.
               </p>
-            ) : !eligibility.eligible ? (
-              <div className="mt-5">
-                <p className="res-text-primary text-sm leading-7">
-                  The creator starter is reserved for a first Oremea purchase. Your existing access stays unchanged.
-                </p>
-                <Link
-                  href="/resonance/visits"
-                  className="res-action-soft mt-5 inline-flex rounded-xl border px-6 py-3 text-sm font-medium transition"
-                >
-                  See Resonance visit options
-                </Link>
-              </div>
             ) : userId ? (
-              <form action={purchaseCreatorStarter} className="mt-6">
+              <form action={purchaseVisits} className="mt-6">
                 <input type="hidden" name="requestId" value={randomUUID()} />
+                <input type="hidden" name="quantity" value="1" />
                 <button
                   type="submit"
                   disabled={!canBuy}
@@ -124,7 +104,7 @@ export default async function CreatorResonancePage({
             )}
 
             <p className="res-text-secondary mt-4 text-xs leading-6">
-              One-time purchase. No subscription is created by this starter.
+              One-time purchase. Creator referrals use the same Resonance price as every other customer.
             </p>
           </div>
         </header>
@@ -181,8 +161,9 @@ export default async function CreatorResonancePage({
           </p>
 
           {userId && canBuy ? (
-            <form action={purchaseCreatorStarter} className="mx-auto mt-8 max-w-md">
+            <form action={purchaseVisits} className="mx-auto mt-8 max-w-md">
               <input type="hidden" name="requestId" value={randomUUID()} />
+              <input type="hidden" name="quantity" value="1" />
               <button
                 type="submit"
                 className="res-action-soft inline-flex w-full items-center justify-center rounded-xl border px-6 py-3 text-sm font-medium transition"
