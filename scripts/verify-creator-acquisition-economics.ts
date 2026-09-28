@@ -110,12 +110,17 @@ assert.match(provisionAction, /provisionCreatorStarterWhopCatalog\(\)/);
 
 // Creator traffic gets one first decision, not the normal package chooser, and
 // the acquisition page itself is public so a creator can introduce Oremea before
-// account creation.
+// account creation. The creator acquisition page IS the low-ticket funnel, so it
+// shows the centrally sourced offer price before checkout rather than hiding it
+// until after account creation.
 assert.match(creatorLanding, /One Resonance visit/);
 assert.match(creatorLanding, /Begin one Resonance visit/);
 assert.match(creatorLanding, /one-time purchase/i);
 assert.match(creatorLanding, /creatorStarterEligibility/);
 assert.match(creatorLanding, /requestAffiliateCode/);
+assert.match(creatorLanding, /CREATOR_ACQUISITION_POLICY\.customerPriceCents/);
+assert.match(creatorLanding, /formatOremeaPrice/);
+assert.match(creatorLanding, /\{starterPrice\}/);
 assert.doesNotMatch(creatorLanding, /3 visits/i);
 assert.doesNotMatch(creatorLanding, /4 visits/i);
 assert.doesNotMatch(creatorLanding, /Complete Ten/i);
