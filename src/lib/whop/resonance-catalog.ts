@@ -18,7 +18,9 @@ const PLAN_MARKER_PREFIX = "oremea:resonance-visits:v1:";
 const REQUIRED_WEBHOOK_EVENTS = [
   "payment.succeeded",
   "payment.failed",
-  "payment.canceled",
+  // Whop's current v1 webhook event enum does not expose
+  // payment.canceled. Keep the webhook route tolerant of that legacy/
+  // unexpected payload, but never require an unsupported provider event.
   "refund.created",
   "refund.updated",
 ] as const;
