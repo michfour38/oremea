@@ -49,7 +49,7 @@
     "test:product-reset": "tsx scripts/verify-product-test-reset-contract.ts",
     "test:member-nav-product": "tsx scripts/verify-member-nav-product-contract.ts",
     "test:launch": "npm run test:central-pricing && npm run test:production-migrations && npm run test:backend-hygiene && npm run test:superseded-boundary && npm run test:participant-sovereignty && npm run test:ai-resilience && npm run test:resonance-content && npm run test:reviews && npm run test:public-product-routing && npm run test:recognition-pricing && npm run test:recognition-funnel && npm run test:provider-neutral-funnels && npm run test:recognition-conversation && npm run test:commerce-routing && npm run test:public-pricing && npm run test:compass && npm run test:current && npm run test:dawn-truth && npm run test:product-marketing && npm run test:product-reset && npm run test:member-nav-product && npm run test:affiliates",
-    "test:affiliates": "tsx scripts/verify-affiliate-contract.ts && tsx scripts/verify-affiliate-economics-observer.ts"
+    "test:affiliates": "tsx scripts/verify-affiliate-contract.ts && tsx scripts/verify-affiliate-economics-observer.ts && tsx scripts/verify-creator-acquisition-economics.ts"
   },
   "prisma": {
     "schema": "./prisma",
