@@ -125,13 +125,13 @@ export const OREMEA_PUBLIC_PRODUCT_MARKETING = {
   "resonance-pulse": {
     id: "resonance-pulse",
     category: "Resonance room 5",
-    headline: "Stay with relational pull",
+    headline: "Let desire meet reality",
     buyerDecision:
-      "What creates attraction, aliveness and movement in connection for me?",
+      "Wanting something does not tell you what to do with it.",
     description:
-      "Pulse helps you stay close to desire, attraction, aliveness and relational rhythm as you experience them, without converting feeling into a verdict.",
+      "Attraction can arrive faster than certainty. Pulse gives desire enough room for time, information and real contact to catch up—so what draws you in, what imagination adds, what changes with pace and what remains can be seen without turning the feeling into a verdict.",
     chooseWhen:
-      "Choose Pulse when pull, chemistry or aliveness is present and you want to observe it without rushing its meaning.",
+      "Enter Pulse when someone or something has your attention and you want to stay with the aliveness without rushing its meaning. Pulse does not decide compatibility, destiny, identity or hidden motive; it helps desire meet reality before choice.",
     limits: [
       "No compatibility verdict.",
       "No destiny claim.",

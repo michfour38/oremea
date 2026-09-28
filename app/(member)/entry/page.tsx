@@ -67,12 +67,12 @@ const ROOM_DETAILS: Record<number, RoomDetail> = {
   },
   5: {
     label: "Attraction",
-    question: "What draws me toward someone?",
+    question: "Wanting something does not tell you what to do with it.",
     description:
-      "Explore what catches your attention, how attraction registers, what deepens it, what imagination adds, how momentum develops, and what you are actually wanting when desire is present.",
+      "A pull can be immediate. Meaning takes longer. Interest can grow, fade, sharpen or change once imagination meets information and real contact. Pulse gives desire somewhere to stay alive long enough to notice what is actually drawing you in, what you hope it will add, what becomes clearer when the pace changes, and whether movement needs action, more information, more time—or nothing yet. Desire can be real without becoming a verdict.",
     chooseWhen:
-      "Attraction, chemistry, desire, being wanted, fascination, or relational pull has your attention.",
-    comparison: "What creates movement, desire, or pull in me?",
+      "someone or something has your attention and you want to stay close to the wanting without either rushing toward it or talking yourself out of it. Pulse does not decide compatibility, destiny, identity or hidden meaning. It helps desire meet reality before choice.",
+    comparison: "Desire can be real before its meaning—or its next move—is clear.",
   },
   6: {
     label: "Protection",
