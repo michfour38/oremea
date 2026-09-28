@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { SiteShell } from "@/components/site/site-shell";
 import { requireAdminPage } from "@/lib/auth/require-admin";
+import { getCreatorStarterWhopProvisioningStatus } from "@/src/lib/whop/creator-starter-catalog";
 import { getResonanceWhopProvisioningStatus } from "@/src/lib/whop/resonance-catalog";
 import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
 
@@ -21,7 +22,10 @@ export default async function ResonanceCommerceAdminPage({
 }) {
   await requireAdminPage();
   const query = await searchParams;
-  const status = await getResonanceWhopProvisioningStatus();
+  const [status, creatorStarter] = await Promise.all([
+    getResonanceWhopProvisioningStatus(),
+    getCreatorStarterWhopProvisioningStatus(),
+  ]);
 
   return (
     <SiteShell>
@@ -40,15 +44,17 @@ export default async function ResonanceCommerceAdminPage({
           Visit-credit checkout
         </h1>
         <p className="mt-5 max-w-2xl text-sm leading-7 text-zinc-400">
-          Private setup for the Resonance visit product, fixed-price plans and
-          the existing Oremea Whop webhook. Provisioning does not enable public
-          visit checkout.
+          Private setup for the Resonance visit product, fixed-price plans, the
+          isolated Creator Resonance Starter, and the existing Oremea Whop
+          webhook. Provisioning does not enable public checkout or approve a
+          creator commission.
         </p>
 
         {query.status === "ready" ? (
           <p className="mt-6 rounded-2xl border border-emerald-300/20 bg-emerald-300/5 p-4 text-sm text-emerald-100">
-            Resonance commerce is provisioned. Public checkout remains controlled
-            separately by its feature flags.
+            Resonance commerce and the isolated creator starter are provisioned.
+            Public checkout and named creator commission remain controlled
+            separately.
           </p>
         ) : null}
         {query.status === "error" ? (
@@ -68,11 +74,16 @@ export default async function ResonanceCommerceAdminPage({
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
           <Status label="Whop API key" ready={status.apiKeyConfigured} />
-          <Status label="Stored catalog" ready={status.catalogConfigured} />
+          <Status label="Stored visit catalog" ready={status.catalogConfigured} />
           <Status
-            label="Fixed-price plans"
+            label="Fixed-price visit plans"
             ready={status.planCount === 11}
             detail={status.catalogConfigured ? `${status.planCount} / 11` : "Not provisioned"}
+          />
+          <Status
+            label="Creator starter"
+            ready={creatorStarter.configured}
+            detail={creatorStarter.configured ? `${formatOremeaPrice(creatorStarter.amountCents)} · isolated product` : "Not provisioned"}
           />
           <Status
             label="Existing webhook"
@@ -83,7 +94,12 @@ export default async function ResonanceCommerceAdminPage({
 
         {status.productId ? (
           <p className="mt-5 text-xs text-zinc-600">
-            Whop product: {status.productId}
+            Resonance visits product: {status.productId}
+          </p>
+        ) : null}
+        {creatorStarter.productId ? (
+          <p className="mt-2 text-xs text-zinc-600">
+            Creator starter product: {creatorStarter.productId}
           </p>
         ) : null}
 
@@ -118,8 +134,10 @@ export default async function ResonanceCommerceAdminPage({
           <p className="mt-3 text-sm leading-7 text-zinc-400">
             This reuses Oremea-marked resources when they already exist, creates
             only missing hidden resources, verifies every approved amount and
-            one-time term, and extends the existing webhook. It fails closed on
-            mismatches.
+            one-time term, and extends the existing webhook. The creator starter
+            is a separate hidden product so its acquisition economics cannot
+            leak into the normal Resonance backend. Provisioning fails closed on
+            mismatches and never assigns an individual creator rate.
           </p>
 
           <ProvisionForm enabled={status.apiKeyConfigured}>
@@ -156,7 +174,6 @@ function Status({
   );
 }
 
-
 function provisioningFailureMessage(
   stage?: string,
   code?: string,
@@ -164,8 +181,8 @@ function provisioningFailureMessage(
 ) {
   const stageLabel: Record<string, string> = {
     account: "reading the Whop company attached to this API key",
-    product: "finding or creating the hidden Resonance Visits product",
-    plans: "finding, creating, or validating the fixed-price plans",
+    product: "finding or creating a hidden Resonance commerce product",
+    plans: "finding, creating, or validating a fixed-price plan",
     webhook: "finding or updating the existing Oremea Whop webhook",
     storage: "saving the verified Whop catalog in Oremea",
   };
