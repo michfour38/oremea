@@ -164,7 +164,7 @@ export default async function RecognitionPurchasePage(props: Props) {
 
         <section className="rec-saved-panel mt-10 rounded-3xl border p-6 text-center md:p-8">
           <p className="rec-accent text-xs uppercase tracking-[0.22em]">
-            Recognition access
+            Ongoing Recognition
           </p>
           <h2 className="rec-text mx-auto mt-2 max-w-2xl font-serif text-2xl md:text-3xl">
             What if the thought did not need solving yet — just somewhere to become clearer?
