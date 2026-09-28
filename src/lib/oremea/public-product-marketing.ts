@@ -75,9 +75,9 @@ export const OREMEA_PUBLIC_PRODUCT_MARKETING = {
     buyerDecision:
       "When the same kind of interaction keeps showing up, seeing your part can change what is possible without making the whole thing yours to carry.",
     description:
-      "The people can change while a familiar sequence keeps returning. You may find yourself smoothing, fixing, explaining, leading, waiting, withdrawing, or taking on more than was asked. Mirror slows the interaction down enough to separate what happened, what you made it mean, what you did next and what followed—so recurrence becomes evidence rather than a label.",
+      "The people can change while a familiar sequence keeps returning. You may find yourself smoothing, fixing, explaining, leading, waiting, withdrawing, or taking on more than was asked. Mirror slows the interaction down enough to separate what happened from the story that formed around it, what you did next and what followed. A pattern can become visible without becoming an identity.",
     chooseWhen:
-      "Enter Mirror when a familiar relational difficulty seems to keep returning and you want to locate the part that is genuinely yours to notice. It looks for where a different move may actually be available without inventing a motive or turning the whole dynamic into your responsibility.",
+      "Enter Mirror when a familiar dynamic keeps returning and you want to see what belongs to your participation—and what does not. It looks for the places where another move may actually be available without diagnosing you, inventing someone else’s motive, or making the whole dynamic yours to carry.",
     limits: [
       "No personality label or diagnosis.",
       "No invented motive.",

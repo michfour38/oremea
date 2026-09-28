@@ -42,9 +42,9 @@ const ROOM_DETAILS: Record<number, RoomDetail> = {
     label: "Patterns",
     question: "Different relationship. Familiar pattern.",
     description:
-      "Sometimes the people change but a familiar sequence does not. You may find yourself smoothing, fixing, explaining, leading, waiting, withdrawing, or carrying something before anyone has asked you to. Mirror slows recurring interactions down enough to separate what happened from what you decided it meant, what you did next, and what tended to follow. The point is not to make everything your responsibility. It is to make your own participation visible enough that choice can appear where habit used to take over.",
+      "Sometimes the people change but a familiar sequence does not. You may find yourself smoothing, fixing, explaining, leading, waiting, withdrawing, or carrying something before anyone has asked you to. Mirror slows recurring interactions down enough to separate what happened from the story that formed around it, what you did next, and what tended to follow. A pattern can become visible without becoming an identity—and your own participation can become clear without making the whole dynamic your responsibility.",
     chooseWhen:
-      "the same kind of interaction keeps returning and you want to see the part that is genuinely yours without absorbing the other person’s part. Mirror stays with evidence, exceptions and choice—not a personality label or a story about what is wrong with you.",
+      "a familiar dynamic keeps returning and you want to see what belongs to your participation—and what does not. Mirror looks for the places where another move may actually be available without diagnosing you, inventing someone else’s motive, or making the whole dynamic yours to carry.",
     comparison: "Different people. Familiar sequences. Notice what keeps travelling with you.",
   },
   3: {
