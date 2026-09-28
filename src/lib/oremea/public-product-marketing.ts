@@ -147,7 +147,7 @@ export const OREMEA_PUBLIC_PRODUCT_MARKETING = {
     buyerDecision:
       "A strong reaction can make sense and still take over more of the moment than you want it to.",
     description:
-      "Shadow slows a strong or familiar reaction down enough to see what changed, what it seems to be responding to, what it helps with, what it costs, what information is actually available now and where another choice may be available. It stays with the evidence you bring rather than explaining the reaction with a hidden wound or theory about your psyche.",
+      "Shadow slows a strong or familiar reaction down enough to see what changed, what it seems to be responding to, what the response helped with, what it cost, what information is actually available now and where another choice may be available. It stays with the evidence you bring rather than explaining the reaction with a hidden wound or theory about your psyche.",
     chooseWhen:
       "Enter Shadow when a reaction feels stronger, faster or more familiar than you want it to be. The room helps you examine usefulness, cost and present choice without assuming trauma, defence, projection or a hidden cause.",
     limits: [
