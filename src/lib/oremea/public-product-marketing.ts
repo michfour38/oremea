@@ -71,13 +71,13 @@ export const OREMEA_PUBLIC_PRODUCT_MARKETING = {
   "resonance-mirror": {
     id: "resonance-mirror",
     category: "Resonance room 2",
-    headline: "Notice what you bring",
+    headline: "Different relationship. Familiar pattern.",
     buyerDecision:
-      "What do I repeatedly bring into relationships, and what tends to happen next?",
+      "When the same kind of interaction keeps showing up, seeing your part can change what is possible without making the whole thing yours to carry.",
     description:
-      "Mirror helps you observe recurring roles, responses and participation in relationships. It places your own evidence beside itself without declaring the hidden meaning.",
+      "The people can change while a familiar sequence keeps returning. You may find yourself smoothing, fixing, explaining, leading, waiting, withdrawing, or taking on more than was asked. Mirror slows the interaction down enough to separate what happened, what you made it mean, what you did next and what followed—so recurrence becomes evidence rather than a label.",
     chooseWhen:
-      "Choose Mirror when a relational pattern is visible but still difficult to describe clearly.",
+      "Enter Mirror when a familiar relational difficulty seems to keep returning and you want to locate the part that is genuinely yours to notice. It looks for where a different move may actually be available without inventing a motive or turning the whole dynamic into your responsibility.",
     limits: [
       "No personality label or diagnosis.",
       "No invented motive.",

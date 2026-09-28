@@ -40,12 +40,12 @@ const ROOM_DETAILS: Record<number, RoomDetail> = {
   },
   2: {
     label: "Patterns",
-    question: "How do I show up in relationship?",
+    question: "Different relationship. Familiar pattern.",
     description:
-      "Look across different relationships for the roles, expectations, sequences, behaviours, and effects that repeatedly travel with you. See what is recognisably yours without requiring every relationship to have the same explanation.",
+      "Sometimes the people change but a familiar sequence does not. You may find yourself smoothing, fixing, explaining, leading, waiting, withdrawing, or carrying something before anyone has asked you to. Mirror slows recurring interactions down enough to separate what happened from what you decided it meant, what you did next, and what tended to follow. The point is not to make everything your responsibility. It is to make your own participation visible enough that choice can appear where habit used to take over.",
     chooseWhen:
-      "Something keeps happening and you want to understand your own recurring participation.",
-    comparison: "What do I repeatedly bring into relationships?",
+      "the same kind of interaction keeps returning and you want to see the part that is genuinely yours without absorbing the other person’s part. Mirror stays with evidence, exceptions and choice—not a personality label or a story about what is wrong with you.",
+    comparison: "Different people. Familiar sequences. Notice what keeps travelling with you.",
   },
   3: {
     label: "Nourishment",
