@@ -120,7 +120,11 @@ assert.match(roomById["resonance-forge"].buyerDecision, /what changes afterward/
 assert.match(roomById["resonance-forge"].description, /what belongs to each person/i);
 assert.match(roomById["resonance-forge"].chooseWhen, /if repair is not available/i);
 assert.doesNotMatch(roomById["resonance-forge"].description, /forgive|reconcile|their motive|their intention/i);
-assert.match(roomById["resonance-vision"].description, /rhythms, responsibilities, decisions, resources and tests/i);
+assert.match(roomById["resonance-vision"].headline, /ordinary Tuesday/i);
+assert.match(roomById["resonance-vision"].buyerDecision, /what that future would actually ask/i);
+assert.match(roomById["resonance-vision"].description, /ordinary days, rhythms, responsibilities, decisions, resources/i);
+assert.match(roomById["resonance-vision"].chooseWhen, /same life in practice/i);
+assert.doesNotMatch(roomById["resonance-vision"].description, /manifest|destiny|guarantee|predict/i);
 assert.match(roomById["resonance-gathering"].description, /allowing unresolved or separate material/i);
 assert.match(roomById["resonance-becoming"].description, /low-capacity versions and return after a lapse/i);
 

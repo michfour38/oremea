@@ -94,12 +94,12 @@ const ROOM_DETAILS: Record<number, RoomDetail> = {
   },
   8: {
     label: "Creation",
-    question: "What relationship structure am I actually choosing to participate in?",
+    question: "A future has to survive ordinary life.",
     description:
-      "Make the architecture of relationship visible: structure, agreement, commitment, access, responsibility, participation, and how agreements change when reality changes. Separate what is genuinely agreed from what has been assumed.",
+      "A shared future is easy to love while it is still made of feeling, possibility and someday. Vision brings it down into the ordinary: how days actually run, what people can count on, who owns which responsibilities, how decisions get made, what resources the life requires, what happens when someone cannot do their part, and which assumptions still need a real-world test. The point is not to make the future smaller. It is to make it specific enough to discover whether the life you are imagining can actually hold the people living it.",
     chooseWhen:
-      "You are thinking about what kind of relationship you actually want to create or participate in.",
-    comparison: "What relationship structure are we actually creating?",
+      "you can picture a future but the practical shape is still blurry—or when two people can agree on the dream without yet knowing whether they mean the same daily life. Vision does not predict, manifest or promise the future. It helps turn imagination into a design concrete enough to examine and test.",
+    comparison: "Make the future specific enough to test.",
   },
   9: {
     label: "Integration",
