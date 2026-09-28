@@ -1,0 +1,98 @@
+name: Becoming KLT copy patch
+
+on:
+  push:
+    branches:
+      - copy/resonance-becoming-klt-2026-09-28
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: copy/resonance-becoming-klt-2026-09-28
+      - name: Apply Becoming copy
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          entry = Path('app/(member)/entry/page.tsx')
+          text = entry.read_text()
+          replacement = "\n".join([
+              '  10: {',
+              '    label: "Embodiment",',
+              '    question: "The practice has to survive the day the ideal version of you does not show up.",',
+              '    description:',
+              '      "Understanding can feel complete long before it has changed an ordinary day. Becoming brings one chosen piece down into visible practice: something small enough to repeat, supported by the environment around it, adjustable when capacity drops, and clear enough to return to after a lapse. A missed day is information about a missed day—not proof of laziness, failure or who you are. The room is interested in what can keep becoming real through the way you actually live.",',
+              '    chooseWhen:',
+              '      "you understand something clearly but want to see it become repeatable in real life—or when a practice keeps disappearing because it only works under ideal conditions. Becoming helps make the action keepable, including a lower-capacity version and a way back after interruption, without streaks, surveillance or moral scoring.",',
+              '    comparison: "Make it small enough to live. Make returning part of the practice.",',
+              '  },',
+          ])
+          text, count = re.subn(r'  10: \{.*?\n  \},\n\};', replacement + '\n};', text, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit('Becoming entry copy block not found')
+          entry.write_text(text)
+
+          marketing = Path('src/lib/oremea/public-product-marketing.ts')
+          text = marketing.read_text()
+          replacement = "\n".join([
+              '  "resonance-becoming": {',
+              '    id: "resonance-becoming",',
+              '    category: "Resonance room 10",',
+              '    headline: "Can it survive a bad day?",',
+              '    buyerDecision:',
+              '      "Insight changes less than a practice you can still return to when life is busy, energy is low or yesterday did not go to plan.",',
+              '    description:',
+              '      "Becoming turns one chosen understanding into visible, repeatable practice. It works with realistic frequency, environmental support, a lower-capacity version, keepable agreements and return after a lapse—so continuation is designed for real life rather than an ideal streak.",',
+              '    chooseWhen:',
+              '      "Enter Becoming when you know what you mean but want to see it become something you actually live. The room helps make the practice small enough to continue and easy enough to resume without turning a missed day into a moral verdict or a reason to start over from zero.",',
+              '    limits: [',
+              '      "No streak, surveillance or accountability theatre.",',
+              '      "No moral failure attached to a lapse.",',
+              '      "No requirement to return to the product.",',
+              '    ],',
+              '    public: true,',
+              '    weekNumber: 10,',
+              '  },',
+              '  "the-current": {',
+          ])
+          text, count = re.subn(r'  "resonance-becoming": \{.*?\n  \},\n  "the-current": \{', replacement, text, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit('Becoming public marketing block not found')
+          marketing.write_text(text)
+
+          contract = Path('scripts/verify-product-marketing-contract.ts')
+          text = contract.read_text()
+          old = 'assert.match(roomById["resonance-becoming"].description, /low-capacity versions and return after a lapse/i);'
+          new = "\n".join([
+              'assert.match(roomById["resonance-becoming"].headline, /survive a bad day/i);',
+              'assert.match(roomById["resonance-becoming"].buyerDecision, /still return to/i);',
+              'assert.match(roomById["resonance-becoming"].description, /lower-capacity version/i);',
+              'assert.match(roomById["resonance-becoming"].description, /return after a lapse/i);',
+              'assert.match(roomById["resonance-becoming"].chooseWhen, /missed day into a moral verdict/i);',
+              'assert.doesNotMatch(roomById["resonance-becoming"].description, /discipline|willpower|lazy|failure|streak/i);',
+          ])
+          if old not in text:
+              raise SystemExit('Becoming marketing contract anchor not found')
+          contract.write_text(text.replace(old, new, 1))
+          PY
+      - name: Verify Becoming marketing and types
+        run: |
+          npm ci
+          npm run test:product-marketing
+          npm run typecheck
+      - name: Commit tested Becoming copy
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/becoming-klt-patch.yml
+          git add 'app/(member)/entry/page.tsx' src/lib/oremea/public-product-marketing.ts scripts/verify-product-marketing-contract.ts
+          git commit -m "Rewrite Becoming as KLT conversion copy"
+          git push origin HEAD:copy/resonance-becoming-klt-2026-09-28
