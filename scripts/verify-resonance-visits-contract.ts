@@ -202,6 +202,14 @@ async function main() {
   assert.match(adminCommerce, /does not enable public/);
   assert.match(adminCommerce, /Stage:/);
   assert.match(adminCommerce, /Whop HTTP/);
+  assert.match(adminCommerce, /owner-only settlement and attribution trace/i);
+  assert.match(adminCommerce, /Referral requested/);
+  assert.match(adminCommerce, /Whop’s affiliate records remain authoritative/);
+  const catalogSource = readFileSync("src/lib/whop/resonance-catalog.ts", "utf8");
+  for (const field of ["amount_cents", "parent_id", "whop_plan_id", "affiliate_code", "paid_at", "created_at", "redemptions"]) {
+    assert.match(catalogSource, new RegExp(field), `Owner commerce trace must select ${field}.`);
+  }
+
   const legacy = readFileSync("src/lib/resonance/resonance-week-runs.ts", "utf8");
   assert.match(legacy, /lockResonanceAccount\(tx, userId\)/);
   const completionPage = readFileSync("app/(member)/resonance/complete/page.tsx", "utf8");

@@ -118,13 +118,41 @@ export default async function ResonanceCommerceAdminPage({
           </div>
           <div className="mt-5 overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <caption className="mb-2 text-left">Latest ten orders — identifiers and settlement state only</caption>
-              <thead><tr><th>Order</th><th>Status</th><th>Visits / unused</th><th>Checkout</th><th>Payment</th></tr></thead>
-              <tbody>{status.recentOrders.map((order) => (
-                <tr key={order.id}><td className="py-2">{order.id}</td><td>{order.status}</td><td>{order.quantity} / {order.remaining_quantity}</td><td>{order.whop_checkout_id ?? "—"}</td><td>{order.whop_payment_id ?? "—"}</td></tr>
-              ))}</tbody>
+              <caption className="mb-2 text-left">Latest ten orders — owner-only settlement and attribution trace</caption>
+              <thead>
+                <tr>
+                  <th>Created</th><th>Order</th><th>Lane</th><th>Status</th><th>Amount</th>
+                  <th>Visits / unused</th><th>Referral requested</th><th>Parent</th>
+                  <th>Checkout</th><th>Payment</th><th>Paid</th><th>Redeemed</th>
+                </tr>
+              </thead>
+              <tbody>{status.recentOrders.map((order) => {
+                const normalPlan = status.plans.find((plan) => plan.id === order.whop_plan_id);
+                const lane = creatorStarter.planId === order.whop_plan_id
+                  ? "Creator starter"
+                  : normalPlan?.label ?? "Unknown approved plan";
+                return (
+                  <tr key={order.id}>
+                    <td className="py-2 whitespace-nowrap">{order.created_at.toISOString()}</td>
+                    <td>{order.id}</td>
+                    <td>{lane}</td>
+                    <td>{order.status}</td>
+                    <td>{formatOremeaPrice(order.amount_cents)}</td>
+                    <td>{order.quantity} / {order.remaining_quantity}</td>
+                    <td>{order.affiliate_code ?? "—"}</td>
+                    <td>{order.parent_id ?? "—"}</td>
+                    <td>{order.whop_checkout_id ?? "—"}</td>
+                    <td>{order.whop_payment_id ?? "—"}</td>
+                    <td className="whitespace-nowrap">{order.paid_at?.toISOString() ?? "—"}</td>
+                    <td>{order._count.redemptions}</td>
+                  </tr>
+                );
+              })}</tbody>
             </table>
           </div>
+          <p className="mt-4 text-xs leading-6 text-zinc-500">
+            “Referral requested” is the affiliate code Oremea preserved on the order. It proves the requested attribution path, not the creator commission. Whop’s affiliate records remain authoritative for whether commission was credited, its rate, timing, refund treatment and spendable balance.
+          </p>
         </div>
 
         <div className="mt-8 rounded-[2rem] border border-white/10 bg-black/40 p-6 md:p-8">
