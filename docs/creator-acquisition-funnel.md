@@ -1,6 +1,6 @@
 # Oremea creator acquisition funnel
 
-Status: economics encoded; provider acquisition product not live until the dedicated hidden Whop product + plan are configured and one real attributable sale is verified.
+Status: economics encoded; provider acquisition product is not live until the owner-only Resonance commerce provisioner creates/verifies the dedicated hidden Whop product + plan and one real attributable sale is verified.
 
 ## The model
 
@@ -14,7 +14,7 @@ Creator-native content
 → creator-specific Oremea external affiliate link
 → conversational long-form Resonance landing page
 → one $50 Creator Resonance Starter visit
-→ creator receives the approved acquisition commission
+→ creator receives the provider-verified acquisition commission
 → buyer immediately receives what they purchased
 → existing one-time Complete Ten offer / smaller addition
 → Resonance experience
@@ -24,11 +24,12 @@ Creator-native content
 
 - Standard/open affiliate: 30%.
 - Owner-approved creator acquisition product: target first-sale rate 100%.
-- Owner-approved backend: 40%.
-- Recognition and Compass remain 40% recurring backend products; they are not 100%-commission acquisition products.
+- Owner-approved backend target: 40%.
+- Recognition and Compass remain 40% recurring backend targets; they are not 100%-commission acquisition products.
 - The 100% rate must NEVER be placed on the normal Resonance catalog. It is isolated to a dedicated hidden acquisition product.
+- Saved-card additions and later cross-product commissions must be verified with real provider transactions before they are promised to creators.
 
-This prevents a creator who sends a single $50 starter buyer from being paid like an ordinary low-value affiliate while also preventing unlimited Recognition/Compass usage from being fully subsidised by Oremea.
+This prevents a creator who sends a single $50 starter buyer from being paid like an ordinary low-value affiliate while also preventing ongoing Recognition/Compass usage from being fully subsidised by Oremea.
 
 ## Unit-economics stress case
 
@@ -56,15 +57,15 @@ The existing Resonance ladder already makes the next transaction separate:
 - total ten-visit value: $400
 - already purchased starter: $50
 - separate Complete Ten backend purchase: $350
-- creator at 40%: $140 backend commission
-- creator earnings across the first two transactions: up to $190 before later recurring products
-- after the 40% commission, stacked fee reserve, 5% refund/dispute reserve and 20% Oremea contribution reserve, $92.62 remains as the delivery-cost budget for the remaining nine visits
+- 40% backend target: $140 creator commission if that charge is attributable as intended
+- creator earnings across the first two attributable transactions: up to $190 before later recurring products
+- after the 40% commission reserve, stacked fee reserve, 5% refund/dispute reserve and 20% Oremea contribution reserve, $92.62 remains as the delivery-cost budget for the remaining nine visits
 
 That is more than $10 per remaining visit before the 20% contribution reserve is touched.
 
 ### Recognition and Compass one-month cancellation safety
 
-At 40% creator commission, stacked subscription fee reserve and a 20% Oremea contribution target:
+At a 40% creator backend target, stacked subscription fee reserve and a 20% Oremea contribution target:
 
 - Recognition at $19.99/month may spend up to $5.90 in delivery cost for that referred member-month before the target contribution reserve is touched.
 - Compass at $50/month may spend up to $15.22 in delivery cost for that referred member-month before the target contribution reserve is touched.
@@ -79,26 +80,28 @@ Observed AI/delivery cost must be compared with these thresholds. DAWN may surfa
 4. **Single front-end decision:** one Creator Resonance Starter visit. Do not make creator traffic choose among three packages before the first yes.
 5. **Deliver the purchase:** the first visit is secure before any next offer appears.
 6. **One-time offer:** the existing Complete Ten screen is the backend OTO. "No thanks" remains easy and visible.
-7. **Backend:** 40% creator economics on approved additional purchases and recurring products.
+7. **Backend:** 40% is the approved target on eligible additional/recurring products only after attribution is proven for that checkout path.
 8. **Lifecycle:** after actual participation, route by need rather than forcing Recognition or Compass as generic bumps.
-9. **Attribution:** never promise cross-product commission unless the creator attribution for that later checkout can be verified.
+9. **Attribution:** never promise saved-card or cross-product commission unless the creator attribution for that later checkout can be verified.
 10. **Disclosure:** creator promotions must disclose the financial relationship in a clear way appropriate to the channel and applicable law.
 
-## Provider configuration required before launch
+## Provider provisioning required before launch
 
-Create a dedicated hidden Whop product / hidden one-time pricing option named internally along the lines of `Creator Resonance Starter` at $50. It must be operationally separate from the normal Resonance product so its acquisition commission cannot leak onto package/backend sales.
+Oremea's existing owner-only Resonance commerce provisioner now creates/verifies two separate hidden catalogs:
 
-Set these production variables only after the provider IDs are verified:
+- `resonance-visits-v1` — normal Resonance backend and package commerce
+- `resonance-creator-starter-v1` — one isolated $50 Creator Resonance Starter product/plan
 
-- `WHOP_RESONANCE_CREATOR_STARTER_PRODUCT_ID`
-- `WHOP_RESONANCE_CREATOR_STARTER_PLAN_ID`
+The creator starter product is created hidden with open/member affiliate enrollment disabled. Provisioning itself never assigns a creator commission and never enables public checkout.
 
-Then configure each owner-approved creator:
+Then configure each owner-approved creator in Whop:
 
 - acquisition product: target 100% first-sale rate, if Whop permits the intended rate for the account
-- approved backend products: 40%, recurring where relevant
+- approved backend products: target 40%, recurring where relevant and where attribution is provider-supported
 
-Run one real creator-linked sale end-to-end before opening the offer broadly. Verify attribution, the actual commission basis, Whop fee records, refund reversal behaviour, pending/available timing and final spendable balance.
+Run one real creator-linked starter sale end-to-end before opening the offer broadly. Verify attribution, the actual commission basis, Whop fee records, refund reversal behaviour, pending/available timing and final spendable balance.
+
+Run a second real test for the Complete Ten / saved-card backend path before promising backend commission. Later cross-product attribution must be verified separately as well.
 
 ## Sources checked 2026-09-28
 
