@@ -79,17 +79,17 @@ if old_note not in text:
     raise SystemExit("commerce audit note insertion point did not match expected source")
 page.write_text(text.replace(old_note, new_note, 1))
 
-test = Path("scripts/verify-resonance-provisioning-contract.ts")
+test = Path("scripts/verify-resonance-visits-contract.ts")
 text = test.read_text()
-marker = '    assert.match(adminCommerce, /Whop HTTP/);'
+marker = '  assert.match(adminCommerce, /Whop HTTP/);'
 guard = '''
-    assert.match(adminCommerce, /owner-only settlement and attribution trace/i);
-    assert.match(adminCommerce, /Referral requested/);
-    assert.match(adminCommerce, /Whop’s affiliate records remain authoritative/);
-    const catalogSource = readFileSync("src/lib/whop/resonance-catalog.ts", "utf8");
-    for (const field of ["amount_cents", "parent_id", "whop_plan_id", "affiliate_code", "paid_at", "created_at", "redemptions"]) {
-      assert.match(catalogSource, new RegExp(field), `Owner commerce trace must select ${field}.`);
-    }
+  assert.match(adminCommerce, /owner-only settlement and attribution trace/i);
+  assert.match(adminCommerce, /Referral requested/);
+  assert.match(adminCommerce, /Whop’s affiliate records remain authoritative/);
+  const catalogSource = readFileSync("src/lib/whop/resonance-catalog.ts", "utf8");
+  for (const field of ["amount_cents", "parent_id", "whop_plan_id", "affiliate_code", "paid_at", "created_at", "redemptions"]) {
+    assert.match(catalogSource, new RegExp(field), `Owner commerce trace must select ${field}.`);
+  }
 '''
 if marker not in text:
     raise SystemExit("admin commerce test insertion point did not match expected source")
