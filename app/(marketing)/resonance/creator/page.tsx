@@ -6,8 +6,6 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteNav } from "@/components/site/site-nav";
 import { purchaseCreatorStarter } from "@/app/(member)/resonance/visits/actions";
-import { CREATOR_ACQUISITION_POLICY } from "@/src/lib/oremea/creator-acquisition-economics";
-import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
 import {
   creatorStarterEligibility,
 } from "@/src/lib/resonance/visit-orders";
@@ -18,10 +16,6 @@ import { visitCheckoutEnabled } from "@/src/lib/resonance/visit-offers";
 import { requestAffiliateCode } from "@/src/lib/whop/affiliate-request";
 
 export const dynamic = "force-dynamic";
-
-const starterPrice = formatOremeaPrice(
-  CREATOR_ACQUISITION_POLICY.customerPriceCents,
-);
 
 export default async function CreatorResonancePage({
   searchParams,
@@ -67,8 +61,7 @@ export default async function CreatorResonancePage({
 
           <div className="res-border res-panel mx-auto mt-9 max-w-xl rounded-[2rem] border p-7 md:p-9">
             <p className="res-text text-2xl font-light">One Resonance visit</p>
-            <p className="res-accent mt-3 text-4xl">{starterPrice}</p>
-            <p className="res-text-secondary mt-3 text-sm leading-7">
+            <p className="res-text-secondary mt-4 text-sm leading-7">
               One visit opens one room. Choose the room after purchase. Move through
               its seven stages at your own pace. The completed visit remains in your Archive.
             </p>
@@ -111,7 +104,7 @@ export default async function CreatorResonancePage({
                   disabled={!canBuy}
                   className="res-action-soft inline-flex w-full items-center justify-center rounded-xl border px-6 py-3 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Begin one Resonance visit · {starterPrice}
+                  Begin one Resonance visit
                 </button>
               </form>
             ) : (
@@ -119,12 +112,12 @@ export default async function CreatorResonancePage({
                 href={signInHref}
                 className="res-action-soft mt-6 inline-flex w-full items-center justify-center rounded-xl border px-6 py-3 text-sm font-medium transition"
               >
-                Create account to begin · {starterPrice}
+                Create account to begin
               </Link>
             )}
 
             <p className="res-text-secondary mt-4 text-xs leading-6">
-              One-time purchase. No subscription is created by this starter.
+              One-time purchase. No subscription is created by this starter. Current purchase details appear at checkout.
             </p>
           </div>
         </header>
@@ -160,7 +153,7 @@ export default async function CreatorResonancePage({
           </h2>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {[
-              ["1 · Add one visit", `Purchase one Resonance visit for ${starterPrice}.`],
+              ["1 · Add one visit", "Purchase one Resonance visit through your creator invitation."],
               ["2 · Choose one room", "Select the relational territory that matches what is actually present now."],
               ["3 · Move through it", "Work through the seven stages at your own pace. The completed visit remains preserved in the Archive."],
             ].map(([heading, copy]) => (
@@ -187,7 +180,7 @@ export default async function CreatorResonancePage({
                 type="submit"
                 className="res-action-soft inline-flex w-full items-center justify-center rounded-xl border px-6 py-3 text-sm font-medium transition"
               >
-                Begin one Resonance visit · {starterPrice}
+                Begin one Resonance visit
               </button>
             </form>
           ) : !userId && referral && checkoutReady ? (
@@ -195,7 +188,7 @@ export default async function CreatorResonancePage({
               href={signInHref}
               className="res-action-soft mt-8 inline-flex rounded-xl border px-6 py-3 text-sm font-medium transition"
             >
-              Create account to begin · {starterPrice}
+              Create account to begin
             </Link>
           ) : null}
         </section>
