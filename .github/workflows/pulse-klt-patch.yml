@@ -71,13 +71,17 @@ jobs:
 
           contract = Path('scripts/verify-product-marketing-contract.ts')
           text = contract.read_text()
-          old = '''assert.match(roomById["resonance-pulse"].description, /desire, attraction, aliveness/i);
-assert.doesNotMatch(roomById["resonance-pulse"].description, /values|alignment/i);'''
-          new = '''assert.match(roomById["resonance-pulse"].headline, /desire meet reality/i);
-assert.match(roomById["resonance-pulse"].buyerDecision, /wanting something does not tell you what to do with it/i);
-assert.match(roomById["resonance-pulse"].description, /time, information and real contact/i);
-assert.match(roomById["resonance-pulse"].chooseWhen, /without rushing its meaning/i);
-assert.doesNotMatch(roomById["resonance-pulse"].description, /values|alignment|destiny|compatibility/i);'''
+          old = "\n".join([
+              'assert.match(roomById["resonance-pulse"].description, /desire, attraction, aliveness/i);',
+              'assert.doesNotMatch(roomById["resonance-pulse"].description, /values|alignment/i);',
+          ])
+          new = "\n".join([
+              'assert.match(roomById["resonance-pulse"].headline, /desire meet reality/i);',
+              'assert.match(roomById["resonance-pulse"].buyerDecision, /wanting something does not tell you what to do with it/i);',
+              'assert.match(roomById["resonance-pulse"].description, /time, information and real contact/i);',
+              'assert.match(roomById["resonance-pulse"].chooseWhen, /without rushing its meaning/i);',
+              'assert.doesNotMatch(roomById["resonance-pulse"].description, /values|alignment|destiny|compatibility/i);',
+          ])
           if old not in text:
               raise SystemExit('Pulse marketing contract anchor not found')
           contract.write_text(text.replace(old, new, 1))
