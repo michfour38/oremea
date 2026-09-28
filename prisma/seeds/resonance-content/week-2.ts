@@ -96,7 +96,7 @@ export const WEEK_2: ResonanceWeekSeed = {
           prompt_order: 3,
           type: "thread_prompt",
           label: null,
-          content: "Once you have a first read on a situation, what do you tend to notice more: things that fit it, things that challenge it, or both?",
+          content: "Once you have a first read on a situation, what information would make you revise it?",
         },
         {
           prompt_order: 4,
@@ -108,7 +108,7 @@ export const WEEK_2: ResonanceWeekSeed = {
           prompt_order: 5,
           type: "mirror_exercise",
           label: null,
-          content: "Think of one recent moment where you had a quick read on someone. Write: what they did or said → what you thought it meant → what you did next → what happened after.",
+          content: "Think of one recent moment where you had a quick read on someone. Write: what they did or said → what you thought it meant → what information would have made you revise that read → what you did next → what happened after.",
         },
       ],
     },
