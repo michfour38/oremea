@@ -18,6 +18,7 @@ const PLAN_MARKER_PREFIX = "oremea:resonance-visits:v1:";
 const REQUIRED_WEBHOOK_EVENTS = [
   "payment.succeeded",
   "payment.failed",
+  "payment.canceled",
   "refund.created",
   "refund.updated",
 ] as const;

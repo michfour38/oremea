@@ -37,7 +37,7 @@ async function main() {
     if (target.pathname.endsWith("/plans")) return Response.json({ data: plans });
     if (target.pathname.endsWith("/webhooks")) return Response.json({ data: [
       { id: "hook_fixture", url: "https://www.oremea.com/api/webhooks/whop", enabled: true,
-        events: ["payment.succeeded", "payment.failed", "refund.created", "refund.updated"] },
+        events: ["payment.succeeded", "payment.failed", "payment.canceled", "refund.created", "refund.updated"] },
     ] });
     throw new Error("Unexpected endpoint: " + target.pathname);
   };
@@ -62,6 +62,12 @@ async function main() {
     process.env.WHOP_COMPANY_ID = "biz_fixture";
     plans[0].initial_price = 1;
     await assert.rejects(provisionResonanceWhopCatalog, { stage: "plans", code: "validation" });
+    const catalogSource = readFileSync("src/lib/whop/resonance-catalog.ts", "utf8");
+    assert.match(
+      catalogSource,
+      /REQUIRED_WEBHOOK_EVENTS[\s\S]*payment\.succeeded[\s\S]*payment\.failed[\s\S]*payment\.canceled[\s\S]*refund\.created[\s\S]*refund\.updated/,
+      "The provisioned Whop webhook must subscribe to canceled payments as well as success, failure and refunds.",
+    );
     const page = readFileSync("app/(member)/resonance/visits/page.tsx", "utf8");
     assert.match(page, /order\?\.status === "pending" \|\| order\?\.status === "failed"/);
     assert.match(page, /order\.whop_checkout_id && canResumeCheckout && checkoutEnabled/);
