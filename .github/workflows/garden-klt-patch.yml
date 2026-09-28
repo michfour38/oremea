@@ -1,0 +1,98 @@
+name: Garden KLT copy patch
+
+on:
+  push:
+    branches:
+      - copy/resonance-garden-klt-2026-09-28
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: copy/resonance-garden-klt-2026-09-28
+      - name: Apply Garden copy
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          entry = Path('app/(member)/entry/page.tsx')
+          text = entry.read_text()
+          replacement = "\n".join([
+              '  3: {',
+              '    label: "Nourishment",',
+              '    question: "Care can be genuine and still be unsustainable.",',
+              '    description:',
+              '      "Care is not only intention. It has a footprint in time, attention, labour, energy, resources and rest. Some support gives capacity back. Some giving feels freely chosen. Some quietly becomes expected. The Garden makes that movement visible so you can notice what restores, what drains, what is being carried, and whether the way care moves between people can actually keep working.",',
+              '    chooseWhen:',
+              '      "care is present but the arrangement around it needs clearer attention. The Garden does not decide who is generous, selfish, loving or ungrateful. It helps make the practical flow visible enough to see what can continue, what needs to be shared or clarified, and what may need to change.",',
+              '    comparison: "Care that gives capacity back instead of quietly consuming it.",',
+              '  },',
+              '  4: {',
+          ])
+          text, count = re.subn(r'  3: \{.*?\n  \},\n  4: \{', replacement, text, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit('Garden entry copy block not found')
+          entry.write_text(text)
+
+          marketing = Path('src/lib/oremea/public-product-marketing.ts')
+          text = marketing.read_text()
+          replacement = "\n".join([
+              '  "resonance-garden": {',
+              '    id: "resonance-garden",',
+              '    category: "Resonance room 3",',
+              '    headline: "Care that can keep working",',
+              '    buyerDecision:',
+              '      "Care can be genuine and still leave one person carrying more than can be sustained.",',
+              '    description:',
+              '      "Care has a footprint in time, attention, labour, energy, resources and rest. Some support gives capacity back. Some helping quietly becomes expected. The Garden makes that movement visible so giving and receiving can be heard as lived arrangements rather than ideals about who cares more.",',
+              '    chooseWhen:',
+              '      "Enter The Garden when care is present but the way it moves needs clearer attention—what restores, what drains, what is being carried, what needs to be asked for, and what can actually be repeated. It does not score reciprocity or turn capacity and limits into a moral judgment.",',
+              '    limits: [',
+              '      "No compatibility scoring.",',
+              '      "No proof that care should continue.",',
+              '      "No moral judgment about capacity or limits.",',
+              '    ],',
+              '    public: true,',
+              '    weekNumber: 3,',
+              '  },',
+              '  "resonance-bearing": {',
+          ])
+          text, count = re.subn(r'  "resonance-garden": \{.*?\n  \},\n  "resonance-bearing": \{', replacement, text, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit('Garden public marketing block not found')
+          marketing.write_text(text)
+
+          contract = Path('scripts/verify-product-marketing-contract.ts')
+          text = contract.read_text()
+          old = 'assert.match(roomById["resonance-garden"].limits.join(" "), /No compatibility scoring/i);'
+          new = "\n".join([
+              'assert.match(roomById["resonance-garden"].headline, /care that can keep working/i);',
+              'assert.match(roomById["resonance-garden"].description, /time, attention, labour, energy, resources and rest/i);',
+              'assert.match(roomById["resonance-garden"].chooseWhen, /capacity and limits/i);',
+              'assert.match(roomById["resonance-garden"].limits.join(" "), /No compatibility scoring/i);',
+              'assert.doesNotMatch(roomById["resonance-garden"].description, /selfish|martyr|trauma|attachment/i);',
+          ])
+          if old not in text:
+              raise SystemExit('Garden marketing contract anchor not found')
+          contract.write_text(text.replace(old, new, 1))
+          PY
+      - name: Verify Garden marketing and types
+        run: |
+          npm ci
+          npm run test:product-marketing
+          npm run typecheck
+      - name: Commit tested Garden copy
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/garden-klt-patch.yml
+          git add 'app/(member)/entry/page.tsx' src/lib/oremea/public-product-marketing.ts scripts/verify-product-marketing-contract.ts
+          git commit -m "Rewrite The Garden as KLT conversion copy"
+          git push origin HEAD:copy/resonance-garden-klt-2026-09-28
