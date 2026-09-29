@@ -5,7 +5,7 @@ import {
   VISIT_PRICES, visitsEnabled, visitCheckoutEnabled,
 } from "../src/lib/resonance/visit-offers";
 import {
-  matchesVisitOrder, matchesVisitRefund, visitPaymentSchema,
+  matchesVisitOrder, matchesVisitRefund, settledVisitPaymentFromList, visitPaymentSchema,
   visitPaymentUpdate, visitRefundSchema,
 } from "../src/lib/resonance/visit-payment-contract";
 import { chargeVisitOrder, createVisitCheckout, getResonanceCheckoutOrigin } from "../src/lib/whop/visit-payments";
@@ -95,6 +95,16 @@ async function main() {
     paid_at: "2026-09-10T18:41:00.000Z", refunded_amount: 0,
   });
   assert.equal(matchesVisitOrder(payment, order, "biz_test", "prod_test"), true);
+  const paidRecord = { ...payment, status: "paid", substatus: "succeeded" };
+  const paymentList = (data: unknown[], hasNext = false) => ({ data, page_info: { has_next_page: hasNext } });
+  assert.equal(settledVisitPaymentFromList(paymentList([{ ...paidRecord, status: "open" }, paidRecord]), order, "biz_test", "prod_test")?.id, payment.id);
+  assert.equal(settledVisitPaymentFromList(paymentList([{ ...paidRecord, status: "open" }]), order, "biz_test", "prod_test"), null);
+  assert.throws(() => settledVisitPaymentFromList(paymentList([paidRecord], true), order, "biz_test", "prod_test"));
+  assert.throws(() => settledVisitPaymentFromList(paymentList([paidRecord, { ...paidRecord, id: "pay_second" }]), order, "biz_test", "prod_test"));
+  assert.throws(() => settledVisitPaymentFromList(paymentList([{ ...paidRecord, subtotal: 50 }]), order, "biz_test", "prod_test"));
+  assert.throws(() => settledVisitPaymentFromList(paymentList([{ ...paidRecord, metadata: { oremea_visit_order: "00000000-0000-4000-8000-000000000002" } }]), order, "biz_test", "prod_test"));
+  assert.throws(() => settledVisitPaymentFromList(paymentList([{ ...paidRecord, substatus: "pending" }]), order, "biz_test", "prod_test"));
+  assert.equal(settledVisitPaymentFromList(paymentList([{ ...paidRecord, refunded_amount: 10, substatus: "partially_refunded" }]), order, "biz_test", "prod_test")?.refunded_amount, 10);
   const mismatches = [
     { company: { id: "biz_other" } }, { product: { id: "prod_other" } },
     { plan: { id: "plan_other" } }, { user: { email: "other@example.test" } },

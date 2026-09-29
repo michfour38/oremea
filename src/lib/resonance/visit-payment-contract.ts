@@ -20,6 +20,32 @@ export const visitPaymentSchema = z.object({
 });
 export type VisitPayment = z.infer<typeof visitPaymentSchema>;
 
+const paymentListSchema = z.object({
+  data: z.array(z.unknown()),
+  page_info: z.object({ has_next_page: z.boolean() }),
+});
+
+/** A provider list is evidence only when the entire checkout result fits on one page. */
+export function settledVisitPaymentFromList(response: unknown, order: Parameters<typeof matchesVisitOrder>[1], companyId: string, productId: string) {
+  const list = paymentListSchema.parse(response);
+  if (list.page_info.has_next_page) throw new Error("Visit checkout has more payment attempts than can be verified.");
+  const paid = list.data.filter((item) => {
+    const record = z.object({ status: z.string(), checkout_configuration_id: z.string().nullable().optional() }).safeParse(item);
+    return record.success && record.data.status === "paid" && record.data.checkout_configuration_id === order.whop_checkout_id;
+  });
+  if (paid.length > 1) throw new Error("Visit checkout has multiple paid payments.");
+  if (!paid.length) return null;
+  const state = z.object({ substatus: z.string() }).parse(paid[0]);
+  const payment = visitPaymentSchema.parse(paid[0]);
+  if (state.substatus !== "succeeded" && !(payment.auto_refunded || (payment.refunded_amount ?? 0) > 0)) {
+    throw new Error("Provider payment is not settled and unencumbered.");
+  }
+  if (!matchesVisitOrder(payment, order, companyId, productId)) {
+    throw new Error("Provider payment does not match the visit order.");
+  }
+  return payment;
+}
+
 /** Pure settlement rules; the caller authenticates the event and locks the order. */
 export function visitPaymentUpdate(type: string, payment: VisitPayment, order: {
   status: string; quantity: number; parent_id: string | null;
