@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 const service = readFileSync("src/lib/resonance/visit-orders.ts", "utf8");
 const purchasePage = readFileSync("app/(member)/resonance/visits/page.tsx", "utf8");
 const provider = readFileSync("src/lib/whop/visit-payments.ts", "utf8");
+const checkoutRecovery = readFileSync("src/lib/resonance/initial-checkout-recovery.ts", "utf8");
 
 // Separate browser tabs and separately generated request IDs must serialize on
 // the same account before a provider checkout can be created.
@@ -28,9 +29,25 @@ assert.match(
   /if \(!query\.order\)[\s\S]*redirect\(`\/resonance\/visits\?order=\$\{unresolved\.id\}\$\{roomSuffix\}`\)/,
 );
 
-// Saved-card add-ons carry a stable provider idempotency key as a second line
-// of defence. The charge function still has no automatic retry loop.
+// If checkout-session creation itself lost its response, recover the checkout
+// with the same order identity. This is checkout creation only: it must never
+// call the saved-card payment function, and the public checkout kill switch
+// must still stop the provider POST.
+assert.match(checkoutRecovery, /restoreInitialVisitCheckout/);
+assert.match(checkoutRecovery, /!\["pending", "unknown"\]\.includes\(order\.status\)/);
+assert.match(checkoutRecovery, /const checkoutId = await createVisitCheckout\(order\)/);
+assert.match(checkoutRecovery, /whop_checkout_id: null/);
+assert.match(checkoutRecovery, /data: \{ whop_checkout_id: checkoutId, status: "pending" \}/);
+assert.doesNotMatch(checkoutRecovery, /chargeVisitOrder/);
+assert.match(
+  purchasePage,
+  /checkoutEnabled && order && !order\.whop_checkout_id[\s\S]*restoreInitialVisitCheckout\(userId, order\.id\)/,
+);
+
+// Both checkout creation and saved-card add-ons carry stable provider
+// idempotency keys. The charge function still has no automatic retry loop.
+assert.match(provider, /idempotencyKey: `oremea-resonance-checkout-\$\{order\.id\}`/);
 assert.match(provider, /idempotencyKey: `oremea-resonance-payment-\$\{order\.id\}`/);
 assert.doesNotMatch(provider, /for \([\s\S]*chargeVisitOrder|while \([\s\S]*chargeVisitOrder/);
 
-console.log("Resonance unresolved-checkout and payment idempotency guards passed.");
+console.log("Resonance checkout recovery and payment idempotency guards passed.");
