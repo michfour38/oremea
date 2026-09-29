@@ -8,6 +8,7 @@ import { INITIAL_QUANTITIES, VISIT_PRICES } from "@/src/lib/resonance/visit-offe
 import { getResonanceRoomTarget } from "@/src/lib/resonance/room-entry";
 import { visitCheckoutAvailableFor, visitCreditsAvailableFor } from "@/src/lib/resonance/visit-access";
 import { getUnresolvedInitialVisitOrder, getVisitBalance, getVisitOrder, reconcileInitialVisitOrder } from "@/src/lib/resonance/visit-orders";
+import { restoreInitialVisitCheckout } from "@/src/lib/resonance/initial-checkout-recovery";
 import { whopVisitConfig } from "@/src/lib/whop/visit-payments";
 import { FunnelFrame } from "./funnel-frame";
 import { VisitSubmitButton } from "./submit-button";
@@ -31,6 +32,10 @@ export default async function VisitPurchasePage({ searchParams }: {
   }
   let order = query.order ? await getVisitOrder(userId, query.order) : null;
   if (query.order && (!order || order.kind !== "initial")) notFound();
+  if (order && !order.whop_checkout_id && ["pending", "unknown"].includes(order.status)) {
+    try { order = await restoreInitialVisitCheckout(userId, order.id); }
+    catch { /* The same checkout can be recovered later; no payment is submitted here. */ }
+  }
   if (order && ["pending", "unknown", "failed"].includes(order.status)) {
     try { order = await reconcileInitialVisitOrder(userId, order.id); }
     catch { /* Keep checkout state unchanged when provider verification fails. */ }
@@ -39,7 +44,7 @@ export default async function VisitPurchasePage({ searchParams }: {
   const checkoutEnabled = await visitCheckoutAvailableFor(userId);
   const unusedVisits = await getVisitBalance(userId);
   // A declined initial payment can be retried inside the same provider checkout.
-  // Unknown outcomes stay blocked to avoid submitting a second uncertain charge.
+  // Unknown payment outcomes stay blocked to avoid submitting a second uncertain charge.
   const canResumeCheckout = order?.status === "pending" || order?.status === "failed";
   const checkoutOrigin =
     order?.whop_checkout_id && canResumeCheckout && checkoutEnabled
