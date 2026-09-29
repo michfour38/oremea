@@ -65,7 +65,7 @@ export default async function VisitPurchasePage({ searchParams }: {
         </div>
       ) : order.whop_checkout_id && canResumeCheckout && checkoutEnabled ? (
         <section className="res-border res-panel mx-auto mt-8 max-w-xl rounded-3xl border p-6">
-          <h2 className="res-text text-2xl">{order.quantity} visits · {formatOremeaPrice(order.amount_cents)}</h2>
+          <h2 className="res-text text-2xl">{order.quantity} visit{order.quantity === 1 ? "" : "s"} · {formatOremeaPrice(order.amount_cents)}</h2>
           <Script src="https://js.whop.com/static/checkout/loader.js" strategy="afterInteractive" />
           <div key={order.id} className="mt-6 min-h-[420px]" data-whop-checkout-plan-id={order.whop_plan_id}
             data-whop-checkout-session={order.whop_checkout_id} data-whop-checkout-theme="dark"
