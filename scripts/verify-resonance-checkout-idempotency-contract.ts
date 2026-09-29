@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 
 const service = readFileSync("src/lib/resonance/visit-orders.ts", "utf8");
 const purchasePage = readFileSync("app/(member)/resonance/visits/page.tsx", "utf8");
+const provider = readFileSync("src/lib/whop/visit-payments.ts", "utf8");
 
 // Separate browser tabs and separately generated request IDs must serialize on
 // the same account before a provider checkout can be created.
@@ -27,4 +28,9 @@ assert.match(
   /if \(!query\.order\)[\s\S]*redirect\(`\/resonance\/visits\?order=\$\{unresolved\.id\}\$\{roomSuffix\}`\)/,
 );
 
-console.log("Resonance unresolved-checkout idempotency guards passed.");
+// Saved-card add-ons carry a stable provider idempotency key as a second line
+// of defence. The charge function still has no automatic retry loop.
+assert.match(provider, /idempotencyKey: `oremea-resonance-payment-\$\{order\.id\}`/);
+assert.doesNotMatch(provider, /for \([\s\S]*chargeVisitOrder|while \([\s\S]*chargeVisitOrder/);
+
+console.log("Resonance unresolved-checkout and payment idempotency guards passed.");
