@@ -31,14 +31,18 @@ assert.match(
 
 // If checkout-session creation itself lost its response, recover the checkout
 // with the same order identity. This is checkout creation only: it must never
-// call the saved-card payment function.
+// call the saved-card payment function, and the public checkout kill switch
+// must still stop the provider POST.
 assert.match(checkoutRecovery, /restoreInitialVisitCheckout/);
 assert.match(checkoutRecovery, /!\["pending", "unknown"\]\.includes\(order\.status\)/);
 assert.match(checkoutRecovery, /const checkoutId = await createVisitCheckout\(order\)/);
 assert.match(checkoutRecovery, /whop_checkout_id: null/);
 assert.match(checkoutRecovery, /data: \{ whop_checkout_id: checkoutId, status: "pending" \}/);
 assert.doesNotMatch(checkoutRecovery, /chargeVisitOrder/);
-assert.match(purchasePage, /restoreInitialVisitCheckout\(userId, order\.id\)/);
+assert.match(
+  purchasePage,
+  /checkoutEnabled && order && !order\.whop_checkout_id[\s\S]*restoreInitialVisitCheckout\(userId, order\.id\)/,
+);
 
 // Both checkout creation and saved-card add-ons carry stable provider
 // idempotency keys. The charge function still has no automatic retry loop.
