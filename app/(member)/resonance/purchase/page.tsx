@@ -20,6 +20,7 @@ import {
 } from "@/src/lib/resonance/resonance-week-run";
 import MemberNav from "../../member-nav";
 import { visitCheckoutEnabled } from "@/src/lib/resonance/visit-offers";
+import { getResonanceRoomTarget } from "@/src/lib/resonance/room-entry";
 
 export const dynamic = "force-dynamic";
 
@@ -134,8 +135,11 @@ async function completeTesterPurchase(formData: FormData) {
 }
 
 export default async function ResonancePurchasePage(props: Props) {
-  if (visitCheckoutEnabled()) redirect("/resonance/visits");
   const searchParams = await props.searchParams;
+  if (visitCheckoutEnabled()) {
+    const room = getResonanceRoomTarget(searchParams?.week);
+    redirect(room ? `/resonance/visits?room=${room.weekNumber}` : "/resonance/visits");
+  }
   const { userId } = await auth();
   if (!userId) {
     redirect(

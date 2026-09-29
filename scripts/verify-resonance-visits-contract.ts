@@ -221,7 +221,14 @@ async function main() {
   assert.match(actions, /visitCreditsAvailableFor\(userId\)/);
   const entryPage = readFileSync("app/(marketing)/resonance/enter/page.tsx", "utf8");
   assert.match(entryPage, /userId \? await visitCheckoutAvailableFor\(userId\) : false/);
-  assert.match(entryPage, /checkoutEnabled \? "\/resonance\/visits" : "\/entry"/);
+  assert.match(entryPage, /hasUnusedVisits = userId && checkoutEnabled && \(await getVisitBalance\(userId\)\) > 0/);
+  assert.match(entryPage, /checkoutEnabled && !hasUnusedVisits \? "\/resonance\/visits" : "\/entry"/);
+  assert.match(purchasePage, /Choose a room with your visits/);
+  const legacyPurchasePage = readFileSync("app/(member)/resonance/purchase/page.tsx", "utf8");
+  assert.match(legacyPurchasePage, /getResonanceRoomTarget\(searchParams\?\.week\)/);
+  assert.match(legacyPurchasePage, /`\/resonance\/visits\?room=\$\{room\.weekNumber\}`/);
+  const feedbackForm = readFileSync("app/feedback/complete/completion-feedback-form.tsx", "utf8");
+  assert.match(feedbackForm, /source === "resonance-complete" \? "\/entry"/);
   assert.match(entryPage, /Choose the visits first\. Choose the room next\./);
   assert.doesNotMatch(entryPage, /RESONANCE_LAUNCH_PRICE|RESONANCE_REGULAR_PRICE/);
   console.log("Resonance visit pricing, payment, refund, and funnel contract checks passed (provider mocked; no live database or payment test).");

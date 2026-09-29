@@ -116,6 +116,8 @@ export default function CompletionFeedbackForm() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [notice, setNotice] = useState("");
+  const returnHref = source === "resonance-complete" ? "/entry" : "https://www.oremea.com";
+  const returnLabel = source === "resonance-complete" ? "Return to your rooms" : "Return to Oremea";
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -214,10 +216,10 @@ export default function CompletionFeedbackForm() {
         </div>
 
         <Link
-          href="https://www.oremea.com"
+          href={returnHref}
           className="mt-6 inline-flex rounded-full border border-white/10 px-5 py-3 text-sm text-zinc-300 transition hover:border-[#c6a96b]/40 hover:text-[#c6a96b]"
         >
-          Return to Oremea
+          {returnLabel}
         </Link>
       </div>
     );
@@ -340,10 +342,10 @@ export default function CompletionFeedbackForm() {
         </button>
 
         <Link
-          href="https://www.oremea.com"
+          href={returnHref}
           className="inline-flex items-center justify-center rounded-full border border-white/10 px-5 py-3 text-sm text-zinc-400 transition hover:border-[#c6a96b]/40 hover:text-[#c6a96b]"
         >
-          Skip survey
+          {source === "resonance-complete" ? "Skip survey · Return to rooms" : "Skip survey"}
         </Link>
       </div>
 

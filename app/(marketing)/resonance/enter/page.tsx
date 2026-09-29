@@ -7,6 +7,7 @@ import { RESONANCE_ROOM_MARKETING } from "@/src/lib/oremea/public-product-market
 import { RESONANCE_ROOM_NAMES } from "@/src/lib/resonance/room-entry";
 import { visitCheckoutAvailableFor } from "@/src/lib/resonance/visit-access";
 import { visitCheckoutEnabled } from "@/src/lib/resonance/visit-offers";
+import { getVisitBalance } from "@/src/lib/resonance/visit-orders";
 
 // Legacy visit-route contract marker: Choose the visits first. Choose the room next.
 function FunnelAction({
@@ -37,7 +38,8 @@ function FunnelAction({
 export default async function ResonanceEnterPage() {
   const { userId } = await auth();
   const checkoutEnabled = userId ? await visitCheckoutAvailableFor(userId) : false;
-  const destination = checkoutEnabled ? "/resonance/visits" : "/entry";
+  const hasUnusedVisits = userId && checkoutEnabled && (await getVisitBalance(userId)) > 0;
+  const destination = checkoutEnabled && !hasUnusedVisits ? "/resonance/visits" : "/entry";
   const publicCheckoutEnabled = !userId && visitCheckoutEnabled();
   const signupDestination = publicCheckoutEnabled ? "/resonance/visits" : destination;
   const funnelCheckoutEnabled = checkoutEnabled || publicCheckoutEnabled;
