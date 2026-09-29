@@ -1,12 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { auth } from "@clerk/nextjs/server";
+import Link from "next/link";
 import Script from "next/script";
 import { notFound, redirect } from "next/navigation";
 import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
 import { INITIAL_QUANTITIES, VISIT_PRICES } from "@/src/lib/resonance/visit-offers";
 import { getResonanceRoomTarget } from "@/src/lib/resonance/room-entry";
 import { visitCheckoutAvailableFor, visitCreditsAvailableFor } from "@/src/lib/resonance/visit-access";
-import { getVisitOrder } from "@/src/lib/resonance/visit-orders";
+import { getVisitBalance, getVisitOrder } from "@/src/lib/resonance/visit-orders";
 import { whopVisitConfig } from "@/src/lib/whop/visit-payments";
 import { FunnelFrame } from "./funnel-frame";
 import { VisitSubmitButton } from "./submit-button";
@@ -28,6 +29,7 @@ export default async function VisitPurchasePage({ searchParams }: {
   if (query.order && (!order || order.kind !== "initial")) notFound();
   if (order?.status === "paid") redirect(`/resonance/complete?order=${order.id}${roomSuffix}`);
   const checkoutEnabled = await visitCheckoutAvailableFor(userId);
+  const unusedVisits = await getVisitBalance(userId);
   // A declined initial payment can be retried inside the same provider checkout.
   // Unknown outcomes stay blocked to avoid submitting a second uncertain charge.
   const canResumeCheckout = order?.status === "pending" || order?.status === "failed";
@@ -42,6 +44,7 @@ export default async function VisitPurchasePage({ searchParams }: {
         <p className="res-accent text-sm uppercase tracking-[0.2em]">Resonance visits</p>
         <h1 className="res-text mt-3 text-4xl font-light">Choose the visits. Choose the room next.</h1>
         <p className="res-text-primary mt-5 text-base leading-8">Each visit opens one seven-day room experience, starting when it is entered. Use different rooms or return to the same room for a fresh round. One visit is active at a time.</p>
+        {unusedVisits > 0 ? <p className="res-text-primary mt-4">You have {unusedVisits} unused visit{unusedVisits === 1 ? "" : "s"}. <Link href={roomTarget?.entryPath ?? "/entry"} className="res-accent underline underline-offset-4">Choose a room with your visits</Link></p> : null}
         {!checkoutEnabled ? <p role="status" className="res-text-primary mt-6">Package checkout is not open yet. Existing purchases remain available.</p> : null}
         {query.error ? <p role="alert" className="res-alert mt-6">{query.error === "email" ? "Verify the primary email on this account before purchasing." : "Checkout could not be opened. No payment has been confirmed."}</p> : null}
       </div>
