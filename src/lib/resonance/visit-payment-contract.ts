@@ -20,10 +20,44 @@ export const visitPaymentSchema = z.object({
 });
 export type VisitPayment = z.infer<typeof visitPaymentSchema>;
 
+const paymentStateSchema = visitPaymentSchema.extend({
+  status: z.string(),
+  substatus: z.string(),
+});
+
 const paymentListSchema = z.object({
   data: z.array(z.unknown()),
   page_info: z.object({ has_next_page: z.boolean() }),
 });
+
+/** Translate a provider payment record into the same event types used by the signed webhook. */
+export function visitPaymentResultFromRecord(
+  response: unknown,
+  order: Parameters<typeof matchesVisitOrder>[1],
+  companyId: string,
+  productId: string,
+): { type: "payment.succeeded" | "payment.failed" | "payment.canceled"; payment: VisitPayment } | null {
+  const record = paymentStateSchema.parse(response);
+  if (!matchesVisitOrder(record, order, companyId, productId)) {
+    throw new Error("Provider payment does not match the visit order.");
+  }
+
+  if (record.auto_refunded || (record.refunded_amount ?? 0) > 0) {
+    // visitPaymentUpdate will freeze unused credits as refunded rather than
+    // treating this record as a usable successful purchase.
+    return { type: "payment.succeeded", payment: record };
+  }
+  if (record.status === "paid" && record.substatus === "succeeded") {
+    return { type: "payment.succeeded", payment: record };
+  }
+  if (record.substatus === "canceled") {
+    return { type: "payment.canceled", payment: record };
+  }
+  if (["failed", "blocked", "price_too_low", "uncollectible"].includes(record.substatus)) {
+    return { type: "payment.failed", payment: record };
+  }
+  return null;
+}
 
 /** A provider list is evidence only when the entire checkout result fits on one page. */
 export function settledVisitPaymentFromList(response: unknown, order: Parameters<typeof matchesVisitOrder>[1], companyId: string, productId: string) {
@@ -44,6 +78,35 @@ export function settledVisitPaymentFromList(response: unknown, order: Parameters
     throw new Error("Provider payment does not match the visit order.");
   }
   return payment;
+}
+
+/**
+ * Recover the one direct saved-card payment for an add-on order when the
+ * signed webhook or the create-payment response was lost. The caller already
+ * scopes the provider list to this plan and a narrow creation window.
+ */
+export function directVisitPaymentResultFromList(
+  response: unknown,
+  order: Parameters<typeof matchesVisitOrder>[1],
+  companyId: string,
+  productId: string,
+) {
+  const list = paymentListSchema.parse(response);
+  if (list.page_info.has_next_page) {
+    throw new Error("Visit add-on has more payment records than can be verified safely.");
+  }
+
+  const matching = list.data.filter((item) => {
+    const parsed = visitPaymentSchema.safeParse(item);
+    return parsed.success &&
+      parsed.data.metadata.oremea_visit_order === order.id &&
+      matchesVisitOrder(parsed.data, order, companyId, productId);
+  });
+  if (matching.length > 1) {
+    throw new Error("Visit add-on has multiple matching payment records.");
+  }
+  if (!matching.length) return null;
+  return visitPaymentResultFromRecord(matching[0], order, companyId, productId);
 }
 
 /** Pure settlement rules; the caller authenticates the event and locks the order. */
