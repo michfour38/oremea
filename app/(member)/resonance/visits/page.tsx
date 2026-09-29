@@ -26,13 +26,14 @@ export default async function VisitPurchasePage({ searchParams }: {
   const { userId } = await auth();
   if (!userId) redirect(`/sign-in?redirect_url=${encodeURIComponent(`/resonance/visits${roomQuery}`)}`);
   if (!(await visitCreditsAvailableFor(userId))) notFound();
+  const checkoutEnabled = await visitCheckoutAvailableFor(userId);
   if (!query.order) {
     const unresolved = await getUnresolvedInitialVisitOrder(userId);
     if (unresolved) redirect(`/resonance/visits?order=${unresolved.id}${roomSuffix}`);
   }
   let order = query.order ? await getVisitOrder(userId, query.order) : null;
   if (query.order && (!order || order.kind !== "initial")) notFound();
-  if (order && !order.whop_checkout_id && ["pending", "unknown"].includes(order.status)) {
+  if (checkoutEnabled && order && !order.whop_checkout_id && ["pending", "unknown"].includes(order.status)) {
     try { order = await restoreInitialVisitCheckout(userId, order.id); }
     catch { /* The same checkout can be recovered later; no payment is submitted here. */ }
   }
@@ -41,7 +42,6 @@ export default async function VisitPurchasePage({ searchParams }: {
     catch { /* Keep checkout state unchanged when provider verification fails. */ }
   }
   if (order?.status === "paid") redirect(`/resonance/complete?order=${order.id}${roomSuffix}`);
-  const checkoutEnabled = await visitCheckoutAvailableFor(userId);
   const unusedVisits = await getVisitBalance(userId);
   // A declined initial payment can be retried inside the same provider checkout.
   // Unknown payment outcomes stay blocked to avoid submitting a second uncertain charge.
