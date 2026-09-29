@@ -97,12 +97,14 @@ export async function chargeVisitOrder(
   config?: WhopVisitConfig,
 ) {
   const resolved = config ?? await whopVisitConfig();
-  // No automatic retry here: an interrupted saved-method charge may have
-  // succeeded even if Oremea did not receive the response.
+  // Keep one provider identity for this exact order even if the request path is
+  // invoked twice. We still do not automatically retry an interrupted charge;
+  // the webhook remains the normal reconciliation path for an unknown result.
   const payment = z.object({ id: z.string().min(1) }).parse(
     await whopApiRequest("payments", {
       method: "POST",
       apiKey: resolved.apiKey,
+      idempotencyKey: `oremea-resonance-payment-${order.id}`,
       body: {
         company_id: resolved.companyId,
         member_id: order.whop_member_id,

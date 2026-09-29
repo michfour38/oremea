@@ -7,7 +7,7 @@ import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
 import { INITIAL_QUANTITIES, VISIT_PRICES } from "@/src/lib/resonance/visit-offers";
 import { getResonanceRoomTarget } from "@/src/lib/resonance/room-entry";
 import { visitCheckoutAvailableFor, visitCreditsAvailableFor } from "@/src/lib/resonance/visit-access";
-import { getVisitBalance, getVisitOrder, reconcileInitialVisitOrder } from "@/src/lib/resonance/visit-orders";
+import { getUnresolvedInitialVisitOrder, getVisitBalance, getVisitOrder, reconcileInitialVisitOrder } from "@/src/lib/resonance/visit-orders";
 import { whopVisitConfig } from "@/src/lib/whop/visit-payments";
 import { FunnelFrame } from "./funnel-frame";
 import { VisitSubmitButton } from "./submit-button";
@@ -25,6 +25,10 @@ export default async function VisitPurchasePage({ searchParams }: {
   const { userId } = await auth();
   if (!userId) redirect(`/sign-in?redirect_url=${encodeURIComponent(`/resonance/visits${roomQuery}`)}`);
   if (!(await visitCreditsAvailableFor(userId))) notFound();
+  if (!query.order) {
+    const unresolved = await getUnresolvedInitialVisitOrder(userId);
+    if (unresolved) redirect(`/resonance/visits?order=${unresolved.id}${roomSuffix}`);
+  }
   let order = query.order ? await getVisitOrder(userId, query.order) : null;
   if (query.order && (!order || order.kind !== "initial")) notFound();
   if (order && ["pending", "unknown", "failed"].includes(order.status)) {
