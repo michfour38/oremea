@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { affiliateCode } from "../whop/affiliate-attribution";
 import { prisma } from "@/lib/prisma";
 import { additionalOffers, initialOffer, VISIT_PRICES } from "./visit-offers";
-import { matchesVisitOrder, matchesVisitRefund, settledVisitPaymentFromList, uuidSchema, visitPaymentSchema, visitPaymentUpdate, visitRefundSchema } from "./visit-payment-contract";
+import { directVisitPaymentResultFromList, matchesVisitOrder, matchesVisitRefund, settledVisitPaymentFromList, uuidSchema, visitPaymentResultFromRecord, visitPaymentSchema, visitPaymentUpdate, visitRefundSchema } from "./visit-payment-contract";
 import { chargeVisitOrder, createVisitCheckout, whopVisitConfig } from "../whop/visit-payments";
 import { whopApiRequest } from "../whop/whop-api";
 import { loadCreatorStarterWhopCatalog } from "../whop/creator-starter-catalog";
@@ -207,6 +207,42 @@ export async function reconcileInitialVisitOrder(userId: string, id: string) {
   // The shared transactional path locks the account and rechecks every field
   // against the current order, including checkout, amount, and payment ID.
   return applyVisitPaymentEvent("payment.succeeded", payment);
+}
+
+/**
+ * Read-only recovery for a saved-card add-on when the signed webhook or the
+ * create-payment response was lost. This function never POSTs a payment.
+ */
+export async function reconcileAdditionalVisitOrder(userId: string, id: string) {
+  const order = await getVisitOrder(userId, id);
+  if (!order) return null;
+  if (!order.parent_id || !["pending", "unknown"].includes(order.status)) return order;
+
+  const expected = await expectedVisitProductForPlan(order.whop_plan_id);
+  let result: ReturnType<typeof visitPaymentResultFromRecord> | null = null;
+
+  if (order.whop_payment_id) {
+    const response = await whopApiRequest(`payments/${encodeURIComponent(order.whop_payment_id)}`);
+    result = visitPaymentResultFromRecord(response, order, expected.companyId, expected.productId);
+  } else {
+    // Whop's payment-list API supports plan and creation-window filters. Keep
+    // the window narrow, reject pagination, then require Oremea's exact order
+    // metadata + member + payment-method + price match before accepting it.
+    const createdAfter = new Date(order.created_at.getTime() - 5 * 60_000).toISOString();
+    const params = new URLSearchParams({
+      account_id: expected.companyId,
+      first: "100",
+      created_after: createdAfter,
+    });
+    params.append("plan_ids[]", order.whop_plan_id);
+    const response = await whopApiRequest(`payments?${params.toString()}`);
+    result = directVisitPaymentResultFromList(response, order, expected.companyId, expected.productId);
+  }
+
+  if (!result) return order;
+  // Same locked, field-rechecking path as the signed webhook. A GET lookup can
+  // settle or fail the existing order, but can never submit another charge.
+  return applyVisitPaymentEvent(result.type, result.payment);
 }
 
 /** Refund payloads differ from payment payloads. Verify their signed envelope too. */
