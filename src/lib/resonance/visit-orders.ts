@@ -14,6 +14,17 @@ export function getVisitOrder(userId: string, id: string) {
   return prisma.resonance_visit_orders.findFirst({ where: { id, user_id: userId } });
 }
 
+export function getUnresolvedInitialVisitOrder(userId: string) {
+  return prisma.resonance_visit_orders.findFirst({
+    where: {
+      user_id: userId,
+      kind: "initial",
+      status: { in: ["pending", "unknown"] },
+    },
+    orderBy: [{ created_at: "desc" }, { id: "desc" }],
+  });
+}
+
 export async function getVisitBalance(userId: string) {
   const result = await prisma.resonance_visit_orders.aggregate({
     where: { user_id: userId, status: "paid" },
@@ -28,22 +39,45 @@ export async function startVisitPurchase(userId: string, email: string, quantity
   const catalog = await loadResonanceWhopCatalog();
   const planId = visitPlanIdFromCatalog(catalog, offer);
   const paymentConfig = await whopVisitConfig(catalog);
-  const order = await prisma.resonance_visit_orders.upsert({
-    where: { id: requestId }, update: {},
-    create: {
+  const prepared = await prisma.$transaction(async (tx) => {
+    await lockResonanceAccount(tx, userId);
+
+    const existingRequest = await tx.resonance_visit_orders.findUnique({ where: { id: requestId } });
+    if (existingRequest) {
+      if (existingRequest.user_id !== userId || existingRequest.quantity !== quantity || existingRequest.kind !== "initial") {
+        throw new Error("This checkout belongs to another request.");
+      }
+      if (existingRequest.status !== "created") return { order: existingRequest, submit: false };
+      const claimed = await tx.resonance_visit_orders.update({
+        where: { id: existingRequest.id }, data: { status: "pending" },
+      });
+      return { order: claimed, submit: true };
+    }
+
+    // Do not create a second provider checkout while an earlier initial
+    // payment is still unresolved. This also serializes separate browser tabs
+    // because the account advisory lock spans the check and row creation.
+    const unresolved = await tx.resonance_visit_orders.findFirst({
+      where: {
+        user_id: userId,
+        kind: "initial",
+        status: { in: ["pending", "unknown"] },
+      },
+      orderBy: [{ created_at: "desc" }, { id: "desc" }],
+    });
+    if (unresolved) return { order: unresolved, submit: false };
+
+    const order = await tx.resonance_visit_orders.create({ data: {
       id: requestId, user_id: userId, buyer_email: email.toLowerCase(),
       kind: offer.kind, quantity: offer.quantity, amount_cents: offer.amountCents,
       whop_plan_id: planId,
       affiliate_code: affiliateCode(referral),
-    },
+      status: "pending",
+    } });
+    return { order, submit: true };
   });
-  if (order.user_id !== userId || order.quantity !== quantity || order.kind !== "initial") {
-    throw new Error("This checkout belongs to another request.");
-  }
-  const claim = await prisma.resonance_visit_orders.updateMany({
-    where: { id: order.id, status: "created" }, data: { status: "pending" },
-  });
-  if (!claim.count) return order.id;
+  if (!prepared.submit) return prepared.order.id;
+  const order = prepared.order;
   try {
     const checkoutId = await createVisitCheckout(order, paymentConfig);
     await prisma.resonance_visit_orders.update({
