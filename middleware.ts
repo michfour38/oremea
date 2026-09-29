@@ -125,6 +125,13 @@ function resonanceDomainResponse(req: NextRequest) {
     }
   }
 
+  // Older Whop checkout sessions were issued with the main-site return URL.
+  // Keep those paid returns on the product host, preserving the order query.
+  if (OREMEA_PUBLIC_HOSTS.has(host) &&
+    (pathname === "/resonance/complete" || pathname === "/resonance/complete/")) {
+    return redirectResonancePath(req, "/resonance/complete");
+  }
+
   return null;
 }
 
