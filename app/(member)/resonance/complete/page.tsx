@@ -7,7 +7,7 @@ import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
 import { additionalOffers, VISIT_PRICES } from "@/src/lib/resonance/visit-offers";
 import { getResonanceRoomTarget } from "@/src/lib/resonance/room-entry";
 import { visitCheckoutAvailableFor, visitCreditsAvailableFor } from "@/src/lib/resonance/visit-access";
-import { getVisitOrder } from "@/src/lib/resonance/visit-orders";
+import { getVisitOrder, reconcileInitialVisitOrder } from "@/src/lib/resonance/visit-orders";
 import { addVisits } from "../visits/actions";
 import { FunnelFrame } from "../visits/funnel-frame";
 import { VisitSubmitButton } from "../visits/submit-button";
@@ -52,8 +52,13 @@ export default async function VisitCompletionPage({ searchParams }: {
   const query = await searchParams;
   const roomTarget = getResonanceRoomTarget(query.room);
   const roomSuffix = roomTarget ? `&room=${roomTarget.weekNumber}` : "";
-  const order = query.order ? await getVisitOrder(userId, query.order) : null;
+  let order = query.order ? await getVisitOrder(userId, query.order) : null;
   if (!order) notFound();
+  if (order.kind === "initial" && ["pending", "unknown", "failed"].includes(order.status)) {
+    try { order = await reconcileInitialVisitOrder(userId, order.id); }
+    catch { /* Whop may be temporarily unavailable; keep the order unconfirmed. */ }
+    if (!order) notFound();
+  }
 
   const child = order.kind === "initial"
     ? await prisma.resonance_visit_orders.findUnique({ where: { parent_id: order.id } })
@@ -82,7 +87,7 @@ export default async function VisitCompletionPage({ searchParams }: {
             </Link>
           ) : null}
           {order.status === "pending" || order.status === "unknown" ? (
-            <a href={`/resonance/complete?order=${order.id}`} className="res-accent res-accent-hover text-base underline">
+            <a href={`/resonance/complete?order=${order.id}${roomSuffix}`} className="res-accent res-accent-hover text-base underline">
               Check payment status
             </a>
           ) : null}
