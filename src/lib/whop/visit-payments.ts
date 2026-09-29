@@ -28,6 +28,18 @@ export type WhopVisitConfig = {
   origin: string;
 };
 
+export function getResonanceCheckoutOrigin() {
+  const appOrigin = getOremeaCommerceOrigin();
+  if (new URL(appOrigin).hostname === "localhost") return appOrigin;
+
+  const configured = process.env.NEXT_PUBLIC_RESONANCE_URL?.trim() || "https://resonance.oremea.com";
+  const origin = new URL(configured);
+  if (origin.protocol !== "https:" || origin.hostname !== "resonance.oremea.com") {
+    throw new Error("Resonance checkout requires the canonical secure host.");
+  }
+  return origin.origin;
+}
+
 export async function whopVisitConfig(
   catalog?: ResonanceWhopCatalog,
 ): Promise<WhopVisitConfig> {
@@ -37,7 +49,7 @@ export async function whopVisitConfig(
     apiKey,
     companyId: resolvedCatalog.companyId,
     productId: resolvedCatalog.productId,
-    origin: getOremeaCommerceOrigin(),
+    origin: getResonanceCheckoutOrigin(),
   };
 }
 

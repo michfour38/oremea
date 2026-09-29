@@ -8,7 +8,7 @@ import {
   matchesVisitOrder, matchesVisitRefund, visitPaymentSchema,
   visitPaymentUpdate, visitRefundSchema,
 } from "../src/lib/resonance/visit-payment-contract";
-import { chargeVisitOrder, createVisitCheckout } from "../src/lib/whop/visit-payments";
+import { chargeVisitOrder, createVisitCheckout, getResonanceCheckoutOrigin } from "../src/lib/whop/visit-payments";
 import { WHOP_VISIT_API_VERSION } from "../src/lib/whop/whop-api";
 
 async function main() {
@@ -60,6 +60,21 @@ async function main() {
   delete process.env.RESONANCE_VISITS_ENABLED;
   process.env.RESONANCE_VISITS_CHECKOUT_ENABLED = "true";
   assert.equal(visitCheckoutEnabled(), false);
+
+  const previousAppUrl = process.env.NEXT_PUBLIC_APP_URL;
+  const previousResonanceUrl = process.env.NEXT_PUBLIC_RESONANCE_URL;
+  try {
+    process.env.NEXT_PUBLIC_APP_URL = "https://www.oremea.com";
+    delete process.env.NEXT_PUBLIC_RESONANCE_URL;
+    assert.equal(getResonanceCheckoutOrigin(), "https://resonance.oremea.com");
+    process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";
+    assert.equal(getResonanceCheckoutOrigin(), "http://localhost:3000");
+  } finally {
+    if (previousAppUrl === undefined) delete process.env.NEXT_PUBLIC_APP_URL;
+    else process.env.NEXT_PUBLIC_APP_URL = previousAppUrl;
+    if (previousResonanceUrl === undefined) delete process.env.NEXT_PUBLIC_RESONANCE_URL;
+    else process.env.NEXT_PUBLIC_RESONANCE_URL = previousResonanceUrl;
+  }
   process.env.RESONANCE_VISITS_ENABLED = "true";
   assert.equal(visitCheckoutEnabled(), true);
   process.env.RESONANCE_VISITS_CHECKOUT_ENABLED = "false";
@@ -154,6 +169,7 @@ async function main() {
     assert.deepEqual(calls[0].body.metadata, { oremea_visit_order: order.id });
     assert.equal(calls[0].body.company_id, "biz_test");
     assert.equal(calls[0].body.plan_id, order.whop_plan_id);
+    assert.equal(calls[0].body.redirect_url, `https://example.test/resonance/complete?order=${order.id}`);
     assert.equal(calls[0].headers["Api-Version-Date"], WHOP_VISIT_API_VERSION);
     assert.match(calls[0].headers.Authorization, /^Bearer /);
     for (const change of [
