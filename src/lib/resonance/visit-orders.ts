@@ -9,9 +9,23 @@ import { loadCreatorStarterWhopCatalog } from "../whop/creator-starter-catalog";
 import { loadResonanceWhopCatalog, visitPlanIdFromCatalog } from "../whop/resonance-catalog";
 import { lockResonanceAccount } from "./resonance-account-lock";
 
-export function getVisitOrder(userId: string, id: string) {
+function findVisitOrder(userId: string, id: string) {
   if (!uuidSchema.safeParse(id).success) return null;
   return prisma.resonance_visit_orders.findFirst({ where: { id, user_id: userId } });
+}
+
+/**
+ * Opening an unresolved saved-card add-on is itself a safe recovery point.
+ * Recovery performs provider GETs only and never retries a charge.
+ */
+export async function getVisitOrder(userId: string, id: string) {
+  const order = await findVisitOrder(userId, id);
+  if (!order) return null;
+  if (order.parent_id && ["pending", "unknown"].includes(order.status)) {
+    try { return await reconcileAdditionalVisitOrderRecord(order); }
+    catch { /* Keep the stored unknown state if provider verification is unavailable. */ }
+  }
+  return order;
 }
 
 export function getUnresolvedInitialVisitOrder(userId: string) {
@@ -192,7 +206,7 @@ export async function applyVisitPaymentEvent(type: string, data: unknown) {
 
 /** Read-only Whop lookup for an authenticated owner's initial checkout return. */
 export async function reconcileInitialVisitOrder(userId: string, id: string) {
-  const order = await getVisitOrder(userId, id);
+  const order = await findVisitOrder(userId, id);
   if (!order) return null;
   if (order.kind !== "initial" || !order.whop_checkout_id ||
       !["pending", "unknown", "failed"].includes(order.status)) return order;
@@ -209,13 +223,7 @@ export async function reconcileInitialVisitOrder(userId: string, id: string) {
   return applyVisitPaymentEvent("payment.succeeded", payment);
 }
 
-/**
- * Read-only recovery for a saved-card add-on when the signed webhook or the
- * create-payment response was lost. This function never POSTs a payment.
- */
-export async function reconcileAdditionalVisitOrder(userId: string, id: string) {
-  const order = await getVisitOrder(userId, id);
-  if (!order) return null;
+async function reconcileAdditionalVisitOrderRecord(order: NonNullable<Awaited<ReturnType<typeof findVisitOrder>>>) {
   if (!order.parent_id || !["pending", "unknown"].includes(order.status)) return order;
 
   const expected = await expectedVisitProductForPlan(order.whop_plan_id);
@@ -243,6 +251,13 @@ export async function reconcileAdditionalVisitOrder(userId: string, id: string) 
   // Same locked, field-rechecking path as the signed webhook. A GET lookup can
   // settle or fail the existing order, but can never submit another charge.
   return applyVisitPaymentEvent(result.type, result.payment);
+}
+
+/** Explicit read-only recovery hook for admin/test tooling. */
+export async function reconcileAdditionalVisitOrder(userId: string, id: string) {
+  const order = await findVisitOrder(userId, id);
+  if (!order) return null;
+  return reconcileAdditionalVisitOrderRecord(order);
 }
 
 /** Refund payloads differ from payment payloads. Verify their signed envelope too. */
