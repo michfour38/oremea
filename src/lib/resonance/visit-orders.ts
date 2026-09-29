@@ -2,8 +2,9 @@ import { randomUUID } from "node:crypto";
 import { affiliateCode } from "../whop/affiliate-attribution";
 import { prisma } from "@/lib/prisma";
 import { additionalOffers, initialOffer, VISIT_PRICES } from "./visit-offers";
-import { matchesVisitOrder, matchesVisitRefund, uuidSchema, visitPaymentSchema, visitPaymentUpdate, visitRefundSchema } from "./visit-payment-contract";
+import { matchesVisitOrder, matchesVisitRefund, settledVisitPaymentFromList, uuidSchema, visitPaymentSchema, visitPaymentUpdate, visitRefundSchema } from "./visit-payment-contract";
 import { chargeVisitOrder, createVisitCheckout, whopVisitConfig } from "../whop/visit-payments";
+import { whopApiRequest } from "../whop/whop-api";
 import { loadCreatorStarterWhopCatalog } from "../whop/creator-starter-catalog";
 import { loadResonanceWhopCatalog, visitPlanIdFromCatalog } from "../whop/resonance-catalog";
 import { lockResonanceAccount } from "./resonance-account-lock";
@@ -153,6 +154,25 @@ export async function applyVisitPaymentEvent(type: string, data: unknown) {
     const update = visitPaymentUpdate(type, payment, order);
     return update ? tx.resonance_visit_orders.update({ where: { id: order.id }, data: update }) : order;
   });
+}
+
+/** Read-only Whop lookup for an authenticated owner's initial checkout return. */
+export async function reconcileInitialVisitOrder(userId: string, id: string) {
+  const order = await getVisitOrder(userId, id);
+  if (!order) return null;
+  if (order.kind !== "initial" || !order.whop_checkout_id ||
+      !["pending", "unknown", "failed"].includes(order.status)) return order;
+
+  const expected = await expectedVisitProductForPlan(order.whop_plan_id);
+  const params = new URLSearchParams({ account_id: expected.companyId, first: "100" });
+  params.append("checkout_configuration_ids[]", order.whop_checkout_id);
+  // GET only. A missing webhook must never cause a second charge.
+  const response = await whopApiRequest(`payments?${params.toString()}`);
+  const payment = settledVisitPaymentFromList(response, order, expected.companyId, expected.productId);
+  if (!payment) return order;
+  // The shared transactional path locks the account and rechecks every field
+  // against the current order, including checkout, amount, and payment ID.
+  return applyVisitPaymentEvent("payment.succeeded", payment);
 }
 
 /** Refund payloads differ from payment payloads. Verify their signed envelope too. */
