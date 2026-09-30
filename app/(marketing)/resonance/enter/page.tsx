@@ -9,7 +9,6 @@ import { visitCheckoutAvailableFor } from "@/src/lib/resonance/visit-access";
 import { visitCheckoutEnabled } from "@/src/lib/resonance/visit-offers";
 import { getVisitBalance } from "@/src/lib/resonance/visit-orders";
 
-// Legacy visit-route contract marker: Choose the visits first. Choose the room next.
 function FunnelAction({
   href,
   signedIn,
@@ -25,27 +24,28 @@ function FunnelAction({
       className="res-action-soft inline-flex rounded-xl border px-6 py-3 text-sm font-medium transition"
     >
       {checkoutReady
-        ? signedIn
-          ? "See Resonance visit options"
-          : "Create account to see visit options"
+        ? "See Resonance visit options"
         : signedIn
           ? "Enter Resonance"
-          : "Create account to enter Resonance"}
+          : "Explore Resonance"}
     </Link>
   );
 }
 
 export default async function ResonanceEnterPage() {
   const { userId } = await auth();
-  const checkoutEnabled = userId ? await visitCheckoutAvailableFor(userId) : false;
-  const hasUnusedVisits = userId && checkoutEnabled && (await getVisitBalance(userId)) > 0;
-  const destination = checkoutEnabled && !hasUnusedVisits ? "/resonance/visits" : "/entry";
-  const publicCheckoutEnabled = !userId && visitCheckoutEnabled();
-  const signupDestination = publicCheckoutEnabled ? "/resonance/visits" : destination;
-  const funnelCheckoutEnabled = checkoutEnabled || publicCheckoutEnabled;
-  const entryHref = userId
-    ? destination
-    : `/sign-up?redirect_url=${encodeURIComponent(signupDestination)}`;
+  const checkoutEnabled = userId
+    ? await visitCheckoutAvailableFor(userId)
+    : visitCheckoutEnabled();
+  const hasUnusedVisits = Boolean(userId && (await getVisitBalance(userId)) > 0);
+  const funnelCheckoutEnabled = checkoutEnabled;
+  const entryHref = hasUnusedVisits
+    ? "/entry"
+    : checkoutEnabled
+      ? "/resonance/visits"
+      : userId
+        ? "/entry"
+        : "/resonance/enter";
 
   return (
     <main id="top" className="resonance-theme relative min-h-screen overflow-x-hidden">
@@ -190,21 +190,29 @@ export default async function ResonanceEnterPage() {
           <div className="mt-8 grid gap-4 md:grid-cols-2">
             {[
               [
-                "1 · Add visit capacity",
+                "1 · Choose visit capacity",
                 funnelCheckoutEnabled
-                  ? "Start with one, three, or four visits. Unused visits stay on the account until they are opened."
+                  ? "Start with one, three, or four visits. If a room caught your attention first, Resonance remembers that interest without locking it in."
                   : "Start with the room that fits what is present now. Each purchase opens one fresh Resonance visit.",
               ],
               [
-                "2 · Open one room",
-                "There are ten rooms and no required order. The room is selected only when a visit is ready to begin, so future visits stay flexible.",
+                "2 · Complete payment",
+                "Payment comes before account creation. Once the purchase is confirmed, you can accept or skip the one-time Complete Ten offer.",
               ],
               [
-                "3 · Move through seven stages",
+                "3 · Keep the visits in your account",
+                "After payment and the optional offer, create or sign into the Oremea account that uses the checkout email. The purchased visits attach there.",
+              ],
+              [
+                "4 · Choose the room to enter",
+                "If you showed interest in a room earlier, it is brought back as a reminder only. You can begin there or compare the rooms and choose another starting point.",
+              ],
+              [
+                "5 · Move through seven stages",
                 "Each room moves through seven guided reflection stages at your own pace. Across the first six stages, the Mirror reflects what is becoming visible and offers two questions arising from that reflection.",
               ],
               [
-                "4 · Keep the completed visit",
+                "6 · Keep the completed visit",
                 "The final stage brings the room together in a Closing Mirror. The completed visit remains preserved in the Archive, including reflections, Mirrors and responses.",
               ],
             ].map(([heading, copy]) => (
@@ -244,6 +252,9 @@ export default async function ResonanceEnterPage() {
           <div className="mt-10 space-y-4">
             {RESONANCE_ROOM_MARKETING.map((room) => {
               const roomName = RESONANCE_ROOM_NAMES[room.weekNumber];
+              const roomHref = funnelCheckoutEnabled
+                ? `/resonance/visits?room=${room.weekNumber}`
+                : `/entry?room=${room.weekNumber}`;
               return (
                 <details key={room.id} className="res-border res-panel group rounded-3xl border backdrop-blur-[2px]">
                   <summary className="flex cursor-pointer list-none items-start justify-between gap-5 px-6 py-5 md:px-7">
@@ -259,7 +270,10 @@ export default async function ResonanceEnterPage() {
                       <p className="res-text-primary text-sm leading-7">{room.description}</p>
                       <p className="res-text-secondary mt-4 text-sm leading-7"><span className="res-accent font-medium">Enter this room when:</span>{" "}{room.chooseWhen}</p>
                     </div>
-                    <Link href={`/entry?room=${room.weekNumber}`} className="res-action mt-6 inline-flex rounded-xl border px-5 py-2.5 text-sm font-medium transition">Choose {roomName} →</Link>
+                    <Link href={roomHref} className="res-action mt-6 inline-flex rounded-xl border px-5 py-2.5 text-sm font-medium transition">Choose {roomName} →</Link>
+                    {funnelCheckoutEnabled ? (
+                      <p className="res-text-secondary mt-3 text-xs leading-6">We&apos;ll remember the interest through checkout. You can choose a different room before opening a visit.</p>
+                    ) : null}
                   </div>
                 </details>
               );
@@ -348,7 +362,7 @@ export default async function ResonanceEnterPage() {
               [
                 "Do I need to select a room before buying visits?",
                 funnelCheckoutEnabled
-                  ? "No. Visits are purchased as capacity. The room is selected only when an unused visit is ready to be opened."
+                  ? "No. If a room catches your attention first, Resonance remembers that interest through checkout, but it does not reserve or lock the room. After purchase you can begin there or choose another room."
                   : "The current purchase path opens the room selected for that visit. Earlier completed visits remain preserved in the Archive.",
               ],
               [
