@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import type { ResonancePromptDTO } from "@/src/lib/resonance/getCurrentDayContent";
@@ -12,6 +12,8 @@ import {
 interface PromptCardProps {
   prompt: ResonancePromptDTO;
 }
+
+const EDIT_WINDOW_MS = 10 * 60 * 1000;
 
 function LoadingDots() {
   return (
@@ -26,8 +28,32 @@ function LoadingDots() {
 export default function PromptCard({ prompt }: PromptCardProps) {
   const router = useRouter();
   const [showEdit, setShowEdit] = useState(false);
+  const [editAvailable, setEditAvailable] = useState(prompt.canEdit);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+
+  useEffect(() => {
+    if (!prompt.isCompleted || !prompt.createdAt || !prompt.canEdit) {
+      setEditAvailable(prompt.canEdit);
+      return;
+    }
+
+    const editDeadline =
+      new Date(prompt.createdAt).getTime() + EDIT_WINDOW_MS;
+    const remaining = editDeadline - Date.now();
+
+    if (remaining <= 0) {
+      setEditAvailable(false);
+      return;
+    }
+
+    setEditAvailable(true);
+    const timeout = window.setTimeout(() => {
+      setEditAvailable(false);
+    }, remaining);
+
+    return () => window.clearTimeout(timeout);
+  }, [prompt.canEdit, prompt.createdAt, prompt.isCompleted]);
 
   async function handleSubmit(formData: FormData) {
     if (isSubmitting) return;
@@ -166,7 +192,7 @@ export default function PromptCard({ prompt }: PromptCardProps) {
           </div>
 
           <div className="flex justify-end">
-            {prompt.canEdit ? (
+            {editAvailable ? (
               <button
                 type="button"
                 onClick={() => {
