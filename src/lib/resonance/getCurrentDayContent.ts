@@ -68,6 +68,8 @@ export async function getCurrentDayContent({
   userId,
   runId,
 }: CurrentDayContentParams): Promise<CurrentDayContentResult> {
+  // Prompt copy is database-backed; the Resonance seed is the source authority
+  // that publishes the active prompt set consumed here.
   const week = await prisma.resonance_weeks.findFirst({
     where: {
       week_number: weekNumber,
