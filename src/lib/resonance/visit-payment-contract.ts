@@ -160,7 +160,7 @@ export function matchesVisitRefund(refund: z.infer<typeof visitRefundSchema>, or
 
 export function matchesVisitOrder(payment: VisitPayment, order: {
   id: string;
-  user_id: string;
+  user_id?: string;
   buyer_email: string;
   whop_plan_id: string;
   whop_checkout_id: string | null;
