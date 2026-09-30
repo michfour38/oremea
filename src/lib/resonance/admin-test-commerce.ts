@@ -85,8 +85,13 @@ export async function simulateAdminVisitAddition(input: {
     const parent = await tx.resonance_visit_orders.findFirst({
       where: { id: input.parentId, user_id: input.userId },
     });
-    if (!parent || parent.kind !== "initial" || parent.status !== "paid") {
-      throw new Error("A paid initial order is required.");
+    if (
+      !parent ||
+      parent.kind !== "initial" ||
+      parent.status !== "paid" ||
+      !isAdminTestVisitPlan(parent.whop_plan_id)
+    ) {
+      throw new Error("An admin test initial order is required.");
     }
 
     const existing = await tx.resonance_visit_orders.findUnique({
