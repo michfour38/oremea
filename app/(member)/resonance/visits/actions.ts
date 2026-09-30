@@ -30,8 +30,25 @@ export async function purchaseVisits(form: FormData) {
     const target = withRoom("/resonance/visits", roomTarget?.weekNumber);
     redirect(`/sign-in?redirect_url=${encodeURIComponent(target)}`);
   }
-  if (!(await visitCheckoutAvailableFor(user.id))) redirect(withRoom("/resonance/visits?error=unavailable", roomTarget?.weekNumber));
+
   const email = user.emailAddresses.find((item) => item.id === user.primaryEmailAddressId);
+  if (await isOremeaAdmin(user.id)) {
+    let orderId: string | null = null;
+    try {
+      orderId = await simulateAdminInitialVisitPurchase({
+        userId: user.id,
+        email: email?.emailAddress ?? "admin-test@oremea.invalid",
+        quantity: Number(form.get("quantity")),
+        requestId: String(form.get("requestId")),
+      });
+    } catch {
+      // Keep admin test failures inside the same safe funnel surface.
+    }
+    if (!orderId) redirect(withRoom("/resonance/visits?error=admin-test", roomTarget?.weekNumber));
+    redirect(withRoom(`/resonance/complete?order=${orderId}`, roomTarget?.weekNumber));
+  }
+
+  if (!(await visitCheckoutAvailableFor(user.id))) redirect(withRoom("/resonance/visits?error=unavailable", roomTarget?.weekNumber));
   if (!email || email.verification?.status !== "verified") redirect(withRoom("/resonance/visits?error=email", roomTarget?.weekNumber));
   let orderId: string | null = null;
   try {
@@ -50,13 +67,11 @@ export async function simulateAdminPurchase(form: FormData) {
   if (!(await isOremeaAdmin(user.id))) redirect("/resonance/visits");
 
   const email = user.emailAddresses.find((item) => item.id === user.primaryEmailAddressId);
-  if (!email) redirect(withRoom("/resonance/visits?error=email", roomTarget?.weekNumber));
-
   let orderId: string | null = null;
   try {
     orderId = await simulateAdminInitialVisitPurchase({
       userId: user.id,
-      email: email.emailAddress,
+      email: email?.emailAddress ?? "admin-test@oremea.invalid",
       quantity: Number(form.get("quantity")),
       requestId: String(form.get("requestId")),
     });
