@@ -17,6 +17,11 @@ type StoredRecognitionComposer = {
   clientMessageId: string | null;
 };
 
+type PendingRecognitionTurn = {
+  content: string;
+  clientMessageId: string;
+};
+
 const COMPOSER_STORAGE_KEY = "oremea:recognition:composer:v1";
 
 function RecognitionDots() {
@@ -98,6 +103,8 @@ export default function RecognitionChat({
   const [messages, setMessages] = useState(initialMessages);
   const [draft, setDraft] = useState("");
   const [pendingMessageId, setPendingMessageId] = useState<string | null>(null);
+  const [pendingLocalTurn, setPendingLocalTurn] =
+    useState<PendingRecognitionTurn | null>(null);
   const [composerHydrated, setComposerHydrated] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isStartingNewChat, setIsStartingNewChat] = useState(false);
@@ -110,6 +117,14 @@ export default function RecognitionChat({
     lastMessage?.role === "user" && lastMessage.clientMessageId
       ? lastMessage
       : null;
+  const pendingTurnAlreadySaved =
+    pendingLocalTurn !== null &&
+    messages.some(
+      (message) =>
+        message.role === "user" &&
+        message.clientMessageId === pendingLocalTurn.clientMessageId,
+    );
+  const hasConversation = messages.length > 0 || pendingLocalTurn !== null;
 
   useEffect(() => {
     const stored = readStoredComposer();
@@ -156,6 +171,14 @@ export default function RecognitionChat({
     textarea.style.height = `${Math.min(textarea.scrollHeight, 224)}px`;
   }, [draft, savedTurnAwaitingReply]);
 
+  useEffect(() => {
+    if (!pendingLocalTurn) return;
+    const frame = window.requestAnimationFrame(() => {
+      bottomRef.current?.scrollIntoView({ block: "end" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [pendingLocalTurn]);
+
   function restoreDifferentStoredComposer(completedClientMessageId: string) {
     const stored = readStoredComposer();
     if (
@@ -174,7 +197,7 @@ export default function RecognitionChat({
   async function startNewChat() {
     if (isSending || isStartingNewChat) return;
 
-    if (messages.length > 0) {
+    if (hasConversation) {
       const confirmed = window.confirm(
         "Begin a new chat? This conversation will stay in your Archive.",
       );
@@ -208,16 +231,22 @@ export default function RecognitionChat({
   }
 
   async function sendMessage(savedTurn?: RecognitionChatMessage) {
-    const content = savedTurn ? savedTurn.content : draft.trim();
+    const content =
+      savedTurn?.content ?? pendingLocalTurn?.content ?? draft.trim();
     if (!content || isSending || isStartingNewChat) return;
 
     const clientMessageId =
-      savedTurn?.clientMessageId ?? pendingMessageId ?? crypto.randomUUID();
+      savedTurn?.clientMessageId ??
+      pendingLocalTurn?.clientMessageId ??
+      pendingMessageId ??
+      crypto.randomUUID();
     if (!clientMessageId) return;
 
-    if (!savedTurn) {
+    if (!savedTurn && !pendingLocalTurn) {
       setPendingMessageId(clientMessageId);
       storeComposer(draft, clientMessageId);
+      setPendingLocalTurn({ content, clientMessageId });
+      setDraft("");
     }
 
     setIsSending(true);
@@ -236,6 +265,7 @@ export default function RecognitionChat({
           setMessages((current) =>
             mergeMessages(current, [data.message as RecognitionChatMessage]),
           );
+          setPendingLocalTurn(null);
           setDraft("");
           setPendingMessageId(null);
           clearStoredComposer();
@@ -249,6 +279,7 @@ export default function RecognitionChat({
           data.messages.assistant as RecognitionChatMessage,
         ]),
       );
+      setPendingLocalTurn(null);
 
       if (savedTurn) {
         restoreDifferentStoredComposer(clientMessageId);
@@ -275,7 +306,7 @@ export default function RecognitionChat({
     <main className="min-h-screen overflow-x-hidden">
       <MemberNav />
 
-      {messages.length > 0 ? (
+      {hasConversation ? (
         <div className="relative z-20 mx-auto flex w-full max-w-3xl justify-end px-5 pt-3 md:px-8">
           <button
             type="button"
@@ -306,12 +337,10 @@ export default function RecognitionChat({
       <section className="relative z-10 mx-auto flex min-h-[calc(100vh-65px)] max-w-3xl flex-col px-5 md:px-8">
         <div
           className={
-            messages.length === 0
-              ? "py-4 md:py-5"
-              : "flex-1 py-8 md:py-12"
+            hasConversation ? "flex-1 py-8 md:py-12" : "py-4 md:py-5"
           }
         >
-          {messages.length === 0 ? (
+          {!hasConversation ? (
             <div className="mx-auto max-w-xl py-2 md:py-3">
               <p className="rec-accent text-xs uppercase tracking-[0.28em]">
                 Begin where you are
@@ -349,6 +378,14 @@ export default function RecognitionChat({
                   </div>
                 </article>
               ))}
+
+              {pendingLocalTurn && !pendingTurnAlreadySaved ? (
+                <article className="ml-auto max-w-xl">
+                  <div className="rec-user-bubble whitespace-pre-wrap rounded-[1.45rem] border px-4 py-3 text-[15px] leading-6 md:px-5 md:text-base md:leading-7">
+                    {pendingLocalTurn.content}
+                  </div>
+                </article>
+              ) : null}
 
               {isSending ? (
                 <article className="mr-auto max-w-3xl">
@@ -393,6 +430,20 @@ export default function RecognitionChat({
                   className="rec-primary-button shrink-0 rounded-full border px-5 py-2 text-sm font-medium transition disabled:cursor-not-allowed"
                 >
                   Continue reflection
+                </button>
+              </div>
+            ) : pendingLocalTurn && !isSending ? (
+              <div className="rec-saved-panel flex flex-col gap-3 rounded-[1.75rem] border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="rec-text text-sm leading-6">
+                  Your words are still here. Recognition can try again from exactly here.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void sendMessage()}
+                  disabled={isStartingNewChat}
+                  className="rec-primary-button shrink-0 rounded-full border px-5 py-2 text-sm font-medium transition disabled:cursor-not-allowed"
+                >
+                  Try again
                 </button>
               </div>
             ) : (
