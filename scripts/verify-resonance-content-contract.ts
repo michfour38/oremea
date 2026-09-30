@@ -114,15 +114,50 @@ assert.match(
   "Bearing must preserve the distinction between endorsed direction and externally controlled pressure.",
 );
 
-assert.match(
-  weekText(5),
-  /what else besides desire can create similar sensations/i,
-  "Pulse must treat bodily intensity as information that still needs context.",
+const pulseDay2 = weekByNumber
+  .get(5)
+  ?.days.find((day) => day.day_number === 2);
+
+assert.ok(pulseDay2, "Pulse must retain Day 2.");
+assert.equal(
+  pulseDay2.prompts.length,
+  6,
+  "Pulse Day 2 must keep six distinct questions rather than collapsing separate distinctions into one prompt.",
 );
 assert.match(
-  weekText(5),
-  /what more information showed me/i,
-  "Pulse must preserve the move from sensation and first interpretation toward reality-testing.",
+  pulseDay2.prompts[0]?.content ?? "",
+  /sensations or changes.*body/i,
+  "Pulse Day 2 question 1 must begin with body sensation.",
+);
+assert.match(
+  pulseDay2.prompts[1]?.content ?? "",
+  /what else besides desire can create similar sensations/i,
+  "Pulse Day 2 question 2 must consider alternate causes for a similar sensation.",
+);
+assert.match(
+  pulseDay2.prompts[2]?.content ?? "",
+  /what context helps you tell/i,
+  "Pulse Day 2 question 3 must add context before assigning meaning.",
+);
+assert.match(
+  pulseDay2.prompts[3]?.content ?? "",
+  /first meaning/i,
+  "Pulse Day 2 question 4 must make the first meaning explicit rather than hiding it inside another prompt.",
+);
+assert.match(
+  pulseDay2.prompts[4]?.content ?? "",
+  /after more time, information, or real contact/i,
+  "Pulse Day 2 question 5 must reality-test the first meaning with time, information, or contact.",
+);
+assert.match(
+  pulseDay2.prompts[5]?.content ?? "",
+  /what did you choose/i,
+  "Pulse Day 2 question 6 must preserve choice as its own step.",
+);
+assert.equal(
+  pulseDay2.prompts[5]?.type,
+  "mirror_exercise",
+  "Pulse Day 2 must keep the final choice question as the day's mirror exercise.",
 );
 assert.doesNotMatch(
   weekText(5),
