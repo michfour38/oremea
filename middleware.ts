@@ -108,10 +108,11 @@ function resonanceDomainResponse(req: NextRequest) {
   const host = getHostname(req);
   const { pathname } = req.nextUrl;
 
-  // On the Resonance host, /entry is the actual destination after a visit
-  // completes. Let it render directly instead of bouncing it through / and
-  // back into an internal /entry rewrite.
   if (host === RESONANCE_HOST) {
+    if (pathname === "/") {
+      return rewriteResonancePath(req, "/resonance/enter");
+    }
+
     return null;
   }
 
@@ -338,14 +339,6 @@ const isPublicRoute = createRouteMatcher([
 const oremeaMiddleware = clerkMiddleware(async (auth, req) => {
   if (isCompassProtectedPath(req)) {
     await auth.protect();
-  }
-
-  const host = getHostname(req);
-  const { pathname } = req.nextUrl;
-
-  if (host === RESONANCE_HOST && pathname === "/") {
-    await auth.protect();
-    return rewriteResonancePath(req, "/entry");
   }
 
   const resonanceResponse = resonanceDomainResponse(req);
