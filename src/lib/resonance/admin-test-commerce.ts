@@ -144,3 +144,46 @@ export async function simulateAdminVisitAddition(input: {
     return order.id;
   });
 }
+
+export async function ensureAdminTestVisitCredit(userId: string) {
+  await requireAdmin(userId);
+  const offer = initialOffer(1);
+
+  return prisma.$transaction(async (tx) => {
+    await lockResonanceAccount(tx, userId);
+
+    const existing = await tx.resonance_visit_orders.findFirst({
+      where: {
+        user_id: userId,
+        status: "paid",
+        remaining_quantity: { gt: 0 },
+        whop_plan_id: { startsWith: ADMIN_TEST_PLAN_PREFIX },
+      },
+      orderBy: { created_at: "asc" },
+      select: { id: true },
+    });
+    if (existing) return existing.id;
+
+    const now = new Date();
+    const order = await tx.resonance_visit_orders.create({
+      data: {
+        user_id: userId,
+        buyer_email: "admin-test@oremea.invalid",
+        kind: "initial",
+        quantity: 1,
+        amount_cents: offer.amountCents,
+        remaining_quantity: 1,
+        status: "paid",
+        whop_plan_id: `${ADMIN_TEST_PLAN_PREFIX}room-entry:1`,
+        whop_member_id: ADMIN_TEST_MEMBER_ID,
+        whop_payment_method_id: ADMIN_TEST_PAYMENT_METHOD_ID,
+        affiliate_code: null,
+        paid_at: now,
+        created_at: ADMIN_TEST_CREATED_AT,
+        offer_closed_at: now,
+      },
+    });
+
+    return order.id;
+  });
+}
