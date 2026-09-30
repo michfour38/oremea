@@ -12,6 +12,8 @@ export type DawnCommerceMetricOrder = {
   affiliate_code?: string | null;
 };
 
+const ADMIN_TEST_PLAN_PREFIX = "admin-test:resonance:";
+
 const coverage = {
   purchases: "resonance_visit_orders",
   checkoutFunnel: "order_created_to_payment_status",
@@ -173,8 +175,13 @@ export function unavailableDawnCommerceMetrics(
 }
 
 export async function oremeaDawnCommerceMetrics() {
-  const [orders, redeemedVisits] = await Promise.all([
+  const [orders, redemptionRows] = await Promise.all([
     prisma.resonance_visit_orders.findMany({
+      where: {
+        NOT: {
+          whop_plan_id: { startsWith: ADMIN_TEST_PLAN_PREFIX },
+        },
+      },
       select: {
         user_id: true,
         kind: true,
@@ -187,8 +194,14 @@ export async function oremeaDawnCommerceMetrics() {
         affiliate_code: true,
       },
     }),
-    prisma.resonance_visit_redemptions.count(),
+    prisma.$queryRaw<Array<{ count: number }>>`
+      SELECT COUNT(*)::int AS "count"
+      FROM "resonance_visit_redemptions" redemption
+      INNER JOIN "resonance_visit_orders" visit_order
+        ON visit_order."id" = redemption."order_id"
+      WHERE visit_order."whop_plan_id" NOT LIKE ${`${ADMIN_TEST_PLAN_PREFIX}%`}
+    `,
   ]);
 
-  return aggregateDawnCommerceMetrics(orders, redeemedVisits);
+  return aggregateDawnCommerceMetrics(orders, redemptionRows[0]?.count ?? 0);
 }
