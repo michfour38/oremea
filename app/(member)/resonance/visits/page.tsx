@@ -10,6 +10,8 @@ import { visitCheckoutAvailableFor, visitCreditsAvailableFor } from "@/src/lib/r
 import { getUnresolvedInitialVisitOrder, getVisitBalance, getVisitOrder, reconcileInitialVisitOrder } from "@/src/lib/resonance/visit-orders";
 import { restoreInitialVisitCheckout } from "@/src/lib/resonance/initial-checkout-recovery";
 import { whopVisitConfig } from "@/src/lib/whop/visit-payments";
+import { isOremeaAdmin } from "@/lib/auth/admin-access";
+import { isAdminTestVisitPlan } from "@/src/lib/resonance/admin-test-commerce";
 import { FunnelFrame } from "./funnel-frame";
 import { VisitSubmitButton } from "./submit-button";
 import { purchaseVisits } from "./actions";
@@ -26,13 +28,23 @@ export default async function VisitPurchasePage({ searchParams }: {
   const { userId } = await auth();
   if (!userId) redirect(`/sign-in?redirect_url=${encodeURIComponent(`/resonance/visits${roomQuery}`)}`);
   if (!(await visitCreditsAvailableFor(userId))) notFound();
-  const checkoutEnabled = await visitCheckoutAvailableFor(userId);
-  if (!query.order) {
+  const [checkoutEnabled, adminMode] = await Promise.all([
+    visitCheckoutAvailableFor(userId),
+    isOremeaAdmin(userId),
+  ]);
+
+  // Public buyers resume an unresolved provider checkout. Admin test mode never
+  // gets trapped behind or mutates a real provider order from an earlier test.
+  if (!query.order && !adminMode) {
     const unresolved = await getUnresolvedInitialVisitOrder(userId);
     if (unresolved) redirect(`/resonance/visits?order=${unresolved.id}${roomSuffix}`);
   }
+
   let order = query.order ? await getVisitOrder(userId, query.order) : null;
   if (query.order && (!order || order.kind !== "initial")) notFound();
+  if (adminMode && order && !isAdminTestVisitPlan(order.whop_plan_id)) {
+    redirect(`/resonance/visits${roomQuery}`);
+  }
   if (checkoutEnabled && order && !order.whop_checkout_id && ["pending", "unknown"].includes(order.status)) {
     try { order = await restoreInitialVisitCheckout(userId, order.id); }
     catch { /* The same checkout can be recovered later; no payment is submitted here. */ }
@@ -59,7 +71,7 @@ export default async function VisitPurchasePage({ searchParams }: {
         <p className="res-text-primary mt-5 text-base leading-8">Each visit opens one seven-day room experience, starting when it is entered. Use different rooms or return to the same room for a fresh round. One visit is active at a time.</p>
         {unusedVisits > 0 ? <p className="res-text-primary mt-4">You have {unusedVisits} unused visit{unusedVisits === 1 ? "" : "s"}. <Link href={roomTarget?.entryPath ?? "/entry"} className="res-accent underline underline-offset-4">Choose a room with your visits</Link></p> : null}
         {!checkoutEnabled ? <p role="status" className="res-text-primary mt-6">Package checkout is not open yet. Existing purchases remain available.</p> : null}
-        {query.error ? <p role="alert" className="res-alert mt-6">{query.error === "email" ? "Verify the primary email on this account before purchasing." : "Checkout could not be opened. No payment has been confirmed."}</p> : null}
+        {query.error ? <p role="alert" className="res-alert mt-6">{query.error === "email" ? "Verify the primary email on this account before purchasing." : query.error === "admin-test" ? "The admin test purchase could not be recorded." : "Checkout could not be opened. No payment has been confirmed."}</p> : null}
       </div>
 
       {!order ? (
