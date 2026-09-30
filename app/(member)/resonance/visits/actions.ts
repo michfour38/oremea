@@ -9,6 +9,7 @@ import { visitCheckoutAvailableFor, visitCreditsAvailableFor } from "@/src/lib/r
 import { getResonanceRoomTarget } from "@/src/lib/resonance/room-entry";
 import { isOremeaAdmin } from "@/lib/auth/admin-access";
 import {
+  ensureAdminTestVisitCredit,
   simulateAdminInitialVisitPurchase,
   simulateAdminVisitAddition,
 } from "@/src/lib/resonance/admin-test-commerce";
@@ -120,6 +121,9 @@ export async function enterVisitRoom(form: FormData) {
   if (!(await visitCreditsAvailableFor(userId))) redirect("/entry");
   let entered = false;
   try {
+    if (await isOremeaAdmin(userId)) {
+      await ensureAdminTestVisitCredit(userId);
+    }
     await redeemVisit(userId, Number(form.get("weekNumber")), String(form.get("requestId")));
     entered = true;
   } catch { /* No debit occurs if a room cannot be opened. */ }
