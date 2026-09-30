@@ -6,8 +6,8 @@ import {
   type ResonanceWhopCatalog,
 } from "./resonance-catalog";
 import { getOremeaCommerceOrigin, getWhopApiKey, whopApiRequest } from "./whop-api";
+import { guestOwnerFromClaim } from "../resonance/guest-visit-identity";
 
-// Apple Pay domain ownership is served from public/.well-known so embedded Whop checkout can expose Apple Pay on verified production domains.
 const checkoutSchema = z.object({
   id: z.string().min(1),
   company_id: z.string(),
@@ -26,6 +26,11 @@ export type WhopVisitConfig = {
   companyId: string;
   productId: string;
   origin: string;
+};
+
+export type VisitCheckoutReturnContext = {
+  claim?: string;
+  room?: number;
 };
 
 export function getResonanceCheckoutOrigin() {
@@ -53,9 +58,26 @@ export async function whopVisitConfig(
   };
 }
 
+export function visitCheckoutReturnUrl(
+  origin: string,
+  orderId: string,
+  context?: VisitCheckoutReturnContext,
+) {
+  const url = new URL("/resonance/complete", origin);
+  url.searchParams.set("order", orderId);
+  if (context?.claim && guestOwnerFromClaim(context.claim)) {
+    url.searchParams.set("claim", context.claim);
+  }
+  if (context?.room && Number.isInteger(context.room) && context.room >= 1 && context.room <= 10) {
+    url.searchParams.set("room", String(context.room));
+  }
+  return url.toString();
+}
+
 export async function createVisitCheckout(
   order: { id: string; whop_plan_id: string; amount_cents: number; affiliate_code?: string | null },
   config?: WhopVisitConfig,
+  returnContext?: VisitCheckoutReturnContext,
 ) {
   const resolved = config ?? await whopVisitConfig();
   const checkout = checkoutSchema.parse(
@@ -69,7 +91,7 @@ export async function createVisitCheckout(
         mode: "payment",
         ...(affiliateCode(order.affiliate_code) ? { affiliate_code: affiliateCode(order.affiliate_code) } : {}),
         metadata: { oremea_visit_order: order.id },
-        redirect_url: `${resolved.origin}/resonance/complete?order=${order.id}`,
+        redirect_url: visitCheckoutReturnUrl(resolved.origin, order.id, returnContext),
       },
     }),
   );
@@ -97,9 +119,6 @@ export async function chargeVisitOrder(
   config?: WhopVisitConfig,
 ) {
   const resolved = config ?? await whopVisitConfig();
-  // Keep one provider identity for this exact order even if the request path is
-  // invoked twice. We still do not automatically retry an interrupted charge;
-  // the webhook remains the normal reconciliation path for an unknown result.
   const payment = z.object({ id: z.string().min(1) }).parse(
     await whopApiRequest("payments", {
       method: "POST",
