@@ -7,6 +7,11 @@ import { requestAffiliateCode } from "@/src/lib/whop/affiliate-request";
 import { acceptVisitAddition, declineVisitAddition, redeemVisit, startVisitPurchase } from "@/src/lib/resonance/visit-orders";
 import { visitCheckoutAvailableFor, visitCreditsAvailableFor } from "@/src/lib/resonance/visit-access";
 import { getResonanceRoomTarget } from "@/src/lib/resonance/room-entry";
+import { isOremeaAdmin } from "@/lib/auth/admin-access";
+import {
+  simulateAdminInitialVisitPurchase,
+  simulateAdminVisitAddition,
+} from "@/src/lib/resonance/admin-test-commerce";
 
 function formRoomTarget(form: FormData) {
   const room = form.get("room");
@@ -38,6 +43,31 @@ export async function purchaseVisits(form: FormData) {
   redirect(withRoom(`/resonance/visits?order=${orderId}`, roomTarget?.weekNumber));
 }
 
+export async function simulateAdminPurchase(form: FormData) {
+  const roomTarget = formRoomTarget(form);
+  const user = await currentUser();
+  if (!user) redirect("/sign-in");
+  if (!(await isOremeaAdmin(user.id))) redirect("/resonance/visits");
+
+  const email = user.emailAddresses.find((item) => item.id === user.primaryEmailAddressId);
+  if (!email) redirect(withRoom("/resonance/visits?error=email", roomTarget?.weekNumber));
+
+  let orderId: string | null = null;
+  try {
+    orderId = await simulateAdminInitialVisitPurchase({
+      userId: user.id,
+      email: email.emailAddress,
+      quantity: Number(form.get("quantity")),
+      requestId: String(form.get("requestId")),
+    });
+  } catch {
+    // Keep admin test failures inside the same safe funnel surface.
+  }
+
+  if (!orderId) redirect(withRoom("/resonance/visits?error=admin-test", roomTarget?.weekNumber));
+  redirect(withRoom(`/resonance/complete?order=${orderId}`, roomTarget?.weekNumber));
+}
+
 export async function addVisits(form: FormData) {
   const roomTarget = formRoomTarget(form);
   const { userId } = await auth();
@@ -45,7 +75,17 @@ export async function addVisits(form: FormData) {
   if (!(await visitCheckoutAvailableFor(userId))) redirect(roomTarget?.entryPath ?? "/entry");
   const parentId = String(form.get("orderId"));
   let orderId: string | null = null;
-  try { orderId = await acceptVisitAddition(userId, parentId, Number(form.get("quantity"))); } catch { /* Show a safe error on the original order. */ }
+  try {
+    orderId = (await isOremeaAdmin(userId))
+      ? await simulateAdminVisitAddition({
+          userId,
+          parentId,
+          quantity: Number(form.get("quantity")),
+        })
+      : await acceptVisitAddition(userId, parentId, Number(form.get("quantity")));
+  } catch {
+    // Show a safe error on the original order.
+  }
   if (!orderId) redirect(withRoom(`/resonance/complete?order=${encodeURIComponent(parentId)}&error=addition`, roomTarget?.weekNumber));
   redirect(withRoom(`/resonance/complete?order=${orderId}`, roomTarget?.weekNumber));
 }
