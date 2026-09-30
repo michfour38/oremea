@@ -13,8 +13,8 @@ export function guestOwnerFromClaim(claim: string | null | undefined) {
   return `${GUEST_OWNER_PREFIX}${digest}`;
 }
 
-export function isGuestVisitOwner(userId: string) {
-  return userId.startsWith(GUEST_OWNER_PREFIX);
+export function isGuestVisitOwner(userId: string | null | undefined) {
+  return Boolean(userId?.startsWith(GUEST_OWNER_PREFIX));
 }
 
 export function pendingGuestEmail(orderId: string) {
