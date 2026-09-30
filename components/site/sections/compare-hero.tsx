@@ -16,22 +16,22 @@ export function CompareHero({ mode, setMode }: CompareHeroProps) {
         </p>
 
         <h1 className="mx-auto max-w-3xl text-4xl font-light leading-tight text-zinc-100 md:text-6xl">
-          Different kinds of participation for what is here now.
+          Different kinds of participation for what is here now
         </h1>
 
         <p className="mx-auto mt-10 max-w-2xl font-serif text-xl leading-relaxed text-zinc-300 md:text-2xl">
-          Each Oremea product has its own job.
+          Each Oremea product has its own job
         </p>
 
         <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-zinc-400 md:text-lg">
           Recognition helps you see yourself clearly. Resonance gives what becomes
           visible somewhere to deepen. Compass helps when you are ready to move.
-          Other products hold their own relational and participation contexts.
+          Other products hold their own relational and participation contexts
         </p>
 
         <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-zinc-500 md:text-lg">
           There is no compulsory sequence. Choose the container that matches the
-          need you actually have.
+          need you actually have
         </p>
 
         <div className="mt-12 inline-flex rounded-full border border-white/10 bg-black/30 p-1">

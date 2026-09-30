@@ -19,7 +19,7 @@ export function CompareCompass({ mode }: CompareCompassProps) {
             </h2>
 
             <p className="mt-6 text-lg leading-8 text-zinc-400">
-              Turn what matters into participant-owned movement.
+              Turn what matters into participant-owned movement
             </p>
           </div>
 
@@ -28,27 +28,27 @@ export function CompareCompass({ mode }: CompareCompassProps) {
               <div className="space-y-8">
                 <div className="rounded-3xl border border-white/10 bg-zinc-950/80 p-8">
                   <p className="font-serif text-2xl leading-relaxed text-zinc-100 md:text-3xl">
-                    Like knowing what you are choosing next.
+                    Like knowing what you are choosing next
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
                     Like several competing priorities becoming clear enough to
-                    choose between.
+                    choose between
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
                     Like seeing why a goal matters before deciding how to pursue
-                    it.
+                    it
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
                     Like keeping what matters visible on a Map while your goals
-                    remain yours to choose.
+                    remain yours to choose
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
                     Like noticing when more discussion is no longer changing what
-                    can happen outside the conversation.
+                    can happen outside the conversation
                   </p>
 
                   <div className="mt-4 flex flex-wrap gap-4">

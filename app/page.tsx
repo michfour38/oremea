@@ -11,7 +11,7 @@ const products = [
     href: "https://recognition.oremea.com",
     active: true,
     short:
-      "A private AI discussion journal for thoughts that need more than a journal page.",
+      "A private AI discussion journal for thoughts that need more than a journal page",
     action: "Enter Recognition",
     full: [
       "Recognition begins wherever your attention is now.",
@@ -25,7 +25,7 @@ const products = [
     href: "/resonance/enter",
     active: true,
     short:
-      "Private seven-day reflection visits. Buy the visits first; choose each room only when you are ready to enter it.",
+      "Private seven-day reflection visits. Buy the visits first; choose each room only when you are ready to enter it",
     action: "Explore Resonance visits",
     full: [
       "Resonance gives you a structured place to notice what happens inside connection across seven days, one room at a time.",
@@ -40,7 +40,7 @@ const products = [
     href: "/compass/access",
     active: true,
     short:
-      "Turn what matters into clear direction, a working Map, and the next movement you can actually make.",
+      "Turn what matters into clear direction, a working Map, and the next movement you can actually make",
     action: "Enter Compass",
     full: [
       "Compass is for navigation when something needs to move.",
@@ -92,13 +92,13 @@ export default function Home() {
 
         <div className="max-w-3xl">
           <h1 className="mt-6 text-2xl font-semibold tracking-tight md:text-3xl">
-            Pattern awareness for people who want to meet life more clearly.
+            Pattern awareness for people who want to meet life more clearly
           </h1>
 
           <p className="mt-5 max-w-2xl text-base leading-8 text-zinc-300">
             Oremea is a house of structured reflective products for
             self-recognition, relational clarity, aligned execution,
-            and intentional connection.
+            and intentional connection
           </p>
         </div>
 

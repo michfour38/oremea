@@ -20,7 +20,7 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
             </h2>
 
             <p className="mt-6 text-lg leading-8 text-zinc-200">
-              Relational awareness and self-observation.
+              Relational awareness and self-observation
             </p>
           </div>
 
@@ -30,27 +30,27 @@ export function CompareResonance({ mode }: CompareResonanceProps) {
                 <div className="rounded-3xl border border-white/10 bg-zinc-950/80 p-8">
                   <p className="font-serif text-2xl leading-relaxed text-zinc-100 md:text-3xl">
                     Like finally slowing down enough to notice what keeps
-                    repeating.
+                    repeating
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-200">
-                    Like seeing your own patterns without being shamed for them.
+                    Like seeing your own patterns without being shamed for them
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-200">
-                    Like someone held up a mirror gently — and didn’t look away.
+                    Like someone held up a mirror gently — and didn’t look away
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-200">
-                    Like becoming more honest with yourself over time.
+                    Like becoming more honest with yourself over time
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-200">
                     Like finally recognising the difference between attraction,
-                    attachment, clarity, and repetition.
+                    attachment, clarity, and repetition
                   </p>
                   <p className="mt-3 text-sm leading-7 text-zinc-200">
-                    Buy the visits first; choose each room when you are ready.
+                    Buy the visits first; choose each room when you are ready
                   </p>
 
                   <div className="mt-4 flex flex-wrap gap-4">

@@ -19,7 +19,7 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
             </h2>
 
             <p className="mt-6 text-lg leading-8 text-zinc-400">
-              See yourself clearly while you are speaking.
+              See yourself clearly while you are speaking
             </p>
           </div>
 
@@ -29,22 +29,22 @@ export function CompareRecognition({ mode }: CompareRecognitionProps) {
                 <div className="rounded-3xl border border-white/10 bg-zinc-950/80 p-8">
                   <p className="font-serif text-2xl leading-relaxed text-zinc-100 md:text-3xl">
                     Like talking to someone who remembers what you actually said,
-                    without deciding what it means for you.
+                    without deciding what it means for you
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
                     Like hearing two of your own statements placed beside one another
-                    when they do not yet sit cleanly together.
+                    when they do not yet sit cleanly together
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
                     Like having “always”, “never”, “no choice”, and “everything”
-                    examined closely enough to become specific.
+                    examined closely enough to become specific
                   </p>
 
                   <p className="mt-8 font-serif text-xl leading-relaxed text-zinc-400">
                     Like having your own words kept in view while interpretation,
-                    authority, responsibility, and next movement remain yours.
+                    authority, responsibility, and next movement remain yours
                   </p>
 
                   <div className="mt-4 flex flex-wrap gap-4">

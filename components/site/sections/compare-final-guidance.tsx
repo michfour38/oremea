@@ -7,7 +7,7 @@ export function CompareFinalGuidance() {
         </p>
 
         <h2 className="text-3xl font-light leading-tight text-zinc-100 md:text-5xl">
-          See clearly. Stay with what emerges. Move when movement is yours.
+          See clearly · Stay with what emerges · Move when movement is yours
         </h2>
 
         <p className="mx-auto mt-8 max-w-3xl text-base leading-8 text-zinc-400">

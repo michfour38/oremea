@@ -9,12 +9,12 @@ export function ContactHero() {
         </p>
 
         <h1 className="max-w-3xl text-4xl font-light leading-tight text-zinc-100 md:text-5xl">
-          Support and business contact for Oremea.
+          Support and business contact for Oremea
         </h1>
 
         <p className="mt-4 max-w-2xl text-base leading-7 text-zinc-400">
           For account access, payment questions, product support, or general
-          enquiries, contact Oremea directly.
+          enquiries, contact Oremea directly
         </p>
       </div>
     </section>
