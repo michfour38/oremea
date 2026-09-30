@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { createVisitCheckout } from "../whop/visit-payments";
+import { createVisitCheckout, type VisitCheckoutReturnContext } from "../whop/visit-payments";
 import { getVisitOrder } from "./visit-orders";
 
 /**
@@ -10,7 +10,11 @@ import { getVisitOrder } from "./visit-orders";
  * createVisitCheckout. Whop therefore returns the original checkout instead
  * of creating another one. No card charge is submitted here.
  */
-export async function restoreInitialVisitCheckout(userId: string, id: string) {
+export async function restoreInitialVisitCheckout(
+  userId: string,
+  id: string,
+  returnContext?: VisitCheckoutReturnContext,
+) {
   const order = await getVisitOrder(userId, id);
   if (!order) return null;
   if (
@@ -19,7 +23,7 @@ export async function restoreInitialVisitCheckout(userId: string, id: string) {
     !["pending", "unknown"].includes(order.status)
   ) return order;
 
-  const checkoutId = await createVisitCheckout(order);
+  const checkoutId = await createVisitCheckout(order, undefined, returnContext);
   await prisma.resonance_visit_orders.updateMany({
     where: {
       id: order.id,
