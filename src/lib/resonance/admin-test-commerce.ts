@@ -6,6 +6,8 @@ import { uuidSchema } from "./visit-payment-contract";
 
 const ADMIN_TEST_PLAN_PREFIX = "admin-test:resonance:";
 const ADMIN_TEST_CREATED_AT = new Date("2000-01-01T00:00:00.000Z");
+const ADMIN_TEST_MEMBER_ID = "admin-test-member";
+const ADMIN_TEST_PAYMENT_METHOD_ID = "admin-test-method";
 
 export function isAdminTestVisitPlan(planId: string | null | undefined) {
   return Boolean(planId?.startsWith(ADMIN_TEST_PLAN_PREFIX));
@@ -57,6 +59,8 @@ export async function simulateAdminInitialVisitPurchase(input: {
         remaining_quantity: offer.quantity,
         status: "paid",
         whop_plan_id: `${ADMIN_TEST_PLAN_PREFIX}initial:${offer.quantity}`,
+        whop_member_id: ADMIN_TEST_MEMBER_ID,
+        whop_payment_method_id: ADMIN_TEST_PAYMENT_METHOD_ID,
         affiliate_code: null,
         paid_at: now,
         created_at: ADMIN_TEST_CREATED_AT,
@@ -108,6 +112,8 @@ export async function simulateAdminVisitAddition(input: {
         remaining_quantity: offer.quantity,
         status: "paid",
         whop_plan_id: `${ADMIN_TEST_PLAN_PREFIX}${offer.kind}:${offer.quantity}`,
+        whop_member_id: ADMIN_TEST_MEMBER_ID,
+        whop_payment_method_id: ADMIN_TEST_PAYMENT_METHOD_ID,
         affiliate_code: null,
         paid_at: now,
         created_at: ADMIN_TEST_CREATED_AT,
