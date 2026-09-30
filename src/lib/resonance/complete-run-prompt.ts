@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 
 const EDIT_WINDOW_MS = 10 * 60 * 1000;
+const EDIT_SAVE_GRACE_MS = 5 * 60 * 1000;
+const EDIT_SAVE_WINDOW_MS = EDIT_WINDOW_MS + EDIT_SAVE_GRACE_MS;
 
 type CompletionRow = {
   id: string;
@@ -14,8 +16,8 @@ export type CompleteRunPromptResult = {
   isShared: boolean;
 };
 
-function isWithinEditWindow(createdAt: Date) {
-  return Date.now() - createdAt.getTime() <= EDIT_WINDOW_MS;
+function isWithinEditSaveWindow(createdAt: Date) {
+  return Date.now() - createdAt.getTime() <= EDIT_SAVE_WINDOW_MS;
 }
 
 export async function completeRunPrompt(params: {
@@ -53,10 +55,9 @@ export async function completeRunPrompt(params: {
     }
   }
 
-  // One atomic write handles first submission, a legitimate edit inside the
-  // 10-minute window, browser/network retries, and accidental duplicate POSTs.
-  // Retrying the exact same answer is always idempotent, even after the edit
-  // window closes, so a successful save can never turn into a false failure.
+  // The edit control is offered for 10 minutes. Once someone has already
+  // opened the editor, allow a short save grace so the form does not become
+  // dead while they are typing. Exact-answer retries remain idempotent.
   const saved = await prisma.$queryRaw<CompletionRow[]>`
     INSERT INTO "prompt_completions" (
       "prompt_id",
@@ -83,7 +84,7 @@ export async function completeRunPrompt(params: {
       "updated_at" = CURRENT_TIMESTAMP
     WHERE "prompt_completions"."user_id" = EXCLUDED."user_id"
       AND (
-        "prompt_completions"."created_at" >= CURRENT_TIMESTAMP - INTERVAL '10 minutes'
+        "prompt_completions"."created_at" >= CURRENT_TIMESTAMP - INTERVAL '15 minutes'
         OR "prompt_completions"."response" = EXCLUDED."response"
       )
     RETURNING "id", "response", "created_at", "is_shared"
@@ -104,7 +105,7 @@ export async function completeRunPrompt(params: {
     LIMIT 1
   `;
 
-  if (existing[0] && !isWithinEditWindow(existing[0].created_at)) {
+  if (existing[0] && !isWithinEditSaveWindow(existing[0].created_at)) {
     throw new Error("The 10-minute edit window has closed.");
   }
 
