@@ -47,6 +47,17 @@ export async function simulateAdminInitialVisitPurchase(input: {
       return existing.id;
     }
 
+    // A new owner test starts with a clean simulated balance. Historical test
+    // rows/redemptions stay intact, while real paid credits are never changed.
+    await tx.resonance_visit_orders.updateMany({
+      where: {
+        user_id: input.userId,
+        remaining_quantity: { gt: 0 },
+        whop_plan_id: { startsWith: ADMIN_TEST_PLAN_PREFIX },
+      },
+      data: { remaining_quantity: 0 },
+    });
+
     const now = new Date();
     const order = await tx.resonance_visit_orders.create({
       data: {
