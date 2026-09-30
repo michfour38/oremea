@@ -35,9 +35,11 @@ export default async function VisitPurchasePage({ searchParams }: {
 
   // Public buyers resume an unresolved provider checkout. Admin test mode never
   // gets trapped behind or mutates a real provider order from an earlier test.
-  if (!query.order && !adminMode) {
-    const unresolved = await getUnresolvedInitialVisitOrder(userId);
-    if (unresolved) redirect(`/resonance/visits?order=${unresolved.id}${roomSuffix}`);
+  if (!query.order) {
+    if (!adminMode) {
+      const unresolved = await getUnresolvedInitialVisitOrder(userId);
+      if (unresolved) redirect(`/resonance/visits?order=${unresolved.id}${roomSuffix}`);
+    }
   }
 
   let order = query.order ? await getVisitOrder(userId, query.order) : null;
