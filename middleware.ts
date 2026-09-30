@@ -108,10 +108,10 @@ function resonanceDomainResponse(req: NextRequest) {
   const host = getHostname(req);
   const { pathname } = req.nextUrl;
 
-  // On the Resonance host, /entry is the actual destination after a visit
-  // completes. Let it render directly instead of bouncing it through / and
-  // back into an internal /entry rewrite.
   if (host === RESONANCE_HOST) {
+    if (pathname === "/" || pathname === "/resonance/enter" || pathname === "/resonance/enter/") {
+      return rewriteResonancePath(req, "/resonance/enter");
+    }
     return null;
   }
 
@@ -125,11 +125,12 @@ function resonanceDomainResponse(req: NextRequest) {
     }
   }
 
-  // Older Whop checkout sessions were issued with the main-site return URL.
-  // Keep those paid returns on the product host, preserving the order query.
-  if (OREMEA_PUBLIC_HOSTS.has(host) &&
-    (pathname === "/resonance/complete" || pathname === "/resonance/complete/")) {
-    return redirectResonancePath(req, "/resonance/complete");
+  if (OREMEA_PUBLIC_HOSTS.has(host) && (
+    pathname === "/resonance/visits" || pathname === "/resonance/visits/" ||
+    pathname === "/resonance/complete" || pathname === "/resonance/complete/" ||
+    pathname === "/resonance/claim" || pathname === "/resonance/claim/"
+  )) {
+    return redirectResonancePath(req, pathname.replace(/\/$/, ""));
   }
 
   return null;
@@ -315,6 +316,9 @@ const isPublicRoute = createRouteMatcher([
   "/compare(.*)",
   "/resonance-rooms(.*)",
   "/resonance/enter(.*)",
+  "/resonance/visits(.*)",
+  "/resonance/complete(.*)",
+  "/resonance/claim(.*)",
   "/resonance/creator(.*)",
   "/contact(.*)",
   "/api/contact",
@@ -340,14 +344,6 @@ const oremeaMiddleware = clerkMiddleware(async (auth, req) => {
     await auth.protect();
   }
 
-  const host = getHostname(req);
-  const { pathname } = req.nextUrl;
-
-  if (host === RESONANCE_HOST && pathname === "/") {
-    await auth.protect();
-    return rewriteResonancePath(req, "/entry");
-  }
-
   const resonanceResponse = resonanceDomainResponse(req);
   if (resonanceResponse) return resonanceResponse;
 
@@ -366,8 +362,6 @@ export default async function middleware(req: NextRequest, event: NextFetchEvent
   const host = getHostname(req);
   const trustedHost = host === "oremea.com" || host.endsWith(".oremea.com") || host === "localhost";
   const code = trustedHost && req.method === "GET" ? affiliateCode(req.nextUrl.searchParams.get("a")) : null;
-  // A session cookie bridges Oremea hosts and sign-in without inventing a
-  // longer attribution window. Whop remains authoritative for eligibility.
   if (code) req.cookies.set(AFFILIATE_COOKIE, code);
   const response = await oremeaMiddleware(req, event) ?? NextResponse.next();
   if (code) {
