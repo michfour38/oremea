@@ -3,11 +3,12 @@ import { affiliateCode } from "../whop/affiliate-attribution";
 import { prisma } from "@/lib/prisma";
 import { additionalOffers, initialOffer, VISIT_PRICES } from "./visit-offers";
 import { directVisitPaymentResultFromList, matchesVisitOrder, matchesVisitRefund, settledVisitPaymentFromList, uuidSchema, visitPaymentResultFromRecord, visitPaymentSchema, visitPaymentUpdate, visitRefundSchema } from "./visit-payment-contract";
-import { chargeVisitOrder, createVisitCheckout, whopVisitConfig } from "../whop/visit-payments";
+import { chargeVisitOrder, createVisitCheckout, type VisitCheckoutReturnContext, whopVisitConfig } from "../whop/visit-payments";
 import { whopApiRequest } from "../whop/whop-api";
 import { loadCreatorStarterWhopCatalog } from "../whop/creator-starter-catalog";
 import { loadResonanceWhopCatalog, visitPlanIdFromCatalog } from "../whop/resonance-catalog";
 import { lockResonanceAccount } from "./resonance-account-lock";
+import { isGuestVisitOwner } from "./guest-visit-identity";
 
 function findVisitOrder(userId: string, id: string) {
   if (!uuidSchema.safeParse(id).success) return null;
@@ -47,7 +48,56 @@ export async function getVisitBalance(userId: string) {
   return result._sum.remaining_quantity ?? 0;
 }
 
-export async function startVisitPurchase(userId: string, email: string, quantity: number, requestId: string, referral?: string | null) {
+export async function claimGuestVisitPurchase(
+  guestOwnerId: string,
+  orderId: string,
+  userId: string,
+  verifiedEmail: string,
+) {
+  if (!isGuestVisitOwner(guestOwnerId)) throw new Error("Invalid guest purchase.");
+  uuidSchema.parse(orderId);
+  const normalizedEmail = verifiedEmail.trim().toLowerCase();
+  if (!normalizedEmail) throw new Error("A verified email is required.");
+
+  return prisma.$transaction(async (tx) => {
+    await lockResonanceAccount(tx, guestOwnerId);
+    await lockResonanceAccount(tx, userId);
+
+    const alreadyClaimed = await tx.resonance_visit_orders.findFirst({
+      where: { id: orderId, user_id: userId, kind: "initial", status: "paid" },
+    });
+    if (alreadyClaimed) {
+      if (alreadyClaimed.buyer_email.toLowerCase() !== normalizedEmail) {
+        throw new Error("The account email does not match the purchase email.");
+      }
+      return alreadyClaimed;
+    }
+
+    const parent = await tx.resonance_visit_orders.findFirst({
+      where: { id: orderId, user_id: guestOwnerId, kind: "initial", status: "paid" },
+    });
+    if (!parent) throw new Error("Paid guest purchase not found.");
+    if (parent.buyer_email.toLowerCase() !== normalizedEmail) {
+      throw new Error("The account email does not match the purchase email.");
+    }
+
+    await tx.resonance_visit_orders.updateMany({
+      where: { user_id: guestOwnerId },
+      data: { user_id: userId },
+    });
+
+    return tx.resonance_visit_orders.findUniqueOrThrow({ where: { id: parent.id } });
+  });
+}
+
+export async function startVisitPurchase(
+  userId: string,
+  email: string,
+  quantity: number,
+  requestId: string,
+  referral?: string | null,
+  returnContext?: VisitCheckoutReturnContext,
+) {
   uuidSchema.parse(requestId);
   const offer = initialOffer(quantity);
   const catalog = await loadResonanceWhopCatalog();
@@ -68,9 +118,6 @@ export async function startVisitPurchase(userId: string, email: string, quantity
       return { order: claimed, submit: true };
     }
 
-    // Do not create a second provider checkout while an earlier initial
-    // payment is still unresolved. This also serializes separate browser tabs
-    // because the account advisory lock spans the check and row creation.
     const unresolved = await tx.resonance_visit_orders.findFirst({
       where: {
         user_id: userId,
@@ -93,7 +140,7 @@ export async function startVisitPurchase(userId: string, email: string, quantity
   if (!prepared.submit) return prepared.order.id;
   const order = prepared.order;
   try {
-    const checkoutId = await createVisitCheckout(order, paymentConfig);
+    const checkoutId = await createVisitCheckout(order, paymentConfig, returnContext);
     await prisma.resonance_visit_orders.update({
       where: { id: order.id }, data: { whop_checkout_id: checkoutId },
     });
@@ -137,8 +184,6 @@ export async function acceptVisitAddition(userId: string, parentId: string, quan
   if (!result.submit) return result.order.id;
   const order = result.order;
   try {
-    // Confirm the provider's price and one-time terms before charging. Do not
-    // expose this add-on checkout to the buyer as a second way to pay it.
     await createVisitCheckout(order, paymentConfig);
     const paymentId = await chargeVisitOrder({
       ...order,
@@ -149,8 +194,6 @@ export async function acceptVisitAddition(userId: string, parentId: string, quan
       where: { id: order.id, whop_payment_id: null }, data: { whop_payment_id: paymentId },
     });
   } catch {
-    // A timeout is an UNKNOWN result, never permission to charge again.
-    // The success/failure webhook can still reconcile this exact order.
     await prisma.resonance_visit_orders.updateMany({
       where: { id: order.id, status: "pending" }, data: { status: "unknown" },
     });
@@ -204,7 +247,7 @@ export async function applyVisitPaymentEvent(type: string, data: unknown) {
   });
 }
 
-/** Read-only Whop lookup for an authenticated owner's initial checkout return. */
+/** Read-only Whop lookup for an owner's initial checkout return. */
 export async function reconcileInitialVisitOrder(userId: string, id: string) {
   const order = await findVisitOrder(userId, id);
   if (!order) return null;
@@ -214,12 +257,9 @@ export async function reconcileInitialVisitOrder(userId: string, id: string) {
   const expected = await expectedVisitProductForPlan(order.whop_plan_id);
   const params = new URLSearchParams({ account_id: expected.companyId, first: "100" });
   params.append("checkout_configuration_ids[]", order.whop_checkout_id);
-  // GET only. A missing webhook must never cause a second charge.
   const response = await whopApiRequest(`payments?${params.toString()}`);
   const payment = settledVisitPaymentFromList(response, order, expected.companyId, expected.productId);
   if (!payment) return order;
-  // The shared transactional path locks the account and rechecks every field
-  // against the current order, including checkout, amount, and payment ID.
   return applyVisitPaymentEvent("payment.succeeded", payment);
 }
 
@@ -233,9 +273,6 @@ async function reconcileAdditionalVisitOrderRecord(order: NonNullable<Awaited<Re
     const response = await whopApiRequest(`payments/${encodeURIComponent(order.whop_payment_id)}`);
     result = visitPaymentResultFromRecord(response, order, expected.companyId, expected.productId);
   } else {
-    // Whop's payment-list API supports plan and creation-window filters. Keep
-    // the window narrow, reject pagination, then require Oremea's exact order
-    // metadata + member + payment-method + price match before accepting it.
     const createdAfter = new Date(order.created_at.getTime() - 5 * 60_000).toISOString();
     const params = new URLSearchParams({
       account_id: expected.companyId,
@@ -248,8 +285,6 @@ async function reconcileAdditionalVisitOrderRecord(order: NonNullable<Awaited<Re
   }
 
   if (!result) return order;
-  // Same locked, field-rechecking path as the signed webhook. A GET lookup can
-  // settle or fail the existing order, but can never submit another charge.
   return applyVisitPaymentEvent(result.type, result.payment);
 }
 
@@ -273,8 +308,6 @@ export async function applyVisitRefundEvent(event: unknown) {
     const order = await tx.resonance_visit_orders.findUniqueOrThrow({ where: { id: found.id } });
     if (!matchesVisitRefund(refund, order, expected.companyId, expected.productId)) throw new Error("Refund does not match the order.");
     if (refund.data.status !== "succeeded" || order.status === "refunded") return order;
-    // A partial or full refund freezes this order's unused credits for review.
-    // Already-entered rooms and earlier reflections are preserved.
     return tx.resonance_visit_orders.update({ where: { id: order.id }, data: {
       status: "refunded", remaining_quantity: 0, whop_payment_id: refund.data.payment.id,
     } });
