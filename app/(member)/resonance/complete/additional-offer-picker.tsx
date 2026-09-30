@@ -20,6 +20,7 @@ export function AdditionalOfferPicker({
   smallerOffers,
   canCharge,
   roomWeekNumber,
+  claim,
 }: {
   orderId: string;
   currentQuantity: number;
@@ -30,6 +31,7 @@ export function AdditionalOfferPicker({
   smallerOffers: SmallerOffer[];
   canCharge: boolean;
   roomWeekNumber?: number;
+  claim?: string;
 }) {
   const [showFewer, setShowFewer] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -74,6 +76,7 @@ export function AdditionalOfferPicker({
 
         <form action={addVisits} className="mt-6">
           <input type="hidden" name="orderId" value={orderId} />
+          {claim ? <input type="hidden" name="claim" value={claim} /> : null}
           {roomWeekNumber ? <input type="hidden" name="room" value={roomWeekNumber} /> : null}
           <input type="hidden" name="quantity" value={completeQuantity} />
           <VisitSubmitButton disabled={!canCharge}>
@@ -148,7 +151,8 @@ export function AdditionalOfferPicker({
 
           <form action={addVisits} className="mt-6">
             <input type="hidden" name="orderId" value={orderId} />
-          {roomWeekNumber ? <input type="hidden" name="room" value={roomWeekNumber} /> : null}
+            {claim ? <input type="hidden" name="claim" value={claim} /> : null}
+            {roomWeekNumber ? <input type="hidden" name="room" value={roomWeekNumber} /> : null}
             <input type="hidden" name="quantity" value={selected.quantity} />
             <button
               type="submit"
@@ -167,12 +171,13 @@ export function AdditionalOfferPicker({
           className="res-border res-panel pointer-events-auto w-full max-w-md rounded-full border px-4 py-2 shadow-2xl backdrop-blur-md"
         >
           <input type="hidden" name="orderId" value={orderId} />
+          {claim ? <input type="hidden" name="claim" value={claim} /> : null}
           {roomWeekNumber ? <input type="hidden" name="room" value={roomWeekNumber} /> : null}
           <button
             type="submit"
             className="res-text-primary res-accent-hover w-full rounded-full px-4 py-2 text-center text-sm underline underline-offset-4"
           >
-            No thanks · Choose my room
+            No thanks · Continue
           </button>
         </form>
       </div>
