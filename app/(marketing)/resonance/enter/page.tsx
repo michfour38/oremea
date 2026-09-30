@@ -76,14 +76,14 @@ export default async function ResonanceEnterPage() {
           </p>
 
           <h1 className="res-text mt-4 font-serif text-4xl font-semibold leading-[0.98] tracking-tight md:text-6xl">
-            Stay with what becomes visible.
+            Stay with what becomes visible
           </h1>
 
           <p className="res-text-primary mx-auto mt-6 max-w-2xl text-base leading-8 md:text-lg">
             Resonance is a private seven-stage reflection experience for relational
             material that needs more than one quick answer. Ten thematic rooms hold
             different territories of connection, and every visit gives one room enough
-            space to move through at your own pace.
+            space to move through at your own pace
           </p>
 
           <div className="mt-8 flex justify-center">
@@ -95,7 +95,7 @@ export default async function ResonanceEnterPage() {
           </div>
 
           <p className="res-text-secondary mx-auto mt-4 max-w-xl text-sm leading-7">
-            Visit capacity stays available until it is used. One room is active at a time.
+            Visit capacity stays available until it is used. One room is active at a time
           </p>
         </header>
 
@@ -104,7 +104,7 @@ export default async function ResonanceEnterPage() {
             Why Resonance exists
           </p>
           <h2 className="res-text mt-3 max-w-2xl font-serif text-3xl md:text-4xl">
-            Some things become clearer only when they are allowed to stay present.
+            Some things become clearer only when they are allowed to stay present
           </h2>
           <div className="res-text-primary mt-7 grid gap-6 text-base leading-8 md:grid-cols-2">
             <p>
@@ -141,7 +141,7 @@ export default async function ResonanceEnterPage() {
               What a visit gives you
             </p>
             <h2 className="res-text mt-3 font-serif text-3xl md:text-4xl">
-              Structure without being pushed toward an answer.
+              Structure without being pushed toward an answer
             </h2>
           </div>
 
@@ -184,7 +184,7 @@ export default async function ResonanceEnterPage() {
             How it works
           </p>
           <h2 className="res-text mt-3 max-w-2xl font-serif text-3xl md:text-4xl">
-            The visit comes first. The room opens when the material is ready.
+            The visit comes first · The room opens when the material is ready
           </h2>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2">
@@ -233,7 +233,7 @@ export default async function ResonanceEnterPage() {
               Ten rooms · any order
             </p>
             <h2 className="res-text mt-3 font-serif text-3xl md:text-4xl">
-              Ten relational territories. Start where the material is alive.
+              Ten relational territories · Start where the material is alive
             </h2>
             <p className="res-text-primary mt-5 text-base leading-8">
               Each room stands on its own. A later visit can enter a different territory or
@@ -249,7 +249,7 @@ export default async function ResonanceEnterPage() {
                   <summary className="flex cursor-pointer list-none items-start justify-between gap-5 px-6 py-5 md:px-7">
                     <div>
                       <p className="res-accent text-xs uppercase tracking-[0.2em]">Room {room.weekNumber} · {roomName}</p>
-                      <h3 className="res-text mt-3 font-serif text-2xl">{room.headline}</h3>
+                      <h3 className="res-text mt-3 font-serif text-2xl">{room.headline.replace(/\.$/, "")}</h3>
                       <p className="res-text-secondary mt-3 text-sm leading-7">{room.buyerDecision}</p>
                     </div>
                     <span className="res-accent mt-1 shrink-0 transition group-open:rotate-180">↓</span>
@@ -272,7 +272,7 @@ export default async function ResonanceEnterPage() {
             The Mirror
           </p>
           <h2 className="res-text mt-3 font-serif text-3xl md:text-4xl">
-            Reflection stays close to the evidence you actually provide.
+            Reflection stays close to the evidence you actually provide
           </h2>
           <div className="res-text-primary mt-7 space-y-5 text-base leading-8">
             <p>
@@ -308,7 +308,7 @@ export default async function ResonanceEnterPage() {
               Returning to a room
             </p>
             <h2 className="res-text mt-3 font-serif text-2xl">
-              The earlier visit stays intact.
+              The earlier visit stays intact
             </h2>
             <p className="res-text-primary mt-4 text-sm leading-7">
               Each return creates a separate visit. Earlier reflections, Mirrors, questions and
@@ -323,7 +323,7 @@ export default async function ResonanceEnterPage() {
               Your authorship
             </p>
             <h2 className="res-text mt-3 font-serif text-2xl">
-              Reflection is not a verdict.
+              Reflection is not a verdict
             </h2>
             <p className="res-text-primary mt-4 text-sm leading-7">
               Resonance can make evidence easier to hear, but it does not become the authority
@@ -339,7 +339,7 @@ export default async function ResonanceEnterPage() {
               Questions before entering
             </p>
             <h2 className="res-text mt-3 font-serif text-3xl md:text-4xl">
-              The practical bits.
+              The practical bits
             </h2>
           </div>
 
@@ -386,11 +386,11 @@ export default async function ResonanceEnterPage() {
             Enter Resonance
           </p>
           <h2 className="res-text mx-auto mt-3 max-w-2xl font-serif text-3xl md:text-4xl">
-            Start with the visit capacity that fits. Open the room when the material is ready.
+            Start with the visit capacity that fits · Open the room when the material is ready
           </h2>
           <p className="res-text-primary mx-auto mt-5 max-w-2xl text-sm leading-7">
             Completed rooms remain in the Archive. Unused visits remain available until they
-            are used to open a room.
+            are used to open a room
           </p>
           <div className="mt-8 flex justify-center">
             <FunnelAction

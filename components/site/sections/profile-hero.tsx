@@ -10,12 +10,12 @@ export function ProfileHero() {
           </p>
 
           <h1 className="max-w-3xl text-4xl font-light leading-tight text-zinc-100 md:text-5xl">
-            Your work, gathered.
+            Your work, gathered
           </h1>
 
           <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400 md:text-base">
             Everything you have opened, completed, and returned to across
-            Oremea—held in one clear record.
+            Oremea—held in one clear record
           </p>
         </div>
       </div>

@@ -153,7 +153,7 @@ export default async function RecognitionPurchasePage(props: Props) {
             Bring whatever has your attention. Recognition stays close to your
             own words and one live thread. It can notice distinctions,
             recurrence and unfinished thought without deciding what any of it
-            means for you.
+            means for you
           </p>
         </header>
 
@@ -219,11 +219,11 @@ export default async function RecognitionPurchasePage(props: Props) {
             After purchase
           </p>
           <h2 className="rec-text mt-3 font-serif text-3xl">
-            Complete checkout. Then move straight into the conversation.
+            Complete checkout · Then move straight into the conversation
           </h2>
           <p className="rec-text mt-4 max-w-2xl text-sm leading-7">
             Use the same email to purchase and sign in to Recognition. That is
-            all that is needed to connect your access to your private conversation.
+            all that is needed to connect your access to your private conversation
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {[
@@ -320,11 +320,11 @@ export default async function RecognitionPurchasePage(props: Props) {
             Begin where you are
           </p>
           <h2 className="rec-text mx-auto mt-3 max-w-2xl font-serif text-3xl md:text-4xl">
-            If the thought is still circling, give it somewhere to continue.
+            If the thought is still circling, give it somewhere to continue
           </h2>
           <p className="rec-text mx-auto mt-4 max-w-2xl text-sm leading-7">
             Recognition does not need a polished question or a finished story.
-            Bring the words you have now. The conversation can begin there.
+            Bring the words you have now. The conversation can begin there
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-4">
             <CheckoutAction

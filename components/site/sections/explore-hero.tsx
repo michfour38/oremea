@@ -11,12 +11,12 @@ export function ExploreHero() {
         </p>
 
         <h1 className="mx-auto max-w-4xl text-4xl font-light leading-tight text-zinc-100 md:text-6xl">
-          Three available ways to see clearly and move deliberately.
+          Three available ways to see clearly and move deliberately
         </h1>
 
         <p className="mx-auto mt-7 max-w-2xl text-base leading-8 text-zinc-400 md:text-lg">
           Recognition, Resonance, and Compass are available now. Start with the
-          product that matches what you need today.
+          product that matches what you need today
         </p>
 
         <div className="mt-8 flex flex-wrap justify-center gap-3">
