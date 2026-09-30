@@ -4,10 +4,11 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { RESONANCE_ROOM_MARKETING } from "@/src/lib/oremea/public-product-marketing";
 import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
-import { additionalOffers, VISIT_PRICES } from "@/src/lib/resonance/visit-offers";
+import { additionalOffers, VISIT_PRICES, visitCheckoutEnabled } from "@/src/lib/resonance/visit-offers";
 import { getResonanceRoomTarget } from "@/src/lib/resonance/room-entry";
 import { visitCheckoutAvailableFor, visitCreditsAvailableFor } from "@/src/lib/resonance/visit-access";
 import { getVisitOrder, reconcileInitialVisitOrder } from "@/src/lib/resonance/visit-orders";
+import { guestClaimPath, guestOwnerFromClaim, isGuestVisitOwner } from "@/src/lib/resonance/guest-visit-identity";
 import { addVisits } from "../visits/actions";
 import { FunnelFrame } from "../visits/funnel-frame";
 import { VisitSubmitButton } from "../visits/submit-button";
@@ -21,6 +22,7 @@ function CompleteTenAction({
   amountCents,
   canCharge,
   roomWeekNumber,
+  claim,
   label = "Complete ten",
 }: {
   orderId: string;
@@ -28,11 +30,13 @@ function CompleteTenAction({
   amountCents: number;
   canCharge: boolean;
   roomWeekNumber?: number;
+  claim?: string;
   label?: string;
 }) {
   return (
     <form action={addVisits} className="mx-auto w-full max-w-md">
       <input type="hidden" name="orderId" value={orderId} />
+      {claim ? <input type="hidden" name="claim" value={claim} /> : null}
       {roomWeekNumber ? <input type="hidden" name="room" value={roomWeekNumber} /> : null}
       <input type="hidden" name="quantity" value={quantity} />
       <VisitSubmitButton disabled={!canCharge}>
@@ -43,19 +47,28 @@ function CompleteTenAction({
 }
 
 export default async function VisitCompletionPage({ searchParams }: {
-  searchParams: Promise<{ order?: string; error?: string; room?: string | string[] }>;
+  searchParams: Promise<{ order?: string; error?: string; room?: string | string[]; claim?: string }>;
 }) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-  if (!(await visitCreditsAvailableFor(userId))) notFound();
-
   const query = await searchParams;
   const roomTarget = getResonanceRoomTarget(query.room);
   const roomSuffix = roomTarget ? `&room=${roomTarget.weekNumber}` : "";
-  let order = query.order ? await getVisitOrder(userId, query.order) : null;
+  const guestOwner = guestOwnerFromClaim(query.claim);
+  const { userId } = await auth();
+
+  if (!guestOwner && !userId) {
+    const returnTo = `/resonance/complete?order=${encodeURIComponent(query.order ?? "")}${roomSuffix}`;
+    redirect(`/sign-in?redirect_url=${encodeURIComponent(returnTo)}`);
+  }
+  if (userId && !guestOwner && !(await visitCreditsAvailableFor(userId))) notFound();
+
+  const ownerId = guestOwner ?? userId!;
+  let order = query.order ? await getVisitOrder(ownerId, query.order) : null;
   if (!order) notFound();
+  const isGuestOrder = isGuestVisitOwner(order.user_id);
+  const claimSuffix = isGuestOrder && query.claim ? `&claim=${encodeURIComponent(query.claim)}` : "";
+
   if (order.kind === "initial" && ["pending", "unknown", "failed"].includes(order.status)) {
-    try { order = await reconcileInitialVisitOrder(userId, order.id); }
+    try { order = await reconcileInitialVisitOrder(ownerId, order.id); }
     catch { /* Whop may be temporarily unavailable; keep the order unconfirmed. */ }
     if (!order) notFound();
   }
@@ -63,44 +76,69 @@ export default async function VisitCompletionPage({ searchParams }: {
   const child = order.kind === "initial"
     ? await prisma.resonance_visit_orders.findUnique({ where: { parent_id: order.id } })
     : null;
-  if (child) redirect(`/resonance/complete?order=${child.id}${roomSuffix}`);
+  if (child) redirect(`/resonance/complete?order=${child.id}${claimSuffix}${roomSuffix}`);
+
+  if (isGuestOrder && query.claim && order.kind === "initial" && order.status === "paid" && order.offer_closed_at) {
+    redirect(guestClaimPath(order.id, query.claim, roomTarget?.weekNumber));
+  }
+  if (isGuestOrder && query.claim && order.parent_id && order.status === "paid") {
+    redirect(guestClaimPath(order.parent_id, query.claim, roomTarget?.weekNumber));
+  }
 
   if (order.status !== "paid" || order.kind !== "initial" || order.offer_closed_at) {
     const heading = order.status === "paid" ? "Your visits are ready."
       : order.status === "failed" ? "The payment did not complete."
         : order.status === "refunded" ? "This payment is under review."
           : "The payment is not confirmed yet.";
+    const guestParentId = isGuestOrder ? (order.parent_id ?? (order.kind === "initial" ? order.id : null)) : null;
+    const guestContinue = guestParentId && query.claim
+      ? guestClaimPath(guestParentId, query.claim, roomTarget?.weekNumber)
+      : null;
 
     return (
       <FunnelFrame>
         <h1 className="res-text text-4xl font-light">{heading}</h1>
         <p className="res-text-primary mt-5 text-base leading-8">
           {order.status === "paid"
-            ? "Choose a room below. Unused visits remain on this account."
+            ? isGuestOrder
+              ? "The confirmed purchase is ready to attach to your Oremea account."
+              : "Choose a room below. Unused visits remain on this account."
             : "Only confirmed payments add visits. Do not submit another charge while this is being checked."}
           {order.parent_id ? " The original purchase remains available, regardless of this additional payment." : ""}
         </p>
         <div className="mt-8 flex flex-wrap gap-6">
           {order.status === "failed" && order.kind === "initial" && order.whop_checkout_id ? (
-            <Link href={`/resonance/visits?order=${order.id}${roomSuffix}`} className="res-accent res-accent-hover text-base underline">
+            <Link href={`/resonance/visits?order=${order.id}${claimSuffix}${roomSuffix}`} className="res-accent res-accent-hover text-base underline">
               Return to checkout
             </Link>
           ) : null}
           {order.status === "pending" || order.status === "unknown" ? (
-            <a href={`/resonance/complete?order=${order.id}${roomSuffix}`} className="res-accent res-accent-hover text-base underline">
+            <a href={`/resonance/complete?order=${order.id}${claimSuffix}${roomSuffix}`} className="res-accent res-accent-hover text-base underline">
               Check payment status
             </a>
           ) : null}
-          <Link href={roomTarget?.entryPath ?? "/entry"} className="res-accent res-accent-hover text-base underline">{roomTarget ? `Continue to ${roomTarget.name}` : "Choose my room"}</Link>
+          {guestContinue && order.parent_id ? (
+            <Link href={guestContinue} className="res-accent res-accent-hover text-base underline">
+              Keep my original purchase
+            </Link>
+          ) : null}
+          {!isGuestOrder && order.status === "paid" ? (
+            <Link href={roomTarget?.entryPath ?? "/entry"} className="res-accent res-accent-hover text-base underline">
+              {roomTarget ? `Continue to ${roomTarget.name}` : "Choose my room"}
+            </Link>
+          ) : null}
         </div>
       </FunnelFrame>
     );
   }
 
   const [complete, ...smaller] = additionalOffers(order.quantity);
-  const canCharge = (await visitCheckoutAvailableFor(userId)) && Boolean(order.whop_member_id && order.whop_payment_method_id);
+  const canCharge = (
+    isGuestOrder ? visitCheckoutEnabled() : await visitCheckoutAvailableFor(userId!)
+  ) && Boolean(order.whop_member_id && order.whop_payment_method_id);
   const completeTotalCents = VISIT_PRICES[10];
   const completePerVisitCents = Math.round(completeTotalCents / 10);
+  const claim = isGuestOrder ? query.claim : undefined;
 
   return (
     <FunnelFrame>
@@ -112,8 +150,13 @@ export default async function VisitCompletionPage({ searchParams }: {
           <h1 className="res-text mt-3 font-serif text-4xl md:text-5xl">Complete ten?</h1>
           <p className="res-text-primary mx-auto mt-5 max-w-2xl text-base leading-8">
             Your first purchase is already secure. Nothing on this page can take that away.
-            This is simply the point where you can complete the ten-visit set now, compare a smaller addition once, or keep exactly what you already bought and move straight into a room.
+            This is simply the point where you can complete the ten-visit set now, compare a smaller addition once, or keep exactly what you already bought.
           </p>
+          {isGuestOrder ? (
+            <p className="res-text-secondary mx-auto mt-4 max-w-xl text-sm leading-7">
+              Your Oremea account comes next. This optional offer does not add an account step to checkout.
+            </p>
+          ) : null}
         </header>
 
         {query.error ? (
@@ -135,12 +178,13 @@ export default async function VisitCompletionPage({ searchParams }: {
           }))}
           canCharge={canCharge}
           roomWeekNumber={roomTarget?.weekNumber}
+          claim={claim}
         />
 
         <p className="res-text-secondary mx-auto mt-5 max-w-2xl text-center text-sm leading-7">
           {canCharge
             ? "Any accepted addition is a separate charge using the saved payment method. A bank may still require verification."
-            : "A saved-payment addition is not available for this checkout. Your purchased visits can be used now."}
+            : "A saved-payment addition is not available for this checkout. Your purchased visits remain secure."}
         </p>
 
         <section className="res-border res-panel mx-auto mt-16 max-w-4xl rounded-[2rem] border p-7 md:p-10">
@@ -148,7 +192,7 @@ export default async function VisitCompletionPage({ searchParams }: {
           <h2 className="res-text mt-3 font-serif text-3xl md:text-4xl">Completing ten adds capacity, not pressure.</h2>
           <div className="res-text-primary mt-7 grid gap-6 text-base leading-8 md:grid-cols-2">
             <p>
-              Completing ten does not start ten rooms, lock in an order, or ask you to know what will matter later. It simply leaves ten visit credits available on the account, ready for whichever relational territory becomes relevant next.
+              Completing ten does not start ten rooms, lock in an order, or ask you to know what will matter later. It simply leaves ten visit credits available, ready for whichever relational territory becomes relevant next.
             </p>
             <p>
               One room is active at a time. Every visit remains separate, and returning to a room later creates a fresh visit without rewriting the earlier one.
@@ -160,7 +204,8 @@ export default async function VisitCompletionPage({ searchParams }: {
               quantity={complete.quantity}
               amountCents={complete.amountCents}
               canCharge={canCharge}
-          roomWeekNumber={roomTarget?.weekNumber}
+              roomWeekNumber={roomTarget?.weekNumber}
+              claim={claim}
             />
           </div>
         </section>
@@ -173,7 +218,7 @@ export default async function VisitCompletionPage({ searchParams }: {
 
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {[
-              ["Ten visits available", "The full set sits on the account until each visit is opened. Unused capacity remains available."],
+              ["Ten visits available", "The full set stays available until each visit is opened. Unused capacity remains available."],
               ["No required sequence", "The ten rooms are not a ladder. A future visit can enter whichever territory matches what is present then."],
               ["One active room", "Only one room is active at a time, so the experience stays contained even when more visits are already available."],
             ].map(([heading, copy]) => (
@@ -190,7 +235,8 @@ export default async function VisitCompletionPage({ searchParams }: {
               quantity={complete.quantity}
               amountCents={complete.amountCents}
               canCharge={canCharge}
-          roomWeekNumber={roomTarget?.weekNumber}
+              roomWeekNumber={roomTarget?.weekNumber}
+              claim={claim}
               label="Keep all ten available"
             />
           </div>
@@ -226,7 +272,8 @@ export default async function VisitCompletionPage({ searchParams }: {
               quantity={complete.quantity}
               amountCents={complete.amountCents}
               canCharge={canCharge}
-          roomWeekNumber={roomTarget?.weekNumber}
+              roomWeekNumber={roomTarget?.weekNumber}
+              claim={claim}
               label="Complete the ten-room set"
             />
           </div>
@@ -258,7 +305,8 @@ export default async function VisitCompletionPage({ searchParams }: {
               quantity={complete.quantity}
               amountCents={complete.amountCents}
               canCharge={canCharge}
-          roomWeekNumber={roomTarget?.weekNumber}
+              roomWeekNumber={roomTarget?.weekNumber}
+              claim={claim}
               label="Complete ten now"
             />
           </div>
@@ -268,7 +316,7 @@ export default async function VisitCompletionPage({ searchParams }: {
           <p className="res-accent text-xs uppercase tracking-[0.28em]">No pressure to decide more</p>
           <h2 className="res-text mt-3 font-serif text-3xl md:text-4xl">Your purchased visit remains ready either way.</h2>
           <p className="res-text-primary mt-5 text-base leading-8">
-            The floating “No thanks · Choose my room” option stays visible while you read this page so leaving the offer never becomes something you have to hunt for.
+            The floating “No thanks · Continue” option stays visible while you read this page so leaving the offer never becomes something you have to hunt for.
           </p>
         </section>
       </div>
