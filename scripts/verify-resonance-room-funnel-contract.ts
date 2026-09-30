@@ -9,8 +9,12 @@ const completePage = read("app/(member)/resonance/complete/page.tsx");
 const offerPicker = read("app/(member)/resonance/complete/additional-offer-picker.tsx");
 const roomEntry = read("src/lib/resonance/room-entry.ts");
 const middleware = read("middleware.ts");
+
+assert.match(middleware, /pathname === "\/"[\s\S]{0,180}rewriteResonancePath\(req, "\/resonance\/enter"\)/);
+assert.doesNotMatch(middleware, /host === RESONANCE_HOST && pathname === "\/"[\s\S]{0,120}auth\.protect/);
 assert.match(middleware, /"\/resonance\/enter\(\.\*\)"/);
 assert.doesNotMatch(middleware, /"\/resonance\/visits\(\.\*\)"/);
+
 assert.match(publicPage, /<details/);
 assert.match(publicPage, /Choose \{roomName\}/);
 assert.match(publicPage, /room\.chooseWhen/);
@@ -27,4 +31,4 @@ assert.match(actions, /roomTarget\?\.entryPath/);
 assert.match(completePage, /roomWeekNumber=\{roomTarget\?\.weekNumber\}/);
 assert.match(completePage, /Continue to \$\{roomTarget\.name\}/);
 assert.match(offerPicker, /name="room"/);
-console.log("Resonance room dropdown and selected-room funnel continuity checks passed.");
+console.log("Resonance public sales root and account-first checkout funnel checks passed.");
