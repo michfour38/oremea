@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isGuestVisitOwner } from "./guest-visit-identity";
 
 export const uuidSchema = z.string().uuid();
 const reference = z.object({ id: z.string().min(1) }).nullable().optional();
@@ -43,8 +44,6 @@ export function visitPaymentResultFromRecord(
   }
 
   if (record.auto_refunded || (record.refunded_amount ?? 0) > 0) {
-    // visitPaymentUpdate will freeze unused credits as refunded rather than
-    // treating this record as a usable successful purchase.
     return { type: "payment.succeeded", payment: record };
   }
   if (record.status === "paid" && record.substatus === "succeeded") {
@@ -82,8 +81,7 @@ export function settledVisitPaymentFromList(response: unknown, order: Parameters
 
 /**
  * Recover the one direct saved-card payment for an add-on order when the
- * signed webhook or the create-payment response was lost. The caller already
- * scopes the provider list to this plan and a narrow creation window.
+ * signed webhook or the create-payment response was lost.
  */
 export function directVisitPaymentResultFromList(
   response: unknown,
@@ -119,17 +117,16 @@ export function visitPaymentUpdate(type: string, payment: VisitPayment, order: {
   }
   if (type === "payment.succeeded") {
     if (!payment.paid_at) throw new Error("A settled payment time is required.");
-    if (order.status === "paid") return null; // Never refill redeemed credits.
+    if (order.status === "paid") return null;
     return {
       status: "paid", remaining_quantity: order.quantity, whop_payment_id: payment.id,
+      buyer_email: payment.user.email.toLowerCase(),
       whop_member_id: payment.member?.id ?? null,
       whop_payment_method_id: payment.payment_method?.id ?? null,
       paid_at: new Date(payment.paid_at),
     };
   }
   if ((type === "payment.failed" || type === "payment.canceled") && order.status !== "paid") {
-    // The initial embedded checkout may create a new attempt after a decline.
-    // The add-on has exactly one attempt, so its payment ID remains fixed.
     return { status: "failed", whop_payment_id: order.parent_id ? payment.id : null };
   }
   return null;
@@ -163,6 +160,7 @@ export function matchesVisitRefund(refund: z.infer<typeof visitRefundSchema>, or
 
 export function matchesVisitOrder(payment: VisitPayment, order: {
   id: string;
+  user_id: string;
   buyer_email: string;
   whop_plan_id: string;
   whop_checkout_id: string | null;
@@ -172,13 +170,16 @@ export function matchesVisitOrder(payment: VisitPayment, order: {
   parent_id: string | null;
   amount_cents: number;
 }, companyId: string, productId: string) {
+  const emailMatches = isGuestVisitOwner(order.user_id) ||
+    payment.user.email.toLowerCase() === order.buyer_email.toLowerCase();
+
   return Boolean(
     companyId && productId &&
     payment.metadata.oremea_visit_order === order.id &&
     payment.company?.id === companyId &&
     payment.product?.id === productId &&
     payment.plan?.id === order.whop_plan_id &&
-    payment.user.email.toLowerCase() === order.buyer_email.toLowerCase() &&
+    emailMatches &&
     payment.currency.toLowerCase() === "usd" &&
     payment.subtotal !== null &&
     Math.abs(payment.subtotal * 100 - order.amount_cents) < 0.001 &&
