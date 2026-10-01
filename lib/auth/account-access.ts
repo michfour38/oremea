@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { clerkClient } from "@clerk/nextjs/server";
 
 import { prisma } from "@/lib/prisma";
@@ -11,7 +12,7 @@ type SuspendAccountInput = {
   reason?: string | null;
   source: SecuritySource;
   actorId?: string | null;
-  metadata?: Record<string, unknown>;
+  metadata?: Prisma.InputJsonObject;
 };
 
 export async function getAccountAccess(userId: string) {
@@ -135,7 +136,7 @@ export async function recordSecuritySignal({
 }: {
   userId: string;
   reason: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Prisma.InputJsonObject;
 }) {
   return prisma.$transaction(async (tx) => {
     await tx.account_security.upsert({
