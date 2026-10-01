@@ -4,6 +4,7 @@ import { SignOutButton } from "@clerk/nextjs"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
+import { EternalKeyNavBadge } from "@/components/site/eternal-key-nav-badge"
 import { FeedbackIcon } from "@/components/site/feedback-icon"
 import {
   resolveMemberNavProduct,
@@ -123,6 +124,8 @@ export default function MemberNav() {
         </div>
 
         <div className="ml-auto flex h-12 items-center justify-end gap-3">
+          <EternalKeyNavBadge />
+
           {activeProduct === "recognition" ? (
             <a
               href="https://www.oremea.com/feedback/complete?product=Recognition&source=recognition-finished"
