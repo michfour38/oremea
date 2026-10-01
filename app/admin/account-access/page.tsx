@@ -1,3 +1,5 @@
+import { clerkClient } from "@clerk/nextjs/server";
+
 import { SiteShell } from "@/components/site/site-shell";
 import { ETERNAL_OREMEA_KEY } from "@/lib/auth/account-access";
 import { requireAdminPage } from "@/lib/auth/require-admin";
@@ -40,6 +42,29 @@ export default async function AccountAccessAdminPage({
       take: 25,
     }),
   ]);
+
+  const userIds = Array.from(
+    new Set([
+      ...suspended.map((item) => item.user_id),
+      ...eternalKeys.map((item) => item.user_id),
+    ]),
+  );
+  const emailByUserId = new Map<string, string>();
+
+  if (userIds.length) {
+    const client = await clerkClient();
+    const { data: users } = await client.users.getUserList({
+      userId: userIds,
+      limit: userIds.length,
+    });
+
+    for (const user of users) {
+      emailByUserId.set(
+        user.id,
+        user.primaryEmailAddress?.emailAddress ?? user.id,
+      );
+    }
+  }
 
   return (
     <SiteShell>
@@ -87,8 +112,11 @@ export default async function AccountAccessAdminPage({
             empty="No suspended accounts in the latest set."
             rows={suspended.map((item) => ({
               key: item.user_id,
-              primary: item.user_id,
-              secondary: [item.suspended_source, item.suspended_reason].filter(Boolean).join(" · ") || "No reason recorded",
+              primary: emailByUserId.get(item.user_id) ?? item.user_id,
+              secondary:
+                [item.suspended_source, item.suspended_reason]
+                  .filter(Boolean)
+                  .join(" · ") || "No reason recorded",
             }))}
           />
           <StateList
@@ -96,7 +124,7 @@ export default async function AccountAccessAdminPage({
             empty="No eternal keys have been granted yet."
             rows={eternalKeys.map((item) => ({
               key: item.id,
-              primary: item.user_id,
+              primary: emailByUserId.get(item.user_id) ?? item.user_id,
               secondary: `Granted ${item.granted_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
             }))}
           />
