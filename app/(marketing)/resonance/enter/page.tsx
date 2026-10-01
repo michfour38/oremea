@@ -46,6 +46,17 @@ export default async function ResonanceEnterPage() {
   const entryHref = userId
     ? destination
     : `/sign-up?redirect_url=${encodeURIComponent(signupDestination)}`;
+  const roomInterestHref = (weekNumber: number) => {
+    const visitPath = `/resonance/visits?room=${weekNumber}`;
+    const entryPath = `/entry?room=${weekNumber}`;
+
+    if (userId) {
+      return checkoutEnabled && !hasUnusedVisits ? visitPath : entryPath;
+    }
+
+    const signupTarget = publicCheckoutEnabled ? visitPath : entryPath;
+    return `/sign-up?redirect_url=${encodeURIComponent(signupTarget)}`;
+  };
 
   return (
     <main id="top" className="resonance-theme relative min-h-screen overflow-x-hidden">
@@ -259,7 +270,7 @@ export default async function ResonanceEnterPage() {
                       <p className="res-text-primary text-sm leading-7">{room.description}</p>
                       <p className="res-text-secondary mt-4 text-sm leading-7"><span className="res-accent font-medium">Enter this room when:</span>{" "}{room.chooseWhen}</p>
                     </div>
-                    <Link href={`/entry?room=${room.weekNumber}`} className="res-action mt-6 inline-flex rounded-xl border px-5 py-2.5 text-sm font-medium transition">Choose {roomName} →</Link>
+                    <Link href={roomInterestHref(room.weekNumber)} className="res-action mt-6 inline-flex rounded-xl border px-5 py-2.5 text-sm font-medium transition">Choose {roomName} →</Link>
                   </div>
                 </details>
               );
