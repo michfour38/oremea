@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { extname, join } from "node:path";
 
 const service = readFileSync("lib/auth/account-access.ts", "utf8");
 const schema = readFileSync("prisma/schema/account-security.prisma", "utf8");
@@ -19,6 +20,32 @@ const adminActions = readFileSync(
 );
 const adminLayout = readFileSync("app/admin/layout.tsx", "utf8");
 const autoFlagger = readFileSync("lib/moderation/auto-flag.ts", "utf8");
+const adminAccess = readFileSync("lib/auth/admin-access.ts", "utf8");
+
+function runtimeSourceFiles(root: string): string[] {
+  const files: string[] = [];
+
+  for (const name of readdirSync(root)) {
+    const fullPath = join(root, name);
+    const stat = statSync(fullPath);
+
+    if (stat.isDirectory()) {
+      files.push(...runtimeSourceFiles(fullPath));
+      continue;
+    }
+
+    if ([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"].includes(extname(fullPath))) {
+      files.push(fullPath.replaceAll("\\", "/"));
+    }
+  }
+
+  return files;
+}
+
+const runtimeIsAdminReferences = ["app", "lib", "src"]
+  .flatMap(runtimeSourceFiles)
+  .filter((file) => readFileSync(file, "utf8").includes("is_admin"))
+  .sort();
 
 assert.match(
   schema,
@@ -112,6 +139,28 @@ assert.equal(
   false,
   "The obsolete duplicate admin helper must not return.",
 );
+
+assert.deepEqual(
+  runtimeIsAdminReferences,
+  ["lib/auth/admin-access.ts"],
+  "Runtime admin authority must stay centralized; no route or feature may read or write is_admin directly.",
+);
+assert.match(
+  adminAccess,
+  /prisma\.profiles\.findUnique\([\s\S]*select:\s*\{\s*is_admin:\s*true\s*\}/,
+  "The canonical admin helper must read only the is_admin flag it needs.",
+);
+assert.doesNotMatch(
+  adminAccess,
+  /prisma\.profiles\.(create|update|upsert|updateMany|createMany|delete|deleteMany)/,
+  "Admin status must never be mutated by the runtime admin helper.",
+);
+assert.doesNotMatch(
+  adminAccess,
+  /publicMetadata|privateMetadata|unsafeMetadata/,
+  "Admin authority must not silently move into user or Clerk metadata.",
+);
+
 assert.doesNotMatch(
   autoFlagger,
   /suspendAccount|account-access|banUser/,
