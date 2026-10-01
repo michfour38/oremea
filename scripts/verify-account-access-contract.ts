@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const service = readFileSync("lib/auth/account-access.ts", "utf8");
 const schema = readFileSync("prisma/schema/account-security.prisma", "utf8");
@@ -17,6 +17,7 @@ const adminActions = readFileSync(
   "app/admin/account-access/actions.ts",
   "utf8",
 );
+const adminLayout = readFileSync("app/admin/layout.tsx", "utf8");
 const autoFlagger = readFileSync("lib/moderation/auto-flag.ts", "utf8");
 
 assert.match(
@@ -90,6 +91,26 @@ assert.match(
   adminActions,
   /if \(target\.userId === actorId\)/,
   "Admin self-suspension must remain blocked.",
+);
+assert.match(
+  adminLayout,
+  /import \{ requireAdminPage \} from "@\/lib\/auth\/require-admin";/,
+  "Admin layout must use the canonical admin authorization helper.",
+);
+assert.match(
+  adminLayout,
+  /export default async function AdminLayout/,
+  "Admin layout must remain async so it can fail closed before rendering.",
+);
+assert.match(
+  adminLayout,
+  /await requireAdminPage\(\);/,
+  "Admin layout must enforce admin authorization for every child route.",
+);
+assert.equal(
+  existsSync("lib/require-admin.ts"),
+  false,
+  "The obsolete duplicate admin helper must not return.",
 );
 assert.doesNotMatch(
   autoFlagger,
