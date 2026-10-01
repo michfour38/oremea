@@ -1,0 +1,81 @@
+"use server";
+
+import { clerkClient } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+import {
+  grantEternalOremeaKey,
+  restoreAccount,
+  suspendAccount,
+} from "@/lib/auth/account-access";
+import { requireAdminAction } from "@/lib/auth/require-admin";
+
+async function userIdForEmail(rawEmail: FormDataEntryValue | null) {
+  const email = String(rawEmail ?? "").trim().toLowerCase();
+
+  if (!email || !email.includes("@")) {
+    throw new Error("Enter a valid email address.");
+  }
+
+  const client = await clerkClient();
+  const { data } = await client.users.getUserList({
+    emailAddress: [email],
+    limit: 2,
+  });
+
+  if (data.length !== 1) {
+    throw new Error(
+      data.length === 0
+        ? `No Oremea account was found for ${email}.`
+        : `More than one account matched ${email}.`,
+    );
+  }
+
+  return { userId: data[0].id, email };
+}
+
+export async function grantEternalKeyAction(formData: FormData) {
+  const { userId: actorId } = await requireAdminAction();
+  const target = await userIdForEmail(formData.get("email"));
+
+  await grantEternalOremeaKey({ userId: target.userId, actorId });
+
+  revalidatePath("/admin/account-access");
+  redirect(`/admin/account-access?done=key&email=${encodeURIComponent(target.email)}`);
+}
+
+export async function suspendAccountAction(formData: FormData) {
+  const { userId: actorId } = await requireAdminAction();
+  const target = await userIdForEmail(formData.get("email"));
+  const reason = String(formData.get("reason") ?? "").trim() || "Admin security suspension";
+
+  if (target.userId === actorId) {
+    throw new Error("An admin cannot suspend their own active session from this control.");
+  }
+
+  await suspendAccount({
+    userId: target.userId,
+    actorId,
+    source: "admin",
+    reason,
+  });
+
+  revalidatePath("/admin/account-access");
+  redirect(`/admin/account-access?done=suspended&email=${encodeURIComponent(target.email)}`);
+}
+
+export async function restoreAccountAction(formData: FormData) {
+  const { userId: actorId } = await requireAdminAction();
+  const target = await userIdForEmail(formData.get("email"));
+  const reason = String(formData.get("reason") ?? "").trim() || "Admin restored account access";
+
+  await restoreAccount({
+    userId: target.userId,
+    actorId,
+    reason,
+  });
+
+  revalidatePath("/admin/account-access");
+  redirect(`/admin/account-access?done=restored&email=${encodeURIComponent(target.email)}`);
+}
