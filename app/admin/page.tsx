@@ -33,6 +33,22 @@ export default async function AdminPage() {
 
         <div className="mt-10 grid gap-5 md:grid-cols-2">
           <Link
+            href="/admin/account-access"
+            className="group rounded-[2rem] border border-[#b79a63]/25 bg-black/45 p-7 transition hover:border-[#b79a63]/55"
+          >
+            <p className="text-xs uppercase tracking-[0.22em] text-[#b79a63]">
+              Identity + security
+            </p>
+            <h2 className="mt-3 text-2xl font-light text-zinc-100">
+              Account access
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-zinc-400">
+              Give an eternal Oremea key, suspend suspicious or malicious
+              accounts, and restore access without touching entitlements.
+            </p>
+          </Link>
+
+          <Link
             href="/admin/feedback"
             className="group rounded-[2rem] border border-[#b79a63]/25 bg-black/45 p-7 transition hover:border-[#b79a63]/55"
           >
