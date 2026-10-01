@@ -1,0 +1,29 @@
+model account_security {
+  user_id           String                    @id
+  status            String                    @default("active")
+  suspended_at      DateTime?                 @db.Timestamptz(6)
+  suspended_reason  String?
+  suspended_source  String?
+  suspended_by      String?
+  created_at        DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime                  @updatedAt @db.Timestamptz(6)
+  events            account_security_events[]
+
+  @@index([status])
+  @@index([suspended_at])
+}
+
+model account_security_events {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String
+  event_type  String
+  source      String
+  reason      String?
+  actor_id    String?
+  metadata    Json             @default("{}")
+  created_at  DateTime         @default(now()) @db.Timestamptz(6)
+  account     account_security @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id, created_at])
+  @@index([event_type, created_at])
+}
