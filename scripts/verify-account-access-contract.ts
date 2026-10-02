@@ -18,7 +18,11 @@ const adminActions = readFileSync(
   "app/admin/account-access/actions.ts",
   "utf8",
 );
-const adminPage = readFileSync("app/admin/account-access/page.tsx", "utf8");
+const adminPage = readFileSync("app/admin/page.tsx", "utf8");
+const accountAccessRedirect = readFileSync(
+  "app/admin/account-access/page.tsx",
+  "utf8",
+);
 const adminLayout = readFileSync("app/admin/layout.tsx", "utf8");
 const autoFlagger = readFileSync("lib/moderation/auto-flag.ts", "utf8");
 const adminAccess = readFileSync("lib/auth/admin-access.ts", "utf8");
@@ -321,7 +325,32 @@ assert.doesNotMatch(
 assert.match(
   adminPage,
   /<GoldenKeyInviteForm \/>/,
-  "Account access admin must expose the Golden Key invitation control.",
+  "The main admin page must expose the Golden Key invitation control.",
+);
+assert.match(
+  adminPage,
+  /Golden Keys · \$\{goldenKeys\.length\}[\s\S]*Suspended · \$\{suspended\.length\}/,
+  "The main admin page must show Golden Keys before suspended accounts.",
+);
+assert.doesNotMatch(
+  adminPage,
+  /Eternal keys|eternal keys|eternal Oremea key/,
+  "Admin-facing naming must use Golden Key consistently.",
+);
+assert.match(
+  accountAccessRedirect,
+  /redirect\("\/admin"\)/,
+  "The old account-access route must redirect into the single canonical admin page.",
+);
+assert.match(
+  adminActions,
+  /revalidatePath\("\/admin"\)/,
+  "Account access actions must refresh the canonical admin page.",
+);
+assert.match(
+  adminActions,
+  /redirect\(`\/admin\?done=suspended[\s\S]*redirect\(`\/admin\?done=restored/,
+  "Suspend and restore actions must return to the canonical admin page.",
 );
 assert.match(
   inviteForm,

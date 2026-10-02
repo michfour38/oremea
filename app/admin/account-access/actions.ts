@@ -54,7 +54,7 @@ export async function createEternalKeyInviteAction(
       actorId,
     });
 
-    revalidatePath("/admin/account-access");
+    revalidatePath("/admin");
 
     return {
       status: "success",
@@ -76,10 +76,13 @@ export async function createEternalKeyInviteAction(
 export async function suspendAccountAction(formData: FormData) {
   const { userId: actorId } = await requireAdminAction();
   const target = await userIdForEmail(formData.get("email"));
-  const reason = String(formData.get("reason") ?? "").trim() || "Admin security suspension";
+  const reason =
+    String(formData.get("reason") ?? "").trim() || "Admin security suspension";
 
   if (target.userId === actorId) {
-    throw new Error("An admin cannot suspend their own active session from this control.");
+    throw new Error(
+      "An admin cannot suspend their own active session from this control.",
+    );
   }
 
   await suspendAccount({
@@ -89,14 +92,16 @@ export async function suspendAccountAction(formData: FormData) {
     reason,
   });
 
-  revalidatePath("/admin/account-access");
-  redirect(`/admin/account-access?done=suspended&email=${encodeURIComponent(target.email)}`);
+  revalidatePath("/admin");
+  redirect(`/admin?done=suspended&email=${encodeURIComponent(target.email)}`);
 }
 
 export async function restoreAccountAction(formData: FormData) {
   const { userId: actorId } = await requireAdminAction();
   const target = await userIdForEmail(formData.get("email"));
-  const reason = String(formData.get("reason") ?? "").trim() || "Admin restored account access";
+  const reason =
+    String(formData.get("reason") ?? "").trim() ||
+    "Admin restored account access";
 
   await restoreAccount({
     userId: target.userId,
@@ -104,6 +109,6 @@ export async function restoreAccountAction(formData: FormData) {
     reason,
   });
 
-  revalidatePath("/admin/account-access");
-  redirect(`/admin/account-access?done=restored&email=${encodeURIComponent(target.email)}`);
+  revalidatePath("/admin");
+  redirect(`/admin?done=restored&email=${encodeURIComponent(target.email)}`);
 }
