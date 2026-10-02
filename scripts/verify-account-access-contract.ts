@@ -18,6 +18,7 @@ const adminActions = readFileSync(
   "app/admin/account-access/actions.ts",
   "utf8",
 );
+const adminPage = readFileSync("app/admin/account-access/page.tsx", "utf8");
 const adminLayout = readFileSync("app/admin/layout.tsx", "utf8");
 const autoFlagger = readFileSync("lib/moderation/auto-flag.ts", "utf8");
 const adminAccess = readFileSync("lib/auth/admin-access.ts", "utf8");
@@ -51,6 +52,18 @@ const harmonizeSystem = readFileSync(
   "app/api/harmonize/system/route.ts",
   "utf8",
 );
+const inviteService = readFileSync("lib/auth/golden-key-invites.ts", "utf8");
+const inviteSchema = readFileSync("prisma/schema/golden-key.prisma", "utf8");
+const inviteMigration = readFileSync(
+  "prisma/migrations/20261002185000_golden_key_invites/migration.sql",
+  "utf8",
+);
+const inviteForm = readFileSync(
+  "components/admin/golden-key-invite-form.tsx",
+  "utf8",
+);
+const claimPage = readFileSync("app/key/claim/[token]/page.tsx", "utf8");
+const claimAction = readFileSync("app/key/claim/[token]/actions.ts", "utf8");
 
 function runtimeSourceFiles(root: string): string[] {
   const files: string[] = [];
@@ -228,6 +241,115 @@ assert.match(
 );
 
 assert.match(
+  inviteSchema,
+  /model oremea_eternal_key_issuances \{[\s\S]*email_normalized\s+String\s+@unique[\s\S]*current_user_id\s+String\?/,
+  "Golden Key issuance must have one permanent normalized-email identity and one current account attachment.",
+);
+assert.match(
+  inviteSchema,
+  /model oremea_eternal_key_invites \{[\s\S]*token_hash\s+String\s+@unique[\s\S]*expires_at\s+DateTime[\s\S]*claimed_at\s+DateTime\?/,
+  "Golden Key invitations must be expiring, one-use records addressed by a unique token hash.",
+);
+assert.match(
+  inviteMigration,
+  /CREATE TABLE "oremea_eternal_key_issuances"[\s\S]*CREATE TABLE "oremea_eternal_key_invites"/,
+  "Production migration must create the permanent Golden Key issuance ledger and temporary invite table.",
+);
+assert.match(
+  inviteMigration,
+  /ON DELETE RESTRICT/,
+  "Deleting an invitation must never cascade-delete a permanent Golden Key issuance.",
+);
+assert.match(
+  inviteService,
+  /randomBytes\(32\)\.toString\("base64url"\)/,
+  "Golden Key links must use cryptographically random bearer material.",
+);
+assert.match(
+  inviteService,
+  /createHash\("sha256"\)[\s\S]*token_hash: tokenHash/,
+  "Only the SHA-256 token hash may be stored for a Golden Key invitation.",
+);
+assert.doesNotMatch(
+  inviteService,
+  /data:\s*\{[\s\S]{0,240}\btoken\s*:/,
+  "The raw Golden Key token must never be persisted in invitation data.",
+);
+assert.match(
+  inviteService,
+  /GOLDEN_KEY_INVITE_TTL_MS = 7 \* 24 \* 60 \* 60 \* 1000/,
+  "Golden Key invitation links must expire after seven days.",
+);
+assert.match(
+  inviteService,
+  /updateMany\([\s\S]*claimed_at: null[\s\S]*revoked_at: null[\s\S]*expires_at: \{ gt: now \}[\s\S]*claimed_by_user_id: userId[\s\S]*consumed\.count !== 1/,
+  "Golden Key claim must atomically consume exactly one live invitation.",
+);
+assert.match(
+  inviteService,
+  /verified\.has\(invite\.email_normalized\)/,
+  "A forwarded Golden Key link must not be claimable without the intended verified email.",
+);
+assert.match(
+  inviteService,
+  /oremea_eternal_key_issuances\.upsert\([\s\S]*email_normalized: invite\.email_normalized[\s\S]*current_user_id: userId/,
+  "Claiming must preserve the permanent email issuance while attaching it to the current Clerk identity.",
+);
+assert.match(
+  inviteService,
+  /oremea_entitlements\.upsert\([\s\S]*product_key: ETERNAL_OREMEA_KEY[\s\S]*expires_at: null[\s\S]*revoked_at: null/,
+  "Claiming a Golden Key invitation must mint the canonical non-expiring entitlement.",
+);
+assert.doesNotMatch(
+  inviteService,
+  /whop|checkout|payment|visit_order|visit_credit|redemption|remaining_quantity/i,
+  "Golden Key invitation and claim logic must remain outside commerce and credit machinery.",
+);
+assert.match(
+  adminActions,
+  /createEternalKeyInviteAction[\s\S]*createGoldenKeyInvite/,
+  "The admin Golden Key button must create an invitation, not require an existing member account.",
+);
+const createInviteActionBody = adminActions.match(
+  /export async function createEternalKeyInviteAction[\s\S]*?export async function suspendAccountAction/,
+)?.[0] ?? "";
+assert.doesNotMatch(
+  createInviteActionBody,
+  /getUserList|userIdForEmail/,
+  "A Golden Key invitation must be creatable before the recipient creates an Oremea account.",
+);
+assert.match(
+  adminPage,
+  /<GoldenKeyInviteForm \/>/,
+  "Account access admin must expose the Golden Key invitation control.",
+);
+assert.match(
+  inviteForm,
+  /Create Golden Key link/,
+  "The admin control must clearly create a Golden Key link.",
+);
+assert.match(
+  inviteForm,
+  /token hash[\s\S]*Copy link/,
+  "The raw one-use link must be surfaced to the admin once with explicit hash-only storage copy.",
+);
+assert.match(
+  claimAction,
+  /verification\?\.status === "verified"[\s\S]*claimGoldenKeyInvite/,
+  "Golden Key claim must pass only Clerk-verified email addresses into the claim service.",
+);
+assert.match(
+  claimPage,
+  /robots: \{ index: false, follow: false \}[\s\S]*referrer: "no-referrer"/,
+  "Golden Key claim pages must stay out of search indexes and avoid leaking the bearer URL as a referrer.",
+);
+assert.match(
+  claimPage,
+  /maskedEmail\(invite\.email\)/,
+  "Golden Key claim UI must not unnecessarily expose the full invited email address.",
+);
+
+assert.match(
   adminActions,
   /if \(target\.userId === actorId\)/,
   "Admin self-suspension must remain blocked.",
@@ -280,4 +402,4 @@ assert.doesNotMatch(
   "Content auto-flags must not directly suspend accounts; security escalation stays separate.",
 );
 
-console.log("Account access and eternal key contract checks passed.");
+console.log("Account access, Golden Key, and one-use invitation contract checks passed.");

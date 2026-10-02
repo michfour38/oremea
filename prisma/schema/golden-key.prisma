@@ -1,0 +1,33 @@
+model oremea_eternal_key_issuances {
+  id               String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email_normalized String                       @unique
+  granted_by       String?
+  granted_at       DateTime                     @default(now()) @db.Timestamptz(6)
+  current_user_id  String?
+  attached_at      DateTime?                    @db.Timestamptz(6)
+  created_at       DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime                     @updatedAt @db.Timestamptz(6)
+  invites          oremea_eternal_key_invites[]
+
+  @@index([current_user_id])
+  @@index([granted_at])
+}
+
+model oremea_eternal_key_invites {
+  id                 String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email_normalized   String
+  token_hash         String                        @unique
+  created_by         String
+  expires_at         DateTime                      @db.Timestamptz(6)
+  claimed_at         DateTime?                     @db.Timestamptz(6)
+  claimed_by_user_id String?
+  revoked_at         DateTime?                     @db.Timestamptz(6)
+  issuance_id        String?                       @db.Uuid
+  created_at         DateTime                      @default(now()) @db.Timestamptz(6)
+  issuance           oremea_eternal_key_issuances? @relation(fields: [issuance_id], references: [id], onDelete: Restrict)
+
+  @@index([email_normalized, created_at])
+  @@index([expires_at])
+  @@index([claimed_at])
+  @@index([issuance_id])
+}
