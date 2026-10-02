@@ -7,6 +7,21 @@ import { useUser } from "@clerk/nextjs";
 import { CurrentBell } from "./current-bell";
 import { FeedbackIcon } from "./feedback-icon";
 
+const ACTIVE_PRODUCT_LINKS = [
+  {
+    href: "https://recognition.oremea.com",
+    label: "Recognition",
+  },
+  {
+    href: "https://resonance.oremea.com",
+    label: "Resonance",
+  },
+  {
+    href: "https://compass.oremea.com",
+    label: "Compass",
+  },
+] as const;
+
 function NavItem({
   href,
   label,
@@ -67,6 +82,23 @@ export function SiteNav() {
           </Link>
         </div>
       </div>
+
+      <nav
+        aria-label="Oremea products"
+        className="grid grid-cols-3 border-t border-white/[0.06] md:hidden"
+      >
+        {ACTIVE_PRODUCT_LINKS.map((product, index) => (
+          <Link
+            key={product.label}
+            href={product.href}
+            className={`flex min-h-11 items-center justify-center px-2 py-3 text-center text-[10px] uppercase tracking-[0.14em] text-[#b79a63] transition hover:bg-[#b79a63]/[0.06] hover:text-[#f1dfb4] ${
+              index > 0 ? "border-l border-white/[0.06]" : ""
+            }`}
+          >
+            {product.label}
+          </Link>
+        ))}
+      </nav>
     </header>
   );
 }
