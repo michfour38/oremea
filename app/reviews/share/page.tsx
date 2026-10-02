@@ -16,8 +16,6 @@ const PRODUCT_OPTIONS = [
   "Resonance · Vision",
   "Resonance · Gathering",
   "Resonance · Becoming",
-  "Harmonize",
-  "The Current",
   "Oremea generally",
 ] as const;
 
