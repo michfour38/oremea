@@ -73,14 +73,15 @@ function ScoreScale({
 }
 
 function RecommendationScale({
+  product,
   value,
   onChange,
 }: {
+  product: string;
   value: number | null;
   onChange: (value: number) => void;
 }) {
-  const label =
-    "How likely are you to recommend this experience to someone who needed this kind of support?";
+  const label = `How likely are you to recommend ${product} to someone looking for private reflective support with a situation, question, relationship or pattern?`;
 
   return (
     <fieldset className="min-w-0">
@@ -180,6 +181,8 @@ export default function CompletionFeedbackForm() {
     );
     setSource((params.get("source") || "completion").slice(0, 180));
   }, []);
+
+  const productLabel = product === "Oremea generally" ? "Oremea" : product;
 
   const reviewHref = useMemo(
     () =>
@@ -294,7 +297,7 @@ export default function CompletionFeedbackForm() {
               {product}
             </p>
             <p className="mt-2 max-w-2xl break-words font-serif text-[17px] leading-7 text-zinc-200 sm:text-lg">
-              A private closing reflection on how the experience actually worked.
+              A private closing reflection on how {productLabel} worked for you.
             </p>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2 text-[10px] uppercase tracking-[0.14em] text-zinc-500">
@@ -318,18 +321,18 @@ export default function CompletionFeedbackForm() {
           <SectionHeader
             number="01"
             title="Clarity shift"
-            description="Hold the before and now beside each other. No need to make the movement larger or smaller than it was."
+            description="Compare how clearly you could see what brought you in before you began with how clearly you see the same material now."
           />
           <div className="grid min-w-0 gap-7 lg:grid-cols-2 lg:gap-6">
             <ScoreScale
-              label="Before this experience, how clear did this feel?"
+              label={`Before starting ${productLabel}, how clearly could you see the situation, question, relationship or pattern you brought in?`}
               value={beforeClarity}
               onChange={setBeforeClarity}
               lowLabel="Not clear"
               highLabel="Very clear"
             />
             <ScoreScale
-              label="How clear does it feel now?"
+              label={`After completing ${productLabel}, how clearly can you see that same situation, question, relationship or pattern now?`}
               value={afterClarity}
               onChange={setAfterClarity}
               lowLabel="Not clear"
@@ -341,11 +344,11 @@ export default function CompletionFeedbackForm() {
         <section className="min-w-0 rounded-[1.75rem] border border-white/[0.08] bg-white/[0.022] p-5 sm:p-6">
           <SectionHeader
             number="02"
-            title="Did it meet the need?"
-            description="Rate the experience against what you actually came here for."
+            title={`Did ${productLabel} meet the need?`}
+            description={`Rate ${productLabel} against the reason you chose to begin.`}
           />
           <ScoreScale
-            label="How well did this experience do what you came here for?"
+            label={`How well did ${productLabel} help with the situation, question, relationship or pattern you brought in?`}
             value={fitScore}
             onChange={setFitScore}
             lowLabel="Not at all"
@@ -356,10 +359,11 @@ export default function CompletionFeedbackForm() {
         <section className="min-w-0 rounded-[1.75rem] border border-white/[0.08] bg-white/[0.022] p-5 sm:p-6">
           <SectionHeader
             number="03"
-            title="Would you pass it on?"
-            description="A recommendation score is useful only when it reflects the experience you actually had."
+            title={`Would you recommend ${productLabel}?`}
+            description={`Rate only the experience you actually had with ${productLabel}.`}
           />
           <RecommendationScale
+            product={productLabel}
             value={recommendScore}
             onChange={setRecommendScore}
           />
@@ -369,36 +373,36 @@ export default function CompletionFeedbackForm() {
           <SectionHeader
             number="04"
             title="In your own words"
-            description="Optional. Say as much or as little as is useful; this remains part of the private completion survey."
+            description="Optional. Say as much or as little as is useful; these answers remain part of the private completion survey."
           />
 
           <div className="grid min-w-0 gap-5 md:grid-cols-2">
             <label className="block min-w-0 text-sm leading-6 text-zinc-200">
-              What changed, if anything?
+              What changed in how you see the situation, question, relationship or pattern you brought in?
               <textarea
                 value={whatChanged}
                 onChange={(event) => setWhatChanged(event.target.value)}
                 maxLength={5000}
                 rows={5}
-                placeholder="Use your own words."
+                placeholder="Describe any change in your own words."
                 className={TEXTAREA_CLASS}
               />
             </label>
 
             <label className="block min-w-0 text-sm leading-6 text-zinc-200">
-              What was most useful?
+              What part of {productLabel} was most useful?
               <textarea
                 value={mostUseful}
                 onChange={(event) => setMostUseful(event.target.value)}
                 maxLength={5000}
                 rows={5}
-                placeholder="What actually helped?"
+                placeholder="Name the part that helped most."
                 className={TEXTAREA_CLASS}
               />
             </label>
 
             <label className="block min-w-0 text-sm leading-6 text-zinc-200">
-              What could work better?
+              What part of {productLabel} could work better?
               <textarea
                 value={improvement}
                 onChange={(event) => setImprovement(event.target.value)}
@@ -410,7 +414,7 @@ export default function CompletionFeedbackForm() {
             </label>
 
             <label className="block min-w-0 text-sm leading-6 text-zinc-200">
-              Anything else Oremea should know?
+              Is there anything else you want Oremea to know about your experience with {productLabel}?
               <textarea
                 value={anythingElse}
                 onChange={(event) => setAnythingElse(event.target.value)}
@@ -436,7 +440,9 @@ export default function CompletionFeedbackForm() {
         <div className="min-w-0 rounded-[1.75rem] border border-[#c6a96b]/15 bg-[#c6a96b]/[0.035] p-5 sm:p-6">
           <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <p className="font-serif text-base text-zinc-200">Close the loop when it feels accurate.</p>
+              <p className="font-serif text-base text-zinc-200">
+                Submit when the four ratings reflect your experience.
+              </p>
               <p className="mt-1 text-xs leading-6 text-zinc-500">
                 Your ratings are saved privately. Written reflections remain optional.
               </p>

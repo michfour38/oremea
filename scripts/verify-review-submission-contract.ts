@@ -80,6 +80,21 @@ assert.match(
   /beforeClarity,[\s\S]*afterClarity,[\s\S]*fitScore,[\s\S]*recommendScore,[\s\S]*whatChanged,[\s\S]*mostUseful,[\s\S]*improvement,[\s\S]*anythingElse/,
   "The completion survey redesign must preserve the existing private completion payload.",
 );
+assert.match(
+  completionForm,
+  /situation, question, relationship or pattern you brought in/,
+  "Completion questions must name the material being rated instead of relying on vague pronouns.",
+);
+assert.match(
+  completionForm,
+  /productLabel/,
+  "Completion questions must identify the actual Oremea product being rated.",
+);
+assert.doesNotMatch(
+  completionForm,
+  /Before this experience, how clear did this feel\?|How clear does it feel now\?|How well did this experience do what you came here for\?|Did it meet the need\?|Would you pass it on\?|Close the loop when it feels accurate\./,
+  "Completion survey copy must not regress to ambiguous 'this' or 'it' language.",
+);
 
 assert.match(
   submitRoute,
