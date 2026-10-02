@@ -72,7 +72,7 @@ export default async function AccountAccessAdminPage({
         <p className="text-xs uppercase tracking-[0.26em] text-[#b79a63]">Oremea Admin</p>
         <h1 className="mt-4 text-4xl font-light tracking-tight md:text-6xl">Account access</h1>
         <p className="mt-5 max-w-3xl text-base leading-8 text-zinc-300">
-          Golden Key invitations are temporary and one-use. The ∞ entitlement they issue is permanent and remains separate from security suspension, purchases and credits.
+          Golden Key invitations are temporary and one-use. The ∞ entitlement they issue is permanent and remains separate from security suspension, purchases and credits. Legacy Keys are automatically attached to a verified identity without changing their access.
         </p>
 
         {done ? (
@@ -120,7 +120,11 @@ export default async function AccountAccessAdminPage({
             rows={eternalKeys.map((item) => ({
               key: item.id,
               primary: emailByUserId.get(item.user_id) ?? item.user_id,
-              secondary: `Granted ${item.granted_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
+              secondary: `Granted ${item.granted_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })} · ${
+                item.source === "eternal_key_issuance" && item.source_reference
+                  ? "Identity protected"
+                  : "Legacy identity pending"
+              }`,
             }))}
           />
         </div>
