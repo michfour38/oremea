@@ -113,6 +113,17 @@ function resonanceDomainResponse(req: NextRequest) {
       return rewriteResonancePath(req, "/resonance/enter");
     }
 
+    if (pathname === "/archive" || pathname === "/archive/") {
+      return rewriteResonancePath(req, "/resonance/archive");
+    }
+
+    if (
+      pathname === "/resonance/archive" ||
+      pathname === "/resonance/archive/"
+    ) {
+      return redirectResonancePath(req, "/archive");
+    }
+
     return null;
   }
 
@@ -121,16 +132,34 @@ function resonanceDomainResponse(req: NextRequest) {
       return redirectResonancePath(req, "/");
     }
 
+    if (
+      pathname === "/resonance/archive" ||
+      pathname === "/resonance/archive/"
+    ) {
+      return redirectResonancePath(req, "/archive");
+    }
+
     if (pathname === "/resonance" || pathname.startsWith("/resonance/")) {
       return redirectResonancePath(req, pathname);
     }
   }
 
-  // Older Whop checkout sessions were issued with the main-site return URL.
-  // Keep those paid returns on the product host, preserving the order query.
-  if (OREMEA_PUBLIC_HOSTS.has(host) &&
-    (pathname === "/resonance/complete" || pathname === "/resonance/complete/")) {
-    return redirectResonancePath(req, "/resonance/complete");
+  if (OREMEA_PUBLIC_HOSTS.has(host)) {
+    if (
+      pathname === "/resonance/archive" ||
+      pathname === "/resonance/archive/"
+    ) {
+      return redirectResonancePath(req, "/archive");
+    }
+
+    // Older Whop checkout sessions were issued with the main-site return URL.
+    // Keep those paid returns on the product host, preserving the order query.
+    if (
+      pathname === "/resonance/complete" ||
+      pathname === "/resonance/complete/"
+    ) {
+      return redirectResonancePath(req, "/resonance/complete");
+    }
   }
 
   return null;
