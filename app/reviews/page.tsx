@@ -7,8 +7,6 @@ type Product =
   | "all"
   | "resonance"
   | "compass"
-  | "harmonize"
-  | "current"
   | "recognition";
 
 type Review = {
@@ -48,29 +46,6 @@ const reviews: Review[] = [
     tags: ["Clarity", "Direction", "Movement"],
     isVisibleOnMainReviews: true,
     status: "approved",
-  },
-  {
-    id: "r3",
-    product: "harmonize",
-    productLabel: "Harmonize",
-    quote: "I saw the space between us differently. It was not only about who was right.",
-    displayName: "Anonymous",
-    role: "Partner",
-    month: "June 2026",
-    tags: ["Relational insight", "Boundaries", "Perspective"],
-    isVisibleOnMainReviews: false,
-    status: "hidden",
-  },
-  {
-    id: "r4",
-    product: "current",
-    productLabel: "The Current",
-    quote: "It made connection feel less like performance and more like readiness.",
-    displayName: "Anonymous",
-    month: "June 2026",
-    tags: ["Readiness", "Connection", "Stillness"],
-    isVisibleOnMainReviews: false,
-    status: "hidden",
   },
   {
     id: "r5",
