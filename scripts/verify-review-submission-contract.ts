@@ -9,6 +9,9 @@ const reviewsPage = read("app/reviews/page.tsx");
 const sharePage = read("app/reviews/share/page.tsx");
 const shareLayout = read("app/reviews/share/layout.tsx");
 const legacySubmitPage = read("app/reviews/submit/page.tsx");
+const completionForm = read(
+  "app/feedback/complete/completion-feedback-form.tsx",
+);
 const submitRoute = read("app/api/reviews/submit/route.ts");
 const sitemap = read("app/sitemap.xml/route.ts");
 const middleware = read("middleware.ts");
@@ -55,6 +58,27 @@ assert.doesNotMatch(
   legacySubmitPage,
   /localStorage|Reflection received/,
   "The legacy URL must never simulate a successful review submission locally.",
+);
+
+assert.match(
+  completionForm,
+  /private and separate from the[\s\S]*Feedback button and the public Reviews page/i,
+  "The completion survey must preserve the privacy boundary between private survey feedback and public reviews.",
+);
+assert.match(
+  completionForm,
+  /grid-cols-5/,
+  "The required 1–5 completion ratings must remain a contained responsive scale rather than detached fixed-width controls.",
+);
+assert.match(
+  completionForm,
+  /grid-cols-6[\s\S]*sm:grid-cols-11/,
+  "The 0–10 recommendation scale must wrap intentionally on narrow screens and become one row when space allows.",
+);
+assert.match(
+  completionForm,
+  /beforeClarity,[\s\S]*afterClarity,[\s\S]*fitScore,[\s\S]*recommendScore,[\s\S]*whatChanged,[\s\S]*mostUseful,[\s\S]*improvement,[\s\S]*anythingElse/,
+  "The completion survey redesign must preserve the existing private completion payload.",
 );
 
 assert.match(
