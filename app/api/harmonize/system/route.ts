@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
+import { hasEternalOremeaKey } from "@/lib/auth/account-access"
 import { prisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
@@ -47,8 +48,8 @@ export async function POST(request: Request) {
       },
     })
 
-    const ownedSpaceCount =
-      await prisma.harmonize_systems.count({
+    const [ownedSpaceCount, eternalKey] = await Promise.all([
+      prisma.harmonize_systems.count({
         where: {
           status: "active",
           OR: [
@@ -61,9 +62,11 @@ export async function POST(request: Request) {
             },
           ],
         },
-      })
+      }),
+      hasEternalOremeaKey(userId),
+    ])
 
-    if (ownedSpaceCount >= INCLUDED_OWNED_SPACE_LIMIT) {
+    if (!eternalKey && ownedSpaceCount >= INCLUDED_OWNED_SPACE_LIMIT) {
       return NextResponse.json(
         {
           success: false,
@@ -104,7 +107,8 @@ export async function POST(request: Request) {
       success: true,
       system,
       ownedSpaceCount: ownedSpaceCount + 1,
-      ownedSpaceLimit: INCLUDED_OWNED_SPACE_LIMIT,
+      ownedSpaceLimit: eternalKey ? null : INCLUDED_OWNED_SPACE_LIMIT,
+      unlimitedOwnedSpaces: eternalKey,
     })
   } catch (error) {
     console.error(

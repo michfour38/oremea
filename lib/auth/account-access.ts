@@ -15,26 +15,38 @@ type SuspendAccountInput = {
   metadata?: Prisma.InputJsonObject;
 };
 
-export async function getAccountAccess(userId: string) {
-  const [security, eternalKey] = await Promise.all([
-    prisma.account_security.findUnique({ where: { user_id: userId } }),
-    prisma.oremea_entitlements.findUnique({
-      where: {
-        user_id_product_key: {
-          user_id: userId,
-          product_key: ETERNAL_OREMEA_KEY,
-        },
+export async function hasEternalOremeaKey(userId: string) {
+  const eternalKey = await prisma.oremea_entitlements.findUnique({
+    where: {
+      user_id_product_key: {
+        user_id: userId,
+        product_key: ETERNAL_OREMEA_KEY,
       },
-    }),
+    },
+    select: {
+      status: true,
+      expires_at: true,
+      revoked_at: true,
+    },
+  });
+
+  return Boolean(
+    eternalKey?.status === "active" &&
+      !eternalKey.revoked_at &&
+      !eternalKey.expires_at,
+  );
+}
+
+export async function getAccountAccess(userId: string) {
+  const [security, hasEternalKey] = await Promise.all([
+    prisma.account_security.findUnique({ where: { user_id: userId } }),
+    hasEternalOremeaKey(userId),
   ]);
 
   return {
     suspended: security?.status === "suspended",
     suspendedAt: security?.suspended_at ?? null,
-    hasEternalKey:
-      eternalKey?.status === "active" &&
-      !eternalKey.revoked_at &&
-      !eternalKey.expires_at,
+    hasEternalKey,
   };
 }
 

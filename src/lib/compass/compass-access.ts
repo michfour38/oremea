@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { hasEternalOremeaKey } from "@/lib/auth/account-access";
 import { hasOremeaOwnerAccess } from "@/src/lib/oremea/owner-recovery";
 
 import {
@@ -26,7 +27,7 @@ export type CompassAccessState = {
   active: boolean;
   expiresAt: Date | null;
   daysRemaining: number | null;
-  source: "owner" | "pass" | "membership" | null;
+  source: "owner" | "eternal_key" | "pass" | "membership" | null;
 };
 
 function readMembershipReference(value: string | null): CompassMembershipReference | null {
@@ -74,6 +75,15 @@ export async function getCompassAccessState(
       expiresAt: null,
       daysRemaining: null,
       source: "owner",
+    };
+  }
+
+  if (await hasEternalOremeaKey(userId)) {
+    return {
+      active: true,
+      expiresAt: null,
+      daysRemaining: null,
+      source: "eternal_key",
     };
   }
 

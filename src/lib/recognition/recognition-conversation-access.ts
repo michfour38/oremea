@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { hasEternalOremeaKey } from "@/lib/auth/account-access";
 import { hasOremeaOwnerAccess } from "@/src/lib/oremea/owner-recovery";
 import { normalizeRecognitionEmail } from "./recognition-access";
 
@@ -9,7 +10,7 @@ export const RECOGNITION_MEMBERSHIP_PRODUCT_KEY = "recognition_membership";
 
 export type RecognitionConversationAccess = {
   active: boolean;
-  source: "owner" | "membership" | null;
+  source: "owner" | "eternal_key" | "membership" | null;
   matchedEmail: string | null;
   purchasedAt: Date | null;
   expiresAt: Date | null;
@@ -175,6 +176,16 @@ export async function getRecognitionConversationAccess({
     return {
       active: true,
       source: "owner",
+      matchedEmail: normalizeRecognitionEmail(emails[0] ?? "") || null,
+      purchasedAt: null,
+      expiresAt: null,
+    };
+  }
+
+  if (await hasEternalOremeaKey(userId)) {
+    return {
+      active: true,
+      source: "eternal_key",
       matchedEmail: normalizeRecognitionEmail(emails[0] ?? "") || null,
       purchasedAt: null,
       expiresAt: null,

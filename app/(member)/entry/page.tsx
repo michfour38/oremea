@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
+import { hasEternalOremeaKey } from "@/lib/auth/account-access";
 import { prisma } from "@/lib/prisma";
 import { getRunContinuedDays } from "@/src/lib/resonance/resonance-run-data";
 import {
@@ -136,9 +137,10 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
   const roomTarget = getResonanceRoomTarget(query.room);
   const { userId } = await auth();
   if (!userId) redirect(`/sign-in?redirect_url=${encodeURIComponent(roomTarget?.entryPath ?? "/entry")}`);
-  const [creditFlow, newCheckout] = await Promise.all([
+  const [creditFlow, newCheckout, eternalKey] = await Promise.all([
     visitCreditsAvailableFor(userId),
     visitCheckoutAvailableFor(userId),
+    hasEternalOremeaKey(userId),
   ]);
 
   const [weeks, activeRun, runs, visitBalance] = await Promise.all([
@@ -153,7 +155,7 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
     }),
     getActiveResonanceRun(userId),
     getResonanceWeekRuns(userId),
-    creditFlow ? getVisitBalance(userId) : Promise.resolve(0),
+    creditFlow && !eternalKey ? getVisitBalance(userId) : Promise.resolve(0),
   ]);
 
   const activeDay = activeRun ? await getActiveRunDay(activeRun.id) : null;
@@ -197,16 +199,21 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
                 Resonance
               </p>
               <h2 className="res-text mt-3 text-3xl font-light">Which one do you choose?</h2>
-              {creditFlow ? (
+              {eternalKey ? (
+                <div className="res-accent-border res-panel mt-5 rounded-2xl border p-5">
+                  <p className="res-accent text-lg font-medium">∞ All Access · Golden Key</p>
+                  <p className="res-text-primary mt-2 text-base">Every published Resonance room is included for life. One room remains active at a time, and opening a room does not consume or create visit credits.</p>
+                </div>
+              ) : creditFlow ? (
                 <div className="res-accent-border res-panel mt-5 rounded-2xl border p-5">
                   <p className="res-accent text-lg font-medium">{visitBalance} unused visit{visitBalance === 1 ? "" : "s"}</p>
                   <p className="res-text-primary mt-2 text-base">Entering a room uses one visit. The other visits remain available for later.</p>
                   {newCheckout ? <Link href="/resonance/visits" className="res-accent res-accent-hover mt-3 inline-block text-base font-medium underline underline-offset-4">Buy visits</Link> : null}
                 </div>
               ) : null}
-              {query.visitError ? <p role="alert" className="res-alert mt-4 text-base">That room could not be opened. Check for an active visit or an unused visit below. No additional visit was deducted for the failed request.</p> : null}
+              {query.visitError ? <p role="alert" className="res-alert mt-4 text-base">That room could not be opened. Check for an active room or available access below. No paid visit was deducted for the failed request.</p> : null}
               <p className="res-text-primary mt-4 text-base leading-8">
-                {creditFlow ? "Each visit opens one seven-day Resonance room." : "Each purchase opens one seven-day Resonance room."} There is no
+                {eternalKey ? "Your Golden Key opens any published seven-day Resonance room." : creditFlow ? "Each visit opens one seven-day Resonance room." : "Each purchase opens one seven-day Resonance room."} There is no
                 required order. Choose the room containing the question that
                 currently has your attention. When the visit closes, it remains
                 available in the archive. Returning to the same room later opens a
@@ -275,8 +282,8 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
                 const hasArchivedHistory =
                   completedRuns.length > 0 || preservedRuns.length > 0;
                 const isActive = activeRun?.weekNumber === week.week_number;
-                const canRedeem = creditFlow && visitBalance > 0 && week.is_published && activeRun === null;
-                const canPurchase = week.is_published && activeRun === null && !canRedeem;
+                const canRedeem = (eternalKey || (creditFlow && visitBalance > 0)) && week.is_published && activeRun === null;
+                const canPurchase = !eternalKey && week.is_published && activeRun === null && !canRedeem;
                 const nextRun = weekRuns.reduce((highest, run) => Math.max(highest, run.runNumber), 0) + 1;
                 const isLockedByActive =
                   week.is_published && activeRun !== null && !isActive;
@@ -292,7 +299,7 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
                         : isLockedByActive
                           ? "Locked"
                           : week.is_published
-                            ? canRedeem ? "Use one visit" : "Available to purchase"
+                            ? canRedeem ? eternalKey ? "Golden Key · ∞" : "Use one visit" : "Available to purchase"
                             : "Unavailable";
 
                 return (
@@ -364,7 +371,7 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
                           <form action={enterVisitRoom}>
                             <input type="hidden" name="weekNumber" value={week.week_number} />
                             <input type="hidden" name="requestId" value={randomUUID()} />
-                            <VisitSubmitButton>{nextRun > 1 ? `Start round ${nextRun} · Use one visit` : "Enter room · Use one visit"}</VisitSubmitButton>
+                            <VisitSubmitButton>{eternalKey ? nextRun > 1 ? `Start round ${nextRun} · ∞` : "Enter room · ∞" : nextRun > 1 ? `Start round ${nextRun} · Use one visit` : "Enter room · Use one visit"}</VisitSubmitButton>
                             {nextRun > 1 ? <p className="res-text-secondary mt-3 text-sm">A fresh round. Previous reflections remain in the archive.</p> : null}
                           </form>
                         ) : null}

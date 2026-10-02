@@ -131,13 +131,15 @@ export default async function CompassAccessPage() {
                 Compass is ready
               </h2>
               <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-zinc-300">
-                {access.source === "membership"
-                  ? access.expiresAt
-                    ? `Compass access is active through ${access.expiresAt.toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}.`
-                    : "Your Compass access is active."
-                  : access.expiresAt
-                    ? `Your earlier Compass pass remains honoured through ${access.expiresAt.toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}.`
-                    : "Your Oremea owner access is active."}
+                {access.source === "eternal_key"
+                  ? "Your Golden Key gives you lifetime Compass access."
+                  : access.source === "membership"
+                    ? access.expiresAt
+                      ? `Compass access is active through ${access.expiresAt.toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}.`
+                      : "Your Compass access is active."
+                    : access.expiresAt
+                      ? `Your earlier Compass pass remains honoured through ${access.expiresAt.toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}.`
+                      : "Your Oremea owner access is active."}
               </p>
               <div className="mt-7 flex justify-center">
                 <Link

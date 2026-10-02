@@ -452,8 +452,8 @@ const accessSource = readFileSync(
 );
 assert.match(
   accessSource,
-  /"owner" \| "membership" \| null/,
-  "Recognition access must consist only of owner override or active membership.",
+  /"owner" \| "eternal_key" \| "membership" \| null/,
+  "Recognition access must consist only of owner override, Golden Key, or active membership.",
 );
 assert.match(
   accessSource,

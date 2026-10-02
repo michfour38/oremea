@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import Script from "next/script";
 import { notFound, redirect } from "next/navigation";
+import { hasEternalOremeaKey } from "@/lib/auth/account-access";
 import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
 import { INITIAL_QUANTITIES, VISIT_PRICES } from "@/src/lib/resonance/visit-offers";
 import { getResonanceRoomTarget } from "@/src/lib/resonance/room-entry";
@@ -27,6 +28,7 @@ export default async function VisitPurchasePage({ searchParams }: {
   const roomSuffix = roomTarget ? `&room=${roomTarget.weekNumber}` : "";
   const { userId } = await auth();
   if (!userId) redirect(`/sign-in?redirect_url=${encodeURIComponent(`/resonance/visits${roomQuery}`)}`);
+  if (await hasEternalOremeaKey(userId)) redirect(roomTarget?.entryPath ?? "/entry");
   if (!(await visitCreditsAvailableFor(userId))) notFound();
   const [checkoutEnabled, adminMode] = await Promise.all([
     visitCheckoutAvailableFor(userId),
