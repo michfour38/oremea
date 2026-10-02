@@ -201,7 +201,7 @@ export default async function ResonancePurchasePage(props: Props) {
                 {detail.question}
               </p>
               <p className="res-text-primary mt-3 text-base leading-8">
-                {detail.description}
+                {detail.description.replace(/\.\s*$/, "")}
               </p>
             </div>
           ) : null}
