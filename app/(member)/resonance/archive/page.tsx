@@ -525,7 +525,7 @@ export default async function ArchivePage(props: Props) {
             <h1 className="res-text text-3xl font-semibold">What has stayed</h1>
             <p className="res-text-secondary max-w-xl text-sm leading-7">
               Return to each Resonance visit as it was lived. Repeating a room creates
-              a new visit while the earlier visit stays intact.
+              a new visit while the earlier visit stays intact
             </p>
           </header>
 
