@@ -162,15 +162,17 @@ export default async function ResonancePage() {
                     Resonance · Day {content.dayNumber}
                   </p>
                   <h1 className="res-text text-4xl">{content.weekTitle}</h1>
-                  <p className="res-text-secondary">{content.weekTheme}</p>
+                  <p className="res-text-secondary">
+                    {content.weekTheme.replace(/\.\s*$/, "")}
+                  </p>
                 </>
               ) : (
                 <div className="space-y-3">
                   <h1 className="res-text text-4xl">Resonance</h1>
                   <p className="res-text-secondary">
                     {contentLoadFailed
-                      ? "This day's reflections could not be loaded yet."
-                      : "This day's reflections are not available yet."}
+                      ? "This day's reflections could not be loaded yet"
+                      : "This day's reflections are not available yet"}
                   </p>
                 </div>
               )}

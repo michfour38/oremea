@@ -71,8 +71,8 @@ export default async function VisitPurchasePage({ searchParams }: {
     <FunnelFrame>
       <div className={order ? "mx-auto max-w-xl" : undefined}>
         <p className="res-accent text-sm uppercase tracking-[0.2em]">Resonance visits</p>
-        <h1 className="res-text mt-3 text-4xl font-light">Choose the visits. Choose the room next.</h1>
-        <p className="res-text-primary mt-5 text-base leading-8">Each visit opens one seven-day room experience, starting when it is entered. Use different rooms or return to the same room for a fresh round. One visit is active at a time.</p>
+        <h1 className="res-text mt-3 text-4xl font-light">Choose the visits · choose the room next</h1>
+        <p className="res-text-primary mt-5 text-base leading-8">Each visit opens one seven-day room experience, starting when it is entered. Use different rooms or return to the same room for a fresh round. One visit is active at a time</p>
         {unusedVisits > 0 ? <p className="res-text-primary mt-4">You have {unusedVisits} unused visit{unusedVisits === 1 ? "" : "s"}. <Link href={roomTarget?.entryPath ?? "/entry"} className="res-accent underline underline-offset-4">Choose a room with your visits</Link></p> : null}
         {!checkoutEnabled ? <p role="status" className="res-text-primary mt-6">Package checkout is not open yet. Existing purchases remain available.</p> : null}
         {query.error ? <p role="alert" className="res-alert mt-6">{query.error === "email" ? "Verify the primary email on this account before purchasing." : query.error === "admin-test" ? "The admin test purchase could not be recorded." : "Checkout could not be opened. No payment has been confirmed."}</p> : null}
