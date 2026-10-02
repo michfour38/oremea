@@ -1,12 +1,12 @@
 import { clerkClient } from "@clerk/nextjs/server";
 
+import { GoldenKeyInviteForm } from "@/components/admin/golden-key-invite-form";
 import { SiteShell } from "@/components/site/site-shell";
 import { ETERNAL_OREMEA_KEY } from "@/lib/auth/account-access";
 import { requireAdminPage } from "@/lib/auth/require-admin";
 import { prisma } from "@/lib/prisma";
 
 import {
-  grantEternalKeyAction,
   restoreAccountAction,
   suspendAccountAction,
 } from "./actions";
@@ -72,7 +72,7 @@ export default async function AccountAccessAdminPage({
         <p className="text-xs uppercase tracking-[0.26em] text-[#b79a63]">Oremea Admin</p>
         <h1 className="mt-4 text-4xl font-light tracking-tight md:text-6xl">Account access</h1>
         <p className="mt-5 max-w-3xl text-base leading-8 text-zinc-300">
-          Security suspension is separate from purchases, credits and eternal-key entitlement. Restoring an account returns the access it already owned.
+          Golden Key invitations are temporary and one-use. The ∞ entitlement they issue is permanent and remains separate from security suspension, purchases and credits.
         </p>
 
         {done ? (
@@ -83,12 +83,7 @@ export default async function AccountAccessAdminPage({
         ) : null}
 
         <div className="mt-10 grid gap-5 lg:grid-cols-3">
-          <AdminForm
-            title="Give eternal key"
-            description="Permanent ∞ All Access. No expiry. A later security suspension does not remove it."
-            action={grantEternalKeyAction}
-            submit="Give key"
-          />
+          <GoldenKeyInviteForm />
           <AdminForm
             title="Suspend account"
             description="Immediately revoke sessions and prevent sign-in across protected Oremea surfaces."

@@ -4,12 +4,19 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import {
-  grantEternalOremeaKey,
-  restoreAccount,
-  suspendAccount,
-} from "@/lib/auth/account-access";
+import { restoreAccount, suspendAccount } from "@/lib/auth/account-access";
+import { createGoldenKeyInvite } from "@/lib/auth/golden-key-invites";
 import { requireAdminAction } from "@/lib/auth/require-admin";
+
+export type GoldenKeyInviteActionState =
+  | { status: "idle" }
+  | {
+      status: "success";
+      email: string;
+      link: string;
+      expiresAt: string;
+    }
+  | { status: "error"; message: string };
 
 async function userIdForEmail(rawEmail: FormDataEntryValue | null) {
   const email = String(rawEmail ?? "").trim().toLowerCase();
@@ -35,14 +42,35 @@ async function userIdForEmail(rawEmail: FormDataEntryValue | null) {
   return { userId: data[0].id, email };
 }
 
-export async function grantEternalKeyAction(formData: FormData) {
+export async function createEternalKeyInviteAction(
+  _previousState: GoldenKeyInviteActionState,
+  formData: FormData,
+): Promise<GoldenKeyInviteActionState> {
   const { userId: actorId } = await requireAdminAction();
-  const target = await userIdForEmail(formData.get("email"));
 
-  await grantEternalOremeaKey({ userId: target.userId, actorId });
+  try {
+    const invite = await createGoldenKeyInvite({
+      email: String(formData.get("email") ?? ""),
+      actorId,
+    });
 
-  revalidatePath("/admin/account-access");
-  redirect(`/admin/account-access?done=key&email=${encodeURIComponent(target.email)}`);
+    revalidatePath("/admin/account-access");
+
+    return {
+      status: "success",
+      email: invite.email,
+      link: invite.link,
+      expiresAt: invite.expiresAt.toISOString(),
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "Could not create the Golden Key link.",
+    };
+  }
 }
 
 export async function suspendAccountAction(formData: FormData) {
