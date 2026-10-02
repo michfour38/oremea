@@ -20,8 +20,6 @@ const ALLOWED_PRODUCTS = new Set([
   "Resonance · Vision",
   "Resonance · Gathering",
   "Resonance · Becoming",
-  "Harmonize",
-  "The Current",
   "Oremea generally",
 ]);
 
