@@ -65,10 +65,28 @@ assert.match(
 
 const middleware = readFileSync("middleware.ts", "utf8");
 const memberNav = readFileSync("app/(member)/member-nav.tsx", "utf8");
+const siteNav = readFileSync("components/site/site-nav.tsx", "utf8");
 const profileProducts = readFileSync(
   "components/site/sections/profile-products.tsx",
   "utf8",
 );
+
+assert.match(
+  siteNav,
+  /aria-label="Oremea products"[\s\S]*md:hidden/,
+  "Narrow public navigation must expose a mobile-only product link row.",
+);
+for (const [label, host] of [
+  ["Recognition", "recognition.oremea.com"],
+  ["Resonance", "resonance.oremea.com"],
+  ["Compass", "compass.oremea.com"],
+] as const) {
+  assert.match(
+    siteNav,
+    new RegExp(`href: "https://${host.replaceAll(".", "\\.")}"[\\s\\S]*label: "${label}"`),
+    `${label} must remain directly reachable from narrow public navigation.`,
+  );
+}
 
 assert.match(
   memberNav,
