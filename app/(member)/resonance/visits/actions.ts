@@ -3,8 +3,10 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { hasEternalOremeaKey } from "@/lib/auth/account-access";
 import { requestAffiliateCode } from "@/src/lib/whop/affiliate-request";
 import { acceptVisitAddition, declineVisitAddition, redeemVisit, startVisitPurchase } from "@/src/lib/resonance/visit-orders";
+import { redeemEternalKeyVisit } from "@/src/lib/resonance/eternal-key-visit";
 import { visitCheckoutAvailableFor, visitCreditsAvailableFor } from "@/src/lib/resonance/visit-access";
 import { getResonanceRoomTarget } from "@/src/lib/resonance/room-entry";
 import { isOremeaAdmin } from "@/lib/auth/admin-access";
@@ -30,6 +32,10 @@ export async function purchaseVisits(form: FormData) {
   if (!user) {
     const target = withRoom("/resonance/visits", roomTarget?.weekNumber);
     redirect(`/sign-in?redirect_url=${encodeURIComponent(target)}`);
+  }
+
+  if (await hasEternalOremeaKey(user.id)) {
+    redirect(roomTarget?.entryPath ?? "/entry");
   }
 
   const email = user.emailAddresses.find((item) => item.id === user.primaryEmailAddressId);
@@ -88,6 +94,7 @@ export async function addVisits(form: FormData) {
   const roomTarget = formRoomTarget(form);
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
+  if (await hasEternalOremeaKey(userId)) redirect(roomTarget?.entryPath ?? "/entry");
   if (!(await visitCheckoutAvailableFor(userId))) redirect(roomTarget?.entryPath ?? "/entry");
   const parentId = String(form.get("orderId"));
   let orderId: string | null = null;
@@ -110,6 +117,7 @@ export async function skipAddition(form: FormData) {
   const roomTarget = formRoomTarget(form);
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
+  if (await hasEternalOremeaKey(userId)) redirect(roomTarget?.entryPath ?? "/entry");
   if (!(await visitCreditsAvailableFor(userId))) redirect(roomTarget?.entryPath ?? "/entry");
   try { await declineVisitAddition(userId, String(form.get("orderId"))); } catch { /* Skipping never blocks purchased access. */ }
   redirect(roomTarget?.entryPath ?? "/entry");
@@ -118,13 +126,17 @@ export async function skipAddition(form: FormData) {
 export async function enterVisitRoom(form: FormData) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
-  if (!(await visitCreditsAvailableFor(userId))) redirect("/entry");
+  if (!(await visitCreditsAvailableFor(userId)) && !(await hasEternalOremeaKey(userId))) redirect("/entry");
   let entered = false;
   try {
-    if (await isOremeaAdmin(userId)) {
-      await ensureAdminTestVisitCredit(userId);
+    if (await hasEternalOremeaKey(userId)) {
+      await redeemEternalKeyVisit(userId, Number(form.get("weekNumber")), String(form.get("requestId")));
+    } else {
+      if (await isOremeaAdmin(userId)) {
+        await ensureAdminTestVisitCredit(userId);
+      }
+      await redeemVisit(userId, Number(form.get("weekNumber")), String(form.get("requestId")));
     }
-    await redeemVisit(userId, Number(form.get("weekNumber")), String(form.get("requestId")));
     entered = true;
   } catch { /* No debit occurs if a room cannot be opened. */ }
   revalidatePath("/entry");

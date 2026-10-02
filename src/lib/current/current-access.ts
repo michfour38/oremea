@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 
+import { hasEternalOremeaKey } from "@/lib/auth/account-access";
 import { prisma } from "@/lib/prisma";
 import { hasOremeaOwnerAccess } from "@/src/lib/oremea/owner-recovery";
 
@@ -104,7 +105,10 @@ export async function getOremeaMemberState({
   userId: string;
   emails: string[];
 }) {
-  if (await hasOremeaOwnerAccess(userId)) {
+  if (
+    (await hasOremeaOwnerAccess(userId)) ||
+    (await hasEternalOremeaKey(userId))
+  ) {
     return { member: true };
   }
 
@@ -162,7 +166,10 @@ export async function getCurrentAccessState(
   userId: string,
   now = new Date(),
 ) {
-  if (await hasOremeaOwnerAccess(userId)) {
+  if (
+    (await hasOremeaOwnerAccess(userId)) ||
+    (await hasEternalOremeaKey(userId))
+  ) {
     return {
       active: true,
       expiresAt: null,
@@ -199,6 +206,8 @@ export async function getCurrentAccessState(
 }
 
 export async function listPendingCurrentInvitations(userId: string) {
+  if ((await getCurrentAccessState(userId)).active) return [];
+
   const launch = await getCurrentLaunchState();
   if (!launch.launched) return [];
 
@@ -394,6 +403,8 @@ export async function startCurrentCheckout({
   userId: string;
   invitationId: string;
 }) {
+  if ((await getCurrentAccessState(userId)).active) return null;
+
   const launch = await getCurrentLaunchState();
   if (!launch.launched) {
     throw new Error("The Current is still forming and checkout is locked.");
