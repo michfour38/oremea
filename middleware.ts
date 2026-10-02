@@ -104,6 +104,21 @@ function recognitionDomainResponse(req: NextRequest) {
   return null;
 }
 
+function isResonanceProtectedPath(req: NextRequest) {
+  if (getHostname(req) !== RESONANCE_HOST) return false;
+
+  const { pathname } = req.nextUrl;
+
+  return (
+    pathname === "/archive" ||
+    pathname === "/archive/" ||
+    pathname.startsWith("/archive/") ||
+    pathname === "/resonance/archive" ||
+    pathname === "/resonance/archive/" ||
+    pathname.startsWith("/resonance/archive/")
+  );
+}
+
 function resonanceDomainResponse(req: NextRequest) {
   const host = getHostname(req);
   const { pathname } = req.nextUrl;
@@ -111,6 +126,25 @@ function resonanceDomainResponse(req: NextRequest) {
   if (host === RESONANCE_HOST) {
     if (pathname === "/") {
       return rewriteResonancePath(req, "/resonance/enter");
+    }
+
+    if (pathname === "/archive" || pathname === "/archive/") {
+      return rewriteResonancePath(req, "/resonance/archive");
+    }
+
+    if (pathname.startsWith("/archive/")) {
+      return rewriteResonancePath(req, `/resonance${pathname}`);
+    }
+
+    if (
+      pathname === "/resonance/archive" ||
+      pathname === "/resonance/archive/"
+    ) {
+      return redirectResonancePath(req, "/archive");
+    }
+
+    if (pathname.startsWith("/resonance/archive/")) {
+      return redirectResonancePath(req, pathname.slice("/resonance".length));
     }
 
     return null;
@@ -128,9 +162,18 @@ function resonanceDomainResponse(req: NextRequest) {
 
   // Older Whop checkout sessions were issued with the main-site return URL.
   // Keep those paid returns on the product host, preserving the order query.
-  if (OREMEA_PUBLIC_HOSTS.has(host) &&
-    (pathname === "/resonance/complete" || pathname === "/resonance/complete/")) {
+  if (
+    OREMEA_PUBLIC_HOSTS.has(host) &&
+    (pathname === "/resonance/complete" || pathname === "/resonance/complete/")
+  ) {
     return redirectResonancePath(req, "/resonance/complete");
+  }
+
+  if (
+    OREMEA_PUBLIC_HOSTS.has(host) &&
+    (pathname === "/resonance/archive" || pathname === "/resonance/archive/")
+  ) {
+    return redirectResonancePath(req, "/archive");
   }
 
   return null;
@@ -337,7 +380,7 @@ const isPublicRoute = createRouteMatcher([
 ]);
 
 const oremeaMiddleware = clerkMiddleware(async (auth, req) => {
-  if (isCompassProtectedPath(req)) {
+  if (isResonanceProtectedPath(req) || isCompassProtectedPath(req)) {
     await auth.protect();
   }
 
