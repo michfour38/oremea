@@ -66,19 +66,19 @@ export default async function VisitCompletionPage({ searchParams }: {
   if (child) redirect(`/resonance/complete?order=${child.id}${roomSuffix}`);
 
   if (order.status !== "paid" || order.kind !== "initial" || order.offer_closed_at) {
-    const heading = order.status === "paid" ? "Your visits are ready."
-      : order.status === "failed" ? "The payment did not complete."
-        : order.status === "refunded" ? "This payment is under review."
-          : "The payment is not confirmed yet.";
+    const heading = order.status === "paid" ? "Your visits are ready"
+      : order.status === "failed" ? "The payment did not complete"
+        : order.status === "refunded" ? "This payment is under review"
+          : "The payment is not confirmed yet";
 
     return (
       <FunnelFrame>
         <h1 className="res-text text-4xl font-light">{heading}</h1>
         <p className="res-text-primary mt-5 text-base leading-8">
           {order.status === "paid"
-            ? "Choose a room below. Unused visits remain on this account."
-            : "Only confirmed payments add visits. Do not submit another charge while this is being checked."}
-          {order.parent_id ? " The original purchase remains available, regardless of this additional payment." : ""}
+            ? "Choose a room below. Unused visits remain on this account"
+            : "Only confirmed payments add visits. Do not submit another charge while this is being checked"}
+          {order.parent_id ? " The original purchase remains available, regardless of this additional payment" : ""}
         </p>
         <div className="mt-8 flex flex-wrap gap-6">
           {order.status === "failed" && order.kind === "initial" && order.whop_checkout_id ? (
@@ -112,7 +112,7 @@ export default async function VisitCompletionPage({ searchParams }: {
           <h1 className="res-text mt-3 font-serif text-4xl md:text-5xl">Complete ten?</h1>
           <p className="res-text-primary mx-auto mt-5 max-w-2xl text-base leading-8">
             Your first purchase is already secure. Nothing on this page can take that away.
-            This is simply the point where you can complete the ten-visit set now, compare a smaller addition once, or keep exactly what you already bought and move straight into a room.
+            This is simply the point where you can complete the ten-visit set now, compare a smaller addition once, or keep exactly what you already bought and move straight into a room
           </p>
         </header>
 
