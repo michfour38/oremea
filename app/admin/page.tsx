@@ -1,6 +1,7 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import Link from "next/link";
 
+import { DeleteAccountForm } from "@/components/admin/delete-account-form";
 import { GoldenKeyInviteForm } from "@/components/admin/golden-key-invite-form";
 import { SiteShell } from "@/components/site/site-shell";
 import { ETERNAL_OREMEA_KEY } from "@/lib/auth/account-access";
@@ -155,6 +156,15 @@ export default async function AdminPage({
                     .join(" · ") || "No reason recorded",
               }))}
             />
+          </div>
+
+          <div className="mt-10 border-t border-red-500/15 pt-8">
+            <p className="text-xs uppercase tracking-[0.22em] text-red-300/60">
+              Danger zone
+            </p>
+            <div className="mt-5 max-w-2xl">
+              <DeleteAccountForm />
+            </div>
           </div>
         </div>
 

@@ -5,8 +5,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { restoreAccount, suspendAccount } from "@/lib/auth/account-access";
+import { getAccountDeletionPreflight } from "@/lib/auth/account-deletion";
+import { getAccountDeletionExtraBlockers } from "@/lib/auth/account-deletion-extra-guards";
+import { isOremeaAdmin } from "@/lib/auth/admin-access";
 import { createGoldenKeyInvite } from "@/lib/auth/golden-key-invites";
 import { requireAdminAction } from "@/lib/auth/require-admin";
+import { hasOremeaOwnerAccess } from "@/src/lib/oremea/owner-recovery";
 
 export type GoldenKeyInviteActionState =
   | { status: "idle" }
@@ -15,6 +19,31 @@ export type GoldenKeyInviteActionState =
       email: string;
       link: string;
       expiresAt: string;
+    }
+  | { status: "error"; message: string };
+
+export type AccountDeletionReviewState =
+  | { status: "idle" }
+  | {
+      status: "review";
+      email: string;
+      userId: string;
+      canDelete: boolean;
+      blockers: string[];
+      confirmationText: string;
+      summary: {
+        profile: boolean;
+        recognitionThreads: number;
+        compassSessions: number;
+        compassGoals: number;
+        currentRecords: number;
+        resonanceRuns: number;
+        resonanceOrders: number;
+        entitlements: number;
+        goldenKey: boolean;
+        entryLead: boolean;
+        feedbackMessages: number;
+      };
     }
   | { status: "error"; message: string };
 
@@ -40,6 +69,80 @@ async function userIdForEmail(rawEmail: FormDataEntryValue | null) {
   }
 
   return { userId: data[0].id, email };
+}
+
+export async function reviewAccountDeletionAction(
+  _previousState: AccountDeletionReviewState,
+  formData: FormData,
+): Promise<AccountDeletionReviewState> {
+  const { userId: actorId } = await requireAdminAction();
+
+  try {
+    const email = String(formData.get("email") ?? "").trim().toLowerCase();
+    if (!email || !email.includes("@")) {
+      throw new Error("Enter a valid email address.");
+    }
+
+    const client = await clerkClient();
+    const { data } = await client.users.getUserList({
+      emailAddress: [email],
+      limit: 2,
+    });
+
+    if (data.length !== 1) {
+      throw new Error(
+        data.length === 0
+          ? `No Oremea account was found for ${email}.`
+          : `More than one account matched ${email}.`,
+      );
+    }
+
+    const user = data[0];
+    if (user.id === actorId) {
+      throw new Error("The active admin account cannot delete itself.");
+    }
+
+    if ((await isOremeaAdmin(user.id)) || (await hasOremeaOwnerAccess(user.id))) {
+      throw new Error("Owner/admin identities cannot be deleted from this control.");
+    }
+
+    const verifiedEmails = user.emailAddresses
+      .filter((item) => item.verification?.status === "verified")
+      .map((item) => item.emailAddress.trim().toLowerCase());
+
+    if (verifiedEmails.length !== 1 || verifiedEmails[0] !== email) {
+      throw new Error(
+        "Delete account currently requires exactly one verified Clerk email. Resolve additional verified emails before deleting this identity.",
+      );
+    }
+
+    const [preflight, extraBlockers] = await Promise.all([
+      getAccountDeletionPreflight({ userId: user.id, email }),
+      getAccountDeletionExtraBlockers({ userId: user.id, email }),
+    ]);
+    const blockers = [
+      ...preflight.blockers.map((item) => item.message),
+      ...extraBlockers,
+    ];
+
+    return {
+      status: "review",
+      email,
+      userId: user.id,
+      canDelete: preflight.canDelete && extraBlockers.length === 0,
+      blockers,
+      confirmationText: `DELETE ${email}`,
+      summary: preflight.summary,
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "The account could not be reviewed for deletion.",
+    };
+  }
 }
 
 export async function createEternalKeyInviteAction(
