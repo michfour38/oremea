@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { hasEternalOremeaKey } from "@/lib/auth/account-access";
+import { getCreatorSilverProductAccess } from "@/lib/auth/creator-silver-key";
 import { hasOremeaOwnerAccess } from "@/src/lib/oremea/owner-recovery";
 import { normalizeRecognitionEmail } from "./recognition-access";
 
@@ -10,7 +11,7 @@ export const RECOGNITION_MEMBERSHIP_PRODUCT_KEY = "recognition_membership";
 
 export type RecognitionConversationAccess = {
   active: boolean;
-  source: "owner" | "eternal_key" | "membership" | null;
+  source: "owner" | "eternal_key" | "creator_silver_key" | "membership" | null;
   matchedEmail: string | null;
   purchasedAt: Date | null;
   expiresAt: Date | null;
@@ -189,6 +190,21 @@ export async function getRecognitionConversationAccess({
       matchedEmail: normalizeRecognitionEmail(emails[0] ?? "") || null,
       purchasedAt: null,
       expiresAt: null,
+    };
+  }
+
+  const creatorSilver = await getCreatorSilverProductAccess(
+    userId,
+    "recognition",
+    now,
+  );
+  if (creatorSilver.active) {
+    return {
+      active: true,
+      source: "creator_silver_key",
+      matchedEmail: normalizeRecognitionEmail(emails[0] ?? "") || null,
+      purchasedAt: creatorSilver.activatedAt,
+      expiresAt: creatorSilver.expiresAt,
     };
   }
 
