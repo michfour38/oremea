@@ -1,6 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
+import { activateCreatorSilverProduct } from "@/lib/auth/creator-silver-key";
 import { prisma } from "@/lib/prisma";
 import { getRecognitionConversationAccess } from "@/src/lib/recognition/recognition-conversation-access";
 import { getOrCreateActiveRecognitionThread } from "@/src/lib/recognition/recognition-thread";
@@ -17,6 +18,10 @@ export default async function RecognitionPage() {
   const emails = user.emailAddresses
     .map((item) => item.emailAddress.trim().toLowerCase())
     .filter(Boolean);
+
+  // Creator Silver Key time begins only when the creator actually enters
+  // Recognition. Merely receiving or claiming the key never starts this clock.
+  await activateCreatorSilverProduct(user.id, "recognition");
 
   const access = await getRecognitionConversationAccess({
     userId: user.id,
