@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { hasEternalOremeaKey } from "@/lib/auth/account-access";
+import { getCreatorSilverProductAccess } from "@/lib/auth/creator-silver-key";
 import { hasOremeaOwnerAccess } from "@/src/lib/oremea/owner-recovery";
 
 import {
@@ -27,7 +28,7 @@ export type CompassAccessState = {
   active: boolean;
   expiresAt: Date | null;
   daysRemaining: number | null;
-  source: "owner" | "eternal_key" | "pass" | "membership" | null;
+  source: "owner" | "eternal_key" | "creator_silver_key" | "pass" | "membership" | null;
 };
 
 function readMembershipReference(value: string | null): CompassMembershipReference | null {
@@ -84,6 +85,20 @@ export async function getCompassAccessState(
       expiresAt: null,
       daysRemaining: null,
       source: "eternal_key",
+    };
+  }
+
+  const creatorSilver = await getCreatorSilverProductAccess(
+    userId,
+    "compass",
+    now,
+  );
+  if (creatorSilver.active && creatorSilver.expiresAt) {
+    return {
+      active: true,
+      expiresAt: creatorSilver.expiresAt,
+      daysRemaining: getCompassDaysRemaining(creatorSilver.expiresAt, now),
+      source: "creator_silver_key",
     };
   }
 
