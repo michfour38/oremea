@@ -66,7 +66,7 @@ export default function MemberNav() {
 
     async function refreshCompassAccess() {
       try {
-        const response = await fetch("/api/compass/access", {
+        const response = await fetch("/api/compass/access?peek=1", {
           cache: "no-store",
         })
         const data = await response.json().catch(() => null)
