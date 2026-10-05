@@ -1,6 +1,7 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import Link from "next/link";
 
+import { CreatorSilverKeyInviteForm } from "@/components/admin/creator-silver-key-invite-form";
 import { DeleteAccountForm } from "@/components/admin/delete-account-form";
 import { GoldenKeyInviteForm } from "@/components/admin/golden-key-invite-form";
 import { SiteShell } from "@/components/site/site-shell";
@@ -17,6 +18,15 @@ export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
+function silverWindowLabel(
+  label: string,
+  activatedAt: Date | null,
+  expiresAt: Date | null,
+) {
+  if (!activatedAt || !expiresAt) return `${label}: not started`;
+  return `${label}: ${activatedAt.toLocaleDateString("en-ZA", { timeZone: "Africa/Johannesburg" })} → ${expiresAt.toLocaleDateString("en-ZA", { timeZone: "Africa/Johannesburg" })}`;
+}
+
 export default async function AdminPage({
   searchParams,
 }: {
@@ -32,6 +42,7 @@ export default async function AdminPage({
     openFeedback,
     totalFeedback,
     goldenKeys,
+    silverKeys,
     suspended,
   ] = await Promise.all([
     prisma.oremea_feedback_messages.count({ where: { status: "new" } }),
@@ -46,6 +57,11 @@ export default async function AdminPage({
         revoked_at: null,
         expires_at: null,
       },
+      orderBy: { granted_at: "desc" },
+      take: 25,
+    }),
+    prisma.oremea_creator_silver_key_issuances.findMany({
+      where: { revoked_at: null },
       orderBy: { granted_at: "desc" },
       take: 25,
     }),
@@ -89,7 +105,7 @@ export default async function AdminPage({
           Business lives here.
         </h1>
         <p className="mt-5 max-w-3xl text-base leading-8 text-zinc-300">
-          Private operational tools for Oremea. Golden Key invitations are temporary and one-use; the ∞ All Access entitlement they issue is permanent and remains separate from security suspension, purchases and credits.
+          Private operational tools for Oremea. Golden Key is permanent ∞ All Access. Creator Silver Key is finite experience access: three Resonance room credits plus independent 30-day Recognition and Compass windows that begin only when each product is first entered.
         </p>
 
         {done ? (
@@ -108,11 +124,12 @@ export default async function AdminPage({
             Identity + security
           </p>
           <h2 className="mt-3 text-3xl font-light text-zinc-100">
-            Golden Keys and account access
+            Keys and account access
           </h2>
 
-          <div className="mt-6 grid gap-5 lg:grid-cols-3">
+          <div className="mt-6 grid gap-5 lg:grid-cols-2 xl:grid-cols-4">
             <GoldenKeyInviteForm />
+            <CreatorSilverKeyInviteForm />
             <AdminForm
               title="Suspend account"
               description="Immediately revoke sessions and prevent sign-in across protected Oremea surfaces."
@@ -130,7 +147,7 @@ export default async function AdminPage({
             />
           </div>
 
-          <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          <div className="mt-8 grid gap-6 xl:grid-cols-3">
             <StateList
               title={`Golden Keys · ${goldenKeys.length}`}
               empty="No Golden Keys have been granted yet."
@@ -142,6 +159,28 @@ export default async function AdminPage({
                     ? "Identity protected"
                     : "Legacy identity pending"
                 }`,
+              }))}
+            />
+            <StateList
+              title={`Creator Silver Keys · ${silverKeys.length}`}
+              empty="No Creator Silver Keys have been claimed yet."
+              rows={silverKeys.map((item) => ({
+                key: item.id,
+                primary: item.email_normalized,
+                secondary: [
+                  item.current_user_id ? "Claimed" : "Not attached",
+                  silverWindowLabel(
+                    "Recognition",
+                    item.recognition_activated_at,
+                    item.recognition_expires_at,
+                  ),
+                  silverWindowLabel(
+                    "Compass",
+                    item.compass_activated_at,
+                    item.compass_expires_at,
+                  ),
+                  item.resonance_order_id ? "Resonance: 3-credit grant created" : "Resonance: grant missing",
+                ].join(" · "),
               }))}
             />
             <StateList
