@@ -9,9 +9,15 @@ const DEFAULT_RECOGNITION_OWNER_USER_ID = "user_3CLGEx3xqgXY6DsIHPyV3yOd1xi";
 
 export const RECOGNITION_MEMBERSHIP_PRODUCT_KEY = "recognition_membership";
 
+type RecognitionCoreAccessSource = "owner" | "eternal_key" | "membership" | null;
+type RecognitionAccessSource =
+  | Exclude<RecognitionCoreAccessSource, null>
+  | "creator_silver_key"
+  | null;
+
 export type RecognitionConversationAccess = {
   active: boolean;
-  source: "owner" | "eternal_key" | "creator_silver_key" | "membership" | null;
+  source: RecognitionAccessSource;
   matchedEmail: string | null;
   purchasedAt: Date | null;
   expiresAt: Date | null;
