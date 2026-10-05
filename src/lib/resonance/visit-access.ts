@@ -7,9 +7,7 @@ import {
 
 export async function visitCreditsAvailableFor(userId: string) {
   return (
-    visitsEnabled() ||
-    (await isOremeaAdmin(userId)) ||
-    (await hasCreatorSilverKey(userId))
+    visitsEnabled() || (await isOremeaAdmin(userId)) || (await hasCreatorSilverKey(userId))
   );
 }
 
