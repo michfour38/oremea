@@ -1,0 +1,55 @@
+model oremea_creator_silver_key_issuances {
+  id                       String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email_normalized         String                            @unique
+  granted_by               String
+  granted_at               DateTime                          @default(now()) @db.Timestamptz(6)
+  current_user_id          String?                           @unique
+  attached_at              DateTime?                         @db.Timestamptz(6)
+  recognition_activated_at DateTime?                         @db.Timestamptz(6)
+  recognition_expires_at   DateTime?                         @db.Timestamptz(6)
+  compass_activated_at     DateTime?                         @db.Timestamptz(6)
+  compass_expires_at       DateTime?                         @db.Timestamptz(6)
+  resonance_order_id       String?                           @unique @db.Uuid
+  revoked_at               DateTime?                         @db.Timestamptz(6)
+  created_at               DateTime                          @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime                          @updatedAt @db.Timestamptz(6)
+  invites                  oremea_creator_silver_key_invites[]
+  events                   oremea_creator_silver_key_events[]
+
+  @@index([granted_at])
+  @@index([revoked_at])
+}
+
+model oremea_creator_silver_key_invites {
+  id                 String                              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email_normalized   String
+  token_hash         String                              @unique
+  created_by         String
+  expires_at         DateTime                            @db.Timestamptz(6)
+  claimed_at         DateTime?                           @db.Timestamptz(6)
+  claimed_by_user_id String?
+  revoked_at         DateTime?                           @db.Timestamptz(6)
+  issuance_id        String?                             @db.Uuid
+  created_at         DateTime                            @default(now()) @db.Timestamptz(6)
+  issuance           oremea_creator_silver_key_issuances? @relation(fields: [issuance_id], references: [id], onDelete: Restrict)
+
+  @@index([email_normalized, created_at])
+  @@index([expires_at])
+  @@index([claimed_at])
+  @@index([issuance_id])
+}
+
+model oremea_creator_silver_key_events {
+  id          String                             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  issuance_id String                             @db.Uuid
+  event_type  String
+  actor_id    String?
+  user_id     String?
+  metadata    Json                               @default("{}")
+  created_at  DateTime                           @default(now()) @db.Timestamptz(6)
+  issuance    oremea_creator_silver_key_issuances @relation(fields: [issuance_id], references: [id], onDelete: Restrict)
+
+  @@index([issuance_id, created_at])
+  @@index([event_type, created_at])
+  @@index([user_id])
+}
