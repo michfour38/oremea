@@ -8,6 +8,7 @@ import { restoreAccount, suspendAccount } from "@/lib/auth/account-access";
 import { getAccountDeletionPreflight } from "@/lib/auth/account-deletion";
 import { getAccountDeletionExtraBlockers } from "@/lib/auth/account-deletion-extra-guards";
 import { isOremeaAdmin } from "@/lib/auth/admin-access";
+import { createCreatorSilverKeyInvite } from "@/lib/auth/creator-silver-key-invites";
 import { createGoldenKeyInvite } from "@/lib/auth/golden-key-invites";
 import { requireAdminAction } from "@/lib/auth/require-admin";
 import { hasOremeaOwnerAccess } from "@/src/lib/oremea/owner-recovery";
@@ -21,6 +22,8 @@ export type GoldenKeyInviteActionState =
       expiresAt: string;
     }
   | { status: "error"; message: string };
+
+export type CreatorSilverKeyInviteActionState = GoldenKeyInviteActionState;
 
 export type AccountDeletionReviewState =
   | { status: "idle" }
@@ -172,6 +175,37 @@ export async function createEternalKeyInviteAction(
         error instanceof Error
           ? error.message
           : "Could not create the Golden Key link.",
+    };
+  }
+}
+
+export async function createCreatorSilverKeyInviteAction(
+  _previousState: CreatorSilverKeyInviteActionState,
+  formData: FormData,
+): Promise<CreatorSilverKeyInviteActionState> {
+  const { userId: actorId } = await requireAdminAction();
+
+  try {
+    const invite = await createCreatorSilverKeyInvite({
+      email: String(formData.get("email") ?? ""),
+      actorId,
+    });
+
+    revalidatePath("/admin");
+
+    return {
+      status: "success",
+      email: invite.email,
+      link: invite.link,
+      expiresAt: invite.expiresAt.toISOString(),
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "Could not create the Creator Silver Key link.",
     };
   }
 }
