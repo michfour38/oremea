@@ -15,6 +15,7 @@ const recognitionAccess = readFileSync(
 const recognitionPage = readFileSync("app/recognition/page.tsx", "utf8");
 const compassAccess = readFileSync("src/lib/compass/compass-access.ts", "utf8");
 const compassRoute = readFileSync("app/api/compass/access/route.ts", "utf8");
+const memberNav = readFileSync("app/(member)/member-nav.tsx", "utf8");
 const visitAccess = readFileSync("src/lib/resonance/visit-access.ts", "utf8");
 const infoPack = readFileSync("app/key/silver/page.tsx", "utf8");
 const claimPage = readFileSync("app/key/silver/claim/[token]/page.tsx", "utf8");
@@ -145,8 +146,13 @@ assert.match(
 );
 assert.match(
   compassRoute,
-  /activateCreatorSilverProduct\(userId, "compass"\)[\s\S]*getCompassAccessState/,
-  "Compass must start its Silver window only on actual product entry.",
+  /peekOnly[\s\S]*if \(!peekOnly\)[\s\S]*activateCreatorSilverProduct\(userId, "compass"\)[\s\S]*getCompassAccessState/,
+  "Compass must activate Silver access only for a real product entry, not a read-only access peek.",
+);
+assert.match(
+  memberNav,
+  /fetch\("\/api\/compass\/access\?peek=1"/,
+  "Shared member navigation must never burn a Creator Silver Compass day merely by rendering.",
 );
 assert.match(
   compassAccess,
