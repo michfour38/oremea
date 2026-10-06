@@ -69,6 +69,16 @@ assert.match(
 );
 assert.match(
   service,
+  /activateCreatorSilverProduct[\s\S]*hasCreatorSilverKey\(userId\)[\s\S]*eligible: false[\s\S]*hasEternalOremeaKey\(userId\)[\s\S]*getCreatorSilverProductAccess\(userId, product, now\)[\s\S]*return prisma\.\$transaction/,
+  "Only a Silver holder without stronger Golden access may enter the timed Silver activation transaction.",
+);
+assert.match(
+  service,
+  /pg_advisory_xact_lock\(hashtext\(\$\{lockKey\}\)\)::text/,
+  "Silver activation locks must cast PostgreSQL void results before Prisma deserializes them.",
+);
+assert.match(
+  service,
   /product === "recognition"[\s\S]*recognition_activated_at[\s\S]*recognition_expires_at[\s\S]*compass_activated_at[\s\S]*compass_expires_at/,
   "Recognition and Compass must use separate activation fields.",
 );
@@ -193,6 +203,21 @@ assert.doesNotMatch(
   infoPack,
   /Harmonize|Continuum/,
   "Unincluded products must not appear in the Silver info pack.",
+);
+assert.match(
+  infoPack,
+  /https:\/\/recognition\.oremea\.com\/begin/,
+  "Silver Recognition must link directly to the canonical live product entry.",
+);
+assert.match(
+  infoPack,
+  /https:\/\/resonance\.oremea\.com\//,
+  "Silver Resonance must link directly to the canonical room chooser.",
+);
+assert.match(
+  infoPack,
+  /https:\/\/compass\.oremea\.com\/begin/,
+  "Silver Compass must link directly to the canonical live product entry.",
 );
 
 assert.match(

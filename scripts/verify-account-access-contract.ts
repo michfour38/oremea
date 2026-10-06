@@ -165,6 +165,21 @@ assert.match(
   /if \(!access\.hasEternalKey\)[\s\S]*redirect\("\/profile"\)/,
   "The Oremea Key page must only open for an eternal-key holder.",
 );
+assert.match(
+  keyPage,
+  /https:\/\/recognition\.oremea\.com\/begin/,
+  "Golden Key Recognition must link directly to the canonical live product entry.",
+);
+assert.match(
+  keyPage,
+  /https:\/\/resonance\.oremea\.com\//,
+  "Golden Key Resonance must link directly to the canonical room chooser.",
+);
+assert.match(
+  keyPage,
+  /https:\/\/compass\.oremea\.com\/begin/,
+  "Golden Key Compass must link directly to the canonical live product entry.",
+);
 
 for (const [name, source] of [
   ["Recognition", recognitionAccess],

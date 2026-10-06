@@ -1,3 +1,4 @@
+import { hasEternalOremeaKey } from "@/lib/auth/account-access";
 import { prisma } from "@/lib/prisma";
 
 export const CREATOR_SILVER_KEY = "oremea:creator-silver-key";
@@ -94,11 +95,28 @@ export async function activateCreatorSilverProduct(
   product: CreatorSilverProduct,
   now = new Date(),
 ): Promise<CreatorSilverProductAccess> {
+  if (!(await hasCreatorSilverKey(userId))) {
+    return {
+      eligible: false,
+      active: false,
+      activatedAt: null,
+      expiresAt: null,
+    };
+  }
+
+  // Golden Key is the stronger entitlement. If an identity holds both keys,
+  // entering a product must not silently consume its finite Silver window.
+  if (await hasEternalOremeaKey(userId)) {
+    return getCreatorSilverProductAccess(userId, product, now);
+  }
+
   const fields = productFields(product);
 
   return prisma.$transaction(async (transaction) => {
     const lockKey = `creator-silver-key:${userId}`;
-    await transaction.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
+    // PostgreSQL advisory locks return void. Cast the result so Prisma can
+    // deserialize it while retaining the blocking transaction lock.
+    await transaction.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))::text`;
 
     const [entitlement, issuance] = await Promise.all([
       transaction.oremea_entitlements.findUnique({
