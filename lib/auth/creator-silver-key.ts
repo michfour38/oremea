@@ -1,3 +1,4 @@
+import { hasEternalOremeaKey } from "@/lib/auth/account-access";
 import { prisma } from "@/lib/prisma";
 
 export const CREATOR_SILVER_KEY = "oremea:creator-silver-key";
@@ -101,6 +102,12 @@ export async function activateCreatorSilverProduct(
       activatedAt: null,
       expiresAt: null,
     };
+  }
+
+  // Golden Key is the stronger entitlement. If an identity holds both keys,
+  // entering a product must not silently consume its finite Silver window.
+  if (await hasEternalOremeaKey(userId)) {
+    return getCreatorSilverProductAccess(userId, product, now);
   }
 
   const fields = productFields(product);
