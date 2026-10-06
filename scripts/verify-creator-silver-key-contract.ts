@@ -69,8 +69,8 @@ assert.match(
 );
 assert.match(
   service,
-  /activateCreatorSilverProduct[\s\S]*hasCreatorSilverKey\(userId\)[\s\S]*eligible: false[\s\S]*return prisma\.\$transaction/,
-  "Only a real Creator Silver Key holder may enter the timed Silver activation transaction.",
+  /activateCreatorSilverProduct[\s\S]*hasCreatorSilverKey\(userId\)[\s\S]*eligible: false[\s\S]*hasEternalOremeaKey\(userId\)[\s\S]*getCreatorSilverProductAccess\(userId, product, now\)[\s\S]*return prisma\.\$transaction/,
+  "Only a Silver holder without stronger Golden access may enter the timed Silver activation transaction.",
 );
 assert.match(
   service,
