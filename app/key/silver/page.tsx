@@ -61,7 +61,7 @@ export default async function CreatorSilverKeyPage({
               info.recognition.expiresAt,
             )}
             body="A private AI discussion journal for thoughts that need more than a journal page. Recognition stays close to your own words, follows the thread, reflects what becomes significant and asks one focused question at a time."
-            href="/recognition"
+            href="https://recognition.oremea.com/begin"
             cta={info.recognition.activatedAt ? "Continue Recognition" : "Enter Recognition"}
           />
 
@@ -69,7 +69,7 @@ export default async function CreatorSilverKeyPage({
             title="Resonance"
             access={`${info.resonance.remaining} of ${info.resonance.total} room credits remaining`}
             body="Choose any three of the ten seven-day rooms. You can choose three different rooms or return to the same room for a fresh visit. One room remains active at a time and unused credits stay available for later."
-            href="/entry"
+            href="https://resonance.oremea.com/"
             cta="Choose a Resonance room"
           />
 
@@ -77,7 +77,7 @@ export default async function CreatorSilverKeyPage({
             title="Compass"
             access={accessLabel(info.compass.activatedAt, info.compass.expiresAt)}
             body="A private goal-setting and next-step process. Compass takes what you want through seven layers of why, then helps turn what becomes clear into a next step you can actually take."
-            href="/compass"
+            href="https://compass.oremea.com/begin"
             cta={info.compass.activatedAt ? "Continue Compass" : "Enter Compass"}
           />
         </div>
