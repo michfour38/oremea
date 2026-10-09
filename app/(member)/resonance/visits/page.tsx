@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
-import Script from "next/script";
 import { notFound, redirect } from "next/navigation";
 import { hasEternalOremeaKey } from "@/lib/auth/account-access";
 import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
@@ -16,6 +15,7 @@ import { isAdminTestVisitPlan } from "@/src/lib/resonance/admin-test-commerce";
 import { FunnelFrame } from "./funnel-frame";
 import { VisitSubmitButton } from "./submit-button";
 import { purchaseVisits } from "./actions";
+import { ResonanceWhopCheckout } from "./whop-checkout";
 
 export const dynamic = "force-dynamic";
 
@@ -95,12 +95,13 @@ export default async function VisitPurchasePage({ searchParams }: {
       ) : order.whop_checkout_id && canResumeCheckout && checkoutEnabled ? (
         <section className="res-border res-panel mx-auto mt-8 max-w-xl rounded-3xl border p-6">
           <h2 className="res-text text-2xl">{order.quantity} visit{order.quantity === 1 ? "" : "s"} · {formatOremeaPrice(order.amount_cents)}</h2>
-          <Script src="https://js.whop.com/static/checkout/loader.js" strategy="afterInteractive" />
-          <div key={order.id} className="mt-6 min-h-[420px]" data-whop-checkout-plan-id={order.whop_plan_id}
-            data-whop-checkout-session={order.whop_checkout_id} data-whop-checkout-theme="dark"
-            data-whop-checkout-prefill-email={order.buyer_email} data-whop-checkout-disable-email="true"
-            data-whop-checkout-setup-future-usage="off_session"
-            data-whop-checkout-return-url={`${checkoutOrigin}/resonance/complete?order=${order.id}${roomSuffix}`} />
+          <div className="mt-6 min-h-[420px]">
+            <ResonanceWhopCheckout
+              sessionId={order.whop_checkout_id}
+              buyerEmail={order.buyer_email}
+              returnUrl={`${checkoutOrigin}/resonance/complete?order=${order.id}${roomSuffix}`}
+            />
+          </div>
         </section>
       ) : (
         <p role="status" className="res-text-primary mx-auto mt-8 max-w-xl text-base leading-8">This checkout could not be confirmed. No visits have been added for it. Contact support before retrying if you received a successful payment confirmation.</p>
