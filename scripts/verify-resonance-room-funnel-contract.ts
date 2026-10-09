@@ -7,6 +7,7 @@ const roomTarget = read("app/(member)/entry/room-target.tsx");
 const resonancePage = read("app/(member)/resonance/page.tsx");
 const archivePage = read("app/(member)/resonance/archive/page.tsx");
 const visitsPage = read("app/(member)/resonance/visits/page.tsx");
+const checkoutEmbed = read("app/(member)/resonance/visits/whop-checkout.tsx");
 const purchasePage = read("app/(member)/resonance/purchase/page.tsx");
 const actions = read("app/(member)/resonance/visits/actions.ts");
 const completePage = read("app/(member)/resonance/complete/page.tsx");
@@ -35,7 +36,12 @@ assert.match(roomTarget, /Begin with \{roomName\}/);
 assert.match(roomTarget, /Compare the rooms/);
 assert.match(visitsPage, /getResonanceRoomTarget/);
 assert.match(visitsPage, /name="room"/);
-assert.match(visitsPage, /data-whop-checkout-return-url=[\s\S]*roomSuffix/);
+assert.match(
+  visitsPage,
+  /returnUrl=\{\`\$\{checkoutOrigin\}\/resonance\/complete\?order=\$\{order\.id\}\$\{roomSuffix\}\`\}/,
+);
+assert.match(checkoutEmbed, /returnUrl=\{returnUrl\}/);
+assert.doesNotMatch(visitsPage, /js\.whop\.com\/static\/checkout\/loader\.js|data-whop-checkout-/);
 assert.match(actions, /formRoomTarget/);
 assert.match(actions, /roomTarget\?\.entryPath/);
 assert.match(completePage, /roomWeekNumber=\{roomTarget\?\.weekNumber\}/);
