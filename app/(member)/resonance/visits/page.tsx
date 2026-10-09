@@ -12,6 +12,7 @@ import { restoreInitialVisitCheckout } from "@/src/lib/resonance/initial-checkou
 import { whopVisitConfig } from "@/src/lib/whop/visit-payments";
 import { isOremeaAdmin } from "@/lib/auth/admin-access";
 import { isAdminTestVisitPlan } from "@/src/lib/resonance/admin-test-commerce";
+import { getActiveResonanceRun } from "@/src/lib/resonance/resonance-week-run";
 import { FunnelFrame } from "./funnel-frame";
 import { VisitSubmitButton } from "./submit-button";
 import { purchaseVisits } from "./actions";
@@ -28,6 +29,7 @@ export default async function VisitPurchasePage({ searchParams }: {
   const roomSuffix = roomTarget ? `&room=${roomTarget.weekNumber}` : "";
   const { userId } = await auth();
   if (!userId) redirect(`/sign-in?redirect_url=${encodeURIComponent(`/resonance/visits${roomQuery}`)}`);
+  if (await getActiveResonanceRun(userId)) redirect("/resonance");
   if (await hasEternalOremeaKey(userId)) redirect(roomTarget?.entryPath ?? "/entry");
   if (!(await visitCreditsAvailableFor(userId))) notFound();
   const [checkoutEnabled, adminMode] = await Promise.all([

@@ -252,9 +252,10 @@ async function main() {
   assert.match(actions, /visitCheckoutAvailableFor\(user\.id\)/);
   assert.match(actions, /visitCreditsAvailableFor\(userId\)/);
   const entryPage = readFileSync("app/(marketing)/resonance/enter/page.tsx", "utf8");
-  assert.match(entryPage, /userId \? await visitCheckoutAvailableFor\(userId\) : false/);
+  assert.match(entryPage, /visitCheckoutAvailableFor\(userId\)/);
+  assert.match(entryPage, /getActiveResonanceRun\(userId\)/);
   assert.match(entryPage, /hasUnusedVisits = userId && checkoutEnabled && \(await getVisitBalance\(userId\)\) > 0/);
-  assert.match(entryPage, /checkoutEnabled && !hasUnusedVisits \? "\/resonance\/visits" : "\/entry"/);
+  assert.match(entryPage, /const destination = activeRun[\s\S]*"\/resonance"[\s\S]*checkoutEnabled && !hasUnusedVisits[\s\S]*"\/resonance\/visits"[\s\S]*"\/entry"/);
   assert.match(purchasePage, /Choose a room with your visits/);
   const legacyPurchasePage = readFileSync("app/(member)/resonance/purchase/page.tsx", "utf8");
   assert.match(legacyPurchasePage, /getResonanceRoomTarget\(searchParams\?\.week\)/);

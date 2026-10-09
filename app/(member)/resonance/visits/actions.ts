@@ -9,6 +9,7 @@ import { acceptVisitAddition, declineVisitAddition, redeemVisit, startVisitPurch
 import { redeemEternalKeyVisit } from "@/src/lib/resonance/eternal-key-visit";
 import { visitCheckoutAvailableFor, visitCreditsAvailableFor } from "@/src/lib/resonance/visit-access";
 import { getResonanceRoomTarget } from "@/src/lib/resonance/room-entry";
+import { getActiveResonanceRun } from "@/src/lib/resonance/resonance-week-run";
 import { isOremeaAdmin } from "@/lib/auth/admin-access";
 import {
   ensureAdminTestVisitCredit,
@@ -32,6 +33,10 @@ export async function purchaseVisits(form: FormData) {
   if (!user) {
     const target = withRoom("/resonance/visits", roomTarget?.weekNumber);
     redirect(`/sign-in?redirect_url=${encodeURIComponent(target)}`);
+  }
+
+  if (await getActiveResonanceRun(user.id)) {
+    redirect("/resonance");
   }
 
   if (await hasEternalOremeaKey(user.id)) {
@@ -71,6 +76,7 @@ export async function simulateAdminPurchase(form: FormData) {
   const roomTarget = formRoomTarget(form);
   const user = await currentUser();
   if (!user) redirect("/sign-in");
+  if (await getActiveResonanceRun(user.id)) redirect("/resonance");
   if (!(await isOremeaAdmin(user.id))) redirect("/resonance/visits");
 
   const email = user.emailAddresses.find((item) => item.id === user.primaryEmailAddressId);
