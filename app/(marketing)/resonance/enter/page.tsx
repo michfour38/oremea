@@ -8,38 +8,55 @@ import { RESONANCE_ROOM_NAMES } from "@/src/lib/resonance/room-entry";
 import { visitCheckoutAvailableFor } from "@/src/lib/resonance/visit-access";
 import { visitCheckoutEnabled } from "@/src/lib/resonance/visit-offers";
 import { getVisitBalance } from "@/src/lib/resonance/visit-orders";
+import { getActiveResonanceRun } from "@/src/lib/resonance/resonance-week-run";
 
 // Legacy visit-route contract marker: Choose the visits first. Choose the room next.
 function FunnelAction({
   href,
   signedIn,
   checkoutReady,
+  resumeLabel,
 }: {
   href: string;
   signedIn: boolean;
   checkoutReady: boolean;
+  resumeLabel?: string;
 }) {
   return (
     <Link
       href={href}
       className="res-action-soft inline-flex rounded-xl border px-6 py-3 text-sm font-medium transition"
     >
-      {checkoutReady
-        ? signedIn
-          ? "See Resonance visit options"
-          : "Create account to see visit options"
-        : signedIn
-          ? "Enter Resonance"
-          : "Create account to enter Resonance"}
+      {resumeLabel
+        ? resumeLabel
+        : checkoutReady
+          ? signedIn
+            ? "See Resonance visit options"
+            : "Create account to see visit options"
+          : signedIn
+            ? "Enter Resonance"
+            : "Create account to enter Resonance"}
     </Link>
   );
 }
 
 export default async function ResonanceEnterPage() {
   const { userId } = await auth();
-  const checkoutEnabled = userId ? await visitCheckoutAvailableFor(userId) : false;
+  const [checkoutEnabled, activeRun] = userId
+    ? await Promise.all([
+        visitCheckoutAvailableFor(userId),
+        getActiveResonanceRun(userId),
+      ])
+    : [false, null] as const;
   const hasUnusedVisits = userId && checkoutEnabled && (await getVisitBalance(userId)) > 0;
-  const destination = checkoutEnabled && !hasUnusedVisits ? "/resonance/visits" : "/entry";
+  const destination = activeRun
+    ? "/resonance"
+    : checkoutEnabled && !hasUnusedVisits
+      ? "/resonance/visits"
+      : "/entry";
+  const resumeLabel = activeRun
+    ? `Continue ${RESONANCE_ROOM_NAMES[activeRun.weekNumber]}`
+    : undefined;
   const publicCheckoutEnabled = !userId && visitCheckoutEnabled();
   const signupDestination = publicCheckoutEnabled ? "/resonance/visits" : destination;
   const funnelCheckoutEnabled = checkoutEnabled || publicCheckoutEnabled;
@@ -51,6 +68,7 @@ export default async function ResonanceEnterPage() {
     const entryPath = `/entry?room=${weekNumber}`;
 
     if (userId) {
+      if (activeRun) return "/resonance";
       return checkoutEnabled && !hasUnusedVisits ? visitPath : entryPath;
     }
 
@@ -102,6 +120,7 @@ export default async function ResonanceEnterPage() {
               href={entryHref}
               signedIn={Boolean(userId)}
               checkoutReady={funnelCheckoutEnabled}
+              resumeLabel={resumeLabel}
             />
           </div>
 
@@ -142,6 +161,7 @@ export default async function ResonanceEnterPage() {
               href={entryHref}
               signedIn={Boolean(userId)}
               checkoutReady={funnelCheckoutEnabled}
+              resumeLabel={resumeLabel}
             />
           </div>
         </section>
@@ -186,6 +206,7 @@ export default async function ResonanceEnterPage() {
               href={entryHref}
               signedIn={Boolean(userId)}
               checkoutReady={funnelCheckoutEnabled}
+              resumeLabel={resumeLabel}
             />
           </div>
         </section>
@@ -234,6 +255,7 @@ export default async function ResonanceEnterPage() {
               href={entryHref}
               signedIn={Boolean(userId)}
               checkoutReady={funnelCheckoutEnabled}
+              resumeLabel={resumeLabel}
             />
           </div>
         </section>
@@ -309,6 +331,7 @@ export default async function ResonanceEnterPage() {
               href={entryHref}
               signedIn={Boolean(userId)}
               checkoutReady={funnelCheckoutEnabled}
+              resumeLabel={resumeLabel}
             />
           </div>
         </section>
@@ -408,6 +431,7 @@ export default async function ResonanceEnterPage() {
               href={entryHref}
               signedIn={Boolean(userId)}
               checkoutReady={funnelCheckoutEnabled}
+              resumeLabel={resumeLabel}
             />
           </div>
         </section>
