@@ -4,7 +4,7 @@ This rollout remains gated until the Whop and PostgreSQL acceptance checks below
 
 ## Customer flow
 
-1. `/resonance/visits`: select 1, 3, or 4 visits and pay in the embedded Whop checkout. The verified primary Oremea email identifies the buyer. This purchase settles independently.
+1. `/resonance/visits`: select 1, 3, or 4 visits and pay in Whop's current React checkout embed (`@whop/checkout`) using the server-created checkout configuration for that Oremea order. The verified primary Oremea email stays prefilled and locked, and `setupFutureUsage="off_session"` preserves the saved-method add-on path. This purchase settles independently.
 2. `/resonance/complete?order=…`: offer the additional visits needed to reach ten. “Choose fewer” expands on the same page while the ten-visit offer remains visible. “No thanks” is beneath both. An accepted addition requests one separate saved-method charge; it cannot undo the original purchase.
 3. `/entry`: show the unused visit balance and let the member choose any published room. Entering consumes one visit, creates a fresh run, and records its start time. A later entry to the same room is labelled with the next round number. Earlier reflections remain archived. The existing seven-day content progression is preserved; this change does not add a calendar-expiry job.
 
@@ -17,6 +17,7 @@ The initial selection and embedded checkout share one route. The smaller offer i
 - Open `/admin/resonance-commerce` as an Oremea admin and run **Provision Resonance commerce**. The action reuses resources carrying Oremea's private marker, or creates one hidden `Resonance Visits` product with eight fixed USD standalone plans (quantities 1–8) and three completion plans (`COMPLETE_FROM_1`, `_3`, `_4`). It verifies one-time billing, no trial, no adaptive pricing, hidden visibility and no purchase-time expiry.
 - The provisioner finds the existing signature-verified Oremea webhook by URL and extends it with `payment.succeeded`, `payment.failed`, `refund.created`, and `refund.updated`. It deliberately refuses to create a second webhook because a new webhook would have a different signing secret. The existing `WHOP_WEBHOOK_SECRET` remains authoritative.
 - Oremea pins the visit-payment provider contract with `Api-Version-Date: 2025-01-01`; do not remove this header while the request/response contract still uses `company_id`. Provider contract changes require a new acceptance pass, not an implicit API-key upgrade.
+- The browser checkout must use `@whop/checkout/react` with the stored `ch_…` checkout configuration as `sessionId`. Do not restore `https://js.whop.com/static/checkout/loader.js` or any `data-whop-checkout-*` legacy embed attributes. The existing checkout configuration remains the source of order metadata, affiliate attribution, price, and redirect identity.
 - In an isolated test environment, set `RESONANCE_VISITS_ENABLED=true` and `RESONANCE_VISITS_CHECKOUT_ENABLED=true`, then perform the acceptance checks below. Do not enable production sales based only on mocked tests.
 - After activation, `RESONANCE_VISITS_CHECKOUT_ENABLED=false` stops new package charges while `RESONANCE_VISITS_ENABLED=true` keeps purchased balances redeemable. Do not disable credit access once customers own visits.
 
