@@ -237,8 +237,14 @@ async function main() {
   assert.match(completionPicker, /aria-label="Choose fewer additional visits"/);
   assert.match(completionPicker, /aria-label="Choose more additional visits"/);
   const purchasePage = readFileSync("app/(member)/resonance/visits/page.tsx", "utf8");
-  assert.match(purchasePage, /data-whop-checkout-setup-future-usage="off_session"/);
-  assert.match(purchasePage, /data-whop-checkout-session=\{order.whop_checkout_id\}/);
+  const checkoutEmbed = readFileSync("app/(member)/resonance/visits/whop-checkout.tsx", "utf8");
+  assert.match(purchasePage, /<ResonanceWhopCheckout[\s\S]*sessionId=\{order\.whop_checkout_id\}/);
+  assert.match(checkoutEmbed, /from "@whop\/checkout\/react"/);
+  assert.match(checkoutEmbed, /sessionId=\{sessionId\}/);
+  assert.match(checkoutEmbed, /prefill=\{\{ email: buyerEmail \}\}/);
+  assert.match(checkoutEmbed, /disableEmail/);
+  assert.match(checkoutEmbed, /setupFutureUsage="off_session"/);
+  assert.doesNotMatch(purchasePage, /js\.whop\.com\/static\/checkout\/loader\.js|data-whop-checkout-/);
   const access = readFileSync("src/lib/resonance/visit-access.ts", "utf8");
   assert.match(access, /visitsEnabled\(\) \|\| \(await isOremeaAdmin\(userId\)\)/);
   assert.match(access, /visitCheckoutEnabled\(\) \|\| \(await isOremeaAdmin\(userId\)\)/);
