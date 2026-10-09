@@ -24,6 +24,9 @@ assert.match(publicPage, /<details/);
 assert.match(publicPage, /Choose \{roomName\}/);
 assert.match(publicPage, /room\.chooseWhen/);
 assert.match(publicPage, /const roomInterestHref = \(weekNumber: number\)/);
+assert.match(publicPage, /getActiveResonanceRun\(userId\)/);
+assert.match(publicPage, /const destination = activeRun[\s\S]*"\/resonance"/);
+assert.match(publicPage, /if \(activeRun\) return "\/resonance"/);
 assert.match(publicPage, /`\/resonance\/visits\?room=\$\{weekNumber\}`/);
 assert.match(publicPage, /href=\{roomInterestHref\(room\.weekNumber\)\}/);
 assert.doesNotMatch(publicPage, /href=\{`\/entry\?room=\$\{room\.weekNumber\}`\}/);
@@ -35,6 +38,7 @@ assert.match(roomTarget, /You showed interest in \{roomName\}/);
 assert.match(roomTarget, /Begin with \{roomName\}/);
 assert.match(roomTarget, /Compare the rooms/);
 assert.match(visitsPage, /getResonanceRoomTarget/);
+assert.match(visitsPage, /getActiveResonanceRun\(userId\)[\s\S]*redirect\("\/resonance"\)/);
 assert.match(visitsPage, /name="room"/);
 assert.match(
   visitsPage,
@@ -43,6 +47,8 @@ assert.match(
 assert.match(checkoutEmbed, /returnUrl=\{returnUrl\}/);
 assert.doesNotMatch(visitsPage, /js\.whop\.com\/static\/checkout\/loader\.js|data-whop-checkout-/);
 assert.match(actions, /formRoomTarget/);
+assert.match(actions, /purchaseVisits[\s\S]*getActiveResonanceRun\(user\.id\)[\s\S]*redirect\("\/resonance"\)/);
+assert.match(actions, /simulateAdminPurchase[\s\S]*getActiveResonanceRun\(user\.id\)[\s\S]*redirect\("\/resonance"\)/);
 assert.match(actions, /roomTarget\?\.entryPath/);
 assert.match(completePage, /roomWeekNumber=\{roomTarget\?\.weekNumber\}/);
 assert.match(completePage, /Continue to \$\{roomTarget\.name\}/);
