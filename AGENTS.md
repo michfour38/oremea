@@ -96,6 +96,17 @@ Authentication and permission are separate:
 
 ## Change workflow
 
+### Standing Anthropic compatibility maintenance authority
+
+On 10 October 2026 the human owner explicitly authorized Anthropic model/API compatibility maintenance to remain active and be kept updated without checking with her. This is the **only** standing category of automatic code/configuration changes authorized by that instruction.
+
+- Monitor official model lifecycle, retirement, release and API migration guidance against models actually used by the products.
+- Apply only necessary Anthropic compatibility fixes, including migration before retirement and repairs to incompatible request parameters. A new release alone is not a reason to change models.
+- Use a bounded branch and PR, preserve product methods, prompts, evidence boundaries, schemas, saved reflections, memory/session continuity and commercial truth, and pass the relevant checks before merging.
+- After green checks, merge and deploy through the existing production pipeline without asking for approval again. Verify the deployment and relevant synthetic product flow where accessible, then notify the owner of the result or blocker.
+- Keep the operational watcher and companion maintenance automation enabled. Missing credentials or inference/deployment access must be reported accurately; continue the checks that are possible.
+- This permission does not authorize unrelated feature, product, pricing, marketing, payment, account, billing, crawler or dependency changes. Those need a separate explicit user instruction.
+
 For material changes:
 1. inspect the canonical source and existing contract tests;
 2. change the smallest coherent surface;
