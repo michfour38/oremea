@@ -32,3 +32,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 build-log*.txt
+
+# Operational model-watch reports and baselines
+.anthropic-watch/
