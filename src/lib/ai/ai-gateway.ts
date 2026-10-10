@@ -147,6 +147,11 @@ async function callAnthropicModel({
         body: JSON.stringify({
           model,
           max_tokens: maxTokens,
+          // These bounded text requests budget for the reply, not hidden thinking.
+          // Sonnet 5 enables thinking by default; other models keep their settings.
+          ...(model === "claude-sonnet-5"
+            ? { thinking: { type: "disabled" } }
+            : {}),
           ...(systemBlocks ? { system: systemBlocks } : {}),
           ...(outputSchema
             ? {

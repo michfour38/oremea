@@ -177,7 +177,7 @@ Preserve the participant evidence and write both questions as actual questions e
           "anthropic-version": "2023-06-01",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-5-20250929",
+          model: "claude-sonnet-4-6",
           max_tokens: 1500,
           messages: [{ role: "user", content: attemptPrompt }],
         }),

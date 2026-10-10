@@ -18,7 +18,7 @@ const AREA_LABELS: Record<CompassGoalArea, string> = {
   lifestyle: "Lifestyle",
 }
 
-const COMPASS_MODEL = "claude-sonnet-4-5-20250929"
+const COMPASS_MODEL = "claude-sonnet-4-6"
 
 export async function runCompassMirror({
   areaResponses,

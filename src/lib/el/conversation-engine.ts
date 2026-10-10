@@ -102,7 +102,7 @@ async function callConversationModel(prompt: string): Promise<string | null> {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-5-20250929",
+        model: "claude-sonnet-4-6",
         max_tokens: 700,
         messages: [{ role: "user", content: prompt }],
       }),
