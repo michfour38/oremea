@@ -30,7 +30,7 @@ const AREA_LABELS: Record<CompassGoalArea, string> = {
   lifestyle: "Lifestyle",
 }
 
-const COMPASS_MODEL = "claude-sonnet-4-5-20250929"
+const COMPASS_MODEL = "claude-sonnet-4-6"
 const MAX_DESCENT_QUESTION_WORDS = 28
 
 const CONCISE_DESCENT_QUESTION_STANDARD = `

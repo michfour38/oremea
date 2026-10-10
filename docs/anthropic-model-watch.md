@@ -23,3 +23,16 @@ Official sources:
 - https://platform.claude.com/docs/en/api/models/retrieve
 - https://platform.claude.com/docs/en/about-claude/model-deprecations
 - https://platform.claude.com/docs/en/release-notes/overview
+
+## Compatibility maintenance: 10 October 2026
+
+Recognition's runtime reported repeated `max_tokens` exhaustion on `claude-sonnet-5`, including its bounded token retry and plain-text fallback. Sonnet 5 enables adaptive thinking when the request omits `thinking`; those tokens share the reply budget. The gateway now explicitly disables thinking for that exact model, preserving the reply budget, prompt, schema, cache policy, memory and retry behavior. Other configured models retain their request settings. Synthetic request tests cover the structured reply, correction memory, token retry and plain-text fallback; they do not establish live account availability or output quality.
+
+Six direct Messages API call sites used `claude-sonnet-4-5-20250929`, deprecated on 30 September 2026 with retirement scheduled for 30 November 2026. They now use the supported Sonnet 4.6 model (`claude-sonnet-4-6`, retirement not before 17 February 2027). This is a bounded compatibility bridge: it preserves existing temperature values, the previous tokenizer, default non-thinking behavior and $3/$15 per million input/output token pricing. Moving them to Sonnet 5.5 would require changing sampling and thinking settings and re-budgeting tokens; a release alone does not authorize that broader migration.
+
+The product services build the same repository, including the shared AI gateway. Their Railway build watch patterns must include `/src/lib/ai/**` so a compatibility fix actually rolls out. Confirm the intended commit on each affected service and terminal deployment success; a merge or an old-build redeploy is insufficient. Missing watcher credentials remain an account-verification limitation, not evidence of a provider outage.
+
+Migration references:
+- https://platform.claude.com/docs/en/models/sonnet-5-5/migration-guide
+- https://platform.claude.com/docs/en/models/sonnet-4-6/overview
+- https://platform.claude.com/docs/en/about-claude/pricing
