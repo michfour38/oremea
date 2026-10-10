@@ -1,0 +1,64 @@
+name: Anthropic model watch
+
+on:
+  schedule:
+    - cron: '23 */6 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'scripts/anthropic-model-watch.mjs'
+      - 'scripts/anthropic-model-watch.test.mjs'
+      - '.github/workflows/anthropic-model-watch.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anthropic-model-watch-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify-watcher:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node --test scripts/anthropic-model-watch.test.mjs
+
+  watch:
+    if: github.event_name != 'pull_request'
+    needs: verify-watcher
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/cache/restore@v4
+        with:
+          path: .anthropic-watch/state.json
+          key: anthropic-model-watch-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: anthropic-model-watch-
+      - name: Check official sources and configured models
+        run: node scripts/anthropic-model-watch.mjs
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AI_PRIMARY_MODEL: ${{ vars.AI_PRIMARY_MODEL }}
+          AI_FALLBACK_MODEL: ${{ vars.AI_FALLBACK_MODEL }}
+          ANTHROPIC_WATCH_MODELS: ${{ vars.ANTHROPIC_WATCH_MODELS }}
+      - name: Save successful source baseline
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .anthropic-watch/state.json
+          key: anthropic-model-watch-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Save monitoring report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anthropic-model-watch-report
+          path: .anthropic-watch/report.*
+          retention-days: 30
