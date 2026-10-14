@@ -50,7 +50,7 @@ jobs:
           AI_FALLBACK_MODEL: ${{ vars.AI_FALLBACK_MODEL }}
           ANTHROPIC_WATCH_MODELS: ${{ vars.ANTHROPIC_WATCH_MODELS }}
       - name: Save successful source baseline
-        if: success()
+        if: ${{ always() && hashFiles('.anthropic-watch/state.json') != '' }}
         uses: actions/cache/save@v4
         with:
           path: .anthropic-watch/state.json
@@ -63,3 +63,4 @@ jobs:
           path: .anthropic-watch/report.*
           retention-days: 30
           if-no-files-found: error
+          include-hidden-files: true
