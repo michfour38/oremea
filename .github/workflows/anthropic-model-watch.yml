@@ -1,4 +1,4 @@
-name: Anthropic model watch
+name: ARGUS | Anthropic model watch
 
 on:
   schedule:
@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - run: node --test scripts/anthropic-model-watch.test.mjs
 
   watch:
@@ -36,7 +36,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - uses: actions/cache/restore@v4
         with:
           path: .anthropic-watch/state.json
@@ -50,7 +50,7 @@ jobs:
           AI_FALLBACK_MODEL: ${{ vars.AI_FALLBACK_MODEL }}
           ANTHROPIC_WATCH_MODELS: ${{ vars.ANTHROPIC_WATCH_MODELS }}
       - name: Save successful source baseline
-        if: always()
+        if: success()
         uses: actions/cache/save@v4
         with:
           path: .anthropic-watch/state.json
@@ -62,3 +62,4 @@ jobs:
           name: anthropic-model-watch-report
           path: .anthropic-watch/report.*
           retention-days: 30
+          if-no-files-found: error
