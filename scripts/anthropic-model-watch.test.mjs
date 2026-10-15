@@ -8,8 +8,8 @@ import { inventory, inspect, SOURCES, summary } from './anthropic-model-watch.mj
 async function fixture(t) {
   const root = await mkdtemp(join(tmpdir(), 'anthropic-watch-'));
   t.after(() => rm(root, { recursive: true, force: true }));
-  await mkdir(join(root, 'src'), { recursive: true });
-  await writeFile(join(root, 'src', 'models.ts'), 'const primary = "claude-test-primary";\nconst secondary = "claude-test-secondary";');
+  await mkdir(join(root, 'src/lib/ai'), { recursive: true });
+  await writeFile(join(root, 'src/lib/ai/ai-config.ts'), 'const primary = "claude-test-primary";\nconst secondary = "claude-test-secondary";');
   return root;
 }
 
@@ -38,13 +38,13 @@ function mock({ lifecycle = 'active', fail, missing = false, alias = false, chan
 }
 const env = { ANTHROPIC_API_KEY: 'secret-fixture' };
 
-test('inventory includes all source locations and environment models, excluding dependencies', async t => {
+test('inventory reads only the approved configuration file and environment overrides', async t => {
   const root = await fixture(t);
-  await mkdir(join(root, 'src', 'node_modules'));
-  await writeFile(join(root, 'src', 'node_modules', 'vendor.js'), '"claude-ignore-me"');
+  await mkdir(join(root, 'app'), { recursive: true });
+  await writeFile(join(root, 'app', 'unrelated.ts'), '"claude-ignore-me"');
   const models = await inventory(root, { AI_PRIMARY_MODEL: 'claude-env', AI_FALLBACK_MODEL: 'claude-fallback', ANTHROPIC_WATCH_MODELS: 'claude-extra' });
-  assert.deepEqual(models.map(m => m.id), ['claude-env', 'claude-extra', 'claude-fallback', 'claude-test-primary', 'claude-test-secondary']);
-  assert.deepEqual(models.find(m => m.id === 'claude-test-secondary').locations, ['src/models.ts:2']);
+  assert.deepEqual(models.map(m => m.id), ['claude-env', 'claude-fallback', 'claude-test-primary', 'claude-test-secondary']);
+  assert.deepEqual(models.find(m => m.id === 'claude-test-secondary').locations, ['src/lib/ai/ai-config.ts:2']);
 });
 
 test('complete first run establishes baseline; past tentative date does not retire an active model', async t => {
@@ -114,4 +114,10 @@ test('provider outage is distinct from model lifecycle findings', async t => {
   const result = await inspect({ root: await fixture(t), env, fetchImpl: mock({ incident: true }) });
   assert.equal(result.report.findings.some(f => f.kind === 'provider_incident'), true);
   assert.equal(result.report.findings.some(f => f.kind === 'model_retired'), false);
+});
+
+test('inventory fails closed when designated config is absent', async t => {
+  const root = await mkdtemp(join(tmpdir(), 'argus-missing-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await assert.rejects(inventory(root), { code: 'ENOENT' });
 });
