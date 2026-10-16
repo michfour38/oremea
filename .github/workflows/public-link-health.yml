@@ -26,4 +26,10 @@ jobs:
           node-version: 20
 
       - name: Check source links, static assets and public external destinations
-        run: node scripts/audit-link-health.mjs --external
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # PR code cannot fix an already-deployed site until deployment.
+            node scripts/audit-link-health.mjs --external --report-only
+          else
+            node scripts/audit-link-health.mjs --external
+          fi
