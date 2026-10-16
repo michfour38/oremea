@@ -46,4 +46,7 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
       - name: Production build
+        env:
+          # Non-secret, non-operational domain placeholder for static Clerk rendering in CI.
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
         run: npm run build
