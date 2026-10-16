@@ -2,11 +2,6 @@ name: ARGUS | Qualified model change gate
 
 on:
   pull_request:
-    paths:
-      - 'src/lib/ai/ai-config.ts'
-      - 'scripts/argus-change-gate.mjs'
-      - 'scripts/argus-change-gate.test.mjs'
-      - '.github/workflows/argus-qualified-update.yml'
   workflow_dispatch:
 
 permissions:
