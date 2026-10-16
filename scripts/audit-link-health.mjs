@@ -67,7 +67,7 @@ function oremeaPath(host, path) {
 function isPublicLiveUrl(url) {
   const parsed = new URL(url);
   const host = parsed.hostname;
-  const path = parsed.pathname.replace(/\\/$/, "") || "/";
+  const path = parsed.pathname.replace(/\/$/, "") || "/";
   if (host === "www.oremea.com" || host === "oremea.com") {
     return path === "/" || [
       "/explore", "/oremea", "/about", "/compare", "/party", "/resonance-rooms",
