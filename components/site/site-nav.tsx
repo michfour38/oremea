@@ -74,12 +74,19 @@ export function SiteNav() {
           <CurrentBell signedIn={Boolean(isSignedIn)} />
           <FeedbackIcon active={feedbackActive} />
 
-          <Link
-            href={isSignedIn ? "/profile" : "/sign-in"}
-            className="rounded-full border border-[#b79a63]/30 bg-[#b79a63]/[0.04] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[#b79a63] transition hover:border-[#b79a63]/60 hover:bg-[#b79a63]/10"
-          >
-            {isSignedIn ? "Profile" : "Log In"}
-          </Link>
+          {isSignedIn ? (
+            <details className="group relative">
+              <summary className="list-none cursor-pointer rounded-full border border-[#b79a63]/30 bg-[#b79a63]/[0.04] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[#b79a63] transition hover:border-[#b79a63]/60 hover:bg-[#b79a63]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#b79a63] [&::-webkit-details-marker]:hidden">
+                Profile ▾
+              </summary>
+              <nav aria-label="Account menu" className="absolute right-0 top-full z-[60] mt-3 min-w-44 overflow-hidden rounded-xl border border-[#b79a63]/30 bg-zinc-950 p-2 shadow-2xl">
+                <Link href="/profile" className="block rounded-lg px-4 py-3 text-sm text-zinc-200 transition hover:bg-white/10">My profile</Link>
+                <Link href="/sign-out" className="block rounded-lg px-4 py-3 text-sm text-[#e7c98b] transition hover:bg-white/10">Sign out</Link>
+              </nav>
+            </details>
+          ) : (
+            <Link href="/sign-in" className="rounded-full border border-[#b79a63]/30 bg-[#b79a63]/[0.04] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[#b79a63] transition hover:border-[#b79a63]/60 hover:bg-[#b79a63]/10">Log In</Link>
+          )}
         </div>
       </div>
 
