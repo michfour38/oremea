@@ -8,6 +8,8 @@ on:
     paths:
       - 'scripts/anthropic-model-watch.mjs'
       - 'scripts/anthropic-model-watch.test.mjs'
+      - 'scripts/argus-model-assessment.mjs'
+      - 'scripts/argus-model-assessment.test.mjs'
       - '.github/workflows/anthropic-model-watch.yml'
 
 permissions:
@@ -27,12 +29,14 @@ jobs:
           sparse-checkout: |
             scripts/anthropic-model-watch.mjs
             scripts/anthropic-model-watch.test.mjs
+            scripts/argus-model-assessment.mjs
+            scripts/argus-model-assessment.test.mjs
             src/lib/ai/ai-config.ts
           sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --test scripts/anthropic-model-watch.test.mjs
+      - run: node --test scripts/anthropic-model-watch.test.mjs scripts/argus-model-assessment.test.mjs
 
   watch:
     if: github.event_name != 'pull_request'
