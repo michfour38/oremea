@@ -4,7 +4,7 @@ const OWNER='michfour38', REPO='oremea';
 const SHA=/^[a-f0-9]{40}$/;
 const API='https://api.github.com';
 const FILE='src/lib/ai/ai-config.ts';
-const REQUIRED={ 'argus-qualified-update.yml':'qualified-model-change', 'oremea-build-gate.yml':'pull-request-check' };
+const REQUIRED={ 'argus-qualified-update.yml':'qualified-model-change', 'pull-request-build.yml':'pull-request-check' };
 // Read-only GitHub API; never accepts a URL from the caller and never writes.
 export async function verifyGithubProposal({pullNumber,token,modelId,fetchImpl=fetch}={}) {
  if(!Number.isSafeInteger(pullNumber)||pullNumber<1||!token) throw new Error('ARGUS_GITHUB_INPUT_INVALID');
