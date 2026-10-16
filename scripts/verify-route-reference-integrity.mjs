@@ -14,7 +14,7 @@ const files = [...walk('app'), ...walk('components'), ...walk('src')]
 const pages = walk('app').filter(p => /\/page\.(tsx|ts|jsx|js)$/.test(p));
 
 function pageMatcher(page) {
-  const segments = page.replace(/^app\//, '').replace(/\/page\.(tsx|ts|jsx|js)$/, '')
+  const segments = page.replace(/^app\//, '').replace(/(^|\/)page\.(tsx|ts|jsx|js)$/, '')
     .split('/').filter(s => s && !/^\(.*\)$/.test(s));
   const suffix = segments.map(s => {
     if (/^\[\[\.\.\.[^\]]+\]\]$/.test(s)) return '(?:/.*)?';
@@ -32,6 +32,11 @@ const issues = [];
 function valid(destination) {
   const path = destination.split(/[?#]/)[0].replace(/\/$/, '') || '/';
   if (ignoredPrefixes.some(prefix => path.startsWith(prefix))) return true;
+  // Explicitly mapped host-aware entry flow in middleware.ts.
+  if (path === '/begin') return true;
+  // Legacy legal document links belong to the separately deployed WORKS app.
+  // Their remote health must be checked by WORKS, not treated as local Next.js pages.
+  if (path.startsWith('/works/')) return true;
   if (/\.(svg|png|jpg|jpeg|webp|ico|pdf|woff2?|txt|xml)$/i.test(path)) return true;
   return routes.some(route => route.test(path));
 }
