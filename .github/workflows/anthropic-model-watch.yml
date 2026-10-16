@@ -50,6 +50,7 @@ jobs:
           sparse-checkout: |
             scripts/anthropic-model-watch.mjs
             scripts/anthropic-model-watch.test.mjs
+            scripts/argus-model-assessment.mjs
             src/lib/ai/ai-config.ts
           sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
