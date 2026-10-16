@@ -4,6 +4,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const EXTERNAL = process.argv.includes("--external");
+const REPORT_ONLY = process.argv.includes("--report-only");
 const roots = ["app", "components", "src"];
 const CODE = /\.(?:tsx?|jsx?)$/;
 const KNOWN_HOSTS = new Set([
@@ -59,6 +60,26 @@ function oremeaPath(host, path) {
   // Main-site redirects and host-specific legacy aliases still resolve to these local pages.
   if (path === "/begin") return "/recognition";
   return path;
+}
+
+// Only probe routes intended for public access. Member/admin routes can
+// deliberately return 404 to anonymous callers and must not be exposed by a link audit.
+function isPublicLiveUrl(url) {
+  const parsed = new URL(url);
+  const host = parsed.hostname;
+  const path = parsed.pathname.replace(/\\/$/, "") || "/";
+  if (host === "www.oremea.com" || host === "oremea.com") {
+    return path === "/" || [
+      "/explore", "/oremea", "/about", "/compare", "/party", "/resonance-rooms",
+      "/resonance/enter", "/resonance/creator", "/contact", "/feedback", "/reviews",
+      "/terms", "/privacy", "/cookies", "/paia", "/disclaimer", "/refunds",
+      "/conduct", "/sign-in", "/sign-up", "/recognition", "/compass/access",
+    ].some(prefix => path === prefix || path.startsWith(prefix + "/"));
+  }
+  if (host === "recognition.oremea.com") return ["/", "/purchase", "/begin"].includes(path);
+  if (host === "resonance.oremea.com") return path === "/";
+  if (host === "compass.oremea.com") return ["/", "/access"].includes(path);
+  return false;
 }
 
 const refs = [];
@@ -117,7 +138,7 @@ for (const ref of refs) {
   }
   if (path.startsWith("/_next/")) continue;
   // Probe public, static route references on their real hosts too; never request private API routes.
-  if (!path.startsWith("/api/") && !path.startsWith("/internal/") && !path.startsWith("/works/")) {
+  if (isPublicLiveUrl(display) && !path.startsWith("/api/") && !path.startsWith("/internal/") && !path.startsWith("/works/")) {
     if (!siteRoutes.has(display)) siteRoutes.set(display, []);
     siteRoutes.get(display).push(ref);
   }
@@ -180,9 +201,9 @@ console.log("Link audit: " + sources.length + " code files, " + refs.length + " 
 console.log("Dynamic expressions in " + dynamic.length + " files require rendered/browser checks.");
 if (skipped.length) console.log(skipped.length + " private/remote-app destinations were not inspected.");
 if (broken.length) {
-  console.error("Broken references:");
+  console.error(REPORT_ONLY ? "Live references requiring repair/deployment (report-only on PR):" : "Broken references:");
   [...new Set(broken)].sort().forEach(x => console.error("  " + x));
-  process.exitCode = 1;
+  if (!REPORT_ONLY) process.exitCode = 1;
 } else {
   console.log("No confirmed broken literal links in checked scope.");
 }
