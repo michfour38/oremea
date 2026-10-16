@@ -8,7 +8,7 @@ export default function Page() {
 
   useEffect(() => {
     signOut(() => {
-      window.location.href = "/oremea/enter";
+      window.location.replace("/sign-in");
     });
   }, []);
 

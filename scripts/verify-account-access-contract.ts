@@ -447,3 +447,9 @@ assert.doesNotMatch(
 );
 
 console.log("Account access, Golden Key, and one-use invitation contract checks passed.");
+
+// Sign-out must redirect to an existing route rather than strand members at a 404.
+const signOutPage = readFileSync("app/sign-out/page.tsx", "utf8");
+assert.ok(existsSync("app/(auth)/sign-in/[[...sign-in]]/page.tsx") || existsSync("app/(auth)/sign-in/page.tsx"), "Oremea sign-in route must exist");
+assert.match(signOutPage, /window\.location\.replace\("\/sign-in"\)/, "Signed-out members must reach sign-in");
+assert.doesNotMatch(signOutPage, /\/oremea\/enter/, "Remove the nonexistent post-signout route");
