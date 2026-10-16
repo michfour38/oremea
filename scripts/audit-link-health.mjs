@@ -141,7 +141,7 @@ async function probe(url) {
   const options = { redirect: "follow", signal: AbortSignal.timeout(12000), headers: { "User-Agent": "OremeaLinkAudit/1.0" } };
   try {
     let response = await fetch(url, { ...options, method: "HEAD" });
-    if ([400, 403, 405, 429, 501].includes(response.status)) {
+    if ([400, 403, 404, 405, 410, 429, 501].includes(response.status)) {
       response = await fetch(url, { ...options, method: "GET", headers: { ...options.headers, Range: "bytes=0-0" } });
       await response.body?.cancel();
     }
