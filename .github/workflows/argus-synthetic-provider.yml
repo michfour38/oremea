@@ -1,0 +1,38 @@
+name: ARGUS | Synthetic provider availability
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '37 5 * * *'
+  pull_request:
+    paths:
+      - 'scripts/argus-synthetic-probe.mjs'
+      - 'scripts/argus-synthetic-probe.test.mjs'
+      - '.github/workflows/argus-synthetic-provider.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            scripts/argus-synthetic-probe.mjs
+            scripts/argus-synthetic-probe.test.mjs
+            scripts/argus-change-gate.mjs
+            src/lib/ai/ai-config.ts
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test scripts/argus-synthetic-probe.test.mjs
+      - name: Run synthetic live probe (never on PRs)
+        if: github.event_name != 'pull_request'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/argus-synthetic-probe.mjs
