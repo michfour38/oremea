@@ -84,15 +84,19 @@ async function main() {
     assert.deepEqual(await whopApiRequest("accounts/me", { apiKey }), { id: "biz_test" });
 
     const action = readFileSync("app/admin/resonance-commerce/actions.ts", "utf8");
-    assert.ok(action.indexOf("await requireAdminAction()") < action.indexOf("await provisionResonanceWhopCatalog()"));
-    assert.match(action, /providerDetails: error.providerDetails/);
+    assert.match(action, /await requireAdminAction\(\)/);
+    assert.doesNotMatch(action, /await provisionResonanceWhopCatalog\(\)/);
+    assert.match(action, /provisioning_locked/);
+    assert.doesNotMatch(action, /providerDetails: error.providerDetails/);
     assert.doesNotMatch(action, /URLSearchParams|console\./,
       "Provider diagnostics must stay out of redirect URLs and logs.");
     const page = readFileSync("app/admin/resonance-commerce/page.tsx", "utf8");
     assert.match(page, /await requireAdminPage\(\)/);
-    assert.doesNotMatch(page, /it is missing a permission required/);
+    assert.match(page, /Provision from the configured API key/);
     const form = readFileSync("app/admin/resonance-commerce/provision-form.tsx", "utf8");
-    assert.match(form, /disabled=\{!enabled \|\| pending\}/);
+    assert.match(form, /type="checkbox"/);
+    assert.match(form, /Return safely to Oremea Admin/);
+    assert.doesNotMatch(form, /type="submit"/);
     assert.doesNotMatch(form, /dangerouslySetInnerHTML/);
     console.log("Whop diagnostic checks passed (mocked HTTP errors, redaction, bounds, no retry, private admin transport).");
   } finally {
