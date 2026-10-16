@@ -1,0 +1,5 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {buildReadOnlyProposal} from './argus-readonly-proposal.mjs';
+const original=['export const AI_MODELS = {','  primary:','    process.env.AI_PRIMARY_MODEL ||','    "claude-sonnet-5",','','  fallback:','    process.env.AI_FALLBACK_MODEL || null,','} as const',''].join('\n');
+test('read-only proposal is always unqualified',()=>{const p=buildReadOnlyProposal(original,'claude-test-new');assert.equal(p.qualified,false);assert.equal(p.productionAuthorized,false);assert.equal(p.path,'src/lib/ai/ai-config.ts');assert.equal(p.proposedContent,original.replace('claude-sonnet-5','claude-test-new'));});
+test('invalid model and arbitrary source alterations fail closed',()=>{assert.throws(()=>buildReadOnlyProposal(original,'../../secret'),/INVALID_MODEL_ID/);assert.throws(()=>buildReadOnlyProposal(original,'claude-sonnet-5'),/NO_CHANGE/);assert.throws(()=>buildReadOnlyProposal(original+'console.log(1)','claude-test-new'),/SHAPE_VIOLATION/);});
