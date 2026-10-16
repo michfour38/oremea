@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { assessCatalog } from './argus-model-assessment.mjs';
 import { readFile, mkdir, writeFile, rename } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -46,6 +47,7 @@ async function request(url, { key, fetchImpl, json = false }) {
 export async function inspect({ root, env = {}, previous = {}, fetchImpl = fetch }) {
   const checkedAt = new Date().toISOString();
   const report = { checkedAt, models: await inventory(root, env), sources: {}, findings: [], failures: [] };
+  report.candidateAssessment = { status: 'incomplete', candidates: [] };
   const state = { sources: { ...previous.sources }, models: previous.models || [], resolutions: { ...previous.resolutions } };
   for (const [name, url] of Object.entries(SOURCES)) {
     try {
@@ -97,6 +99,14 @@ export async function inspect({ root, env = {}, previous = {}, fetchImpl = fetch
         for (const id of previous.models.filter(id => !catalog.includes(id))) report.findings.push({ kind: 'catalog_model_removed', id });
       }
       state.models = [...new Set(catalog)].sort();
+      // Catalogue IDs alone never qualify a model for promotion.
+      // Detailed lifecycle, price, quality and application compatibility remain unverified.
+      report.candidateAssessment = assessCatalog({
+        catalog: state.models.map(id => ({ id })),
+        configuredModels: report.models,
+        providerHealthy: report.inferenceStatus === 'operational',
+        documentationChanged: report.findings.some(f => f.kind === 'documentation_changed'),
+      });
     } catch (error) {
       report.failures.push({ source: 'models_catalog', kind: 'source_unavailable', httpStatus: error.status || null });
     }
@@ -130,6 +140,9 @@ export function summary(report) {
     '| Configured model | API result | Retirement | Source locations |', '| --- | --- | --- | --- |',
     ...report.models.map(m => `| ${m.id} | ${m.lifecycle || 'unverified'} | ${m.retiresAt || '—'} | ${m.locations.join(', ')} |`), '',
     '## Findings', '', ...report.findings.map(f => `- ${JSON.stringify(f)}`), '',
+    '## Candidate assessment (read-only)', '',
+    `Assessment: ${report.candidateAssessment?.status || 'incomplete'}`, '',
+    ...(report.candidateAssessment?.candidates || []).slice(0, 30).map(c => `- ${c.id}: ${c.decision} (${c.reasons.join(', ')})`), '',
     '## Incomplete checks', '', ...report.failures.map(f => `- ${JSON.stringify(f)}`), '',
     'Documentation changes require review; a new model is not proof that an upgrade is compatible.',
     'This check sends no participant text, makes no generation requests, and changes no production configuration.', '',
