@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: '23 */6 * * *'
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/anthropic-model-watch.mjs'
+      - 'scripts/argus-model-assessment.mjs'
+      - '.github/workflows/anthropic-model-watch.yml'
   pull_request:
     paths:
       - 'scripts/anthropic-model-watch.mjs'
