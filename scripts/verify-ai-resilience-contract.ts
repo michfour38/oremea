@@ -117,4 +117,19 @@ assert.match(
   "Harmonize Private Witness must actually use its fallback when AI returns no reply.",
 );
 
+
+const aiGateway = source("src/lib/ai/ai-gateway.ts");
+assert.match(aiGateway, /AbortSignal\.timeout\(45000\)/,
+  "AI calls must have a bounded network timeout instead of hanging customer requests.");
+assert.match(aiGateway, /if \(!process\.env\.ANTHROPIC_API_KEY\)/,
+  "Missing provider credentials must fail clearly without attempting a request.");
+assert.match(aiGateway, /if \(!res\.ok\) \{/,
+  "Provider errors must be handled before trying to parse their response bodies.");
+assert.doesNotMatch(aiGateway, /console\.error\([\s\S]*?data,\s*\)/,
+  "Never log untrusted provider error payloads containing potentially private customer data.");
+assert.doesNotMatch(aiGateway, /console\.error\([\s\S]*?error,\s*\)/,
+  "Never log raw network exceptions from participant requests.");
+assert.match(aiGateway, /new Set\(/,
+  "Repeated configured model IDs must not double the failure time.");
+
 console.log("AI participant-progress resilience contract checks passed.");
