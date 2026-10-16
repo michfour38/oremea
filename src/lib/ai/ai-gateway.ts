@@ -72,12 +72,14 @@ export async function generateAIWithUsage({
     ? `${OREMEA_EVIDENCE_BOUNDARY}\n\n${prompt}`
     : prompt
 
-  const models = [
-    AI_MODELS.primary,
-    AI_MODELS.fallback,
-  ].filter(
-    (model): model is string => Boolean(model),
-  )
+  const models = [...new Set([AI_MODELS.primary, AI_MODELS.fallback].filter(
+    (model): model is string => Boolean(model?.trim()),
+  ))]
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.error(`AI unavailable for task "${task}": provider credential missing.`)
+    return null
+  }
 
   for (const model of models) {
     const result = await callAnthropicModel({
@@ -138,6 +140,7 @@ async function callAnthropicModel({
       "https://api.anthropic.com/v1/messages",
       {
         method: "POST",
+        signal: AbortSignal.timeout(45000),
         headers: {
           "Content-Type": "application/json",
           "x-api-key":
@@ -173,6 +176,12 @@ async function callAnthropicModel({
       },
     )
 
+    // Provider error payloads may contain private request data; never log them.
+    if (!res.ok) {
+      console.error(`AI provider request failed for task "${task}" using "${model}" (HTTP ${res.status}).`)
+      return null
+    }
+
     const data = await res.json()
 
     if (data?.stop_reason === "max_tokens") {
@@ -195,15 +204,6 @@ async function callAnthropicModel({
 
       console.error(
         `AI model "${model}" remained truncated for task "${task}" after retry.`,
-      )
-
-      return null
-    }
-
-    if (!res.ok) {
-      console.error(
-        `AI model attempt failed for task "${task}" using "${model}":`,
-        data,
       )
 
       return null
@@ -240,8 +240,7 @@ async function callAnthropicModel({
     }
   } catch (error) {
     console.error(
-      `AI request failed for task "${task}" using "${model}":`,
-      error,
+      `AI request failed for task "${task}" using "${model}" (network, timeout or unreadable response).`,
     )
 
     return null

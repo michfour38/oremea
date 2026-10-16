@@ -65,6 +65,8 @@ async function verifyBoundedSonnetRequests() {
   const originalFetch = globalThis.fetch;
   const originalModel = process.env.AI_PRIMARY_MODEL;
   const originalFallback = process.env.AI_FALLBACK_MODEL;
+  const originalAnthropicKey = process.env.ANTHROPIC_API_KEY;
+  process.env.ANTHROPIC_API_KEY = "test-only-mocked-anthropic-key";
   process.env.AI_PRIMARY_MODEL = "claude-sonnet-5";
   delete process.env.AI_FALLBACK_MODEL;
 
@@ -134,6 +136,8 @@ async function verifyBoundedSonnetRequests() {
     console.log("Recognition bounded Sonnet requests, schema, memory, retry and fallback checks passed.");
   } finally {
     globalThis.fetch = originalFetch;
+    if (originalAnthropicKey === undefined) delete process.env.ANTHROPIC_API_KEY;
+    else process.env.ANTHROPIC_API_KEY = originalAnthropicKey;
     if (originalModel === undefined) delete process.env.AI_PRIMARY_MODEL;
     else process.env.AI_PRIMARY_MODEL = originalModel;
     if (originalFallback === undefined) delete process.env.AI_FALLBACK_MODEL;
