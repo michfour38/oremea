@@ -1,6 +1,9 @@
 name: Oremea public link health
 
 on:
+  pull_request:
+    branches:
+      - main
   schedule:
     # Daily public-link check; reports definitive 404/410 responses without touching billing.
     - cron: "15 5 * * *"
