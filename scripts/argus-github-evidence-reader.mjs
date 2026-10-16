@@ -1,4 +1,5 @@
 import { validateCommitEvidence } from './argus-commit-evidence.mjs';
+import { validateConfig } from './argus-change-gate.mjs';
 
 const OWNER='michfour38', REPO='oremea';
 const SHA=/^[a-f0-9]{40}$/;
@@ -6,7 +7,7 @@ const API='https://api.github.com';
 const FILE='src/lib/ai/ai-config.ts';
 const REQUIRED={ 'argus-qualified-update.yml':'qualified-model-change', 'pull-request-build.yml':'pull-request-check' };
 // Read-only GitHub API; never accepts a URL from the caller and never writes.
-export async function verifyGithubProposal({pullNumber,token,modelId,fetchImpl=fetch}={}) {
+export async function verifyGithubProposal({pullNumber,token,fetchImpl=fetch}={}) {
  if(!Number.isSafeInteger(pullNumber)||pullNumber<1||!token) throw new Error('ARGUS_GITHUB_INPUT_INVALID');
  const headers={authorization:'Bearer '+token,accept:'application/vnd.github+json','x-github-api-version':'2022-11-28'};
  async function get(path){
@@ -26,6 +27,11 @@ export async function verifyGithubProposal({pullNumber,token,modelId,fetchImpl=f
  const files=await get('/pulls/'+pullNumber+'/files?per_page=100');
  if(!Array.isArray(files)||files.length!==1||files[0].filename!==FILE||
     files[0].status!=='modified') throw new Error('ARGUS_DIFF_SCOPE_INVALID');
+ const fileAtCommit=await get('/contents/'+FILE+'?ref='+headSha);
+ if(fileAtCommit.encoding!=='base64'||typeof fileAtCommit.content!=='string'||fileAtCommit.size>8192)
+   throw new Error('ARGUS_CONFIG_UNREADABLE');
+ const modelId=validateConfig(Buffer.from(fileAtCommit.content.replace(/\\s/g,''),'base64').toString('utf8'));
+ // The verified model must be derived from the exact commit, never a caller-supplied ID.
  // Read-only workflow runs. Each check must be from an approved workflow, for the exact head SHA.
  const runs=await get('/actions/runs?head_sha='+headSha+'&per_page=100');
  if(!Array.isArray(runs.workflow_runs)||runs.total_count>100) throw new Error('ARGUS_WORKFLOW_INCOMPLETE');
