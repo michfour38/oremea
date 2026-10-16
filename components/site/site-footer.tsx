@@ -116,6 +116,7 @@ export function SiteFooter() {
 
               <p className="max-w-56 leading-6 text-zinc-500">
                 {OREMEA_OPERATOR.address}
+                <span className="block">Local Is Lekker</span>
               </p>
             </div>
           </div>
