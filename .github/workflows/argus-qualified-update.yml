@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test scripts/argus-change-gate.test.mjs scripts/argus-proposal-preflight.test.mjs scripts/anthropic-model-watch.test.mjs
+      - run: node --test scripts/argus-change-gate.test.mjs scripts/argus-proposal-preflight.test.mjs scripts/argus-commit-evidence.test.mjs scripts/anthropic-model-watch.test.mjs
 
   qualified-model-change:
     if: ${{ github.event_name == 'pull_request' && startsWith(github.head_ref, 'argus/') }}
