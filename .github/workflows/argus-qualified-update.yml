@@ -1,0 +1,52 @@
+name: ARGUS | Qualified model change gate
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  argus-unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test scripts/argus-change-gate.test.mjs scripts/anthropic-model-watch.test.mjs
+
+  qualified-model-change:
+    if: ${{ github.event_name == 'pull_request' && startsWith(github.head_ref, 'argus/') }}
+    needs: argus-unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Enforce single-file change and canonical config format
+        env:
+          ARGUS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/argus-change-gate.mjs
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Generate Prisma client
+        run: npx prisma generate
+      - name: Run complete launch contract suite
+        run: npm run test:launch
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Production build
+        env:
+          # Non-secret, non-operational domain placeholder for static Clerk rendering in CI.
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
+        run: npm run build
