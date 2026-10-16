@@ -1,0 +1,39 @@
+name: ARGUS | Read-only proposal artifact
+on:
+  workflow_dispatch:
+    inputs:
+      candidate:
+        description: 'Exact Anthropic model ID to inspect; produces unqualified artifact only'
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  proposal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            scripts/argus-change-gate.mjs
+            scripts/argus-readonly-proposal.mjs
+            scripts/argus-readonly-proposal.test.mjs
+            src/lib/ai/ai-config.ts
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test scripts/argus-readonly-proposal.test.mjs
+      - name: Generate UNQUALIFIED proposal without any source changes
+        env:
+          ARGUS_CANDIDATE: ${{ inputs.candidate }}
+        run: node scripts/argus-readonly-proposal.mjs
+      - name: Export inert proposal artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: argus-unqualified-proposal
+          path: .argus-proposal/proposal.json
+          retention-days: 7
+          include-hidden-files: true
