@@ -89,6 +89,7 @@ for (const file of sources) {
 
 const broken = [];
 const remote = new Map();
+const siteRoutes = new Map();
 const skipped = [];
 const checkedLocal = new Set();
 for (const ref of refs) {
@@ -115,6 +116,11 @@ for (const ref of refs) {
     continue;
   }
   if (path.startsWith("/_next/")) continue;
+  // Probe public, static route references on their real hosts too; never request private API routes.
+  if (!path.startsWith("/api/") && !path.startsWith("/internal/") && !path.startsWith("/works/")) {
+    if (!siteRoutes.has(display)) siteRoutes.set(display, []);
+    siteRoutes.get(display).push(ref);
+  }
   if (path.startsWith("/works/")) {
     skipped.push(ref.file + ":" + ref.line + " WORKS separately deployed: " + path);
     continue;
@@ -146,7 +152,7 @@ async function probe(url) {
 }
 
 if (EXTERNAL) {
-  const urls = [...remote.keys()];
+  const urls = [...new Set([...remote.keys(), ...siteRoutes.keys()])];
   let cursor = 0;
   const inconclusive = [];
   await Promise.all(Array.from({ length: Math.min(6, urls.length) }, async () => {
@@ -154,7 +160,7 @@ if (EXTERNAL) {
       const url = urls[cursor++];
       const { status, final, reason } = await probe(url);
       if (status === 404 || status === 410) {
-        for (const ref of remote.get(url)) broken.push(ref.file + ":" + ref.line + " external HTTP " + status + " " + url);
+        for (const ref of (remote.get(url) || siteRoutes.get(url) || [])) broken.push(ref.file + ":" + ref.line + " external HTTP " + status + " " + url);
       } else if (status === null || status >= 400) {
         inconclusive.push(url + " " + (status ?? reason));
       } else {
@@ -169,7 +175,7 @@ if (EXTERNAL) {
 }
 
 console.log("Link audit: " + sources.length + " code files, " + refs.length + " literal references, " +
-  checkedLocal.size + " unique local destinations, " + remote.size + " unique external destinations" +
+  checkedLocal.size + " unique local destinations, " + remote.size + " external destinations, " + siteRoutes.size + " live-site URLs" +
   (EXTERNAL ? " checked" : " (remote HTTP not checked)") + ".");
 console.log("Dynamic expressions in " + dynamic.length + " files require rendered/browser checks.");
 if (skipped.length) console.log(skipped.length + " private/remote-app destinations were not inspected.");
