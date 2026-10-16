@@ -104,6 +104,7 @@ export default async function AdminPage({
         <h1 className="mt-4 text-4xl font-light tracking-tight md:text-6xl">
           Business lives here.
         </h1>
+        <a href="https://dawn.oremea.com/?view=Operations" target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center rounded-xl border border-[#b79a63]/40 px-5 py-3 text-sm font-medium text-[#ead6a9] transition hover:border-[#b79a63]">DAWN Control Room ↗</a>
         <p className="mt-5 max-w-3xl text-base leading-8 text-zinc-300">
           Private operational tools for Oremea. Golden Key is permanent ∞ All Access. Creator Silver Key is finite experience access: three Resonance room credits plus independent 30-day Recognition and Compass windows that begin only when each product is first entered.
         </p>
