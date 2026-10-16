@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test scripts/argus-change-gate.test.mjs scripts/argus-proposal-preflight.test.mjs scripts/argus-commit-evidence.test.mjs scripts/argus-github-evidence-reader.test.mjs scripts/argus-readonly-proposal.test.mjs scripts/anthropic-model-watch.test.mjs
+      - run: node --test scripts/argus-change-gate.test.mjs scripts/argus-proposal-preflight.test.mjs scripts/argus-commit-evidence.test.mjs scripts/argus-github-evidence-reader.test.mjs scripts/argus-readonly-proposal.test.mjs scripts/argus-required-check.test.mjs scripts/anthropic-model-watch.test.mjs
 
   qualified-model-change:
     if: ${{ github.event_name == 'pull_request' && startsWith(github.head_ref, 'argus/') }}
@@ -50,3 +50,21 @@ jobs:
           # Non-secret, non-operational domain placeholder for static Clerk rendering in CI.
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
         run: npm run build
+
+  argus-protection:
+    name: argus-protection
+    if: ${{ always() && github.event_name == 'pull_request' }}
+    needs: [argus-unit, qualified-model-change]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Enforce model-change qualification for all pull requests
+        env:
+          ARGUS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          ARGUS_HEAD_REF: ${{ github.head_ref }}
+          ARGUS_UNIT_RESULT: ${{ needs.argus-unit.result }}
+          ARGUS_QUALIFICATION_RESULT: ${{ needs.qualified-model-change.result }}
+        run: node scripts/argus-required-check.mjs
