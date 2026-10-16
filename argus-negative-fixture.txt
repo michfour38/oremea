@@ -1,0 +1,1 @@
+ARGUS negative test: this extra file MUST be rejected by qualified model-change gate.
