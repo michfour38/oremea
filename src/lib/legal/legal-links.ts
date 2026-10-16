@@ -4,7 +4,7 @@ export const LEGAL_RETURN_LINK = {
 } as const;
 
 export const WORKS_RETURN_LINK = {
-  href: "/works",
+  href: "https://works.oremea.com",
   label: "Return to WORKS",
 } as const;
 
