@@ -1,0 +1,1 @@
+Forbidden extra file deliberately supplied to prove the gate rejects unrelated files.
