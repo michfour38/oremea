@@ -112,3 +112,8 @@ console.log(
     routes.length +
     " routes and both legal footers.",
 );
+
+// Preserve the founder-approved South African footer wording.
+if (!footer.includes('Local Is Lekker')) {
+  throw new Error('The Contact footer must retain Local Is Lekker below South Africa');
+}
