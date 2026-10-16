@@ -109,6 +109,19 @@ for (const file of sources) {
 }
 
 const broken = [];
+// Navigation that promises public access must not be silently gated by Clerk.
+const middleware = existsSync("middleware.ts") ? readFileSync("middleware.ts", "utf8") : "";
+const publicMatcher = middleware.split("const isPublicRoute = createRouteMatcher([")[1]?.split("]);")[0] || "";
+for (const matcher of ["/about(.*)", "/party(.*)", "/cookies(.*)", "/paia(.*)"]) {
+  if (!publicMatcher.includes('"' + matcher + '"')) {
+    broken.push("middleware.ts: missing public access matcher " + matcher);
+  }
+}
+for (const protectedMatcher of ["/admin(.*)", "/key(.*)", "/current(.*)", "/harmonize(.*)"]) {
+  if (publicMatcher.includes('"' + protectedMatcher + '"')) {
+    broken.push("middleware.ts: member/admin route inadvertently public " + protectedMatcher);
+  }
+}
 const remote = new Map();
 const siteRoutes = new Map();
 const skipped = [];
