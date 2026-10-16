@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { validateConfig } from './argus-change-gate.mjs';
 const ENDPOINT='https://api.anthropic.com/v1/messages';
 export async function probe({apiKey,configSource,fetchImpl=fetch}={}) {
@@ -18,7 +19,7 @@ export async function probe({apiKey,configSource,fetchImpl=fetch}={}) {
   throw new Error('ARGUS_PROBE_RESPONSE_INVALID');
  return {status:'pass',model,synthetic:true,customerDataUsed:false,productionMutation:false};
 }
-if(process.argv[1]&&new URL(import.meta.url).pathname===process.argv[1]) {
+if(process.argv[1]&&new URL(import.meta.url).pathname===resolve(process.argv[1])) {
  try {
   const result=await probe({apiKey:process.env.ANTHROPIC_API_KEY,
    configSource:readFileSync('src/lib/ai/ai-config.ts','utf8')});
