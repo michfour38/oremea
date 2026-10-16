@@ -22,6 +22,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            scripts/anthropic-model-watch.mjs
+            scripts/anthropic-model-watch.test.mjs
+            src/lib/ai/ai-config.ts
+          sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -34,6 +41,13 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            scripts/anthropic-model-watch.mjs
+            scripts/anthropic-model-watch.test.mjs
+            src/lib/ai/ai-config.ts
+          sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -48,7 +62,6 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           AI_PRIMARY_MODEL: ${{ vars.AI_PRIMARY_MODEL }}
           AI_FALLBACK_MODEL: ${{ vars.AI_FALLBACK_MODEL }}
-          ANTHROPIC_WATCH_MODELS: ${{ vars.ANTHROPIC_WATCH_MODELS }}
       - name: Save successful source baseline
         if: ${{ always() && hashFiles('.anthropic-watch/state.json') != '' }}
         uses: actions/cache/save@v4

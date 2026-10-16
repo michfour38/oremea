@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
-import { readdir, readFile, mkdir, writeFile, rename } from 'node:fs/promises';
-import { dirname, join, relative, resolve } from 'node:path';
+import { readFile, mkdir, writeFile, rename } from 'node:fs/promises';
+import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 export const SOURCES = {
@@ -10,37 +10,23 @@ export const SOURCES = {
   pricing: 'https://platform.claude.com/docs/en/about-claude/pricing.md',
 };
 
-const SKIP = new Set(['node_modules', '.git', '.next', 'dist', 'build']);
 const sha = value => createHash('sha256').update(value).digest('hex');
+const MODEL_CONFIG = 'src/lib/ai/ai-config.ts';
 
 export async function inventory(root, env = {}) {
+  // ARGUS has one permitted source file. No recursive repository enumeration.
+  const file = resolve(root, MODEL_CONFIG);
+  const text = await readFile(file, 'utf8');
   const models = new Map();
   const add = (id, location) => {
     if (!/^claude-[a-z0-9.-]+$/.test(id)) throw new Error('Invalid configured model ID');
     models.set(id, [...new Set([...(models.get(id) || []), location])]);
   };
-  async function walk(directory) {
-    let entries;
-    try { entries = await readdir(directory, { withFileTypes: true }); }
-    catch (error) { if (error.code === 'ENOENT') return; throw error; }
-    for (const entry of entries) {
-      if (SKIP.has(entry.name) || entry.isSymbolicLink()) continue;
-      const path = join(directory, entry.name);
-      if (entry.isDirectory()) await walk(path);
-      else if (/\.[cm]?[jt]sx?$/.test(entry.name)) {
-        const text = await readFile(path, 'utf8');
-        for (const match of text.matchAll(/["'`](claude-[a-z0-9.-]+)["'`]/g)) {
-          add(match[1], `${relative(root, path)}:${text.slice(0, match.index).split('\n').length}`);
-        }
-      }
-    }
+  for (const match of text.matchAll(/["'`](claude-[a-z0-9.-]+)["'`]/g)) {
+    add(match[1], `${MODEL_CONFIG}:${text.slice(0, match.index).split('\n').length}`);
   }
-  for (const dir of ['src', 'app']) await walk(join(root, dir));
   for (const name of ['AI_PRIMARY_MODEL', 'AI_FALLBACK_MODEL']) {
     if (env[name]) add(env[name].trim(), `environment:${name}`);
-  }
-  for (const id of (env.ANTHROPIC_WATCH_MODELS || '').split(',').map(v => v.trim()).filter(Boolean)) {
-    add(id, 'environment:ANTHROPIC_WATCH_MODELS');
   }
   return [...models].sort(([a], [b]) => a.localeCompare(b)).map(([id, locations]) => ({ id, locations }));
 }
