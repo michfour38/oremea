@@ -63,7 +63,7 @@ export function SiteNav() {
 
           <nav className="hidden items-center gap-6 text-[11px] uppercase tracking-[0.18em] text-zinc-300 md:flex">
             <NavItem href="/explore" label="Explore" pathname={pathname} />
-            <NavItem href="/works" label="WORKS" pathname={pathname} />
+            <NavItem href="https://works.oremea.com" label="WORKS" pathname={pathname} />
             <NavItem href="/reviews" label="Reviews" pathname={pathname} />
             <NavItem href="/compare" label="Compare" pathname={pathname} />
             <NavItem href="/contact" label="Contact" pathname={pathname} />
