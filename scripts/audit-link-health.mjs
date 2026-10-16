@@ -25,7 +25,7 @@ const publicFiles = new Set(walk("public").map(path => "/" + relative("public", 
 const routeFiles = appFiles.filter(path => /\/(?:page|route)\.(?:tsx?|jsx?)$/.test(path));
 
 function routeMatcher(path) {
-  const segments = path.replace(/^app\//, "").replace(/\/(?:page|route)\.(?:tsx?|jsx?)$/, "")
+  const segments = path.replace(/^app\//, "").replace(/(?:^|\/)(?:page|route)\.(?:tsx?|jsx?)$/, "")
     .split("/").filter(s => s && !/^\(.*\)$/.test(s));
   return new RegExp("^" + (segments.map(segment => {
     if (/^\[\[\.\.\.[^\]]+\]\]$/.test(segment)) return "(?:/.*)?";
