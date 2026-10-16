@@ -7,9 +7,22 @@ function walk(dir) {
 }
 const files=[...walk('app'),...walk('components'),...walk('src')].filter(p=>/\.(tsx|ts|jsx|js)$/.test(p));
 const pages=walk('app').filter(p=>/\/page\.(tsx|ts|jsx|js)$/.test(p));
-const normalizeRoute=p=>'/'+relative('app',p).replace(/\\/g,'/').replace(/\/page\.[^.]+$/,'')
- .split('/').filter(s=>s&&!/^\(.*\)$/.test(s)).join('/');
-const patterns=pages.map(p=>normalizeRoute(p).replace(/\/[[][^\]]+\]/g,'/[^/]+').replace(/\/\[\[\.\.\.[^/]+\]\]/g,'(?:/.*)?')).map(p=>new RegExp('^'+p+'/?$'));
+const normalizeRoute=p=> {
+ const bits=relative('app',p).replace(/\\\\/g,'/').replace(/\\/page\\.[^.]+$/,'').split('/');
+ const segments=bits.filter(x=>x&&!/^\\(.*\\)$/.test(x));
+ return segments.length?'/'+segments.join('/'):'/';
+};
+const patterns=pages.map(p=>{
+ const route=normalizeRoute(p);
+ const segments=route.split('/').filter(Boolean);
+ const suffix=segments.map(seg=>{
+  if(/^\\[\\[\\.\\.\\.[^\\]]+\\]\\]$/.test(seg)) return '(?:/.*)?';
+  if(/^\\[\\.\\.\\.[^\\]]+\\]$/.test(seg)) return '/.+';
+  if(/^\\[[^\\]]+\\]$/.test(seg)) return '/[^/]+';
+  return '/'+seg.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&');
+ }).join('');
+ return new RegExp('^'+(suffix||'/')+'/?$');
+});
 const extraKnownRoutes=new Set(['/api','/sign-out']);
 const ignorePrefixes=['/api/','/_next/','/images/','/fonts/','/icons/','/public/','/assets/'];
 function valid(s) {
