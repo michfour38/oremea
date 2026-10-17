@@ -109,6 +109,15 @@ export default function RecognitionChat({
   const [isSending, setIsSending] = useState(false);
   const [isStartingNewChat, setIsStartingNewChat] = useState(false);
   const [error, setError] = useState("");
+  const [recoveryNotice, setRecoveryNotice] = useState(false);
+  // A participant's saved send ID is reused on each bounded retry.
+  const recovery = useRef({
+    attempts: 0,
+    timer: null as number | null,
+    hadOutage: false,
+    hadFallback: false,
+    inFlight: false,
+  });
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -194,6 +203,33 @@ export default function RecognitionChat({
     setPendingMessageId(null);
   }
 
+  useEffect(() => {
+    return () => {
+      if (recovery.current.timer !== null) {
+        window.clearTimeout(recovery.current.timer);
+      }
+    };
+  }, []);
+
+  function cancelRecoveryTimer() {
+    if (recovery.current.timer !== null) {
+      window.clearTimeout(recovery.current.timer);
+      recovery.current.timer = null;
+    }
+  }
+
+  function scheduleRecovery(savedTurn: RecognitionChatMessage) {
+    if (recovery.current.attempts >= 2 || recovery.current.timer !== null) return;
+    const delay = recovery.current.attempts === 0 ? 20_000 : 90_000;
+    recovery.current.timer = window.setTimeout(() => {
+      recovery.current.timer = null;
+      // Do not repeatedly send words when the tab is hidden or the device is offline.
+      if (document.visibilityState !== "visible" || !navigator.onLine) return;
+      recovery.current.attempts += 1;
+      void sendMessage(savedTurn);
+    }, delay);
+  }
+
   async function startNewChat() {
     if (isSending || isStartingNewChat) return;
 
@@ -204,6 +240,7 @@ export default function RecognitionChat({
       if (!confirmed) return;
     }
 
+    cancelRecoveryTimer();
     setIsStartingNewChat(true);
     setError("");
 
@@ -233,7 +270,9 @@ export default function RecognitionChat({
   async function sendMessage(savedTurn?: RecognitionChatMessage) {
     const content =
       savedTurn?.content ?? pendingLocalTurn?.content ?? draft.trim();
-    if (!content || isSending || isStartingNewChat) return;
+    if (!content || isSending || isStartingNewChat || recovery.current.inFlight) return;
+    recovery.current.inFlight = true;
+    cancelRecoveryTimer();
 
     const clientMessageId =
       savedTurn?.clientMessageId ??
@@ -261,6 +300,10 @@ export default function RecognitionChat({
       const data = await response.json();
 
       if (!response.ok || !data?.messages?.user || !data?.messages?.assistant) {
+        if (response.status === 503 && data?.saved && data?.message) {
+          recovery.current.hadOutage = true;
+          scheduleRecovery(data.message as RecognitionChatMessage);
+        }
         if (data?.saved && data?.message) {
           setMessages((current) =>
             mergeMessages(current, [data.message as RecognitionChatMessage]),
@@ -281,6 +324,18 @@ export default function RecognitionChat({
       );
       setPendingLocalTurn(null);
 
+      if (data.responseMode === "fallback") {
+        recovery.current.hadFallback = true;
+      } else if (data.responseMode === "structured" &&
+        (recovery.current.hadOutage || recovery.current.hadFallback)) {
+        setRecoveryNotice(true);
+        recovery.current.hadOutage = false;
+        recovery.current.hadFallback = false;
+      }
+      // The current turn has completed; never retry or replay it automatically.
+      cancelRecoveryTimer();
+      recovery.current.attempts = 0;
+
       if (savedTurn) {
         restoreDifferentStoredComposer(clientMessageId);
       } else {
@@ -295,6 +350,7 @@ export default function RecognitionChat({
           : "Recognition could not respond just now.",
       );
     } finally {
+      recovery.current.inFlight = false;
       setIsSending(false);
       window.requestAnimationFrame(() =>
         inputRef.current?.focus({ preventScroll: true }),
@@ -305,6 +361,21 @@ export default function RecognitionChat({
   return (
     <main className="min-h-screen overflow-x-hidden">
       <MemberNav />
+      {recoveryNotice ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-20 left-5 right-5 z-50 mx-auto max-w-md rounded-2xl border border-[var(--recognition-gold)] bg-[var(--recognition-bg)] px-5 py-4 shadow-2xl"
+        >
+          <p className="rec-text text-sm leading-6">
+            Recognition is responding again. Let's get back into it.
+          </p>
+          <button type="button" onClick={() => setRecoveryNotice(false)}
+            className="rec-primary-button mt-3 rounded-full border px-5 py-2 text-sm font-medium">
+            Continue
+          </button>
+        </div>
+      ) : null}
 
       {hasConversation ? (
         <div className="relative z-20 mx-auto flex w-full max-w-3xl justify-end px-5 pt-3 md:px-8">
