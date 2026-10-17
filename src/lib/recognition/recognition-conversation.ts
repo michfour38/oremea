@@ -470,6 +470,7 @@ Keep the reply under ${MAX_REPLY_WORDS} words and ask no more than one question.
     memory,
     model: result.model,
     usage: result.usage,
+    responseMode: "fallback" as const,
   };
 }
 
@@ -518,6 +519,7 @@ export async function generateRecognitionConversationReply({
         memory: nextMemory,
         model: result.model,
         usage: result.usage,
+        responseMode: "structured" as const,
       };
     } catch {
       console.warn(

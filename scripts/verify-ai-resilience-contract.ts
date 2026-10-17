@@ -133,3 +133,20 @@ assert.match(aiGateway, /new Set\(/,
   "Repeated configured model IDs must not double the failure time.");
 
 console.log("AI participant-progress resilience contract checks passed.");
+
+
+// ARGUS recovery: protect participant words and avoid unlimited paid retries.
+const recognitionChat = source("app/recognition/recognition-chat.tsx");
+assert.match(recognitionEngine, /responseMode: "fallback" as const/);
+assert.match(recognitionEngine, /responseMode: "structured" as const/);
+assert.match(recognitionRoute, /responseMode: generated\.responseMode/);
+assert.match(recognitionRoute, /ARGUS_RECOGNITION_FALLBACK_DELIVERED/);
+assert.match(recognitionChat, /recovery\.current\.attempts >= 2/);
+assert.match(recognitionChat, /document\.visibilityState !== "visible" \|\| !navigator\.onLine/);
+assert.match(recognitionChat, /void sendMessage\(savedTurn\)/);
+assert.match(recognitionChat, /response\.status === 503 && data\?\.saved && data\?\.message/);
+assert.match(recognitionChat, /recovery\.current\.inFlight/);
+assert.match(recognitionChat, /Recognition is responding again/);
+assert.match(recognitionChat, /setRecoveryNotice\(true\)/);
+assert.doesNotMatch(recognitionChat, /Notification\.requestPermission|PushManager\.subscribe/,
+  "Participant recovery must not silently opt anyone into push notifications.");

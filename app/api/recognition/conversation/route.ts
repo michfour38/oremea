@@ -387,6 +387,11 @@ export async function POST(request: Request) {
       memory: readRecognitionMemory(prepared.memorySnapshot),
     });
 
+    // ARGUS signal: emit only the response-path category, never participant text.
+    if (generated.responseMode === "fallback") {
+      console.warn("ARGUS_RECOGNITION_FALLBACK_DELIVERED");
+    }
+
     const assistantTurnIndex = prepared.userTurnIndex + 1;
     const saved = await prisma.$transaction(async (transaction) => {
       const lockKey = `recognition-thread:${user.id}`;
@@ -444,6 +449,7 @@ export async function POST(request: Request) {
             anchorCount: generated.memory.anchors.length,
             promptMessageCount: promptMessages.length,
             model: generated.model,
+            responseMode: generated.responseMode,
             inputTokens: generated.usage.inputTokens,
             outputTokens: generated.usage.outputTokens,
             cacheCreationInputTokens: generated.usage.cacheCreationInputTokens,
@@ -479,7 +485,10 @@ export async function POST(request: Request) {
       };
     });
 
-    return NextResponse.json({ ok: true, replayed: false, messages: saved });
+    return NextResponse.json({
+      ok: true, replayed: false, messages: saved,
+      responseMode: generated.responseMode,
+    });
   } catch (error) {
     console.error("POST /api/recognition/conversation failed:", error);
 
