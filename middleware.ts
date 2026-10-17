@@ -361,6 +361,8 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/recognition(.*)",
   "/api/recognition(.*)",
+  // Bearer-authenticated ARGUS export verifies its own machine credential.
+  "/api/internal/argus/recognition-status",
   "/api/webhooks/whop",
   "/compass/access(.*)",
 ]);
