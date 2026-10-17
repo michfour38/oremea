@@ -163,6 +163,13 @@ assert.match(telemetry, /structuredResponseCount/);
 assert.match(telemetry, /Cache-Control.*no-store/);
 assert.match(telemetry, /role: "assistant"/);
 assert.match(telemetry, /select: \{ created_at: true \}/);
+assert.match(telemetry, /pendingSavedTurnCount/);
+assert.match(telemetry, /latestPendingAt/);
+assert.match(telemetry, /message_count % 2/);
+assert.match(telemetry, /3 \* 60 \* 1000/);
+assert.match(telemetry, /SELECT COUNT\(\*\)::bigint AS pending_count/);
+assert.match(telemetry, /status = 'active'/);
+assert.doesNotMatch(telemetry, /SELECT[\\s\\S]*user_id|SELECT[\\s\\S]*content/);
 assert.doesNotMatch(telemetry, /select:\s*\{\s*(?:content|user_id|thread_id|client_message_id)/);
 
 // Machine-to-machine observations authenticate via scoped bearer token,
