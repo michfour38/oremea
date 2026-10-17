@@ -271,15 +271,14 @@ export default function RecognitionChat({
     const content =
       savedTurn?.content ?? pendingLocalTurn?.content ?? draft.trim();
     if (!content || isSending || isStartingNewChat || recovery.current.inFlight) return;
-    recovery.current.inFlight = true;
-    cancelRecoveryTimer();
-
     const clientMessageId =
       savedTurn?.clientMessageId ??
       pendingLocalTurn?.clientMessageId ??
       pendingMessageId ??
       crypto.randomUUID();
     if (!clientMessageId) return;
+    recovery.current.inFlight = true;
+    cancelRecoveryTimer();
 
     if (!savedTurn && !pendingLocalTurn) {
       setPendingMessageId(clientMessageId);
