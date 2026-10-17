@@ -3,7 +3,7 @@ name: ARGUS | Synthetic provider availability
 on:
   workflow_dispatch:
   schedule:
-    - cron: '37 5 * * *'
+    - cron: '37 5 * * 1'
   pull_request:
     paths:
       - 'scripts/argus-synthetic-probe.mjs'
