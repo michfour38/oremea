@@ -31,8 +31,9 @@ export async function GET(request: Request) {
 
   const observedAt = new Date();
   const since = new Date(observedAt.getTime() - 60 * 60 * 1000);
+  const staleBefore = new Date(observedAt.getTime() - 3 * 60 * 1000);
   const where = { role: "assistant", created_at: { gte: since } } as const;
-  const [fallbackResponseCount, structuredResponseCount, latestFallback, latestStructured] =
+  const [fallbackResponseCount, structuredResponseCount, latestFallback, latestStructured, pendingRows] =
     await Promise.all([
       prisma.recognition_messages.count({
         where: { ...where, evidence_snapshot: { path: ["responseMode"], equals: "fallback" } },
@@ -50,7 +51,21 @@ export async function GET(request: Request) {
         orderBy: { created_at: "desc" },
         select: { created_at: true },
       }),
+      // Thread turns alternate user/assistant. An odd message count with no
+      // assistant after three minutes is a stalled saved turn. Aggregate only;
+      // do not export identities or original language.
+      prisma.$queryRaw<Array<{ pending_count: bigint; latest_pending_at: Date | null }>>`
+        SELECT COUNT(*)::bigint AS pending_count,
+               MAX(last_message_at) AS latest_pending_at
+        FROM recognition_threads
+        WHERE status = 'active'
+          AND (message_count % 2) = 1
+          AND last_message_at >= ${since}
+          AND last_message_at < ${staleBefore}
+      `,
     ]);
+  const pendingSavedTurnCount = Number(pendingRows[0]?.pending_count ?? 0);
+  const latestPendingAt = pendingRows[0]?.latest_pending_at?.toISOString() ?? null;
 
   return NextResponse.json({
     schemaVersion: 1,
@@ -60,8 +75,10 @@ export async function GET(request: Request) {
     windowMinutes: 60,
     fallbackResponseCount,
     structuredResponseCount,
+    pendingSavedTurnCount,
+    latestPendingAt,
     latestFallbackAt: latestFallback?.created_at?.toISOString() ?? null,
     latestStructuredAt: latestStructured?.created_at?.toISOString() ?? null,
-    note: "A backup reply is a valid response, not automatically a full provider outage.",
+    note: "Backup replies and stalled saved turns indicate degradation, not necessarily a provider-wide outage.",
   }, { headers });
 }
