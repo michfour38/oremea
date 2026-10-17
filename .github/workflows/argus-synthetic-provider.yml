@@ -3,7 +3,7 @@ name: ARGUS | Synthetic provider availability
 on:
   workflow_dispatch:
   schedule:
-    - cron: '37 5 * * *'
+    - cron: '37 5 * * 1'
   pull_request:
     paths:
       - 'scripts/argus-synthetic-probe.mjs'
@@ -25,6 +25,7 @@ jobs:
             scripts/argus-synthetic-probe.mjs
             scripts/argus-synthetic-probe.test.mjs
             scripts/argus-change-gate.mjs
+            .github/workflows/argus-synthetic-provider.yml
             src/lib/ai/ai-config.ts
           sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4

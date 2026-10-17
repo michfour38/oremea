@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
@@ -120,4 +121,13 @@ test('inventory fails closed when designated config is absent', async t => {
   const root = await mkdtemp(join(tmpdir(), 'argus-missing-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   await assert.rejects(inventory(root), { code: 'ENOENT' });
+});
+
+
+test('pre-revenue model lifecycle watch runs daily without generation requests',()=>{
+ const workflow=readFileSync(new URL('../.github/workflows/anthropic-model-watch.yml',import.meta.url),'utf8');
+ assert.match(workflow,/cron: '23 5 \* \* \*'/);
+ assert.match(workflow,/workflow_dispatch:/);
+ const source=readFileSync(new URL('./anthropic-model-watch.mjs',import.meta.url),'utf8');
+ assert.doesNotMatch(source,/\/v1\/messages/);
 });
