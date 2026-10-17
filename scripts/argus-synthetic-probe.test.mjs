@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {probe} from './argus-synthetic-probe.mjs';
@@ -16,4 +17,13 @@ test('bad status, incorrect model, text or missing key are failures',async()=>{
  await assert.rejects(probe({configSource:source}),/KEY_MISSING/);
  for(const response of [new Response('x',{status:503}),Response.json({model:'wrong',stop_reason:'end_turn',content:[{type:'text',text:'ARGUS_OK'}]}),Response.json({model:'claude-sonnet-5',stop_reason:'end_turn',content:[{type:'text',text:'No'}]})])
  await assert.rejects(probe({apiKey:'dummy',configSource:source,fetchImpl:async()=>response}));
+});
+
+
+test('pre-revenue live paid probe runs weekly, with manual override and never on pull requests',()=>{
+ const workflow=readFileSync(new URL('../.github/workflows/argus-synthetic-provider.yml',import.meta.url),'utf8');
+ assert.match(workflow,/cron: '37 5 \* \* 1'/);
+ assert.match(workflow,/workflow_dispatch:/);
+ assert.match(workflow,/github\.event_name != 'pull_request'/);
+ assert.match(workflow,/ANTHROPIC_API_KEY: \$\{\{ secrets\.ANTHROPIC_API_KEY \}\}/);
 });
