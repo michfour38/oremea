@@ -168,6 +168,10 @@ assert.match(telemetry, /latestPendingAt/);
 assert.match(telemetry, /message_count % 2/);
 assert.match(telemetry, /3 \* 60 \* 1000/);
 assert.match(telemetry, /SELECT COUNT\(\*\)::bigint AS pending_count/);
+assert.match(telemetry, /pendingScope: "all_active_stalled_turns"/);
+const stalledSql = telemetry.slice(telemetry.indexOf("SELECT COUNT(*)::bigint AS pending_count"));
+assert.doesNotMatch(stalledSql, /last_message_at >=/,
+  "Active unanswered Recognition turns must never expire from ARGUS monitoring merely because they are old.");
 assert.match(telemetry, /status = 'active'/);
 assert.doesNotMatch(telemetry, /SELECT[\\s\\S]*user_id|SELECT[\\s\\S]*content/);
 assert.doesNotMatch(telemetry, /select:\s*\{\s*(?:content|user_id|thread_id|client_message_id)/);
