@@ -164,3 +164,9 @@ assert.match(telemetry, /Cache-Control.*no-store/);
 assert.match(telemetry, /role: "assistant"/);
 assert.match(telemetry, /select: \{ created_at: true \}/);
 assert.doesNotMatch(telemetry, /select:\s*\{\s*(?:content|user_id|thread_id|client_message_id)/);
+
+// Machine-to-machine observations authenticate via scoped bearer token,
+// not interactive Clerk cookies. The handler still fails closed without it.
+const routeMiddleware = source("middleware.ts");
+assert.match(routeMiddleware, /"\/api\/internal\/argus\/recognition-status"/);
+assert.match(telemetry, /if \(!authorised\(request\)\)/);
