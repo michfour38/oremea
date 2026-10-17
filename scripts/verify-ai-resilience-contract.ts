@@ -150,3 +150,17 @@ assert.match(recognitionChat, /Recognition is responding again/);
 assert.match(recognitionChat, /setRecoveryNotice\(true\)/);
 assert.doesNotMatch(recognitionChat, /Notification\.requestPermission|PushManager\.subscribe/,
   "Participant recovery must not silently opt anyone into push notifications.");
+
+
+// The operational ARGUS export is aggregate-only and bound to the existing
+// private Oremea → DAWN truth token. It cannot expose participant writing.
+const telemetry = source("app/api/internal/argus/recognition-status/route.ts");
+assert.match(telemetry, /DAWN_TRUTH_EXPORT_TOKEN/);
+assert.match(telemetry, /timingSafeEqual/);
+assert.match(telemetry, /aggregate_no_pii/);
+assert.match(telemetry, /fallbackResponseCount/);
+assert.match(telemetry, /structuredResponseCount/);
+assert.match(telemetry, /Cache-Control.*no-store/);
+assert.match(telemetry, /role: "assistant"/);
+assert.match(telemetry, /select: \{ created_at: true \}/);
+assert.doesNotMatch(telemetry, /select:\s*\{\s*(?:content|user_id|thread_id|client_message_id)/);
