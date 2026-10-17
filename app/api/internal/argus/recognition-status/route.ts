@@ -52,7 +52,9 @@ export async function GET(request: Request) {
         select: { created_at: true },
       }),
       // Thread turns alternate user/assistant. An odd message count with no
-      // assistant after three minutes is a stalled saved turn. Aggregate only;
+      // assistant after three minutes is a stalled saved turn, regardless of age.
+      // Old unresolved turns must not disappear simply because time passes.
+      // Aggregate only;
       // do not export identities or original language.
       prisma.$queryRaw<Array<{ pending_count: bigint; latest_pending_at: Date | null }>>`
         SELECT COUNT(*)::bigint AS pending_count,
@@ -60,7 +62,6 @@ export async function GET(request: Request) {
         FROM recognition_threads
         WHERE status = 'active'
           AND (message_count % 2) = 1
-          AND last_message_at >= ${since}
           AND last_message_at < ${staleBefore}
       `,
     ]);
@@ -77,8 +78,9 @@ export async function GET(request: Request) {
     structuredResponseCount,
     pendingSavedTurnCount,
     latestPendingAt,
+    pendingScope: "all_active_stalled_turns",
     latestFallbackAt: latestFallback?.created_at?.toISOString() ?? null,
     latestStructuredAt: latestStructured?.created_at?.toISOString() ?? null,
-    note: "Backup replies and stalled saved turns indicate degradation, not necessarily a provider-wide outage.",
+    note: "Response-mode counts cover one hour; stalled saved turns include all active unresolved turns older than three minutes. Neither signal alone proves a provider-wide outage.",
   }, { headers });
 }
