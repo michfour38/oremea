@@ -15,22 +15,6 @@ const routes = [
   { href: "/conduct", file: "app/(legal)/conduct/page.tsx", scope: "oremea" },
   { href: "/cookies", file: "app/(legal)/cookies/page.tsx", scope: "oremea" },
   { href: "/paia", file: "app/(legal)/paia/page.tsx", scope: "oremea" },
-  { href: "/works/terms", file: "app/works/terms/page.tsx", scope: "works" },
-  {
-    href: "/works/verification",
-    file: "app/works/verification/page.tsx",
-    scope: "works",
-  },
-  {
-    href: "/works/reviews-policy",
-    file: "app/works/reviews-policy/page.tsx",
-    scope: "works",
-  },
-  {
-    href: "/works/partner-disclosure",
-    file: "app/works/partner-disclosure/page.tsx",
-    scope: "works",
-  },
 ] as const;
 
 function source(file: string) {
@@ -42,8 +26,6 @@ function source(file: string) {
 const registry = source("src/lib/legal/legal-links.ts");
 const shell = source("components/legal/legal-document.tsx");
 const footer = source("components/site/site-footer.tsx");
-const worksFooter = source("components/works/works-legal-footer.tsx");
-const worksLayout = source("app/works/layout.tsx");
 
 for (const route of routes) {
   const page = source(route.file);
@@ -68,12 +50,6 @@ for (const route of routes) {
     );
   }
 
-  if (
-    route.scope === "works" &&
-    !page.includes("returnLink={WORKS_RETURN_LINK}")
-  ) {
-    throw new Error(route.file + " does not return to WORKS");
-  }
 }
 
 const returnLabelUses = shell.match(/← \{returnLink\.label\}/g)?.length ?? 0;
@@ -83,17 +59,8 @@ if (returnLabelUses < 2) {
   );
 }
 
-for (const required of ["LEGAL_LINKS", "WORKS_LEGAL_LINKS"]) {
-  if (!footer.includes(required)) {
-    throw new Error("Site footer does not use canonical " + required);
-  }
-  if (!worksFooter.includes(required)) {
-    throw new Error("WORKS footer does not use canonical " + required);
-  }
-}
-
-if (!worksLayout.includes("<WorksLegalFooter")) {
-  throw new Error("WORKS routes are not wrapped with the legal footer");
+if (!footer.includes("LEGAL_LINKS")) {
+  throw new Error("Oremea footer must use canonical legal links");
 }
 
 const legalSources = routes.map((route) => source(route.file)).join("\n");
@@ -110,7 +77,7 @@ if (legalSources.includes("April 2026")) {
 console.log(
   "Legal navigation contract passed for " +
     routes.length +
-    " routes and both legal footers.",
+    " Oremea routes.",
 );
 
 // Preserve the founder-approved South African footer wording.
