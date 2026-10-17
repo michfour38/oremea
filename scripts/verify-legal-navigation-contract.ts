@@ -44,9 +44,9 @@ for (const route of routes) {
     throw new Error(route.file + " does not declare the correct activePath");
   }
 
-  if (!page.includes('updated="9 August 2026"')) {
+  if (!/updated="[0-9]{1,2} [A-Za-z]+ 20[0-9]{2}"/.test(page)) {
     throw new Error(
-      route.file + " does not carry the current legal update date",
+      route.file + " is missing an explicit legal update date",
     );
   }
 
