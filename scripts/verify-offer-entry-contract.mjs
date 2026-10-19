@@ -26,16 +26,16 @@ for (const offer of offers) {
     assert.ok(source.includes(expected), `${offer.name} ${where} entry changed or disappeared: ${expected}`);
   }
 }
-assert.match(home, /href=\\{product\\.href\\}/, "Homepage offer actions must use their product destination, not a dead decorative control.");
-assert.match(explore, /href=\\{product\\.href\\}/, "Explore offer buttons must navigate to their declared product.");
-assert.match(nav, /href=\\{product\\.href\\}/, "The mobile product navigation must link to each product host.");
-assert.match(home, /onClick=\\{\\(event\\) => event\\.stopPropagation\\(\\)\\}/, "A homepage offer link must not accidentally toggle its parent card.");
+assert.match(home, /href=\{product\.href\}/, "Homepage offer actions must use their product destination, not a dead decorative control.");
+assert.match(explore, /href=\{product\.href\}/, "Explore offer buttons must navigate to their declared product.");
+assert.match(nav, /href=\{product\.href\}/, "The mobile product navigation must link to each product host.");
+assert.match(home, /onClick=\{\(event\) => event\.stopPropagation\(\)\}/, "A homepage offer link must not accidentally toggle its parent card.");
 
 // The three public product hosts have distinct root rewrite contracts.
-assert.match(middleware, /host === RECOGNITION_HOST[\\s\\S]*?rewriteRecognitionPath\\(req, "\\/recognition\\/purchase"\\)/);
-assert.match(middleware, /host === RESONANCE_HOST[\\s\\S]*?rewriteResonancePath\\(req, "\\/resonance\\/enter"\\)/);
-assert.match(middleware, /host === COMPASS_HOST[\\s\\S]*?rewriteCompassPath\\(req, "\\/compass\\/access"\\)/);
-assert.match(middleware, /isCompassProtectedPath\\(req\\)[\\s\\S]*?auth\\.protect\\(\\)/, "Compass protected routes must remain protected.");
+assert.match(middleware, /host === RECOGNITION_HOST[\s\S]*?rewriteRecognitionPath\(req, "\/recognition\/purchase"\)/);
+assert.match(middleware, /host === RESONANCE_HOST[\s\S]*?rewriteResonancePath\(req, "\/resonance\/enter"\)/);
+assert.match(middleware, /host === COMPASS_HOST[\s\S]*?rewriteCompassPath\(req, "\/compass\/access"\)/);
+assert.match(middleware, /isCompassProtectedPath\(req\)[\s\S]*?auth\.protect\(\)/, "Compass protected routes must remain protected.");
 
 const publicRoutes = middleware.split("const isPublicRoute = createRouteMatcher([")[1]?.split("]);")[0];
 assert.ok(publicRoutes, "Public Clerk matcher missing");
