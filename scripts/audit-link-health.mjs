@@ -215,7 +215,7 @@ if (EXTERNAL) {
       // A public landing page returning 200 only after silently redirecting to
       // sign-in is not a healthy anonymous entry point.
       const finalPath = final ? new URL(final).pathname : "";
-      if (criticalPublicUrls.includes(url) && /^\\/sign-(?:in|up)(?:\\/|$)/.test(finalPath)) {
+      if (criticalPublicUrls.includes(url) && /^\/sign-(?:in|up)(?:\/|$)/.test(finalPath)) {
         broken.push("critical-public-paths: unexpected sign-in redirect " + url + " → " + final);
       } else if (status === 404 || status === 410) {
         for (const ref of (remote.get(url) || siteRoutes.get(url) || [])) broken.push(ref.file + ":" + ref.line + " external HTTP " + status + " " + url);
