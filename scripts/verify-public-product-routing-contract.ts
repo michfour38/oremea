@@ -139,7 +139,7 @@ assert.match(
 );
 assert.doesNotMatch(
   selfReflection,
-  /\\b(?:you|your|yours)\\b/i,
+  /\b(?:you|your|yours)\b/i,
   "The founder's personal reflection must not address the visitor in the second person.",
 );
 
