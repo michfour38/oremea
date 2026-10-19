@@ -16,7 +16,7 @@ export default function OremeaAboutPage() {
 
       <section className="mx-auto max-w-3xl px-6 pb-24">
         <h2 className="mb-16 text-3xl font-light tracking-tight">
-          What I See When I Look At You
+          What I See When I Look At Myself
         </h2>
 
         <div className="space-y-6 text-lg leading-9 text-[#d8d2c6]">

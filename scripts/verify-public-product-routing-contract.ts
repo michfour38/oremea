@@ -130,4 +130,17 @@ assert.match(
   "Expired Compass records must keep their clean Compass Archive destination.",
 );
 
+
+const selfReflection = readFileSync("app/about/oremea/page.tsx", "utf8");
+assert.match(
+  selfReflection,
+  /What I See When I Look At Myself/,
+  "The founder's Oremea reflection must remain explicitly addressed to herself.",
+);
+assert.doesNotMatch(
+  selfReflection,
+  /\b(?:you|your|yours)\b/i,
+  "The founder's personal reflection must not address the visitor in the second person.",
+);
+
 console.log("Public product routing contract checks passed.");
