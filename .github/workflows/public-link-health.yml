@@ -1,0 +1,35 @@
+name: Oremea public link health
+
+on:
+  pull_request:
+    branches:
+      - main
+  schedule:
+    # Daily public-link check; reports definitive 404/410 responses without touching billing.
+    - cron: "15 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-link-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out Oremea
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check source links, static assets and public external destinations
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # PR code cannot fix an already-deployed site until deployment.
+            node scripts/audit-link-health.mjs --external --report-only
+          else
+            node scripts/audit-link-health.mjs --external
+          fi
