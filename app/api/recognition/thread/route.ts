@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
@@ -43,7 +44,7 @@ export async function POST() {
       createdAt: thread.created_at.toISOString(),
     });
   } catch (error) {
-    console.error("POST /api/recognition/thread failed:", error);
+    logPrivateError("POST /api/recognition/thread failed:", error);
     return NextResponse.json(
       {
         ok: false,
@@ -98,7 +99,7 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ ok: true, deletedThreadId: thread.id });
   } catch (error) {
-    console.error("DELETE /api/recognition/thread failed:", error);
+    logPrivateError("DELETE /api/recognition/thread failed:", error);
     return NextResponse.json(
       {
         ok: false,

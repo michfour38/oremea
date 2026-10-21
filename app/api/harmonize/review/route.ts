@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { buildCycleSummary } from "@/lib/harmonize/build-cycle-summary"
 import { inferReviewOutcome } from "@/lib/harmonize/review-outcome"
 import { auth } from "@clerk/nextjs/server"
@@ -89,7 +90,7 @@ different_in_system:
       review,
     })
   } catch (error) {
-    console.error("POST /api/harmonize/review failed:", error)
+    logPrivateError("POST /api/harmonize/review failed:", error)
 
     return NextResponse.json(
       { success: false, error: "Failed to save Harmonize review" },

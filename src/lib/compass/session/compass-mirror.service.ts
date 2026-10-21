@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { OREMEA_EVIDENCE_BOUNDARY } from "@/src/lib/oremea/evidence-boundary"
 
 import type {
@@ -69,7 +70,7 @@ Do not add JSON, XML, markdown fences, metadata, or commentary about the retry.`
       const data = await res.json()
 
       if (!res.ok) {
-        console.error(`Compass Mirror API error on attempt ${attempt + 1}:`, data)
+        logPrivateError("src/lib/compass/session/compass-mirror.service.ts:72")
         continue
       }
 
@@ -86,14 +87,9 @@ Do not add JSON, XML, markdown fences, metadata, or commentary about the retry.`
 
       if (text) return text
 
-      console.warn(
-        `Compass Mirror returned no readable text on attempt ${attempt + 1}; retrying before using the deterministic reflection fallback.`,
-      )
+      logPrivateError("src/lib/compass/session/compass-mirror.service.ts:89")
     } catch (error) {
-      console.error(
-        `Compass Mirror request failed on attempt ${attempt + 1}:`,
-        error,
-      )
+      logPrivateError("src/lib/compass/session/compass-mirror.service.ts:93", error)
     }
   }
 

@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { OREMEA_EVIDENCE_BOUNDARY } from "@/src/lib/oremea/evidence-boundary"
 import { MIRROR_AUTHORING_STANDARD } from "@/src/lib/oremea/mirror-authoring"
 import {
@@ -173,10 +174,7 @@ export async function evaluateCompassDescentAnswer({
         }),
     })
   } catch (error) {
-    console.error(
-      "Compass Descent decision recovered after Mirror failure:",
-      error instanceof Error ? error.message : "Unknown Mirror failure.",
-    )
+    logPrivateError("Compass Descent decision recovered after Mirror failure:")
 
     return recoverCompassDescentDecision({
       layer,
@@ -605,7 +603,7 @@ async function callClaude(prompt: string, maxTokens: number): Promise<string> {
   const data = await response.json()
 
   if (!response.ok) {
-    console.error("Compass Descent API error:", data)
+    logPrivateError("Compass Descent API error:")
     throw new Error("Mirror could not generate the next Descent movement.")
   }
 

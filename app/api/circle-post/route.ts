@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
@@ -100,12 +101,12 @@ export async function POST(req: Request) {
       flagged: riskScore >= 40,
     });
   } catch (error) {
-    console.error("circle-post POST error:", error);
+    logPrivateError("circle-post POST error:", error);
 
     return NextResponse.json(
       {
         ok: false,
-        error: error instanceof Error ? error.message : "Unknown server error",
+        error: "Unable to save the post.",
       },
       { status: 500 }
     );

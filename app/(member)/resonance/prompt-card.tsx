@@ -1,4 +1,5 @@
 "use client";
+import { logPrivateError } from "@/src/lib/security/private-errors";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -80,7 +81,7 @@ export default function PromptCard({ prompt }: PromptCardProps) {
       setShowEdit(false);
       router.refresh();
     } catch (error) {
-      console.error("Resonance reflection save request failed:", error);
+      logPrivateError("Resonance reflection save request failed:", error);
       setSubmitError(
         "The save request could not reach Resonance. [CLIENT_NETWORK]",
       );

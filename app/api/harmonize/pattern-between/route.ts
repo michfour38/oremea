@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -57,7 +58,7 @@ export async function GET(request: Request) {
       patternBetween,
     })
   } catch (error) {
-    console.error("GET /api/harmonize/pattern-between failed:", error)
+    logPrivateError("GET /api/harmonize/pattern-between failed:", error)
 
     return NextResponse.json(
       { success: false, error: "Failed to load pattern between" },

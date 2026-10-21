@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -62,7 +63,7 @@ export async function GET(request: Request) {
       entries,
     })
   } catch (error) {
-    console.error("GET /api/harmonize/entries failed:", error)
+    logPrivateError("GET /api/harmonize/entries failed:", error)
 
     return NextResponse.json(
       { success: false, error: "Failed to load Harmonize entries" },

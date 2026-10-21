@@ -7,7 +7,9 @@ const globalForPrisma = global as unknown as {
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: ["error"],
+    // Prisma's raw error event can include query parameters. Route diagnostics
+    // go through the allowlisted private-error logger instead.
+    log: [],
   });
 
 if (process.env.NODE_ENV !== "production") {

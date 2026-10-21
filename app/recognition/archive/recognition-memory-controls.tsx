@@ -48,6 +48,7 @@ export default function RecognitionMemoryControls({
   }
 
   async function clearMemory() {
+    if (!window.confirm("Clear remembered excerpts from all your Recognition chats? Your saved conversations remain in the Archive.")) return;
     setWorkingKey("clear");
     setError("");
 
@@ -86,7 +87,7 @@ export default function RecognitionMemoryControls({
           <p className="rec-text mt-4 text-sm leading-7">
             These are exact excerpts from your own messages that Recognition may
             carry into a future turn when they are relevant. Removing an excerpt
-            stops it being used as long-term memory; your original conversation
+            removes its carried-forward copies from your Recognition memory; your original conversation
             remains unchanged in the archive.
           </p>
         </div>
@@ -98,7 +99,7 @@ export default function RecognitionMemoryControls({
             onClick={() => void clearMemory()}
             className="rec-text rounded-full border border-[var(--recognition-user-border)] px-4 py-2 text-xs transition hover:border-[var(--recognition-composer-focus)] hover:text-[var(--recognition-gold)] disabled:opacity-40"
           >
-            Clear remembered excerpts
+            Clear all remembered excerpts
           </button>
         ) : null}
       </div>

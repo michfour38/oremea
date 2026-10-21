@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -70,7 +71,7 @@ const participantLabel = cycle.participant_labels.find(
 },
     })
   } catch (error) {
-    console.error("GET /api/harmonize/cycle/summary failed:", error)
+    logPrivateError("GET /api/harmonize/cycle/summary failed:", error)
 
     return NextResponse.json(
       { success: false, error: "Failed to load cycle summary" },

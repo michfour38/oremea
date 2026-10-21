@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -70,7 +71,7 @@ export async function POST(request: Request) {
       participant,
     })
   } catch (error) {
-    console.error("POST /api/harmonize/participant failed:", error)
+    logPrivateError("POST /api/harmonize/participant failed:", error)
 
     return NextResponse.json(
       {

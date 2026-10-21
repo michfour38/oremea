@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import type { Metadata } from "next";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -89,7 +90,7 @@ async function getProductTestOwnerStatus(
           maskedEmail,
         };
   } catch (error) {
-    console.error("Owner demo access recovery failed:", error);
+    logPrivateError("Owner demo access recovery failed:", error);
     return {
       active: false,
       reason: "recovery_failed",

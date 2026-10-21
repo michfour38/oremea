@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -59,7 +60,7 @@ export async function GET(request: Request) {
       memory,
     })
   } catch (error) {
-    console.error("GET /api/harmonize/system/memory failed:", error)
+    logPrivateError("GET /api/harmonize/system/memory failed:", error)
 
     return NextResponse.json(
       { success: false, error: "Failed to load system memory" },

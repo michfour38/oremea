@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import {
   getCompassBoundaryMessage,
   type CompassScopeCategory,
@@ -111,7 +112,7 @@ async function callConversationModel(prompt: string): Promise<string | null> {
     const data = await res.json()
 
     if (!res.ok) {
-      console.error("EL Conversation API error:", data)
+      logPrivateError("EL Conversation API error:")
       return null
     }
 
@@ -128,7 +129,7 @@ async function callConversationModel(prompt: string): Promise<string | null> {
 
     return text || null
   } catch (error) {
-    console.error("EL Conversation request failed:", error)
+    logPrivateError("EL Conversation request failed:", error)
     return null
   }
 }

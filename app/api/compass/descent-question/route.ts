@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -75,7 +76,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, question })
   } catch (error) {
-    console.error("POST /api/compass/descent-question failed:", error)
+    logPrivateError("POST /api/compass/descent-question failed:", error)
 
     return NextResponse.json(
       {

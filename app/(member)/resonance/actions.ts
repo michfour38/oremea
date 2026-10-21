@@ -1,4 +1,5 @@
 "use server";
+import { logPrivateError } from "@/src/lib/security/private-errors";
 
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
@@ -186,11 +187,7 @@ export async function submitPromptAction(formData: FormData) {
     revalidatePath("/resonance");
     return { ok: true };
   } catch (error) {
-    console.error("Resonance reflection save failed on server:", {
-      userId,
-      promptId,
-      error,
-    });
+    logPrivateError("Resonance reflection save failed on server:");
 
     return { ok: false, error: promptSaveMessage(error) };
   }

@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { Prisma } from "@prisma/client";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
@@ -60,7 +61,7 @@ export async function GET() {
       session,
     });
   } catch (error) {
-    console.error("GET /api/compass/session failed:", error);
+    logPrivateError("GET /api/compass/session failed:", error);
 
     return NextResponse.json(
       {
@@ -237,7 +238,7 @@ export async function POST(request: Request) {
       session,
     });
   } catch (error) {
-    console.error("POST /api/compass/session failed:", error);
+    logPrivateError("POST /api/compass/session failed:", error);
 
     return NextResponse.json(
       {

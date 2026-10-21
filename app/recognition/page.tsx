@@ -67,6 +67,9 @@ export default async function RecognitionPage() {
 
   return (
     <RecognitionChat
+      key={`${user.id}:${thread.id}`}
+      participantId={user.id}
+      threadId={thread.id}
       firstName={user.firstName ?? null}
       initialMessages={initialMessages}
     />

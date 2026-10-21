@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -66,10 +67,7 @@ export async function PATCH(request: Request) {
       system: updatedSystem,
     })
   } catch (error) {
-    console.error(
-      "PATCH /api/harmonize/system/name failed:",
-      error,
-    )
+    logPrivateError("PATCH /api/harmonize/system/name failed:", error)
 
     return NextResponse.json(
       {

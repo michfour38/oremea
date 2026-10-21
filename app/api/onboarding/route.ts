@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error(error);
+    logPrivateError("app/api/onboarding/route.ts:34", error);
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }

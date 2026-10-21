@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -27,17 +28,27 @@ export async function GET(request: Request) {
       )
     }
 
-    const system = await prisma.harmonize_systems.findUnique({
+    const system = await prisma.harmonize_systems.findFirst({
       where: {
         id: systemId,
+        participants: { some: { profile_id: userId, active: true } },
       },
-      include: {
+      select: {
         cycles: {
           where: {
             status: "archived",
           },
           orderBy: {
             started_at: "desc",
+          },
+          select: {
+            id: true,
+            status: true,
+            started_at: true,
+            participant_labels: {
+              where: { participants: { profile_id: userId, active: true } },
+              select: { label: true },
+            },
           },
         },
       },
@@ -53,14 +64,16 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       archive: {
-        conversations: system.cycles,
+        conversations: system.cycles.map((cycle) => ({
+          id: cycle.id,
+          status: cycle.status,
+          started_at: cycle.started_at,
+          displayTitle: cycle.participant_labels[0]?.label || "Conversation",
+        })),
       },
     })
   } catch (error) {
-    console.error(
-      "GET /api/harmonize/archive/summary failed:",
-      error,
-    )
+    logPrivateError("GET /api/harmonize/archive/summary failed:", error)
 
     return NextResponse.json(
       {

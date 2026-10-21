@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -57,7 +58,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ ok: true, output })
   } catch (error) {
-    console.error("GET /api/compass/mirror failed:", error)
+    logPrivateError("GET /api/compass/mirror failed:", error)
     return NextResponse.json({ ok: false, output: null }, { status: 500 })
   }
 }
@@ -131,15 +132,13 @@ export async function POST(request: Request) {
       output,
     })
   } catch (error) {
-    console.error("POST /api/compass/mirror failed:", error)
+    logPrivateError("POST /api/compass/mirror failed:", error)
 
     return NextResponse.json(
       {
         ok: false,
         error:
-          error instanceof Error
-            ? error.message
-            : "Unknown Compass Mirror error.",
+          "Unable to prepare the reflection.",
       },
       { status: 500 },
     )

@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { Prisma } from "@prisma/client"
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
@@ -47,7 +48,7 @@ export async function GET() {
       boundaryMessage: getCompassBoundaryMessage(state.scopeCategory),
     })
   } catch (error) {
-    console.error("GET /api/compass/ending failed:", error)
+    logPrivateError("GET /api/compass/ending failed:", error)
     return NextResponse.json(
       { error: "Failed to load Compass ending." },
       { status: 500 },
@@ -439,7 +440,7 @@ export async function POST(request: Request) {
       boundaryMessage: getCompassBoundaryMessage(state.scopeCategory),
     })
   } catch (error) {
-    console.error("POST /api/compass/ending failed:", error)
+    logPrivateError("POST /api/compass/ending failed:", error)
     return NextResponse.json(
       { error: "Failed to update Compass ending." },
       { status: 500 },

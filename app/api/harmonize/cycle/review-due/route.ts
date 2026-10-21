@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
       cycle: updatedCycle,
     })
   } catch (error) {
-    console.error("POST /api/harmonize/cycle/review-due failed:", error)
+    logPrivateError("POST /api/harmonize/cycle/review-due failed:", error)
 
     return NextResponse.json(
       { success: false, error: "Failed to mark cycle review due" },

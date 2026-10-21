@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
@@ -227,9 +228,7 @@ export async function POST(request: Request) {
     if (currentProductId && membership.productId === currentProductId) {
       const user = await findExactlyOneOremeaUser(membership.email);
       if (!user) {
-        console.error(
-          `Current membership ${membership.membershipId} could not be matched to one Oremea account for ${membership.email}.`,
-        );
+        logPrivateError("app/api/webhooks/whop/route.ts:230");
         return NextResponse.json(
           { error: "Current member account could not be matched." },
           { status: 422 },
@@ -242,9 +241,7 @@ export async function POST(request: Request) {
           listPendingCurrentInvitations(user.id),
         ]);
         if (!launch.launched || invitations.length === 0) {
-          console.error(
-            `Current membership ${membership.membershipId} attempted activation without a live invitation for ${membership.email}.`,
-          );
+          logPrivateError("app/api/webhooks/whop/route.ts:245");
           return NextResponse.json(
             { error: "The Current membership is not eligible for activation." },
             { status: 422 },
@@ -277,9 +274,7 @@ export async function POST(request: Request) {
     if (compassAccess === "monthly_subscription") {
       const user = await findExactlyOneOremeaUser(membership.email);
       if (!user) {
-        console.error(
-          `Compass membership ${membership.membershipId} could not be matched to one Oremea account for ${membership.email}.`,
-        );
+        logPrivateError("app/api/webhooks/whop/route.ts:280");
         return NextResponse.json(
           { error: "Compass member account could not be matched." },
           { status: 422 },
@@ -323,9 +318,7 @@ export async function POST(request: Request) {
   if (resonanceWeek) {
     const user = await findExactlyOneOremeaUser(payment.email);
     if (!user) {
-      console.error(
-        `Resonance payment ${payment.paymentId} could not be matched to one Oremea account for ${payment.email}.`,
-      );
+      logPrivateError("app/api/webhooks/whop/route.ts:326");
       return NextResponse.json(
         { error: "Resonance buyer account could not be matched." },
         { status: 422 },
@@ -357,9 +350,7 @@ export async function POST(request: Request) {
   if (compassAccess === "30_day_pass") {
     const user = await findExactlyOneOremeaUser(payment.email);
     if (!user) {
-      console.error(
-        `Compass payment ${payment.paymentId} could not be matched to one Oremea account for ${payment.email}.`,
-      );
+      logPrivateError("app/api/webhooks/whop/route.ts:360");
       return NextResponse.json(
         { error: "Compass buyer account could not be matched." },
         { status: 422 },

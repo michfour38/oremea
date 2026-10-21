@@ -2,6 +2,11 @@
 
 import MemberNav from "@/app/(member)/member-nav";
 import Image from "next/image";
+import { useUser } from "@clerk/nextjs";
+import {
+  readRecognitionComposer, writeRecognitionComposer, removeRecognitionComposer,
+  clearRecognitionDrafts,
+} from "@/src/lib/recognition/composer-storage";
 import { useEffect, useRef, useState } from "react";
 
 export type RecognitionChatMessage = {
@@ -12,17 +17,11 @@ export type RecognitionChatMessage = {
   createdAt: string;
 };
 
-type StoredRecognitionComposer = {
-  draft: string;
-  clientMessageId: string | null;
-};
-
 type PendingRecognitionTurn = {
   content: string;
   clientMessageId: string;
 };
 
-const COMPOSER_STORAGE_KEY = "oremea:recognition:composer:v1";
 
 function RecognitionDots() {
   return (
@@ -46,43 +45,6 @@ function RecognitionDots() {
   );
 }
 
-function readStoredComposer(): StoredRecognitionComposer | null {
-  try {
-    const raw = window.localStorage.getItem(COMPOSER_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<StoredRecognitionComposer>;
-    if (typeof parsed.draft !== "string") return null;
-    return {
-      draft: parsed.draft,
-      clientMessageId:
-        typeof parsed.clientMessageId === "string"
-          ? parsed.clientMessageId
-          : null,
-    };
-  } catch {
-    return null;
-  }
-}
-
-function storeComposer(draft: string, clientMessageId: string | null) {
-  try {
-    window.localStorage.setItem(
-      COMPOSER_STORAGE_KEY,
-      JSON.stringify({ draft, clientMessageId }),
-    );
-  } catch {
-    // Local draft protection is best-effort; the database remains authoritative.
-  }
-}
-
-function clearStoredComposer() {
-  try {
-    window.localStorage.removeItem(COMPOSER_STORAGE_KEY);
-  } catch {
-    // Ignore storage restrictions in privacy-hardened browsers.
-  }
-}
-
 function mergeMessages(
   current: RecognitionChatMessage[],
   incoming: RecognitionChatMessage[],
@@ -96,10 +58,25 @@ function mergeMessages(
 export default function RecognitionChat({
   firstName,
   initialMessages,
+  participantId,
+  threadId,
 }: {
+  participantId: string;
+  threadId: string;
   firstName: string | null;
   initialMessages: RecognitionChatMessage[];
 }) {
+  const { isLoaded, user } = useUser();
+  const identityMatches = isLoaded && user?.id === participantId;
+  const identityRef = useRef(identityMatches);
+  identityRef.current = identityMatches;
+  function readStoredComposer() {
+    return identityRef.current ? readRecognitionComposer(participantId, threadId) : null;
+  }
+  function storeComposer(draft: string, clientMessageId: string | null) {
+    if (identityRef.current) writeRecognitionComposer(participantId, threadId, draft, clientMessageId);
+  }
+  function clearStoredComposer() { removeRecognitionComposer(participantId, threadId); }
   const [messages, setMessages] = useState(initialMessages);
   const [draft, setDraft] = useState("");
   const [pendingMessageId, setPendingMessageId] = useState<string | null>(null);
@@ -136,6 +113,7 @@ export default function RecognitionChat({
   const hasConversation = messages.length > 0 || pendingLocalTurn !== null;
 
   useEffect(() => {
+    if (!identityMatches) return;
     const stored = readStoredComposer();
     if (stored?.clientMessageId) {
       const matchingSavedTurn = initialMessages.find(
@@ -162,16 +140,29 @@ export default function RecognitionChat({
     return () => window.cancelAnimationFrame(frame);
     // Initial server state is intentionally read once; later message changes are local.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [identityMatches]);
 
   useEffect(() => {
-    if (!composerHydrated || savedTurnAwaitingReply) return;
+    if (isLoaded && !identityMatches) {
+      clearRecognitionDrafts();
+      setDraft("");
+      setPendingMessageId(null);
+      setPendingLocalTurn(null);
+      setMessages([]);
+      setComposerHydrated(false);
+      cancelRecoveryTimer();
+      window.location.replace(user?.id ? window.location.pathname : "/sign-in");
+    }
+  }, [isLoaded, identityMatches, user?.id]);
+
+  useEffect(() => {
+    if (!identityMatches || !composerHydrated || savedTurnAwaitingReply) return;
     if (draft) {
       storeComposer(draft, pendingMessageId);
     } else if (!pendingMessageId) {
       clearStoredComposer();
     }
-  }, [composerHydrated, draft, pendingMessageId, savedTurnAwaitingReply]);
+  }, [identityMatches, composerHydrated, draft, pendingMessageId, savedTurnAwaitingReply]);
 
   useEffect(() => {
     const textarea = inputRef.current;
@@ -231,7 +222,7 @@ export default function RecognitionChat({
   }
 
   async function startNewChat() {
-    if (isSending || isStartingNewChat) return;
+    if (!identityRef.current || isSending || isStartingNewChat) return;
 
     if (hasConversation) {
       const confirmed = window.confirm(
@@ -249,6 +240,7 @@ export default function RecognitionChat({
         method: "POST",
       });
       const data = await response.json();
+      if (!identityRef.current) return;
       if (!response.ok || !data?.ok) {
         throw new Error(
           data?.error || "Recognition could not begin a new chat just now.",
@@ -270,7 +262,7 @@ export default function RecognitionChat({
   async function sendMessage(savedTurn?: RecognitionChatMessage) {
     const content =
       savedTurn?.content ?? pendingLocalTurn?.content ?? draft.trim();
-    if (!content || isSending || isStartingNewChat || recovery.current.inFlight) return;
+    if (!identityRef.current || !content || isSending || isStartingNewChat || recovery.current.inFlight) return;
     const clientMessageId =
       savedTurn?.clientMessageId ??
       pendingLocalTurn?.clientMessageId ??
@@ -294,9 +286,10 @@ export default function RecognitionChat({
       const response = await fetch("/api/recognition/conversation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, clientMessageId }),
+        body: JSON.stringify({ content, clientMessageId, threadId }),
       });
       const data = await response.json();
+      if (!identityRef.current) return;
 
       if (!response.ok || !data?.messages?.user || !data?.messages?.assistant) {
         if (response.status === 503 && data?.saved && data?.message) {
@@ -356,6 +349,8 @@ export default function RecognitionChat({
       );
     }
   }
+
+  if (!identityMatches) return null;
 
   return (
     <main className="min-h-screen overflow-x-hidden">

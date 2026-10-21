@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
@@ -125,7 +126,7 @@ export async function GET() {
       try {
         activeDay = await getRunActiveDay(activeRun.id, activeRun.week_number);
       } catch (error) {
-        console.error("Profile could not resolve the active Resonance day:", error);
+        logPrivateError("Profile could not resolve the active Resonance day:", error);
       }
     }
 
@@ -214,7 +215,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("GET /api/profile/products failed:", error);
+    logPrivateError("GET /api/profile/products failed:", error);
 
     return NextResponse.json(
       { success: false, error: "Failed to load profile products" },

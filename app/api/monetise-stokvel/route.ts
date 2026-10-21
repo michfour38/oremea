@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      console.error("Stokvel signup email failed:", error);
+      logPrivateError("Stokvel signup email failed:", error);
       return NextResponse.json(
         {
           success: false,
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
         "Your request is in. Join the WhatsApp group to help form the Founding 17.",
     });
   } catch (error) {
-    console.error("Stokvel signup request failed:", error);
+    logPrivateError("Stokvel signup request failed:", error);
     return NextResponse.json(
       {
         success: false,

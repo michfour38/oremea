@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -198,15 +199,7 @@ export async function POST(request: Request) {
           ),
         })
       } catch (guidanceError) {
-        console.error(
-          "Reckoning guidance generation failed:",
-          {
-            cycleId,
-            participantId: participant.id,
-            riskType: shareReview.riskType,
-            error: guidanceError,
-          },
-        )
+        logPrivateError("Reckoning guidance generation failed:")
       }
 
       /*
@@ -277,14 +270,7 @@ export async function POST(request: Request) {
          * Do not return a failure that could cause the
          * client to retry and create a duplicate entry.
          */
-        console.error(
-          "Witness-anchor enrichment failed:",
-          {
-            entryId: entry.id,
-            cycleId: entry.cycle_id,
-            error: anchorError,
-          },
-        )
+        logPrivateError("Witness-anchor enrichment failed:")
       }
     }
 
@@ -295,18 +281,13 @@ export async function POST(request: Request) {
       witnessAnchorUpdated,
     })
   } catch (error) {
-    console.error(
-      "POST /api/harmonize/entry failed:",
-      error,
-    )
+    logPrivateError("POST /api/harmonize/entry failed:", error)
 
     return NextResponse.json(
       {
         success: false,
         error:
-          error instanceof Error
-            ? error.message
-            : "Failed to save Harmonize entry",
+          "Failed to save Harmonize entry",
       },
       {
         status: 500,

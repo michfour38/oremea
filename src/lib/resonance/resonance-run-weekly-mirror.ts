@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { prisma } from "@/lib/prisma";
 
 import { OREMEA_EVIDENCE_BOUNDARY } from "@/src/lib/oremea/evidence-boundary";
@@ -483,7 +484,7 @@ Return only the finished Closing Mirror text. Do not add headings, metadata, JSO
       const data = await res.json();
 
       if (!res.ok) {
-        console.error(`Mirror API error on attempt ${attempt + 1}:`, data);
+        logPrivateError("src/lib/resonance/resonance-run-weekly-mirror.ts:486");
         continue;
       }
 
@@ -499,14 +500,9 @@ Return only the finished Closing Mirror text. Do not add headings, metadata, JSO
 
       if (text) return text;
 
-      console.warn(
-        `Closing Mirror returned no readable text on attempt ${attempt + 1}; retrying before surfacing an error.`,
-      );
+      logPrivateError("src/lib/resonance/resonance-run-weekly-mirror.ts:502");
     } catch (error) {
-      console.error(
-        `Mirror API request failed on attempt ${attempt + 1}:`,
-        error,
-      );
+      logPrivateError("src/lib/resonance/resonance-run-weekly-mirror.ts:506", error);
     }
   }
 

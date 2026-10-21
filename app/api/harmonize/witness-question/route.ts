@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -167,15 +168,7 @@ export async function POST(request: Request) {
     })
 
     if (!result?.reply) {
-      console.warn("WITNESS FALLBACK USED", {
-        cycleId,
-        participantId: participant.id,
-        latestAnswer,
-        anchor:
-          witness.anchorDefinition?.anchor ?? null,
-        signalSource:
-          witness.strongestSignal?.source ?? null,
-      })
+      logPrivateError("WITNESS FALLBACK USED")
     }
 
     return NextResponse.json({
@@ -187,18 +180,13 @@ export async function POST(request: Request) {
         witness.readyForSharedSpace,
     })
   } catch (error) {
-    console.error(
-      "POST /api/harmonize/witness-question failed:",
-      error,
-    )
+    logPrivateError("POST /api/harmonize/witness-question failed:", error)
 
     return NextResponse.json(
       {
         success: false,
         error:
-          error instanceof Error
-            ? error.message
-            : "Failed to generate witness question",
+          "Unable to load the next question.",
       },
       {
         status: 500,

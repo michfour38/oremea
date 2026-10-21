@@ -1,4 +1,5 @@
 "use client";
+import { logPrivateError } from "@/src/lib/security/private-errors";
 
 import MemberNav from "@/app/(member)/member-nav";
 import { CompassAreaFlow } from "@/components/compass/CompassAreaFlow";
@@ -147,7 +148,7 @@ const backLockRef = useRef(false);
           setPhase("intro");
         }
       } catch (error) {
-        console.error("Failed to load Compass session:", error);
+        logPrivateError("Failed to load Compass session:", error);
         window.location.replace("/");
       } finally {
         setSessionLoaded(true);
@@ -436,7 +437,7 @@ async function generateAreaMirror(updatedAreaResponses: CompassAreaResponse[]) {
 
     setAreaMirrorOutput("");
   } catch (error) {
-    console.error("Compass Area Mirror failed:", error);
+    logPrivateError("Compass Area Mirror failed:", error);
     setAreaMirrorOutput("");
   }
 }
@@ -467,7 +468,7 @@ async function generateCompassMirror(
 
     setCompassMirrorOutput("");
   } catch (error) {
-    console.error("Compass Mirror failed:", error);
+    logPrivateError("Compass Mirror failed:", error);
     setCompassMirrorOutput("");
   }
 }
@@ -646,10 +647,7 @@ function beginDiscussion(savedMirror: string) {
       },
     ]);
   } catch (error) {
-    console.error(
-      "EL conversation failed:",
-      error,
-    );
+    logPrivateError("EL conversation failed:", error);
 
     setDiscussionMessages([
       ...nextMessages,

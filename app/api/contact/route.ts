@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      console.error("Contact email failed:", error);
+      logPrivateError("Contact email failed:", error);
       return NextResponse.json(
         {
           success: false,
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
       message: "Your message has been sent to Oremea.",
     });
   } catch (error) {
-    console.error("Contact request failed:", error);
+    logPrivateError("Contact request failed:", error);
     return NextResponse.json(
       {
         success: false,

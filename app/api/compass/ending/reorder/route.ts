@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
@@ -145,7 +146,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, state: nextState });
   } catch (error) {
-    console.error("POST /api/compass/ending/reorder failed:", error);
+    logPrivateError("POST /api/compass/ending/reorder failed:", error);
     return NextResponse.json(
       { error: "Compass could not save the new Map order." },
       { status: 500 },

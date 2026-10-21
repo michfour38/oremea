@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { Resend } from "resend";
 
 function escapeHtml(value: string) {
@@ -112,7 +113,7 @@ export async function sendPartyWelcomeEmail({
   });
 
   if (error) {
-    console.error("Party welcome email failed:", error);
+    logPrivateError("Party welcome email failed:", error);
     return false;
   }
 
