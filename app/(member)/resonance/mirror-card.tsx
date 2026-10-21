@@ -1,4 +1,5 @@
 "use client";
+import { logPrivateError } from "@/src/lib/security/private-errors";
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -87,7 +88,7 @@ export default function MirrorCard({
       setSaved(true);
       router.refresh();
     } catch (error) {
-      console.error("Resonance deeper reflection save request failed:", error);
+      logPrivateError("Resonance deeper reflection save request failed:", error);
       setSubmitError(
         "The save request could not reach Resonance. [CLIENT_NETWORK]",
       );

@@ -347,8 +347,8 @@ assert.match(
 );
 assert.match(
   chatSource,
-  /oremea:recognition:composer:v1/,
-  "Recognition must keep an unsent or in-flight composer locally across refresh.",
+  /readRecognitionComposer\(participantId, threadId\)/,
+  "Recognition recovery must be explicitly account- and thread-bound.",
 );
 assert.match(
   chatSource,
@@ -436,8 +436,8 @@ assert.doesNotMatch(
 const memoryApiSource = readFileSync("app/api/recognition/memory/route.ts", "utf8");
 assert.match(
   memoryApiSource,
-  /EMPTY_RECOGNITION_MEMORY/,
-  "Participants must be able to clear Recognition's long-term memory index.",
+  /mutateRecognitionMemoryCopies/,
+  "Participants must be able to clear carried-forward Recognition memory copies.",
 );
 const archiveSource = readFileSync("app/recognition/archive/page.tsx", "utf8");
 assert.match(

@@ -1,25 +1,14 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { currentUser } from "@clerk/nextjs/server";
-import type { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
-import { prisma } from "@/lib/prisma";
-import {
-  EMPTY_RECOGNITION_MEMORY,
-  readRecognitionMemory,
-} from "@/src/lib/recognition/recognition-conversation";
-import { getActiveRecognitionThread } from "@/src/lib/recognition/recognition-thread";
+import { mutateRecognitionMemoryCopies } from "@/src/lib/recognition/recognition-memory-mutation";
 
 export async function DELETE(request: Request) {
   try {
     const user = await currentUser();
     if (!user) {
       return NextResponse.json({ ok: false }, { status: 401 });
-    }
-
-    const thread = await getActiveRecognitionThread(user.id);
-
-    if (!thread) {
-      return NextResponse.json({ ok: true, anchors: [] });
     }
 
     const body = await request.json().catch(() => ({}));
@@ -30,27 +19,11 @@ export async function DELETE(request: Request) {
         : null;
     const quote = typeof body?.quote === "string" ? body.quote : null;
 
-    const current = readRecognitionMemory(thread.memory_snapshot);
-    const next = clear
-      ? EMPTY_RECOGNITION_MEMORY
-      : {
-          version: 1 as const,
-          anchors: current.anchors.filter(
-            (anchor) =>
-              !(anchor.turnIndex === turnIndex && anchor.quote === quote),
-          ),
-        };
-
-    await prisma.recognition_threads.update({
-      where: { id: thread.id },
-      data: {
-        memory_snapshot: next as Prisma.InputJsonValue,
-      },
-    });
+    const next = await mutateRecognitionMemoryCopies({ userId: user.id, clear, turnIndex, quote });
 
     return NextResponse.json({ ok: true, anchors: next.anchors });
   } catch (error) {
-    console.error("DELETE /api/recognition/memory failed:", error);
+    logPrivateError("DELETE /api/recognition/memory failed:", error);
     return NextResponse.json(
       {
         ok: false,

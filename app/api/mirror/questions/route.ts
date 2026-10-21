@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
@@ -186,7 +187,7 @@ Preserve the participant evidence and write both questions as actual questions e
       const data = await res.json();
 
       if (!res.ok) {
-        console.error(`Daily Mirror API error on attempt ${attempt + 1}:`, data);
+        logPrivateError("app/api/mirror/questions/route.ts:189");
         continue;
       }
 
@@ -203,14 +204,9 @@ Preserve the participant evidence and write both questions as actual questions e
       const parsed = parseDailyMirror(text);
       if (parsed) return parsed;
 
-      console.warn(
-        `Daily Mirror response could not be parsed on attempt ${attempt + 1}; retrying before surfacing an error.`,
-      );
+      logPrivateError("app/api/mirror/questions/route.ts:206");
     } catch (error) {
-      console.error(
-        `Daily Mirror request failed on attempt ${attempt + 1}:`,
-        error,
-      );
+      logPrivateError("app/api/mirror/questions/route.ts:210", error);
     }
   }
 

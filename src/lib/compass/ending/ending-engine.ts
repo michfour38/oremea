@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { OREMEA_EVIDENCE_BOUNDARY } from "@/src/lib/oremea/evidence-boundary"
 
 import type {
@@ -83,7 +84,7 @@ async function requestEndingModel(prompt: string): Promise<string | null> {
     const data = await response.json()
 
     if (!response.ok) {
-      console.error("Compass ending engine API error:", data)
+      logPrivateError("Compass ending engine API error:")
       return null
     }
 
@@ -100,7 +101,7 @@ async function requestEndingModel(prompt: string): Promise<string | null> {
 
     return text || null
   } catch (error) {
-    console.error("Compass ending engine request failed:", error)
+    logPrivateError("Compass ending engine request failed:", error)
     return null
   }
 }

@@ -54,13 +54,14 @@
     "test:member-nav-product": "tsx scripts/verify-member-nav-product-contract.ts",
     "test:creator-silver-key": "tsx scripts/verify-creator-silver-key-contract.ts",
     "test:account-access": "tsx scripts/verify-account-access-contract.ts && tsx scripts/verify-account-deletion-contract.ts && npm run test:creator-silver-key",
-    "test:launch": "npm run test:central-pricing && npm run test:production-migrations && npm run test:backend-hygiene && npm run test:superseded-boundary && npm run test:participant-sovereignty && npm run test:ai-resilience && npm run test:resonance-content && npm run test:reviews && npm run test:public-product-routing && npm run test:route-references && npm run test:legal-navigation && npm run test:link-health && npm run test:offer-entry && npm run test:recognition-pricing && npm run test:recognition-funnel && npm run test:provider-neutral-funnels && npm run test:recognition-conversation && npm run test:commerce-routing && npm run test:public-pricing && npm run test:compass && npm run test:current && npm run test:dawn-truth && npm run test:product-marketing && npm run test:product-reset && npm run test:member-nav-product && npm run test:account-access && npm run test:affiliates",
+    "test:launch": "npm run test:participant-security && npm run test:central-pricing && npm run test:production-migrations && npm run test:backend-hygiene && npm run test:superseded-boundary && npm run test:participant-sovereignty && npm run test:ai-resilience && npm run test:resonance-content && npm run test:reviews && npm run test:public-product-routing && npm run test:route-references && npm run test:legal-navigation && npm run test:link-health && npm run test:offer-entry && npm run test:recognition-pricing && npm run test:recognition-funnel && npm run test:provider-neutral-funnels && npm run test:recognition-conversation && npm run test:commerce-routing && npm run test:public-pricing && npm run test:compass && npm run test:current && npm run test:dawn-truth && npm run test:product-marketing && npm run test:product-reset && npm run test:member-nav-product && npm run test:account-access && npm run test:affiliates",
     "test:affiliates": "tsx scripts/verify-affiliate-contract.ts && tsx scripts/verify-affiliate-economics-observer.ts && tsx scripts/verify-creator-acquisition-economics.ts",
     "test:resonance-room-funnel": "tsx scripts/verify-resonance-room-funnel-contract.ts",
     "test:legal-navigation": "tsx scripts/verify-legal-navigation-contract.ts",
     "test:link-health": "node scripts/audit-link-health.mjs",
     "test:link-health:external": "node scripts/audit-link-health.mjs --external",
-    "test:offer-entry": "node scripts/verify-offer-entry-contract.mjs"
+    "test:offer-entry": "node scripts/verify-offer-entry-contract.mjs",
+    "test:participant-security": "tsx scripts/verify-participant-security.ts"
   },
   "prisma": {
     "schema": "./prisma",
@@ -76,7 +77,7 @@
     "@trpc/react-query": "^11.0.0-rc.370",
     "@trpc/server": "^11.0.0-rc.370",
     "@whop/checkout": "0.7.0",
-    "next": "^15.5.24",
+    "next": "15.5.28",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "resend": "^6.12.3",
@@ -89,8 +90,9 @@
     "@types/react-dom": "^19.2.5",
     "autoprefixer": "^10.4.19",
     "eslint": "^8",
-    "eslint-config-next": "^15.5.24",
+    "eslint-config-next": "15.5.28",
     "postcss": "^8.5.23",
+    "prisma": "5.22.0",
     "tailwindcss": "^3.4.3",
     "tsx": "^4.21.0",
     "typescript": "^5"
@@ -103,6 +105,7 @@
     "next": {
       "postcss": ">=8.5.23 <9"
     },
-    "sharp": ">=0.35.4 <0.36"
+    "sharp": ">=0.35.4 <0.36",
+    "source-map-js": ">=1.2.2 <2"
   }
 }

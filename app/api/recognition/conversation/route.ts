@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { currentUser } from "@clerk/nextjs/server";
 import type { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
@@ -173,6 +174,13 @@ export async function POST(request: Request) {
       userId: user.id,
       primaryEmail,
     });
+
+    if (body.threadId !== thread.id) {
+      return NextResponse.json(
+        { ok: false, error: "Recognition changed. Refresh before continuing." },
+        { status: 409 },
+      );
+    }
 
     const savedRetry = await readSavedMessagePair({
       threadId: thread.id,
@@ -426,7 +434,7 @@ export async function POST(request: Request) {
 
       const currentThread = await transaction.recognition_threads.findUnique({
         where: { id: thread.id },
-        select: { message_count: true, status: true },
+        select: { message_count: true, status: true, memory_snapshot: true },
       });
       if (
         !currentThread ||
@@ -467,7 +475,10 @@ export async function POST(request: Request) {
       await transaction.recognition_threads.update({
         where: { id: thread.id },
         data: {
-          memory_snapshot: generated.memory as Prisma.InputJsonValue,
+          // A memory deletion during generation outranks the stale model snapshot.
+          memory_snapshot: (JSON.stringify(currentThread.memory_snapshot) === JSON.stringify(prepared.memorySnapshot)
+            ? generated.memory
+            : currentThread.memory_snapshot) as Prisma.InputJsonValue,
           message_count: assistantTurnIndex,
           last_message_at: now,
           primary_email: primaryEmail ?? undefined,
@@ -490,7 +501,7 @@ export async function POST(request: Request) {
       responseMode: generated.responseMode,
     });
   } catch (error) {
-    console.error("POST /api/recognition/conversation failed:", error);
+    logPrivateError("POST /api/recognition/conversation failed:", error);
 
     if (error instanceof RecognitionMessageIdConflictError) {
       return NextResponse.json(

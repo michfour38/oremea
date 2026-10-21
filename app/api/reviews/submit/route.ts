@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
@@ -110,7 +111,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      console.error("Review submission email failed:", error);
+      logPrivateError("Review submission email failed:", error);
       return NextResponse.json(
         {
           success: false,
@@ -126,7 +127,7 @@ export async function POST(request: NextRequest) {
         "Thank you. Your reflection has reached Oremea for human review. Nothing is published automatically.",
     });
   } catch (error) {
-    console.error("Review submission failed:", error);
+    logPrivateError("Review submission failed:", error);
     return NextResponse.json(
       {
         success: false,

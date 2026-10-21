@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -20,8 +21,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing reviewId" }, { status: 400 })
     }
 
-    const review = await prisma.harmonize_share_reviews.findUnique({
-      where: { id: reviewId },
+    const review = await prisma.harmonize_share_reviews.findFirst({
+      where: {
+        id: reviewId,
+        entries: { participants: { profile_id: userId, active: true } },
+      },
       include: {
         entries: {
           include: {
@@ -42,7 +46,7 @@ export async function POST(request: Request) {
     }
 
     const participant = review.entries.cycles.systems.participants.find(
-      (p) => p.profile_id === userId && p.active,
+      (p) => p.profile_id === userId && p.active && p.id === review.entries.participant_id,
     )
 
     if (!participant) {
@@ -52,20 +56,27 @@ export async function POST(request: Request) {
       )
     }
 
-    const updatedReview = await prisma.harmonize_share_reviews.update({
-      where: { id: reviewId },
+    const updatedReview = await prisma.harmonize_share_reviews.updateMany({
+      where: {
+        id: reviewId,
+        entries: { participants: { profile_id: userId, active: true } },
+      },
       data: {
         approved: true,
         reviewed_at: new Date(),
       },
     })
 
+    if (updatedReview.count !== 1) {
+      return NextResponse.json({ error: "Review not found" }, { status: 404 })
+    }
+
     return NextResponse.json({
       success: true,
-      review: updatedReview,
+      review: { id: reviewId, approved: true },
     })
   } catch (error) {
-    console.error("POST /api/harmonize/share-review/approve failed:", error)
+    logPrivateError("POST /api/harmonize/share-review/approve failed:", error)
 
     return NextResponse.json(
       { success: false, error: "Failed to approve share review" },

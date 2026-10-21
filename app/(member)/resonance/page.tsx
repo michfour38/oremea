@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
@@ -101,7 +102,7 @@ export default async function ResonancePage() {
     });
   } catch (error) {
     contentLoadFailed = true;
-    console.error("Resonance content failed to load:", error);
+    logPrivateError("Resonance content failed to load:", error);
   }
 
   const backgrounds = getResonanceBackgrounds(

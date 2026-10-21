@@ -1,4 +1,5 @@
 "use client";
+import { logPrivateError } from "@/src/lib/security/private-errors";
 
 import { useEffect, useState } from "react";
 
@@ -110,7 +111,7 @@ export default function MirrorOutput({
 
         setAnswersSaved(data?.answered === true);
       } catch (error) {
-        console.error("Saved Daily Mirror load failed:", error);
+        logPrivateError("Saved Daily Mirror load failed:", error);
         setQuestionsError("Today's Mirror could not be loaded. Please try again.");
       }
     }
@@ -168,7 +169,7 @@ export default function MirrorOutput({
       setAnswerTwo("");
       setAnswersSaved(false);
     } catch (error) {
-      console.error("Daily Mirror generation failed:", error);
+      logPrivateError("Daily Mirror generation failed:", error);
       setQuestionsError(
         error instanceof Error && error.message
           ? error.message
@@ -215,7 +216,7 @@ export default function MirrorOutput({
       setAnswerTwo(data.answers[1]);
       setAnswersSaved(data?.answered === true);
     } catch (error) {
-      console.error("2Q answer save failed:", error);
+      logPrivateError("2Q answer save failed:", error);
       setAnswersError(true);
     } finally {
       setAnswersSaving(false);

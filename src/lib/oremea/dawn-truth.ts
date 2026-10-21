@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import {
   oremeaDawnCommerceMetrics,
   unavailableDawnCommerceMetrics,
@@ -18,7 +19,7 @@ export async function oremeaDawnTruthSnapshot() {
       commerceMetrics: { ...commerceMetrics, providerEconomics },
     };
   } catch (error) {
-    console.error("DAWN commerce telemetry could not be aggregated.", error);
+    logPrivateError("DAWN commerce telemetry could not be aggregated.", error);
     return {
       ...productTruth,
       commerceMetrics: unavailableDawnCommerceMetrics(),

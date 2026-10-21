@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import {
   auth,
   currentUser,
@@ -294,10 +295,7 @@ export async function GET(request: Request) {
           ?.emailAddress || null,
     })
   } catch (error) {
-    console.error(
-      "GET /api/harmonize/join failed:",
-      error,
-    )
+    logPrivateError("GET /api/harmonize/join failed:", error)
 
     return NextResponse.json(
       {
@@ -646,10 +644,7 @@ export async function POST(
       participant,
     })
   } catch (error) {
-    console.error(
-      "POST /api/harmonize/join failed:",
-      error,
-    )
+    logPrivateError("POST /api/harmonize/join failed:", error)
 
     if (
       error instanceof InviteClaimError

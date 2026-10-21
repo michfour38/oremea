@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
       cycle: updatedCycle,
     })
   } catch (error) {
-    console.error("POST /api/harmonize/pause failed:", error)
+    logPrivateError("POST /api/harmonize/pause failed:", error)
 
     return NextResponse.json(
       { success: false, error: "Failed to pause Harmonize cycle" },

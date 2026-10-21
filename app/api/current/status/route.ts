@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
@@ -86,7 +87,7 @@ export async function GET() {
       })),
     });
   } catch (error) {
-    console.error("GET /api/current/status failed:", error);
+    logPrivateError("GET /api/current/status failed:", error);
     return NextResponse.json(
       { member: false, error: "The Current status could not be loaded." },
       { status: 500 },

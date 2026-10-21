@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -54,12 +55,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, row });
   } catch (error) {
-    console.error("POST /api/mirror/feedback failed:", error);
+    logPrivateError("POST /api/mirror/feedback failed:", error);
     return NextResponse.json(
       {
         ok: false,
         error:
-          error instanceof Error ? error.message : "Unknown feedback error",
+          "Unable to save feedback.",
       },
       { status: 500 }
     );

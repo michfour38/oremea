@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -129,7 +130,7 @@ export async function POST(request: NextRequest) {
           : "Saved privately.",
     });
   } catch (error) {
-    console.error("Feedback save failed:", error);
+    logPrivateError("Feedback save failed:", error);
     return NextResponse.json(
       {
         success: false,

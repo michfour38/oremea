@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -190,7 +191,7 @@ export async function POST(request: Request) {
       invitations,
     })
   } catch (error) {
-    console.error("POST /api/harmonize/invite failed:", error)
+    logPrivateError("POST /api/harmonize/invite failed:", error)
 
     return NextResponse.json(
       {
@@ -296,10 +297,7 @@ export async function DELETE(request: Request) {
       invitation: revokedInvitation,
     })
   } catch (error) {
-    console.error(
-      "DELETE /api/harmonize/invite failed:",
-      error,
-    )
+    logPrivateError("DELETE /api/harmonize/invite failed:", error)
 
     return NextResponse.json(
       {

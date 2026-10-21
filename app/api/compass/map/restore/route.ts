@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { Prisma } from "@prisma/client";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
@@ -151,7 +152,7 @@ export async function POST(request: Request) {
       state: nextState,
     });
   } catch (error) {
-    console.error("POST /api/compass/map/restore failed:", error);
+    logPrivateError("POST /api/compass/map/restore failed:", error);
     return NextResponse.json(
       { error: "Compass could not return this goal to the Map yet." },
       { status: 500 },

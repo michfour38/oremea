@@ -40,7 +40,7 @@ assert.doesNotMatch(
 );
 assert.match(
   memoryRouteSource,
-  /EMPTY_RECOGNITION_MEMORY/,
+  /mutateRecognitionMemoryCopies/,
   "Participants must be able to clear carried-forward Recognition memory without deleting transcript history.",
 );
 assert.match(

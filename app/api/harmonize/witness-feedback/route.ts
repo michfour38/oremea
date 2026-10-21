@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -99,15 +100,13 @@ export async function POST(request: Request) {
       feedback: feedbackEntry,
     })
   } catch (error) {
-    console.error("POST /api/harmonize/witness-feedback failed:", error)
+    logPrivateError("POST /api/harmonize/witness-feedback failed:", error)
 
     return NextResponse.json(
       {
         success: false,
         error:
-          error instanceof Error
-            ? error.message
-            : "Failed to save witness feedback",
+          "Unable to save feedback.",
       },
       { status: 500 },
     )

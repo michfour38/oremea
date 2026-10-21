@@ -121,6 +121,6 @@ export async function POST(request: Request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Account deletion failed.";
     const status = message === "Unauthorized" ? 401 : message === "Forbidden" ? 403 : 500;
-    return json({ error: message }, status);
+    return json({ error: status === 500 ? "Account deletion failed." : message }, status);
   }
 }

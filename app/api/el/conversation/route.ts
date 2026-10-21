@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -141,15 +142,13 @@ export async function POST(request: Request) {
       result,
     })
   } catch (error) {
-    console.error("POST /api/el/conversation failed:", error)
+    logPrivateError("POST /api/el/conversation failed:", error)
 
     return NextResponse.json(
       {
         ok: false,
         error:
-          error instanceof Error
-            ? error.message
-            : "Unknown EL conversation error.",
+          "Unable to continue the conversation.",
       },
       { status: 500 },
     )

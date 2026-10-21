@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { Resend } from "resend";
 
 type SendRecognitionEmailArgs = {
@@ -82,6 +83,6 @@ export async function sendRecognitionEmail({
       `,
     });
   } catch (error) {
-    console.error("Recognition email failed:", error);
+    logPrivateError("Recognition email failed:", error);
   }
 }

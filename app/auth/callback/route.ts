@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 // app/auth/callback/route.ts
 // Handles Supabase auth callbacks: email confirmation, magic link sign-in.
 // Exchanges the code for a session, then redirects to the intended destination.
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
-      console.error('[auth/callback] Code exchange failed:', error.message);
+      logPrivateError("[auth/callback] Code exchange failed:");
       return NextResponse.redirect(new URL('/login?error=auth_callback_failed', requestUrl.origin));
     }
   }

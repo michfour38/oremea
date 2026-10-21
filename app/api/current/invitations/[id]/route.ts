@@ -1,3 +1,4 @@
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
@@ -56,13 +57,11 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
       { status: 400 },
     );
   } catch (error) {
-    console.error("POST /api/current/invitations/[id] failed:", error);
+    logPrivateError("POST /api/current/invitations/[id] failed:", error);
     return NextResponse.json(
       {
         error:
-          error instanceof Error
-            ? error.message
-            : "The Current invitation could not be updated.",
+          "The Current invitation could not be updated.",
       },
       { status: 500 },
     );

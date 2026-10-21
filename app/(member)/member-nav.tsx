@@ -1,5 +1,6 @@
 "use client"
 
+import { clearRecognitionDrafts } from "@/src/lib/recognition/composer-storage"
 import { SignOutButton } from "@clerk/nextjs"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
@@ -226,6 +227,7 @@ export default function MemberNav() {
                 <div className="mt-2 border-t border-zinc-800 pt-2">
                   <SignOutButton signOutOptions={{ redirectUrl: "/" }}>
                     <button
+                      onClick={() => clearRecognitionDrafts()}
                       type="button"
                       className="block w-full rounded-xl px-4 py-3 text-center text-sm text-zinc-300 transition hover:bg-zinc-900 hover:text-white"
                     >
