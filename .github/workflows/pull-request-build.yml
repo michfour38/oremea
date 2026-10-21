@@ -20,6 +20,7 @@ env:
 
 jobs:
   production-build:
+    timeout-minutes: 15
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
@@ -39,6 +40,7 @@ jobs:
         run: npm run build
 
   pull-request-check:
+    timeout-minutes: 15
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
