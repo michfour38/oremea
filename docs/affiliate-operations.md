@@ -10,7 +10,7 @@ policy once and deliberately applying the corresponding Whop settings.
 Use `/admin/affiliates` for policy, provider economics and the Whop dashboard link.
 Whop → Affiliates → Set the affiliate commission for a specific user accepts the
 named creator's email/username, percentage, recurring/first-payment choice and
-approved products. Use the policy's approved creator rate and recurring payments.
+approved products. The approved 2026-10-23 acquisition policy is 70% on eligible open products and 70% for approved creator deals. Preserve the previously chosen recurring-payments behavior unless explicitly changed by the owner. Update open global/member rates as applicable; inspect every existing named custom deal because it can override the global rate. Product discoverability, private/invitation-only status, and Whop live rates cannot be inferred from this repository policy.
 Never use a public URL, form field, self-declared role or DAWN recommendation as
 creator approval. Standard members inherit the global rate when the member rate
 is zero. The Current remains invitation-only and has no affiliate activation.
@@ -55,8 +55,8 @@ approve creators, change rates, activate paid creator arrangements or move funds
 
 ## Verification boundary
 
-Standard product rates and external link were saved in production on 2026-09-27.
-Whop displays recurring global rewards and supports named recurring custom offers.
+Historical standard 30% product rates and external link were saved in production on 2026-09-27. The 70% repository policy proposed on 2026-10-23 does not itself edit Whop; live rates and per-user overrides must be verified and changed deliberately in Whop.
+Whop supports recurring global rewards and named recurring custom offers.
 No named creator was approved by this task. Actual standard and creator payment
 tests, add-on attribution and reconciled net revenue require a real affiliate
 identity and provider transaction evidence. Unit tests are not those live tests.
