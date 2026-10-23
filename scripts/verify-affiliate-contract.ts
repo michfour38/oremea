@@ -6,16 +6,16 @@ import { OREMEA_AFFILIATE_POLICY } from "../src/lib/oremea/affiliate-policy";
 import { createVisitCheckout } from "../src/lib/whop/visit-payments";
 
 async function main() {
-  assert.equal(OREMEA_AFFILIATE_POLICY.standardRate, 0.3);
-  assert.equal(OREMEA_AFFILIATE_POLICY.approvedCreatorRate, 0.4);
+  assert.equal(OREMEA_AFFILIATE_POLICY.standardRate, 0.7);
+  assert.equal(OREMEA_AFFILIATE_POLICY.approvedCreatorRate, 0.7);
   assert.equal(OREMEA_AFFILIATE_POLICY.dawnIncomeAllocation, 0);
   for (const invalid of [null, undefined, "", "a&rate=40", "https://evil.test", "x".repeat(101)]) assert.equal(affiliateCode(invalid), null);
   assert.equal(affiliateCheckoutUrl("https://whop.com/checkout/plan_x/?redirect_url=x", "creator.one"), "https://whop.com/checkout/plan_x/?redirect_url=x&a=creator.one");
   assert.equal(affiliateCheckoutUrl("https://whop.com.evil.test/", "creator"), "https://whop.com.evil.test/");
   assert.equal(affiliateCheckoutUrl("https://whop.com/checkout/plan_x/", null), "https://whop.com/checkout/plan_x/");
   const costs = {platformAndPaymentCents:175,affiliateProcessingCents:25,taxAndRemittanceCents:0,refundsAndDisputesCents:0};
-  assert.equal(affiliateEconomics(5000,"standard",costs).commissionCents,1500);
-  assert.equal(affiliateEconomics(5000,"approved_creator",costs).retainedRevenueCents,2800);
+  assert.equal(affiliateEconomics(5000,"standard",costs).commissionCents,3500);
+  assert.equal(affiliateEconomics(5000,"approved_creator",costs).retainedRevenueCents,1300);
   assert.equal(affiliateEconomics(5000,"direct",costs).commissionCents,0);
   assert.equal(affiliateEconomics(5000,"standard",{...costs,platformAndPaymentCents:null}).retainedRevenueCents,null);
   assert.equal(affiliateEconomics(5000,"standard",costs,1400).retainedRevenueCents,3400);
