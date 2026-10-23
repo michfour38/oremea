@@ -1,6 +1,6 @@
 # Creator referrals
 
-Updated 2026-10-23: eligible standard/open affiliates and specifically approved creators are both targeted for 70%; this supersedes the 2026-09-28 30%/40% acquisition policy. Both send customers through the same Oremea purchase paths, plans, and prices. There is no creator-only price, discount, starter product, or first-sale commission override.
+Updated 2026-10-23: eligible standard/open affiliates and specifically approved creators use a 70% policy; this supersedes the 2026-09-28 30%/40% acquisition policy. Whop global rates were saved and verified after reload for Resonance Visits, the ten individual Resonance rooms, and Compass. Recognition is excluded from this public activation. Both affiliate groups send customers through the same Oremea purchase paths, plans, and prices. There is no creator-only price, discount, starter product, or first-sale commission override.
 
 The legacy `/resonance/creator` link redirects to the ordinary Resonance visit purchase page. Affiliate attribution is carried through the existing referral cookie and checkout. Whop is the source of truth for actual commission and renewal attribution.
 

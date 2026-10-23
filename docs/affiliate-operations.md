@@ -55,7 +55,15 @@ approve creators, change rates, activate paid creator arrangements or move funds
 
 ## Verification boundary
 
-Historical standard 30% product rates and external link were saved in production on 2026-09-27. The 70% repository policy proposed on 2026-10-23 does not itself edit Whop; live rates and per-user overrides must be verified and changed deliberately in Whop.
+Historical standard 30% product rates and external link were saved in production on 2026-09-27. On 2026-10-23, the signed-in Whop dashboard was updated and reloaded to verify 70% global rates for Resonance Visits, all ten individual Resonance rooms, and Compass (12 products). Member rates remain zero to inherit global rates. Recognition's historical 30% was not activated as part of this public launch. The Current and WORKS remain at zero global/member rates in this Oremea business; WORKS arrangements are separate.
+
+The creator dashboard showed no affiliates (0 results), so no existing named custom rewards were available to migrate. No new named creator invitation was sent. Repository policy is not a live Whop synchronization mechanism; future dashboard drift still requires inspection.
+
+Affiliate marketplace featuring was off. It is now enabled with the public `Resonance · The Hearth` product selected, and affiliate instructions explain the 70% rate, ordinary purchase flow and personal referral links. Resonance Visits is a hidden checkout container and remains hidden. All ten room products and Compass were visible/live on Discover. Recognition unexpectedly appeared visible/live on Discover despite canonical hidden status; it was hidden, with the product table confirming Hidden / Not listed on Discover. The Current and WORKS remain hidden. The visible/hidden product inventory contains 15 products and no historical creator starter; archived inventory was not inspected.
+
+The two existing external sales links were verified: Oremea points to `https://www.oremea.com` and Resonance visits points to `https://resonance.oremea.com/resonance/enter`. The Resonance destination returned HTTP 200. The live legacy `/resonance/creator` route returned HTTP 307 to `/resonance/visits`; anonymous `/admin/affiliates` returned 404, consistent with private access. The live robots file excludes the creator route and the sitemap does not list it.
+
+The source/live link audit checked 428 source files, 51 unique local destinations and 26 live-site URLs with no confirmed broken literal links. Several destinations returned timeouts or 503 responses, and 52 source files contain dynamic links requiring rendered checks. This is not proof of complete route or payment coverage.
 Whop supports recurring global rewards and named recurring custom offers.
 No named creator was approved by this task. Actual standard and creator payment
 tests, add-on attribution and reconciled net revenue require a real affiliate

@@ -21,7 +21,7 @@ export default async function AffiliateAdminPage() {
   return <SiteShell><section className="mx-auto max-w-4xl space-y-6 px-6 py-12">
     <Link href="/admin">← Oremea Admin</Link>
     <h1 className="text-3xl">Affiliate management</h1>
-    <p>Proposed Oremea affiliate policy: {policy.standardRate * 100}% for eligible public products and {policy.approvedCreatorRate * 100}% for approved creators on the same customer prices and checkout. This page is a policy display, not proof that Whop live rates have changed.</p>
+    <p>Oremea affiliate policy: {policy.standardRate * 100}% for eligible public products and {policy.approvedCreatorRate * 100}% for approved creators on the same customer prices and checkout. This page displays repository policy; check Whop for current live rates.</p>
     <p>Whop executes commissions and recurring subscription rewards. Update Whop global/member rates and review all existing custom creator overrides individually; repository policy changes do not update Whop. Oremea does not create a separate creator offer or first-sale override.</p>
     {whop && <a className="block underline" href={whop}>Open Whop affiliate controls</a>}
 
