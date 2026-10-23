@@ -7,16 +7,16 @@ import { approvedCreatorStressCases } from "../src/lib/oremea/creator-acquisitio
 import { OREMEA_PRICING } from "../src/lib/oremea/pricing";
 
 const cases = approvedCreatorStressCases();
-assert.equal(OREMEA_AFFILIATE_POLICY.standardRate, 0.30);
-assert.equal(OREMEA_AFFILIATE_POLICY.approvedCreatorRate, 0.40);
+assert.equal(OREMEA_AFFILIATE_POLICY.standardRate, 0.70);
+assert.equal(OREMEA_AFFILIATE_POLICY.approvedCreatorRate, 0.70);
 assert.equal(cases.resonanceOneVisit.priceCents, OREMEA_PRICING.resonance.visitPricesCents[1]);
-assert.equal(cases.resonanceOneVisit.creatorCommissionCents, 2000);
-assert.equal(cases.resonanceOneVisit.maxDeliveryBudgetCents, 1297);
+assert.equal(cases.resonanceOneVisit.creatorCommissionCents, 3500);
+assert.equal(cases.resonanceOneVisit.maxDeliveryBudgetCents, 0);
 assert.equal(cases.resonanceCompleteTenFromOne.priceCents, 35000);
-assert.equal(cases.resonanceCompleteTenFromOne.creatorCommissionCents, 14000);
-assert.equal(cases.resonanceCompleteTenFromOne.maxDeliveryBudgetCents, 9262);
-assert.equal(cases.recognitionFirstMonth.maxDeliveryBudgetCents, 590);
-assert.equal(cases.compassFirstMonth.maxDeliveryBudgetCents, 1522);
+assert.equal(cases.resonanceCompleteTenFromOne.creatorCommissionCents, 24500);
+assert.equal(cases.resonanceCompleteTenFromOne.maxDeliveryBudgetCents, 0);
+assert.equal(cases.recognitionFirstMonth.maxDeliveryBudgetCents, 0);
+assert.equal(cases.compassFirstMonth.maxDeliveryBudgetCents, 22);
 
 const source = (file: string) => fs.readFileSync(path.join(process.cwd(), file), "utf8");
 const landing = source("app/(marketing)/resonance/creator/page.tsx");
@@ -42,4 +42,4 @@ assert.match(orders, /applyVisitPaymentEvent/);
 assert.match(orders, /applyVisitRefundEvent/);
 assert.doesNotMatch(orders, /startCreatorStarterPurchase/);
 
-console.log("Creator 30/40 policy, shared purchase path, and historical settlement compatibility verified.");
+console.log("Creator 70/70 policy, shared purchase path, and historical settlement compatibility verified.");
