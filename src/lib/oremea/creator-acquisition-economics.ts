@@ -1,4 +1,5 @@
 import { OREMEA_PRICING } from "./pricing";
+import { OREMEA_AFFILIATE_POLICY } from "./affiliate-policy";
 
 const ceilRate = (amountCents: number, rate: number) =>
   Math.ceil(amountCents * rate);
@@ -95,7 +96,7 @@ export function maxDeliveryBudgetCents({
 }
 
 export function approvedCreatorStressCases() {
-  const creatorRate = 0.40;
+  const creatorRate = OREMEA_AFFILIATE_POLICY.approvedCreatorRate;
   const resonanceOneVisitAmountCents = OREMEA_PRICING.resonance.visitPricesCents[1];
   const resonanceCompleteTenAmountCents =
     OREMEA_PRICING.resonance.visitPricesCents[10] -
