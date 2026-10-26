@@ -7,7 +7,8 @@ import { formatOremeaPrice } from "@/src/lib/oremea/pricing";
 import { additionalOffers, VISIT_PRICES } from "@/src/lib/resonance/visit-offers";
 import { getResonanceRoomTarget } from "@/src/lib/resonance/room-entry";
 import { visitCheckoutAvailableFor, visitCreditsAvailableFor } from "@/src/lib/resonance/visit-access";
-import { getVisitOrder, reconcileInitialVisitOrder } from "@/src/lib/resonance/visit-orders";
+import { getVisitOrder, getVisitBankVerification, reconcileInitialVisitOrder } from "@/src/lib/resonance/visit-orders";
+import { uuidSchema } from "@/src/lib/resonance/visit-payment-contract";
 import { addVisits } from "../visits/actions";
 import { FunnelFrame } from "../visits/funnel-frame";
 import { VisitSubmitButton } from "../visits/submit-button";
@@ -45,11 +46,15 @@ function CompleteTenAction({
 export default async function VisitCompletionPage({ searchParams }: {
   searchParams: Promise<{ order?: string; error?: string; room?: string | string[] }>;
 }) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-  if (!(await visitCreditsAvailableFor(userId))) notFound();
-
   const query = await searchParams;
+  const { userId } = await auth();
+  if (!userId) {
+    const returnPath = query.order && uuidSchema.safeParse(query.order).success
+      ? `/resonance/complete?order=${encodeURIComponent(query.order)}`
+      : "/resonance/visits";
+    redirect(`/sign-in?redirect_url=${encodeURIComponent(returnPath)}`);
+  }
+  if (!(await visitCreditsAvailableFor(userId))) notFound();
   const roomTarget = getResonanceRoomTarget(query.room);
   const roomSuffix = roomTarget ? `&room=${roomTarget.weekNumber}` : "";
   let order = query.order ? await getVisitOrder(userId, query.order) : null;
@@ -66,7 +71,12 @@ export default async function VisitCompletionPage({ searchParams }: {
   if (child) redirect(`/resonance/complete?order=${child.id}${roomSuffix}`);
 
   if (order.status !== "paid" || order.kind !== "initial" || order.offer_closed_at) {
-    const heading = order.status === "paid" ? "Your visits are ready"
+    // One read-only provider status check. No new payment can be submitted here.
+    const verification = order.parent_id && ["pending", "unknown"].includes(order.status)
+      ? await getVisitBankVerification(userId, order.id).catch(() => null)
+      : null;
+    const heading = verification?.requiresAction ? "Bank verification is needed"
+      : order.status === "paid" ? "Your visits are ready"
       : order.status === "failed" ? "The payment did not complete"
         : order.status === "refunded" ? "This payment is under review"
           : "The payment is not confirmed yet";
@@ -80,6 +90,29 @@ export default async function VisitCompletionPage({ searchParams }: {
             : "Only confirmed payments add visits. Do not submit another charge while this is being checked"}
           {order.parent_id ? " The original purchase remains available, regardless of this additional payment" : ""}
         </p>
+        {verification?.requiresAction ? (
+          <div role="status" className="res-border res-panel mt-6 rounded-2xl border p-5 text-sm leading-7">
+            Your bank needs to confirm this additional payment. The original
+            visits remain available. Only a confirmed Whop payment can add
+            more visits.
+            {verification.redirectUrl ? (
+              <div className="mt-4">
+                <a
+                  href={verification.redirectUrl}
+                  rel="noopener noreferrer"
+                  className="res-accent res-accent-hover underline underline-offset-4"
+                >
+                  Continue bank verification
+                </a>
+              </div>
+            ) : (
+              <p className="mt-3">
+                A secure verification link was not provided. Check your bank
+                prompt, or contact Oremea support. Please do not repeat the charge.
+              </p>
+            )}
+          </div>
+        ) : null}
         <div className="mt-8 flex flex-wrap gap-6">
           {order.status === "failed" && order.kind === "initial" && order.whop_checkout_id ? (
             <Link href={`/resonance/visits?order=${order.id}${roomSuffix}`} className="res-accent res-accent-hover text-base underline">
