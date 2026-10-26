@@ -1,45 +1,37 @@
-import { logPrivateError } from "@/src/lib/security/private-errors";
-// app/auth/callback/route.ts
-// Handles Supabase auth callbacks: email confirmation, magic link sign-in.
-// Exchanges the code for a session, then redirects to the intended destination.
+import { NextRequest, NextResponse } from "next/server";
 
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { NextRequest, NextResponse } from 'next/server';
+// Compatibility only: Supabase sign-in was retired when Oremea moved to Clerk.
+// Do not exchange stale Supabase magic-link codes, resurrect a second session
+// provider, or redirect to arbitrary external URLs supplied in email links.
+const SAFE_RETURN_PATHS = new Set([
+  "/",
+  "/dashboard",
+  "/profile",
+  "/entry",
+  "/resonance",
+  "/recognition",
+  "/compass/access",
+  "/key",
+  "/key/silver",
+]);
+
+function safeLegacyDestination(raw: string | null): string {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.includes("\\") ||
+      /[\u0000-\u001f\u007f]/.test(raw)) return "/";
+  try {
+    const parsed = new URL(raw, "https://oremea.invalid");
+    if (parsed.origin !== "https://oremea.invalid") return "/";
+    return SAFE_RETURN_PATHS.has(parsed.pathname) ? parsed.pathname : "/";
+  } catch {
+    return "/";
+  }
+}
 
 export async function GET(request: NextRequest) {
-  const requestUrl = new URL(request.url);
-  const code        = requestUrl.searchParams.get('code');
-  const redirectTo  = requestUrl.searchParams.get('redirectTo') ?? '/dashboard';
-
-  if (code) {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
-          },
-          set(name, value, options) {
-            cookieStore.set({ name, value, ...options });
-          },
-          remove(name, options) {
-            cookieStore.set({ name, value: '', ...options });
-          },
-        },
-      }
-    );
-
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-
-    if (error) {
-      logPrivateError("[auth/callback] Code exchange failed:");
-      return NextResponse.redirect(new URL('/login?error=auth_callback_failed', requestUrl.origin));
-    }
-  }
-
-  // Redirect to the intended destination after successful auth
-  return NextResponse.redirect(new URL(redirectTo, requestUrl.origin));
+  const incoming = new URL(request.url);
+  const destination = safeLegacyDestination(incoming.searchParams.get("redirectTo"));
+  const signIn = new URL("/sign-in", incoming.origin);
+  signIn.searchParams.set("redirect_url", destination);
+  // Use Clerk for verification; a stale Supabase code is never a session.
+  return NextResponse.redirect(signIn, 307);
 }

@@ -363,6 +363,8 @@ const isPublicRoute = createRouteMatcher([
   "/conduct(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
+  // Retired Supabase links only redirect into Clerk; they must work before login.
+  "/auth/callback",
   // A recipient must be able to read the invitation before signing in.
   // The POST actions still require Clerk auth and the matching verified email.
   "/key/claim/(.*)",

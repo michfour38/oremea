@@ -98,6 +98,8 @@ jobs:
               "app/(auth)/", "app/(marketing)/party/", "src/lib/email/",
               "app/api/contact/", "app/api/webhooks/", "app/(member)/entry/",
               "app/(member)/resonance/", "src/lib/resonance/",
+              "app/auth/", "app/compass/", "app/protected-test/",
+              "app/(member)/journey/", "lib/supabase/",
           )
           critical_files = ("app/oremea-colors.css", ".github/workflows/pull-request-build.yml")
           critical_build = any(
