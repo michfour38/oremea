@@ -93,7 +93,19 @@ async function main() {
   assert.doesNotMatch(adminTrace, /Creator Resonance Starter/);
   assert.match(adminTrace, /order\._count\.redemptions/);
   assert.doesNotMatch(adminTrace, /order\.buyer_email/);
+  assert.match(adminTrace, /Orders needing payment or refund review/);
+  assert.match(adminTrace, /status\.reviewOrders\.map/);
+  assert.match(adminTrace, /Never retry an unknown charge/);
+  assert.match(adminTrace, /A partial refund freezes unused credits for manual review/);
   const traceCatalogSource = readFileSync("src/lib/whop/resonance-catalog.ts", "utf8");
+  const ownerReview = traceCatalogSource.match(/\/\/ Read-only owner review queue[\s\S]*?const redemptions =/)?.[0] ?? "";
+  assert.ok(ownerReview, "Missing owner-only payment/refund review query.");
+  assert.match(ownerReview, /status: "refunded"/);
+  assert.match(ownerReview, /status: \{ in: \["pending", "unknown"\] \}/);
+  assert.match(ownerReview, /30 \* 60 \* 1000/);
+  assert.match(ownerReview, /take: 25/);
+  assert.doesNotMatch(ownerReview, /\.update\(|\.create\(|\.delete\(|chargeVisitOrder|whopApiRequest/,
+    "Review queue must never mutate orders or contact Whop for another charge.");
   for (const field of ["amount_cents", "parent_id", "affiliate_code", "whop_plan_id", "paid_at", "created_at"]) {
     assert.match(traceCatalogSource, new RegExp(`${field}: true`));
   }
