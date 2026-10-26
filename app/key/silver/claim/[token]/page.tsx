@@ -33,9 +33,11 @@ function maskedEmail(email: string) {
 function StatusCard({
   title,
   body,
+  action,
 }: {
   title: string;
   body: string;
+  action: { href: string; label: string };
 }) {
   return (
     <div className="mx-auto max-w-2xl rounded-[2rem] border border-zinc-300/20 bg-black/50 p-7 md:p-10">
@@ -46,6 +48,9 @@ function StatusCard({
         {title}
       </h1>
       <p className="mt-5 text-sm leading-7 text-zinc-400">{body}</p>
+      <Link href={action.href} className="mt-6 inline-flex rounded-full border border-[var(--oremea-gold-border-soft)] bg-[var(--oremea-gold-10)] px-5 py-3 text-xs uppercase tracking-[0.12em] text-[var(--oremea-gold)] transition hover:border-[var(--oremea-gold-border-strong)]">
+        {action.label}
+      </Link>
     </div>
   );
 }
@@ -68,6 +73,7 @@ export default async function CreatorSilverKeyClaimPage({
           <StatusCard
             title="This link is not valid"
             body="Ask the person who issued the invitation to create a fresh Creator Silver Key link."
+            action={{ href: "/contact", label: "Contact Oremea" }}
           />
         </section>
       </SiteShell>
@@ -80,7 +86,8 @@ export default async function CreatorSilverKeyClaimPage({
         <section className="px-6 py-16 md:py-24">
           <StatusCard
             title="Already claimed"
-            body="This one-use invitation has already issued its Creator Silver Key."
+            body="This one-use invitation has already issued its Creator Silver Key. Sign in with the original invited account to use it."
+            action={{ href: "/key/silver", label: "Open your Silver Key" }}
           />
         </section>
       </SiteShell>
@@ -94,6 +101,7 @@ export default async function CreatorSilverKeyClaimPage({
           <StatusCard
             title="This invitation was replaced"
             body="Only the newest Creator Silver Key invitation for this email can be used. Ask for the latest link."
+            action={{ href: "/contact", label: "Contact Oremea" }}
           />
         </section>
       </SiteShell>
@@ -107,6 +115,7 @@ export default async function CreatorSilverKeyClaimPage({
           <StatusCard
             title="This invitation has expired"
             body="The one-use invitation expires after seven days. Ask for a fresh Creator Silver Key link."
+            action={{ href: "/contact", label: "Contact Oremea" }}
           />
         </section>
       </SiteShell>
