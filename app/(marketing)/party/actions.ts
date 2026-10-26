@@ -3,6 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 
+import { logPrivateError } from "@/src/lib/security/private-errors";
 import { prisma } from "@/lib/prisma";
 import { sendPartyWelcomeEmail } from "@/src/lib/email/send-party-welcome-email";
 import { getPartyTopicGroup } from "./topics";
@@ -149,14 +150,22 @@ export async function registerForParty(formData: FormData) {
     ),
   );
 
-  await sendPartyWelcomeEmail({
-    to: registration.email,
-    firstName: registration.first_name,
-    questionsToken: registration.questions_token,
-    guestPassTokens: passes
-      .sort((a, b) => a.slot - b.slot)
-      .map((pass) => pass.token),
-  });
+  // Registration is already stored. A provider failure must not lose the
+  // confirmation page or pretend that the private Questions Box link was sent.
+  let welcomeEmailSent = false;
+  try {
+    welcomeEmailSent = await sendPartyWelcomeEmail({
+      to: registration.email,
+      firstName: registration.first_name,
+      questionsToken: registration.questions_token,
+      guestPassTokens: passes
+        .sort((a, b) => a.slot - b.slot)
+        .map((pass) => pass.token),
+    });
+  } catch (error) {
+    logPrivateError("Party welcome delivery failed after registration:", error);
+  }
 
-  redirect(`/party?registered=${registration.referral_code}`);
+  const deliveryStatus = welcomeEmailSent ? "" : "&delivery=unavailable";
+  redirect(`/party?registered=${registration.referral_code}${deliveryStatus}`);
 }
