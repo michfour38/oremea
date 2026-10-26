@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 };
 
 type Params = Promise<{ token: string }>;
+type SearchParams = Promise<{ error?: string }>;
 
 function maskedEmail(email: string) {
   const [local, domain] = email.split("@");
@@ -51,10 +52,13 @@ function StatusCard({
 
 export default async function CreatorSilverKeyClaimPage({
   params,
+  searchParams,
 }: {
   params: Params;
+  searchParams: SearchParams;
 }) {
   const { token } = await params;
+  const { error } = await searchParams;
   const invite = await getCreatorSilverKeyInviteState(token);
 
   if (invite.status === "invalid") {
@@ -140,6 +144,14 @@ export default async function CreatorSilverKeyClaimPage({
             Compass. Recognition and Compass start separately when you first enter
             each product.
           </p>
+
+          {error === "claim" ? (
+            <p role="alert" className="mt-7 rounded-xl border border-[var(--oremea-danger-border)] bg-[var(--oremea-danger-panel)] px-5 py-4 text-sm leading-6 text-[var(--oremea-danger)]">
+              The invitation could not be claimed. Check that the link is still
+              available and that this account has the invited verified email.
+              If the problem continues, request a fresh invitation.
+            </p>
+          ) : null}
 
           {canClaim ? (
             <form action={claimCreatorSilverKeyAction} className="mt-8">
