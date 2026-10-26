@@ -31,16 +31,21 @@ function StatusCard({
   eyebrow,
   title,
   body,
+  action,
 }: {
   eyebrow: string;
   title: string;
   body: string;
+  action: { href: string; label: string };
 }) {
   return (
     <div className="mx-auto max-w-2xl rounded-[2rem] border border-[#b79a63]/25 bg-black/50 p-7 md:p-10">
       <p className="text-[11px] uppercase tracking-[0.28em] text-[#b79a63]">{eyebrow}</p>
       <h1 className="mt-4 text-3xl font-light text-zinc-100 md:text-5xl">{title}</h1>
       <p className="mt-5 text-sm leading-7 text-zinc-400">{body}</p>
+      <Link href={action.href} className="mt-6 inline-flex rounded-full border border-[var(--oremea-gold-border-soft)] bg-[var(--oremea-gold-10)] px-5 py-3 text-xs uppercase tracking-[0.12em] text-[var(--oremea-gold)] transition hover:border-[var(--oremea-gold-border-strong)]">
+        {action.label}
+      </Link>
     </div>
   );
 }
@@ -58,6 +63,7 @@ export default async function GoldenKeyClaimPage({ params, searchParams }: { par
             eyebrow="Golden Key"
             title="This link is not valid"
             body="Ask the person who issued the invitation to create a fresh Golden Key link."
+            action={{ href: "/contact", label: "Contact Oremea" }}
           />
         </section>
       </SiteShell>
@@ -71,7 +77,8 @@ export default async function GoldenKeyClaimPage({ params, searchParams }: { par
           <StatusCard
             eyebrow="Golden Key"
             title="Already claimed"
-            body="This one-use invitation has already issued its ∞ All Access Golden Key."
+            body="This one-use invitation has already issued its ∞ All Access Golden Key. Sign in with the invited verified account to continue."
+            action={{ href: "/key", label: "Open your Golden Key" }}
           />
         </section>
       </SiteShell>
@@ -86,6 +93,7 @@ export default async function GoldenKeyClaimPage({ params, searchParams }: { par
             eyebrow="Golden Key"
             title="This invitation was replaced"
             body="Only the newest Golden Key invitation for this email can be used. Ask for the latest link."
+            action={{ href: "/contact", label: "Contact Oremea" }}
           />
         </section>
       </SiteShell>
@@ -100,6 +108,7 @@ export default async function GoldenKeyClaimPage({ params, searchParams }: { par
             eyebrow="Golden Key"
             title="This invitation has expired"
             body="The temporary invitation expired without affecting any Golden Key already issued. Ask for a fresh link."
+            action={{ href: "/contact", label: "Contact Oremea" }}
           />
         </section>
       </SiteShell>
