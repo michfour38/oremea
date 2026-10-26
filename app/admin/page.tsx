@@ -42,6 +42,7 @@ export default async function AdminPage({
     openFeedback,
     totalFeedback,
     goldenKeys,
+    goldenInvites,
     silverKeys,
     suspended,
   ] = await Promise.all([
@@ -60,6 +61,18 @@ export default async function AdminPage({
       orderBy: { granted_at: "desc" },
       take: 25,
     }),
+    prisma.oremea_eternal_key_invites.findMany({
+      orderBy: { created_at: "desc" },
+      take: 25,
+      select: {
+        id: true,
+        email_normalized: true,
+        created_at: true,
+        expires_at: true,
+        claimed_at: true,
+        revoked_at: true,
+      },
+    }),
     prisma.oremea_creator_silver_key_issuances.findMany({
       where: { revoked_at: null },
       orderBy: { granted_at: "desc" },
@@ -71,6 +84,8 @@ export default async function AdminPage({
       take: 25,
     }),
   ]);
+
+  const now = new Date();
 
   const userIds = Array.from(
     new Set([
@@ -148,7 +163,26 @@ export default async function AdminPage({
             />
           </div>
 
-          <div className="mt-8 grid gap-6 xl:grid-cols-3">
+          <div className="mt-8 grid gap-6 xl:grid-cols-2">
+            <StateList
+              title={`Golden invitations · ${goldenInvites.length} recent`}
+              empty="No Golden Key invitation links have been generated yet."
+              rows={goldenInvites.map((item) => ({
+                key: item.id,
+                primary: item.email_normalized,
+                secondary: [
+                  item.claimed_at
+                    ? "Claimed"
+                    : item.revoked_at
+                      ? "Replaced"
+                      : item.expires_at.getTime() <= now.getTime()
+                        ? "Expired · create a new link"
+                        : "Awaiting claim · not proof of delivery",
+                  `Created ${item.created_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
+                  `Expires ${item.expires_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
+                ].join(" · "),
+              }))}
+            />
             <StateList
               title={`Golden Keys · ${goldenKeys.length}`}
               empty="No Golden Keys have been granted yet."
