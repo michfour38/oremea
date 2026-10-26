@@ -1,3 +1,4 @@
+import { isIP } from "node:net";
 import { z } from "zod";
 
 export const uuidSchema = z.string().uuid();
@@ -29,6 +30,55 @@ const paymentListSchema = z.object({
   data: z.array(z.unknown()),
   page_info: z.object({ has_next_page: z.boolean() }),
 });
+
+/**
+ * Read-only buyer verification. Never treat a payment-status response as proof
+ * of settlement: signed webhooks and matching payment records grant visits.
+ */
+export function visitPaymentVerificationAction(response: unknown, paymentId: string) {
+  const paymentStatus = z.object({
+    id: z.string().min(1),
+    status: z.string(),
+    next_action: z.unknown().nullable().optional(),
+  }).parse(response);
+  if (paymentStatus.id !== paymentId) {
+    throw new Error("Provider status does not match this payment.");
+  }
+  if (paymentStatus.status !== "requires_action") {
+    return { requiresAction: false, redirectUrl: null as string | null };
+  }
+
+  const action = z.object({
+    type: z.string().optional(),
+    url: z.string().optional(),
+    redirect_url: z.string().optional(),
+    redirect: z.object({ url: z.string().optional() }).optional(),
+    redirect_to_url: z.object({ url: z.string().optional() }).optional(),
+  }).passthrough().safeParse(paymentStatus.next_action);
+  if (!action.success || (action.data.type && !action.data.type.toLowerCase().includes("redirect"))) {
+    return { requiresAction: true, redirectUrl: null as string | null };
+  }
+
+  const candidate = action.data.redirect_to_url?.url ??
+    action.data.redirect?.url ?? action.data.redirect_url ?? action.data.url;
+  if (!candidate || candidate.length > 2048) {
+    return { requiresAction: true, redirectUrl: null as string | null };
+  }
+  try {
+    const url = new URL(candidate);
+    const hostname = url.hostname.replace(/^\[|\]$/g, "").toLowerCase();
+    if (url.protocol !== "https:" || url.username || url.password || url.port ||
+        !hostname.includes(".") || isIP(hostname) !== 0 ||
+        hostname.endsWith(".local") || hostname.endsWith(".localhost") ||
+        hostname.endsWith(".internal") || hostname.endsWith(".test")) {
+      return { requiresAction: true, redirectUrl: null as string | null };
+    }
+    return { requiresAction: true, redirectUrl: url.toString() };
+  } catch {
+    return { requiresAction: true, redirectUrl: null as string | null };
+  }
+}
+
 
 /** Translate a provider payment record into the same event types used by the signed webhook. */
 export function visitPaymentResultFromRecord(
