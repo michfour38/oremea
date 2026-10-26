@@ -237,3 +237,63 @@
   color: var(--product-text-disabled);
   opacity: 1;
 }
+
+/* Admin controls use the shared Oremea root palette, never independent hex colors. */
+.oremea-admin-surface {
+  border-color: var(--oremea-border);
+  background-color: var(--oremea-panel);
+}
+.oremea-admin-field {
+  border: 1px solid var(--oremea-border);
+  background-color: var(--oremea-panel-strong);
+  color: var(--oremea-text-primary);
+  caret-color: var(--oremea-gold);
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.oremea-admin-field:focus {
+  border-color: var(--oremea-gold-border-strong);
+  box-shadow: 0 0 0 1px var(--oremea-gold-ring);
+}
+.oremea-admin-field::placeholder { color: var(--oremea-text-disabled); }
+/* An untouched required field isn't a validation error. */
+.oremea-admin-field:invalid:not(:user-invalid):not([data-oremea-invalid="true"]) {
+  border-color: var(--oremea-border);
+  box-shadow: none;
+}
+.oremea-admin-field:focus:invalid:not(:user-invalid):not([data-oremea-invalid="true"]) {
+  border-color: var(--oremea-gold-border-strong);
+  box-shadow: 0 0 0 1px var(--oremea-gold-ring);
+}
+.oremea-admin-field:user-invalid,
+.oremea-admin-field[data-oremea-invalid="true"] {
+  border-color: var(--oremea-validation);
+  box-shadow: 0 0 0 2px var(--oremea-validation-ring);
+}
+.oremea-admin-action {
+  border-color: var(--oremea-gold-border-soft);
+  background-color: var(--oremea-gold-10);
+  color: var(--oremea-gold);
+}
+.oremea-admin-action:hover:not(:disabled) {
+  border-color: var(--oremea-gold-border-strong);
+  background-color: var(--oremea-gold-15);
+}
+.oremea-admin-action-danger {
+  border-color: var(--oremea-danger-border);
+  background-color: var(--oremea-danger-panel);
+  color: var(--oremea-danger);
+}
+.oremea-admin-action-danger:hover:not(:disabled) {
+  border-color: var(--oremea-danger);
+}
+.oremea-admin-feedback-error {
+  border-color: var(--oremea-danger-border);
+  background-color: var(--oremea-danger-panel);
+  color: var(--oremea-danger);
+}
+.oremea-admin-feedback-success {
+  border-color: var(--oremea-gold-border-soft);
+  background-color: var(--oremea-gold-10);
+  color: var(--oremea-text-primary);
+}
