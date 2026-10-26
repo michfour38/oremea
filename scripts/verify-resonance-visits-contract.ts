@@ -242,16 +242,19 @@ async function main() {
   assert.match(service, /status: "unknown"/);
   assert.match(service, /room\?\.is_published/);
   assert.match(service, /started_at: new Date\(\)/);
-  const statusQuery = service.match(/export async function getVisitBankVerification[\\s\\S]*?\\n}/)?.[0] ?? "";
-  assert.ok(statusQuery, "Missing read-only saved-card verification lookup.");
-  assert.match(statusQuery, /whopApiRequest\\(\\`payments\\/\\$\\{encodeURIComponent\\(order\\.whop_payment_id\\)\\}\\/status\\`\\)/);
-  assert.doesNotMatch(statusQuery, /chargeVisitOrder|method:\\s*"POST"/,
+  const statusStart = service.indexOf("export async function getVisitBankVerification");
+  assert.ok(statusStart >= 0, "Missing read-only saved-card verification lookup.");
+  const statusQuery = service.slice(statusStart, service.indexOf("\n}", statusStart) + 2);
+  assert.match(statusQuery, /whopApiRequest/);
+  assert.ok(statusQuery.includes("/status"), "Status lookup must use provider GET payment status.");
+  assert.match(statusQuery, /visitPaymentVerificationAction/);
+  assert.doesNotMatch(statusQuery, /chargeVisitOrder|method:\s*"POST"/,
     "Verification must never submit a second payment.");
   const completion = readFileSync("app/(member)/resonance/complete/page.tsx", "utf8");
-  assert.match(completion, /getVisitBankVerification\\(userId, order\\.id\\)/);
-  assert.match(completion, /Continue bank verification/);
-  assert.match(completion, /Only a confirmed Whop payment can add/);
-  assert.match(completion, /sign-in\\?redirect_url=/);
+  assert.ok(completion.includes("getVisitBankVerification(userId, order.id)"));
+  assert.ok(completion.includes("Continue bank verification"));
+  assert.ok(completion.includes("Only a confirmed Whop payment can add"));
+  assert.ok(completion.includes("sign-in?redirect_url="));
   const catalog = readFileSync("src/lib/whop/resonance-catalog.ts", "utf8");
   assert.match(catalog, /RESONANCE_WHOP_CATALOG_KEY = "resonance-visits-v1"/);
   assert.match(catalog, /\[1, 2, 3, 4, 5, 6, 7, 8\]/);
