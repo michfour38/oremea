@@ -93,7 +93,12 @@ jobs:
               for path in changed
           )
 
-          critical_prefixes = ("app/key/", "app/admin/", "lib/auth/", "components/admin/")
+          critical_prefixes = (
+              "app/key/", "app/admin/", "lib/auth/", "components/admin/",
+              "app/(auth)/", "app/(marketing)/party/", "src/lib/email/",
+              "app/api/contact/", "app/api/webhooks/", "app/(member)/entry/",
+              "app/(member)/resonance/", "src/lib/resonance/",
+          )
           critical_files = ("app/oremea-colors.css", ".github/workflows/pull-request-build.yml")
           critical_build = any(
               path.startswith(critical_prefixes) or path in critical_files
@@ -129,7 +134,7 @@ jobs:
         run: npm run typecheck
 
       # Avoid building on every content-only PR, but catch production compiler
-      # issues before merging changes to keys, access controls or admin UI.
+      # issues before merging changes to auth, keys, signup/email and checkout.
       - name: Build critical account-access changes
         if: steps.scope.outputs.critical_build == 'true'
         run: npm run build
