@@ -363,6 +363,10 @@ const isPublicRoute = createRouteMatcher([
   "/conduct(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
+  // A recipient must be able to read the invitation before signing in.
+  // The POST actions still require Clerk auth and the matching verified email.
+  "/key/claim/(.*)",
+  "/key/silver/claim/(.*)",
   "/recognition(.*)",
   "/api/recognition(.*)",
   // Bearer-authenticated ARGUS export verifies its own machine credential.
