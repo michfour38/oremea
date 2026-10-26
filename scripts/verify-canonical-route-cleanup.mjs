@@ -18,6 +18,10 @@ assert.match(callback, /new URL\("\/sign-in", incoming\.origin\)/, "Retired Supa
 assert.match(callback, /signIn\.searchParams\.set\("redirect_url", destination\)/, "Legacy sign-in must preserve a safe return destination.");
 assert.doesNotMatch(callback, /createServerClient|exchangeCodeForSession|\/login\?error/, "Supabase must not regain control of sign-in.");
 
+const middleware = readFileSync("middleware.ts", "utf8");
+assert.match(middleware, /"\/auth\/callback"/, "The old callback must be able to reach Clerk redirect before login.");
+assert.doesNotMatch(middleware, /"\/key\(\.\*\)"/, "The Key holder dashboards must remain protected.");
+
 const compass = readFileSync("app/compass/access/page.tsx", "utf8");
 assert.match(compass, /"\/sign-in\?redirect_url=%2Faccess"/, "Compass sign-in must lead back to product access.");
 assert.doesNotMatch(compass, /"\/sign-in\?redirect_url=%2F"/, "Compass must not discard prospects on the home page.");
