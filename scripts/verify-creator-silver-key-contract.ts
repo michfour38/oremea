@@ -251,6 +251,11 @@ assert.match(
   "Expired Silver product windows must not be presented as active.",
 );
 assert.match(
+  infoPack,
+  /recognition\.activatedAt && !info\.recognition\.active[\s\S]*recognition\.oremea\.com\/[\s\S]*compass\.activatedAt && !info\.compass\.active[\s\S]*compass\.oremea\.com\//,
+  "Expired Silver products must lead to access information rather than unavailable product entry.",
+);
+assert.match(
   adminPage,
   /silverInvites[\s\S]*Silver invitations[\s\S]*Awaiting claim · not proof of delivery/,
   "Admin must show Silver invitation status separately from claimed key issuance.",
