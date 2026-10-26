@@ -68,6 +68,7 @@ const inviteForm = readFileSync(
 );
 const claimPage = readFileSync("app/key/claim/[token]/page.tsx", "utf8");
 const claimAction = readFileSync("app/key/claim/[token]/actions.ts", "utf8");
+const middleware = readFileSync("middleware.ts", "utf8");
 
 function runtimeSourceFiles(root: string): string[] {
   const files: string[] = [];
@@ -392,6 +393,48 @@ assert.match(
   /maskedEmail\(invite\.email\)/,
   "Golden Key claim UI must not unnecessarily expose the full invited email address.",
 );
+
+assert.match(
+  middleware,
+  /"\/key\/claim\/\(\.\*\)"/,
+  "Golden Key claim landing pages must be visible before sign-in.",
+);
+assert.match(
+  middleware,
+  /"\/key\/silver\/claim\/\(\.\*\)"/,
+  "Creator Silver Key claim landing pages must be visible before sign-in.",
+);
+assert.doesNotMatch(
+  middleware,
+  /"\/key\(\.\*\)"/,
+  "Private Golden and Silver Key dashboards must remain protected.",
+);
+assert.match(
+  claimPage,
+  /SignOutButton[\s\S]*Switch to invited account[\s\S]*Sign in to claim[\s\S]*Create an account/,
+  "Golden Key claim must support signing in, registering and switching to the invited account.",
+);
+assert.match(
+  claimPage,
+  /error === "claim"[\s\S]*role="alert"/,
+  "Golden Key claim failures must show accessible recovery instructions.",
+);
+assert.match(
+  claimAction,
+  /try \{[\s\S]*claimGoldenKeyInvite[\s\S]*catch \{[\s\S]*error=claim/,
+  "Golden Key claim must return to recovery on errors rather than a raw failure.",
+);
+assert.match(
+  inviteForm,
+  /Creating a Golden Key link does not email it/,
+  "Admin must know an invitation link has not automatically been delivered.",
+);
+assert.match(
+  adminPage,
+  /oremea_eternal_key_invites\.findMany[\s\S]*Golden invitations[\s\S]*Awaiting claim · not proof of delivery/,
+  "Admin must distinguish Golden Key invitations awaiting claim from issued keys.",
+);
+
 
 assert.match(
   adminActions,
