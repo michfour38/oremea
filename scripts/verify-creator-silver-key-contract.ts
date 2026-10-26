@@ -231,6 +231,26 @@ assert.match(
   "Silver claim action must pass only verified Clerk emails.",
 );
 assert.match(
+  claimPage,
+  /const signInUrl = [\s\S]*const signUpUrl = [\s\S]*SignOutButton[\s\S]*Sign in to claim[\s\S]*Create an account/,
+  "Silver claim must offer sign-in, signup and account switching without losing the invitation.",
+);
+assert.match(
+  infoPack,
+  /Access ended[\s\S]*Explore Recognition access[\s\S]*Explore Compass access/,
+  "Expired Silver product windows must not be presented as active.",
+);
+assert.match(
+  adminPage,
+  /silverInvites[\s\S]*Silver invitations[\s\S]*Awaiting claim · not proof of delivery/,
+  "Admin must show Silver invitation status separately from claimed key issuance.",
+);
+assert.match(
+  adminForm,
+  /Creating a link does not send an email/,
+  "Creating an invitation must not be represented as delivering it.",
+);
+assert.match(
   adminAction,
   /createCreatorSilverKeyInviteAction[\s\S]*createCreatorSilverKeyInvite/,
   "Admin must be able to create Silver invitations before the recipient account exists.",
