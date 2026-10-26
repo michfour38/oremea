@@ -62,7 +62,7 @@ export default async function CreatorSilverKeyPage({
               info.recognition.expiresAt,
             )}
             body="A private AI discussion journal for thoughts that need more than a journal page. Recognition stays close to your own words, follows the thread, reflects what becomes significant and asks one focused question at a time."
-            href="https://recognition.oremea.com/begin"
+            href={info.recognition.activatedAt && !info.recognition.active ? "https://recognition.oremea.com/" : "https://recognition.oremea.com/begin"}
             cta={info.recognition.active ? "Continue Recognition" : info.recognition.activatedAt ? "Explore Recognition access" : "Enter Recognition"}
           />
 
@@ -78,7 +78,7 @@ export default async function CreatorSilverKeyPage({
             title="Compass"
             access={accessLabel(info.compass.activatedAt, info.compass.expiresAt)}
             body="A private goal-setting and next-step process. Compass takes what you want through seven layers of why, then helps turn what becomes clear into a next step you can actually take."
-            href="https://compass.oremea.com/begin"
+            href={info.compass.activatedAt && !info.compass.active ? "https://compass.oremea.com/" : "https://compass.oremea.com/begin"}
             cta={info.compass.active ? "Continue Compass" : info.compass.activatedAt ? "Explore Compass access" : "Enter Compass"}
           />
         </div>
