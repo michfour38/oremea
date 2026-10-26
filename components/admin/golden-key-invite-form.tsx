@@ -49,6 +49,12 @@ export function GoldenKeyInviteForm() {
           {pending ? "Creating…" : "Create Golden Key link"}
         </button>
       </form>
+      <p className="mt-3 text-xs leading-5 text-[var(--oremea-text-secondary)]">
+        Creating a Golden Key link does not email it to the recipient.
+        Copy and deliver the link within seven days. If it is lost or
+        expires, issue a fresh link to the same address; the older link
+        will be replaced.
+      </p>
 
       {state.status === "error" ? (
         <p className="mt-4 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-xs leading-5 text-red-200">
