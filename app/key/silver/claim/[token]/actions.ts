@@ -16,6 +16,12 @@ export async function claimCreatorSilverKeyAction(formData: FormData) {
     .filter((email) => email.verification?.status === "verified")
     .map((email) => email.emailAddress);
 
-  await claimCreatorSilverKeyInvite({ token, userId, verifiedEmails });
+  try {
+    await claimCreatorSilverKeyInvite({ token, userId, verifiedEmails });
+  } catch {
+    // The invite may have been claimed, replaced or expired after page load.
+    // Return to the invitation instead of displaying a raw application error.
+    redirect(`/key/silver/claim/${encodeURIComponent(token)}?error=claim`);
+  }
   redirect("/key/silver?claimed=1");
 }
