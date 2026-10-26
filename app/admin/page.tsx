@@ -43,6 +43,7 @@ export default async function AdminPage({
     totalFeedback,
     goldenKeys,
     silverKeys,
+    silverInvites,
     suspended,
   ] = await Promise.all([
     prisma.oremea_feedback_messages.count({ where: { status: "new" } }),
@@ -65,12 +66,26 @@ export default async function AdminPage({
       orderBy: { granted_at: "desc" },
       take: 25,
     }),
+    prisma.oremea_creator_silver_key_invites.findMany({
+      orderBy: { created_at: "desc" },
+      take: 25,
+      select: {
+        id: true,
+        email_normalized: true,
+        created_at: true,
+        expires_at: true,
+        claimed_at: true,
+        revoked_at: true,
+      },
+    }),
     prisma.account_security.findMany({
       where: { status: "suspended" },
       orderBy: { suspended_at: "desc" },
       take: 25,
     }),
   ]);
+
+  const now = new Date();
 
   const userIds = Array.from(
     new Set([
@@ -148,7 +163,7 @@ export default async function AdminPage({
             />
           </div>
 
-          <div className="mt-8 grid gap-6 xl:grid-cols-3">
+          <div className="mt-8 grid gap-6 xl:grid-cols-2">
             <StateList
               title={`Golden Keys · ${goldenKeys.length}`}
               empty="No Golden Keys have been granted yet."
@@ -160,6 +175,25 @@ export default async function AdminPage({
                     ? "Identity protected"
                     : "Legacy identity pending"
                 }`,
+              }))}
+            />
+            <StateList
+              title={`Silver invitations · ${silverInvites.length} recent`}
+              empty="No Creator Silver Key links have been generated yet."
+              rows={silverInvites.map((item) => ({
+                key: item.id,
+                primary: item.email_normalized,
+                secondary: [
+                  item.claimed_at
+                    ? "Claimed"
+                    : item.revoked_at
+                      ? "Replaced"
+                      : item.expires_at.getTime() <= now.getTime()
+                        ? "Expired · issue a fresh link"
+                        : "Awaiting claim · not proof of delivery",
+                  `Created ${item.created_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
+                  `Expires ${item.expires_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
+                ].join(" · "),
               }))}
             />
             <StateList
