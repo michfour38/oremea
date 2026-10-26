@@ -226,6 +226,16 @@ assert.match(
   "Silver claim links must remain private and non-indexable.",
 );
 assert.match(
+  claimPage,
+  /href: "\/key\/silver", label: "Open your Silver Key"/,
+  "Claimed Silver invitees must have a protected dashboard next step.",
+);
+assert.match(
+  claimPage,
+  /href: "\/contact", label: "Contact Oremea"/,
+  "Expired and replaced Silver invitees must have a support next step.",
+);
+assert.match(
   claimAction,
   /verification\?\.status === "verified"[\s\S]*claimCreatorSilverKeyInvite/,
   "Silver claim action must pass only verified Clerk emails.",

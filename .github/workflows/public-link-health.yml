@@ -25,6 +25,9 @@ jobs:
         with:
           node-version: 20
 
+      - name: Verify broken source links always fail the PR gate
+        run: node scripts/verify-link-health-gate.mjs
+
       - name: Check source links, static assets and public external destinations
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
