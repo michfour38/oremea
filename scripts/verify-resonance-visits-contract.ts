@@ -6,7 +6,7 @@ import {
 } from "../src/lib/resonance/visit-offers";
 import {
   matchesVisitOrder, matchesVisitRefund, settledVisitPaymentFromList, visitPaymentSchema,
-  visitPaymentUpdate, visitRefundSchema,
+  visitPaymentUpdate, visitRefundSchema, visitPaymentVerificationAction,
 } from "../src/lib/resonance/visit-payment-contract";
 import { chargeVisitOrder, createVisitCheckout, getResonanceCheckoutOrigin } from "../src/lib/whop/visit-payments";
 import { WHOP_VISIT_API_VERSION } from "../src/lib/whop/whop-api";
@@ -122,6 +122,31 @@ async function main() {
   assert.equal(matchesVisitOrder({ ...payment, member: { id: "mbr_other" } }, addon, "biz_test", "prod_test"), false);
   assert.equal(matchesVisitOrder({ ...payment, payment_method: null }, addon, "biz_test", "prod_test"), false);
 
+  const verificationId = "pay_bank_challenge";
+  const challenge = (next_action: unknown) =>
+    visitPaymentVerificationAction({ id: verificationId, status: "requires_action", next_action }, verificationId);
+  assert.deepEqual(challenge({ type: "redirect", url: "https://verify.whop.com/3ds/start" }),
+    { requiresAction: true, redirectUrl: "https://verify.whop.com/3ds/start" });
+  assert.deepEqual(challenge({ type: "redirect_to_url", redirect_to_url: { url: "https://secure.bank.example.com/confirm" } }),
+    { requiresAction: true, redirectUrl: "https://secure.bank.example.com/confirm" });
+  assert.deepEqual(challenge({ type: "display_instructions", url: "https://verify.whop.com/3ds/start" }),
+    { requiresAction: true, redirectUrl: null }, "Unknown action shapes never become clickable payment redirects.");
+  for (const unsafe of [
+    "http://verify.whop.com/3ds", "javascript:alert(1)",
+    "https://127.0.0.1/3ds", "https://localhost/3ds",
+    "https://verify.whop.com:8443/3ds", "https://user:pass@verify.whop.com/3ds",
+    "https://verify.example.test/3ds",
+  ]) assert.deepEqual(challenge({ type: "redirect", url: unsafe }),
+    { requiresAction: true, redirectUrl: null }, "Unsafe next_action links must not be shown.");
+  assert.throws(() => visitPaymentVerificationAction({
+    id: "pay_different", status: "requires_action",
+    next_action: { type: "redirect", url: "https://verify.whop.com/3ds" },
+  }, verificationId), "Payment status must match the exact order payment ID.");
+  assert.deepEqual(visitPaymentVerificationAction({
+    id: verificationId, status: "succeeded", next_action: null,
+  }, verificationId), { requiresAction: false, redirectUrl: null },
+  "Status API success must not grant credits; only matched payment events may do so.");
+
   const settled = visitPaymentUpdate("payment.succeeded", payment, order);
   assert.equal(settled?.status, "paid");
   assert.equal(settled?.remaining_quantity, 4);
@@ -195,6 +220,11 @@ async function main() {
     assert.equal(calls.at(-1)?.body.company_id, "biz_test");
     assert.equal(calls.at(-1)?.body.member_id, "mbr_test");
     assert.equal(calls.at(-1)?.body.payment_method_id, "pmt_test");
+    assert.equal(calls.at(-1)?.body.off_session, false,
+      "An explicitly accepted add-on must allow the buyer to authenticate.");
+    assert.equal(calls.at(-1)?.body.return_url,
+      `https://example.test/resonance/complete?order=${addon.id}`,
+      "3DS must return to the existing order, not another checkout.");
     assert.equal(calls.at(-1)?.headers["Api-Version-Date"], WHOP_VISIT_API_VERSION);
     let attempts = 0;
     globalThis.fetch = async () => { attempts++; throw new Error("simulated connection interruption"); };
@@ -212,6 +242,16 @@ async function main() {
   assert.match(service, /status: "unknown"/);
   assert.match(service, /room\?\.is_published/);
   assert.match(service, /started_at: new Date\(\)/);
+  const statusQuery = service.match(/export async function getVisitBankVerification[\\s\\S]*?\\n}/)?.[0] ?? "";
+  assert.ok(statusQuery, "Missing read-only saved-card verification lookup.");
+  assert.match(statusQuery, /whopApiRequest\\(\\`payments\\/\\$\\{encodeURIComponent\\(order\\.whop_payment_id\\)\\}\\/status\\`\\)/);
+  assert.doesNotMatch(statusQuery, /chargeVisitOrder|method:\\s*"POST"/,
+    "Verification must never submit a second payment.");
+  const completion = readFileSync("app/(member)/resonance/complete/page.tsx", "utf8");
+  assert.match(completion, /getVisitBankVerification\\(userId, order\\.id\\)/);
+  assert.match(completion, /Continue bank verification/);
+  assert.match(completion, /Only a confirmed Whop payment can add/);
+  assert.match(completion, /sign-in\\?redirect_url=/);
   const catalog = readFileSync("src/lib/whop/resonance-catalog.ts", "utf8");
   assert.match(catalog, /RESONANCE_WHOP_CATALOG_KEY = "resonance-visits-v1"/);
   assert.match(catalog, /\[1, 2, 3, 4, 5, 6, 7, 8\]/);
