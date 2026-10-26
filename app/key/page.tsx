@@ -24,7 +24,7 @@ export default async function OremeaKeyPage() {
     <SiteShell>
       <section className="mx-auto w-full max-w-4xl px-6 py-12 md:px-10 md:py-20">
         <p className="mb-7 max-w-2xl text-sm leading-7 text-zinc-400">
-          This key belongs to the signed-in Oremea identity and remains attached to that identity permanently.
+          Your Golden Key provides lifetime access through this account. If your verified identity changes, access may need to be reattached securely.
         </p>
         <EternalKeyCard />
 
