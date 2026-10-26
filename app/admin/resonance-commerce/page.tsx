@@ -96,6 +96,48 @@ export default async function ResonanceCommerceAdminPage({
           <p className="mt-3">Public visit credits: {status.visitsEnabled ? "ON" : "OFF"} · Public checkout: {status.checkoutEnabled ? "ON" : "OFF"}</p>
           <p>Company: {status.companyId ?? "Not configured"}</p>
           <p>Paid orders: {status.paidOrders} · Redeemed visits: {status.redemptions}</p>
+          <section className="mt-6 rounded-2xl border border-[var(--oremea-border)] bg-[var(--oremea-panel)] p-5">
+            <h3 className="text-base font-medium text-[var(--oremea-text-primary)]">Orders needing payment or refund review</h3>
+            <p role={status.unresolvedOrders || status.refundedOrders ? "alert" : "status"} className="mt-2 text-sm leading-6 text-zinc-300">
+              {status.unresolvedOrders} checkouts unresolved for more than 30 minutes · {status.refundedOrders} orders with frozen unused credits after a refund.
+            </p>
+            <p className="mt-2 text-xs leading-5 text-zinc-400">
+              Read-only list of the 25 most recently updated cases. Check Whop payment and refund records before changing any entitlement. A partial refund freezes unused credits for manual review; already-opened rooms remain intact. Never retry an unknown charge.
+            </p>
+            {status.reviewOrders.length ? (
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full min-w-[850px] text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-[var(--oremea-border)]">
+                      <th className="py-2 pr-3">Updated</th>
+                      <th className="pr-3">Order</th>
+                      <th className="pr-3">Status</th>
+                      <th className="pr-3">Amount</th>
+                      <th className="pr-3">Credits</th>
+                      <th>Provider reference</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {status.reviewOrders.map((order) => (
+                      <tr key={order.id} className="border-b border-[var(--oremea-border)] align-top">
+                        <td className="py-2 pr-3">{traceTime(order.updated_at)}</td>
+                        <td className="py-2 pr-3">
+                          <div>{order.id}</div>
+                          <div className="text-zinc-500">{order.kind}{order.parent_id ? " · additional purchase" : " · first purchase"}</div>
+                        </td>
+                        <td className="py-2 pr-3">{order.status === "refunded" ? "Refund · reconcile manually" : "Unconfirmed · provider verification needed"}</td>
+                        <td className="py-2 pr-3">{formatOremeaPrice(order.amount_cents)}</td>
+                        <td className="py-2 pr-3">{order._count.redemptions} used · {order.remaining_quantity} available</td>
+                        <td className="py-2">{order.whop_payment_id ?? order.whop_checkout_id ?? "Not recorded"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="mt-4 text-sm text-zinc-400">No outstanding payment or refund review cases in Oremea's local order records.</p>
+            )}
+          </section>
           <p role={status.unresolvedOrders ? "alert" : "status"} className={status.unresolvedOrders ? "mt-3 text-amber-200" : "mt-3 text-zinc-500"}>
             Unresolved checkouts older than 30 minutes: {status.unresolvedOrders}.
             {status.unresolvedOrders ? " Reconcile them against Whop payments and webhooks before retrying any charge." : ""}
