@@ -50,6 +50,11 @@ export function CreatorSilverKeyInviteForm() {
           {pending ? "Creating…" : "Create Silver Key link"}
         </button>
       </form>
+      <p className="mt-3 text-xs leading-5 text-[var(--oremea-text-secondary)]">
+        Creating a link does not send an email. Copy and deliver it within seven
+        days. If the link is lost before it is claimed, issue another for the same
+        email; the older link will be replaced.
+      </p>
 
       {state.status === "error" ? (
         <p className="mt-4 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-xs leading-5 text-red-200">
