@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { affiliateCode } from "../whop/affiliate-attribution";
 import { prisma } from "@/lib/prisma";
 import { additionalOffers, initialOffer, VISIT_PRICES } from "./visit-offers";
-import { directVisitPaymentResultFromList, matchesVisitOrder, matchesVisitRefund, settledVisitPaymentFromList, uuidSchema, visitPaymentResultFromRecord, visitPaymentSchema, visitPaymentUpdate, visitRefundSchema } from "./visit-payment-contract";
+import { directVisitPaymentResultFromList, matchesVisitOrder, matchesVisitRefund, settledVisitPaymentFromList, uuidSchema, visitPaymentResultFromRecord, visitPaymentSchema, visitPaymentUpdate, visitRefundSchema, visitPaymentVerificationAction } from "./visit-payment-contract";
 import { chargeVisitOrder, createVisitCheckout, whopVisitConfig } from "../whop/visit-payments";
 import { whopApiRequest } from "../whop/whop-api";
 import { loadCreatorStarterWhopCatalog } from "../whop/creator-starter-catalog";
@@ -259,6 +259,19 @@ export async function reconcileAdditionalVisitOrder(userId: string, id: string) 
   if (!order) return null;
   return reconcileAdditionalVisitOrderRecord(order);
 }
+
+/** Read-only next action for an order owned by this Clerk user. */
+export async function getVisitBankVerification(userId: string, id: string) {
+  const order = await findVisitOrder(userId, id);
+  if (!order?.parent_id || !["pending", "unknown"].includes(order.status) ||
+      !order.whop_payment_id) return null;
+
+  const status = await whopApiRequest(`payments/${encodeURIComponent(order.whop_payment_id)}/status`);
+  // Even an apparent success here is not entitlement proof. Confirmation goes
+  // through the existing matching payment record / signed webhook path.
+  return visitPaymentVerificationAction(status, order.whop_payment_id);
+}
+
 
 /** Refund payloads differ from payment payloads. Verify their signed envelope too. */
 export async function applyVisitRefundEvent(event: unknown) {
