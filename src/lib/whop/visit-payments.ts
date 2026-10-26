@@ -110,6 +110,10 @@ export async function chargeVisitOrder(
         member_id: order.whop_member_id,
         payment_method_id: order.whop_payment_method_id,
         plan_id: order.whop_plan_id,
+        // This is a buyer-present, explicitly accepted addition. The previous
+        // implicit off-session behavior could strand 3-D Secure challenges.
+        off_session: false,
+        return_url: `${resolved.origin}/resonance/complete?order=${encodeURIComponent(order.id)}`,
         metadata: { oremea_visit_order: order.id },
       },
     }),
