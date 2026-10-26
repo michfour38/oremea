@@ -432,6 +432,39 @@ export async function getResonanceWhopProvisioningStatus() {
       created_at: { lt: new Date(Date.now() - 30 * 60 * 1000) },
     },
   });
+  // Read-only owner review queue. A partial refund freezes the purchase's
+  // unused capacity, while an unresolved payment may still settle at Whop.
+  // Never infer a second charge or reissue credits from these local records.
+  const reviewOrders = await prisma.resonance_visit_orders.findMany({
+    where: {
+      OR: [
+        { status: "refunded" },
+        {
+          status: { in: ["pending", "unknown"] },
+          created_at: { lt: new Date(Date.now() - 30 * 60 * 1000) },
+        },
+      ],
+    },
+    orderBy: [{ updated_at: "desc" }, { id: "desc" }],
+    take: 25,
+    select: {
+      id: true,
+      parent_id: true,
+      kind: true,
+      status: true,
+      quantity: true,
+      amount_cents: true,
+      remaining_quantity: true,
+      whop_payment_id: true,
+      whop_checkout_id: true,
+      created_at: true,
+      updated_at: true,
+      _count: { select: { redemptions: true } },
+    },
+  });
+  const refundedOrders = await prisma.resonance_visit_orders.count({
+    where: { status: "refunded" },
+  });
   const redemptions = await prisma.resonance_visit_redemptions.count();
   return {
     visitsEnabled: process.env.RESONANCE_VISITS_ENABLED === "true",
@@ -440,7 +473,7 @@ export async function getResonanceWhopProvisioningStatus() {
     plans: planSpecs().map((spec) => ({ ...spec,
       id: catalog ? z.record(z.string()).parse(catalog.plans)[spec.key] ?? null : null,
     })),
-    recentOrders, paidOrders, unresolvedOrders, redemptions,
+    recentOrders, paidOrders, unresolvedOrders, refundedOrders, reviewOrders, redemptions,
     apiKeyConfigured: Boolean(process.env.WHOP_API_KEY?.trim()),
     catalogConfigured: Boolean(catalog),
     productId: catalog?.product_id ?? null,
