@@ -70,8 +70,8 @@ export function DeleteAccountForm() {
   }
 
   return (
-    <div className="rounded-[2rem] border border-red-500/25 bg-red-950/10 p-6">
-      <p className="text-[11px] uppercase tracking-[0.2em] text-red-300/70">
+    <div className="oremea-admin-surface rounded-[2rem] border p-6">
+      <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--oremea-danger)]">
         Destructive
       </p>
       <h2 className="mt-2 text-xl font-light text-zinc-100">Delete account</h2>
@@ -94,20 +94,20 @@ export function DeleteAccountForm() {
             type="email"
             required
             autoComplete="off"
-            className="mt-2 w-full rounded-xl border border-white/10 bg-zinc-950 px-4 py-3 text-sm normal-case tracking-normal text-zinc-100 outline-none transition focus:border-red-400/60"
+            className="oremea-admin-field mt-2 w-full rounded-xl px-4 py-3 text-sm normal-case tracking-normal"
           />
         </label>
         <button
           type="submit"
           disabled={reviewing || execution.status === "deleting"}
-          className="mt-6 w-full rounded-full border border-red-500/35 bg-red-500/10 px-5 py-3 text-xs uppercase tracking-[0.18em] text-red-200 transition hover:border-red-400/70 disabled:cursor-wait disabled:opacity-50"
+          className="oremea-admin-action mt-6 w-full rounded-full border px-5 py-3 text-xs uppercase tracking-[0.18em] transition disabled:cursor-wait disabled:opacity-50"
         >
           {reviewing ? "Reviewing…" : "Review deletion"}
         </button>
       </form>
 
       {review.status === "error" ? (
-        <p className="mt-4 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-xs leading-5 text-red-200">
+        <p className="oremea-admin-feedback-error mt-4 rounded-xl border px-4 py-3 text-xs leading-5">
           {review.message}
         </p>
       ) : null}
@@ -133,7 +133,7 @@ export function DeleteAccountForm() {
           </div>
 
           {review.blockers.length > 0 ? (
-            <div className="mt-4 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-xs leading-5 text-amber-100">
+            <div className="mt-4 rounded-xl border border-[var(--oremea-gold-border-soft)] bg-[var(--oremea-gold-10)] px-4 py-3 text-xs leading-5 text-[var(--oremea-alert)]">
               <p className="font-medium">Deletion blocked</p>
               <ul className="mt-2 list-disc space-y-1 pl-4">
                 {review.blockers.map((blocker) => (
@@ -143,7 +143,7 @@ export function DeleteAccountForm() {
             </div>
           ) : (
             <div className="mt-5">
-              <p className="text-xs leading-5 text-red-200/80">
+              <p className="text-xs leading-5 text-[var(--oremea-danger)]">
                 This removes private product state, profile, access state, Golden Key
                 issuance and the Clerk identity. This cannot be undone.
               </p>
@@ -153,7 +153,7 @@ export function DeleteAccountForm() {
                   value={confirmation}
                   onChange={(event) => setConfirmation(event.target.value)}
                   autoComplete="off"
-                  className="mt-2 w-full rounded-xl border border-red-500/25 bg-black px-4 py-3 text-sm normal-case tracking-normal text-zinc-100 outline-none focus:border-red-400/70"
+                  className="oremea-admin-field mt-2 w-full rounded-xl px-4 py-3 text-sm normal-case tracking-normal"
                 />
               </label>
               <button
@@ -163,7 +163,7 @@ export function DeleteAccountForm() {
                   execution.status === "deleting" ||
                   confirmation !== review.confirmationText
                 }
-                className="mt-4 w-full rounded-full border border-red-500/50 bg-red-600/15 px-5 py-3 text-xs uppercase tracking-[0.18em] text-red-100 transition hover:bg-red-600/25 disabled:cursor-not-allowed disabled:opacity-35"
+                className="oremea-admin-action-danger mt-4 w-full rounded-full border px-5 py-3 text-xs uppercase tracking-[0.18em] transition disabled:cursor-not-allowed disabled:opacity-35"
               >
                 {execution.status === "deleting"
                   ? "Deleting…"
@@ -178,8 +178,8 @@ export function DeleteAccountForm() {
         <p
           className={`mt-4 rounded-xl border px-4 py-3 text-xs leading-5 ${
             execution.status === "success"
-              ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-100"
-              : "border-red-500/25 bg-red-500/10 text-red-200"
+              ? "oremea-admin-feedback-success"
+              : "oremea-admin-feedback-error"
           }`}
         >
           {execution.message}
