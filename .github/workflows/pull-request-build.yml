@@ -93,13 +93,22 @@ jobs:
               for path in changed
           )
 
+          critical_prefixes = ("app/key/", "app/admin/", "lib/auth/", "components/admin/")
+          critical_files = ("app/oremea-colors.css", ".github/workflows/pull-request-build.yml")
+          critical_build = any(
+              path.startswith(critical_prefixes) or path in critical_files
+              for path in changed
+          )
+
           print("Changed files:")
           for path in changed:
               print(f"  {path}")
           print(f"Validation scope: {'resonance' if targeted else 'full'}")
+          print(f"Account-access build required: {critical_build}")
 
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               output.write(f"scope={'resonance' if targeted else 'full'}\n")
+              output.write(f"critical_build={'true' if critical_build else 'false'}\n")
           PY
 
       - name: Validate Resonance-only change
@@ -118,3 +127,9 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      # Avoid building on every content-only PR, but catch production compiler
+      # issues before merging changes to keys, access controls or admin UI.
+      - name: Build critical account-access changes
+        if: steps.scope.outputs.critical_build == 'true'
+        run: npm run build
