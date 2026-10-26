@@ -231,6 +231,16 @@ assert.match(
   "Silver claim action must pass only verified Clerk emails.",
 );
 assert.match(
+  claimAction,
+  /try \{[\s\S]*claimCreatorSilverKeyInvite[\s\S]*catch \{[\s\S]*error=claim/,
+  "Silver claims must recover without a raw application error if invitation state changes.",
+);
+assert.match(
+  claimPage,
+  /error === "claim"[\s\S]*role="alert"[\s\S]*invitation could not be claimed/,
+  "Failed Silver claims must display accessible retry instructions.",
+);
+assert.match(
   claimPage,
   /const signInUrl = [\s\S]*const signUpUrl = [\s\S]*SignOutButton[\s\S]*Sign in to claim[\s\S]*Create an account/,
   "Silver claim must offer sign-in, signup and account switching without losing the invitation.",
