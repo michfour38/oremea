@@ -71,7 +71,7 @@ export default async function CompassAccessPage() {
   const subscriptionFulfillmentConfigured =
     isCompassSubscriptionFulfillmentConfigured();
   const subscriptionCheckoutHref = !userId
-    ? "/sign-in?redirect_url=%2F"
+    ? "/sign-in?redirect_url=%2Faccess"
     : subscriptionFulfillmentConfigured
       ? subscriptionCheckout
       : null;
