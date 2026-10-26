@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { SiteFooter } from "@/components/site/site-footer";
 import { prisma } from "@/lib/prisma";
@@ -18,7 +19,7 @@ export const dynamic = "force-dynamic";
 export default async function PartyPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ref?: string; pass?: string; registered?: string; error?: string }>;
+  searchParams: Promise<{ ref?: string; pass?: string; registered?: string; error?: string; delivery?: string }>;
 }) {
   const query = await searchParams;
   const startLabel = process.env.OREMEA_PARTY_START_LABEL?.trim() || null;
@@ -87,9 +88,24 @@ export default async function PartyPage({
               Oremea does not collect your friends’ details unless they choose to claim a place.
             </p>
             <PartyInviteControls inviteUrls={inviteUrls} />
-            <p className="mt-7 text-sm leading-7 text-zinc-500">
-              Read the welcome email — the private Questions Box is inside. Keep that email. The box stays open, can be used more than once, and questions added there help shape the live conversation before the session begins.
-            </p>
+            {query.delivery === "unavailable" ? (
+              <div role="alert" className="mt-7 rounded-2xl border border-[var(--oremea-gold-border-soft)] bg-[var(--oremea-gold-10)] p-5 text-sm leading-7 text-[var(--oremea-text-primary)]">
+                Your place is reserved, but we could not confirm delivery of
+                your welcome email. The private Questions Box link is not
+                displayed publicly for your safety. Please{" "}
+                <Link className="font-medium underline underline-offset-4" href="/contact">
+                  contact Oremea
+                </Link>{" "}
+                so the delivery can be checked. Your registration and two guest
+                passes are still saved.
+              </div>
+            ) : (
+              <p className="mt-7 text-sm leading-7 text-zinc-500">
+                Read your welcome email for the private Questions Box link. If it
+                has not arrived, check spam and then contact Oremea. The box
+                stays open and can be used more than once before the session.
+              </p>
+            )}
           </section>
         ) : (
           <form
