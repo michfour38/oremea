@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { SignOutButton } from "@clerk/nextjs";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 
 import { SiteShell } from "@/components/site/site-shell";
@@ -17,6 +19,7 @@ export const metadata: Metadata = {
 };
 
 type Params = Promise<{ token: string }>;
+type SearchParams = Promise<{ error?: string }>;
 
 function maskedEmail(email: string) {
   const [local, domain] = email.split("@");
@@ -42,8 +45,9 @@ function StatusCard({
   );
 }
 
-export default async function GoldenKeyClaimPage({ params }: { params: Params }) {
+export default async function GoldenKeyClaimPage({ params, searchParams }: { params: Params; searchParams: SearchParams }) {
   const { token } = await params;
+  const { error } = await searchParams;
   const invite = await getGoldenKeyInviteState(token);
 
   if (invite.status === "invalid") {
@@ -103,6 +107,9 @@ export default async function GoldenKeyClaimPage({ params }: { params: Params })
   }
 
   const { userId } = await auth();
+  const claimPath = `/key/claim/${token}`;
+  const signInUrl = `/sign-in?redirect_url=${encodeURIComponent(claimPath)}`;
+  const signUpUrl = `/sign-up?redirect_url=${encodeURIComponent(claimPath)}`;
   let canClaim = false;
 
   if (userId) {
@@ -124,6 +131,14 @@ export default async function GoldenKeyClaimPage({ params }: { params: Params })
             This is a one-use invitation for {maskedEmail(invite.email)}. Once claimed, the invitation ends and the Golden Key does not.
           </p>
 
+          {error === "claim" ? (
+            <p role="alert" className="mt-7 rounded-xl border border-[var(--oremea-danger-border)] bg-[var(--oremea-danger-panel)] px-5 py-4 text-sm leading-6 text-[var(--oremea-danger)]">
+              The invitation could not be claimed. Confirm that it is still valid
+              and that the invited address is verified on this account. If
+              this continues, request a fresh invitation.
+            </p>
+          ) : null}
+
           {canClaim ? (
             <form action={claimGoldenKeyAction} className="mt-8">
               <input type="hidden" name="token" value={token} />
@@ -135,8 +150,38 @@ export default async function GoldenKeyClaimPage({ params }: { params: Params })
               </button>
             </form>
           ) : (
-            <div className="mt-8 rounded-2xl border border-white/10 bg-zinc-950/75 px-5 py-4 text-sm leading-6 text-zinc-400">
-              Sign in with the verified email address this Golden Key was issued to. If this is the wrong signed-in account, switch accounts and return to this link.
+            <div className="mt-8 rounded-2xl border border-white/10 bg-zinc-950/75 px-5 py-4 text-sm leading-6 text-zinc-300">
+              <p>
+                This invitation belongs to the verified email address it was issued
+                to. A forwarded link cannot be claimed by someone else.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                {userId ? (
+                  <SignOutButton signOutOptions={{ redirectUrl: signInUrl }}>
+                    <button
+                      type="button"
+                      className="rounded-full border border-[var(--oremea-gold-border-soft)] bg-[var(--oremea-gold-10)] px-5 py-3 text-xs uppercase tracking-[0.12em] text-[var(--oremea-gold)] transition hover:border-[var(--oremea-gold-border-strong)]"
+                    >
+                      Switch to invited account
+                    </button>
+                  </SignOutButton>
+                ) : (
+                  <>
+                    <Link
+                      href={signInUrl}
+                      className="rounded-full border border-[var(--oremea-gold-border-soft)] bg-[var(--oremea-gold-10)] px-5 py-3 text-xs uppercase tracking-[0.12em] text-[var(--oremea-gold)] transition hover:border-[var(--oremea-gold-border-strong)]"
+                    >
+                      Sign in to claim
+                    </Link>
+                    <Link
+                      href={signUpUrl}
+                      className="rounded-full border border-[var(--oremea-border)] px-5 py-3 text-xs uppercase tracking-[0.12em] text-[var(--oremea-text-secondary)] transition hover:border-[var(--oremea-gold-border-soft)]"
+                    >
+                      Create an account
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           )}
 
