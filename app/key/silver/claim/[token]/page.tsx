@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { SignOutButton } from "@clerk/nextjs";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 
 import { SiteShell } from "@/components/site/site-shell";
@@ -17,6 +19,7 @@ export const metadata: Metadata = {
 };
 
 type Params = Promise<{ token: string }>;
+type SearchParams = Promise<{ error?: string }>;
 
 function maskedEmail(email: string) {
   const [local, domain] = email.split("@");
@@ -49,10 +52,13 @@ function StatusCard({
 
 export default async function CreatorSilverKeyClaimPage({
   params,
+  searchParams,
 }: {
   params: Params;
+  searchParams: SearchParams;
 }) {
   const { token } = await params;
+  const { error } = await searchParams;
   const invite = await getCreatorSilverKeyInviteState(token);
 
   if (invite.status === "invalid") {
@@ -108,6 +114,9 @@ export default async function CreatorSilverKeyClaimPage({
   }
 
   const { userId } = await auth();
+  const claimPath = `/key/silver/claim/${token}`;
+  const signInUrl = `/sign-in?redirect_url=${encodeURIComponent(claimPath)}`;
+  const signUpUrl = `/sign-up?redirect_url=${encodeURIComponent(claimPath)}`;
   let canClaim = false;
 
   if (userId) {
@@ -136,6 +145,14 @@ export default async function CreatorSilverKeyClaimPage({
             each product.
           </p>
 
+          {error === "claim" ? (
+            <p role="alert" className="mt-7 rounded-xl border border-[var(--oremea-danger-border)] bg-[var(--oremea-danger-panel)] px-5 py-4 text-sm leading-6 text-[var(--oremea-danger)]">
+              The invitation could not be claimed. Check that the link is still
+              available and that this account has the invited verified email.
+              If the problem continues, request a fresh invitation.
+            </p>
+          ) : null}
+
           {canClaim ? (
             <form action={claimCreatorSilverKeyAction} className="mt-8">
               <input type="hidden" name="token" value={token} />
@@ -147,9 +164,38 @@ export default async function CreatorSilverKeyClaimPage({
               </button>
             </form>
           ) : (
-            <div className="mt-8 rounded-2xl border border-white/10 bg-zinc-950/75 px-5 py-4 text-sm leading-6 text-zinc-400">
-              Sign in with the verified email address this Creator Silver Key was
-              issued to. A forwarded link cannot be claimed by another account.
+            <div className="mt-8 rounded-2xl border border-white/10 bg-zinc-950/75 px-5 py-4 text-sm leading-6 text-zinc-300">
+              <p>
+                This invitation is reserved for the verified email address it
+                was issued to. A forwarded link cannot be claimed by another account.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                {userId ? (
+                  <SignOutButton signOutOptions={{ redirectUrl: signInUrl }}>
+                    <button
+                      type="button"
+                      className="rounded-full border border-[var(--oremea-gold-border-soft)] bg-[var(--oremea-gold-10)] px-5 py-3 text-xs uppercase tracking-[0.12em] text-[var(--oremea-gold)] transition hover:border-[var(--oremea-gold-border-strong)]"
+                    >
+                      Switch to invited account
+                    </button>
+                  </SignOutButton>
+                ) : (
+                  <>
+                    <Link
+                      href={signInUrl}
+                      className="rounded-full border border-[var(--oremea-gold-border-soft)] bg-[var(--oremea-gold-10)] px-5 py-3 text-xs uppercase tracking-[0.12em] text-[var(--oremea-gold)] transition hover:border-[var(--oremea-gold-border-strong)]"
+                    >
+                      Sign in to claim
+                    </Link>
+                    <Link
+                      href={signUpUrl}
+                      className="rounded-full border border-[var(--oremea-border)] px-5 py-3 text-xs uppercase tracking-[0.12em] text-[var(--oremea-text-secondary)] transition hover:border-[var(--oremea-border-strong)]"
+                    >
+                      Create an account
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           )}
 
