@@ -23,7 +23,7 @@ export function GoldenKeyInviteForm() {
   }
 
   return (
-    <div className="rounded-[2rem] border border-[#b79a63]/25 bg-black/40 p-6">
+    <div className="oremea-admin-surface rounded-[2rem] border p-6">
       <h2 className="text-xl font-light text-zinc-100">Give Golden Key</h2>
       <p className="mt-3 min-h-20 text-sm leading-6 text-zinc-500">
         Create a one-use link for one verified email. The link lasts seven days;
@@ -38,27 +38,33 @@ export function GoldenKeyInviteForm() {
             type="email"
             required
             autoComplete="off"
-            className="mt-2 w-full rounded-xl border border-white/10 bg-zinc-950 px-4 py-3 text-sm normal-case tracking-normal text-zinc-100 outline-none transition focus:border-[#b79a63]/60"
+            className="oremea-admin-field mt-2 w-full rounded-xl px-4 py-3 text-sm normal-case tracking-normal"
           />
         </label>
         <button
           type="submit"
           disabled={pending}
-          className="mt-6 w-full rounded-full border border-[#b79a63]/35 bg-[#b79a63]/10 px-5 py-3 text-xs uppercase tracking-[0.18em] text-[#e7c98b] transition hover:border-[#b79a63]/70 disabled:cursor-wait disabled:opacity-50"
+          className="oremea-admin-action mt-6 w-full rounded-full border px-5 py-3 text-xs uppercase tracking-[0.18em] transition disabled:cursor-wait disabled:opacity-50"
         >
           {pending ? "Creating…" : "Create Golden Key link"}
         </button>
       </form>
+      <p className="mt-3 text-xs leading-5 text-[var(--oremea-text-secondary)]">
+        Creating a Golden Key link does not email it to the recipient.
+        Copy and deliver the link within seven days. If it is lost or
+        expires, issue a fresh link to the same address; the older link
+        will be replaced.
+      </p>
 
       {state.status === "error" ? (
-        <p className="mt-4 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-xs leading-5 text-red-200">
+        <p className="oremea-admin-feedback-error mt-4 rounded-xl border px-4 py-3 text-xs leading-5">
           {state.message}
         </p>
       ) : null}
 
       {state.status === "success" ? (
-        <div className="mt-5 rounded-2xl border border-[#b79a63]/25 bg-[#b79a63]/[0.06] p-4">
-          <p className="text-xs leading-5 text-[#ead6a9]">
+        <div className="oremea-admin-feedback-success mt-5 rounded-2xl border p-4">
+          <p className="text-xs leading-5 text-[var(--oremea-text-primary)]">
             Golden Key invitation for {state.email}. Copy it now; Oremea stores
             only the token hash, so this raw link cannot be recovered later.
           </p>
@@ -66,13 +72,13 @@ export function GoldenKeyInviteForm() {
             readOnly
             value={state.link}
             aria-label="Golden Key invitation link"
-            className="mt-3 w-full rounded-xl border border-white/10 bg-zinc-950 px-3 py-2.5 text-xs text-zinc-300 outline-none"
+            className="oremea-admin-field mt-3 w-full rounded-xl px-3 py-2.5 text-xs"
           />
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <button
               type="button"
               onClick={copyLink}
-              className="rounded-full border border-[#b79a63]/35 bg-black/30 px-4 py-2 text-[11px] uppercase tracking-[0.16em] text-[#e7c98b] transition hover:border-[#b79a63]/70"
+              className="oremea-admin-action rounded-full border px-4 py-2 text-[11px] uppercase tracking-[0.16em] transition"
             >
               {copied ? "Copied" : "Copy link"}
             </button>
