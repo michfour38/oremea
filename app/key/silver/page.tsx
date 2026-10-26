@@ -11,7 +11,8 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 function accessLabel(activatedAt: Date | null, expiresAt: Date | null) {
   if (!activatedAt || !expiresAt) return "30 days · starts when you first enter";
-  return `Active until ${expiresAt.toLocaleDateString("en-ZA", {
+  const ended = expiresAt.getTime() <= Date.now();
+  return `${ended ? "Access ended" : "Active until"} ${expiresAt.toLocaleDateString("en-ZA", {
     timeZone: "Africa/Johannesburg",
   })}`;
 }
@@ -62,7 +63,7 @@ export default async function CreatorSilverKeyPage({
             )}
             body="A private AI discussion journal for thoughts that need more than a journal page. Recognition stays close to your own words, follows the thread, reflects what becomes significant and asks one focused question at a time."
             href="https://recognition.oremea.com/begin"
-            cta={info.recognition.activatedAt ? "Continue Recognition" : "Enter Recognition"}
+            cta={info.recognition.active ? "Continue Recognition" : info.recognition.activatedAt ? "Explore Recognition access" : "Enter Recognition"}
           />
 
           <ProductCard
@@ -70,7 +71,7 @@ export default async function CreatorSilverKeyPage({
             access={`${info.resonance.remaining} of ${info.resonance.total} room credits remaining`}
             body="Choose any three of the ten seven-day rooms. You can choose three different rooms or return to the same room for a fresh visit. One room remains active at a time and unused credits stay available for later."
             href="https://resonance.oremea.com/"
-            cta="Choose a Resonance room"
+            cta={info.resonance.remaining > 0 ? "Choose a Resonance room" : "Explore Resonance access"}
           />
 
           <ProductCard
@@ -78,7 +79,7 @@ export default async function CreatorSilverKeyPage({
             access={accessLabel(info.compass.activatedAt, info.compass.expiresAt)}
             body="A private goal-setting and next-step process. Compass takes what you want through seven layers of why, then helps turn what becomes clear into a next step you can actually take."
             href="https://compass.oremea.com/begin"
-            cta={info.compass.activatedAt ? "Continue Compass" : "Enter Compass"}
+            cta={info.compass.active ? "Continue Compass" : info.compass.activatedAt ? "Explore Compass access" : "Enter Compass"}
           />
         </div>
 
