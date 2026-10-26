@@ -108,18 +108,21 @@ for (const file of sources) {
   if (/\b(?:href|src)\s*=\s*\{(?!\s*["'])/.test(code)) dynamic.push(file);
 }
 
-const broken = [];
+// Source-code errors must always fail CI, even while a pull request reports
+// already-deployed public URL errors without blocking an unrelated change.
+const localBroken = [];
+const liveBroken = [];
 // Navigation that promises public access must not be silently gated by Clerk.
 const middleware = existsSync("middleware.ts") ? readFileSync("middleware.ts", "utf8") : "";
 const publicMatcher = middleware.split("const isPublicRoute = createRouteMatcher([")[1]?.split("]);")[0] || "";
 for (const matcher of ["/about(.*)", "/party(.*)", "/cookies(.*)", "/paia(.*)"]) {
   if (!publicMatcher.includes('"' + matcher + '"')) {
-    broken.push("middleware.ts: missing public access matcher " + matcher);
+    localBroken.push("middleware.ts: missing public access matcher " + matcher);
   }
 }
 for (const protectedMatcher of ["/admin(.*)", "/key(.*)", "/current(.*)", "/harmonize(.*)"]) {
   if (publicMatcher.includes('"' + protectedMatcher + '"')) {
-    broken.push("middleware.ts: member/admin route inadvertently public " + protectedMatcher);
+    localBroken.push("middleware.ts: member/admin route inadvertently public " + protectedMatcher);
   }
 }
 const remote = new Map();
@@ -186,11 +189,11 @@ for (const ref of refs) {
   if (/\.(?:png|jpe?g|webp|svg|ico|gif|woff2?|ttf|otf|pdf|txt|xml|html|avif|mp4|webm)$/i.test(localPath)) {
     if (publicFiles.has(localPath) || pageExists(localPath)) {
       checkedLocal.add(localPath);
-    } else broken.push(ref.file + ":" + ref.line + " missing asset " + localPath);
+    } else localBroken.push(ref.file + ":" + ref.line + " missing asset " + localPath);
   } else if (pageExists(localPath)) {
     checkedLocal.add(localPath);
   } else {
-    broken.push(ref.file + ":" + ref.line + " missing route " + display + " → " + localPath);
+    localBroken.push(ref.file + ":" + ref.line + " missing route " + display + " → " + localPath);
   }
 }
 
@@ -220,9 +223,9 @@ if (EXTERNAL) {
       // sign-in is not a healthy anonymous entry point.
       const finalPath = final ? new URL(final).pathname : "";
       if (criticalPublicUrls.includes(url) && /^\/sign-(?:in|up)(?:\/|$)/.test(finalPath)) {
-        broken.push("critical-public-paths: unexpected sign-in redirect " + url + " → " + final);
+        liveBroken.push("critical-public-paths: unexpected sign-in redirect " + url + " → " + final);
       } else if (status === 404 || status === 410) {
-        for (const ref of (remote.get(url) || siteRoutes.get(url) || [])) broken.push(ref.file + ":" + ref.line + " external HTTP " + status + " " + url);
+        for (const ref of (remote.get(url) || siteRoutes.get(url) || [])) liveBroken.push(ref.file + ":" + ref.line + " external HTTP " + status + " " + url);
       } else if (status === null || status >= 400) {
         inconclusive.push(url + " " + (status ?? reason));
       } else {
@@ -241,10 +244,21 @@ console.log("Link audit: " + sources.length + " code files, " + refs.length + " 
   (EXTERNAL ? " checked" : " (remote HTTP not checked)") + ".");
 console.log("Dynamic expressions in " + dynamic.length + " files require rendered/browser checks.");
 if (skipped.length) console.log(skipped.length + " private/remote-app destinations were not inspected.");
-if (broken.length) {
-  console.error(REPORT_ONLY ? "Live references requiring repair/deployment (report-only on PR):" : "Broken references:");
-  [...new Set(broken)].sort().forEach(x => console.error("  " + x));
-  if (!REPORT_ONLY) process.exitCode = 1;
+if (localBroken.length) {
+  console.error("Broken source references (always blocking):");
+  [...new Set(localBroken)].sort().forEach(x => console.error("  " + x));
+  process.exitCode = 1;
 } else {
-  console.log("No confirmed broken literal links in checked scope.");
+  console.log("No confirmed broken local source references.");
+}
+
+if (liveBroken.length) {
+  const label = REPORT_ONLY
+    ? "Deployed live URLs requiring repair (PR report only; proposed code may not be live):"
+    : "Broken deployed live URLs:";
+  console.warn(label);
+  [...new Set(liveBroken)].sort().forEach(x => console.warn("  " + x));
+  if (!REPORT_ONLY) process.exitCode = 1;
+} else if (EXTERNAL) {
+  console.log("No confirmed broken deployed live URLs in checked scope.");
 }
