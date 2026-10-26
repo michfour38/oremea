@@ -16,6 +16,12 @@ export async function claimGoldenKeyAction(formData: FormData) {
     .filter((email) => email.verification?.status === "verified")
     .map((email) => email.emailAddress);
 
-  await claimGoldenKeyInvite({ token, userId, verifiedEmails });
+  try {
+    await claimGoldenKeyInvite({ token, userId, verifiedEmails });
+  } catch {
+    // A link can expire or be replaced between page load and submission.
+    // Keep the invited identity private and show an actionable page instead.
+    redirect(`/key/claim/${encodeURIComponent(token)}?error=claim`);
+  }
   redirect("/key?claimed=1");
 }

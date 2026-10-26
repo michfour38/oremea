@@ -135,6 +135,10 @@ const criticalPublicUrls = [
   "https://www.oremea.com/paia",
   "https://www.oremea.com/party",
   "https://www.oremea.com/party/questions",
+  // Synthetic invalid tokens: verify claim pages stay readable before sign-in.
+  // These values cannot claim a key or disclose a real bearer token.
+  "https://www.oremea.com/key/claim/invalid-invitation-test",
+  "https://www.oremea.com/key/silver/claim/invalid-invitation-test",
   "https://recognition.oremea.com/",
   "https://resonance.oremea.com/",
   "https://compass.oremea.com/",

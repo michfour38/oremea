@@ -42,7 +42,9 @@ export default async function AdminPage({
     openFeedback,
     totalFeedback,
     goldenKeys,
+    goldenInvites,
     silverKeys,
+    silverInvites,
     suspended,
   ] = await Promise.all([
     prisma.oremea_feedback_messages.count({ where: { status: "new" } }),
@@ -60,10 +62,34 @@ export default async function AdminPage({
       orderBy: { granted_at: "desc" },
       take: 25,
     }),
+    prisma.oremea_eternal_key_invites.findMany({
+      orderBy: { created_at: "desc" },
+      take: 25,
+      select: {
+        id: true,
+        email_normalized: true,
+        created_at: true,
+        expires_at: true,
+        claimed_at: true,
+        revoked_at: true,
+      },
+    }),
     prisma.oremea_creator_silver_key_issuances.findMany({
       where: { revoked_at: null },
       orderBy: { granted_at: "desc" },
       take: 25,
+    }),
+    prisma.oremea_creator_silver_key_invites.findMany({
+      orderBy: { created_at: "desc" },
+      take: 25,
+      select: {
+        id: true,
+        email_normalized: true,
+        created_at: true,
+        expires_at: true,
+        claimed_at: true,
+        revoked_at: true,
+      },
     }),
     prisma.account_security.findMany({
       where: { status: "suspended" },
@@ -71,6 +97,8 @@ export default async function AdminPage({
       take: 25,
     }),
   ]);
+
+  const now = new Date();
 
   const userIds = Array.from(
     new Set([
@@ -98,19 +126,19 @@ export default async function AdminPage({
   return (
     <SiteShell>
       <section className="mx-auto w-full max-w-6xl px-6 py-12 md:px-10 md:py-16">
-        <p className="text-xs uppercase tracking-[0.26em] text-[#b79a63]">
+        <p className="text-xs uppercase tracking-[0.26em] text-[var(--oremea-gold)]">
           Oremea Admin
         </p>
         <h1 className="mt-4 text-4xl font-light tracking-tight md:text-6xl">
           Business lives here.
         </h1>
-        <a href="https://dawn.oremea.com/?view=Operations" target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center rounded-xl border border-[#b79a63]/40 px-5 py-3 text-sm font-medium text-[#ead6a9] transition hover:border-[#b79a63]">DAWN Control Room ↗</a>
+        <a href="https://dawn.oremea.com/?view=Operations" target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center rounded-xl border border-[var(--oremea-gold-border-soft)] px-5 py-3 text-sm font-medium text-[var(--oremea-text-primary)] transition hover:border-[var(--oremea-gold)]">DAWN Control Room ↗</a>
         <p className="mt-5 max-w-3xl text-base leading-8 text-zinc-300">
           Private operational tools for Oremea. Golden Key is permanent ∞ All Access. Creator Silver Key is finite experience access: three Resonance room credits plus independent 30-day Recognition and Compass windows that begin only when each product is first entered.
         </p>
 
         {done ? (
-          <div className="mt-8 rounded-2xl border border-[#b79a63]/30 bg-[#b79a63]/10 px-5 py-4 text-sm text-[#ead6a9]">
+          <div className="mt-8 rounded-2xl border border-[var(--oremea-gold-border-soft)] bg-[var(--oremea-gold-10)] px-5 py-4 text-sm text-[var(--oremea-text-primary)]">
             {done === "key"
               ? "Golden Key granted"
               : done === "suspended"
@@ -121,7 +149,7 @@ export default async function AdminPage({
         ) : null}
 
         <div className="mt-12">
-          <p className="text-xs uppercase tracking-[0.22em] text-[#b79a63]">
+          <p className="text-xs uppercase tracking-[0.22em] text-[var(--oremea-gold)]">
             Identity + security
           </p>
           <h2 className="mt-3 text-3xl font-light text-zinc-100">
@@ -148,7 +176,26 @@ export default async function AdminPage({
             />
           </div>
 
-          <div className="mt-8 grid gap-6 xl:grid-cols-3">
+          <div className="mt-8 grid gap-6 xl:grid-cols-2">
+            <StateList
+              title={`Golden invitations · ${goldenInvites.length} recent`}
+              empty="No Golden Key invitation links have been generated yet."
+              rows={goldenInvites.map((item) => ({
+                key: item.id,
+                primary: item.email_normalized,
+                secondary: [
+                  item.claimed_at
+                    ? "Claimed"
+                    : item.revoked_at
+                      ? "Replaced"
+                      : item.expires_at.getTime() <= now.getTime()
+                        ? "Expired · create a new link"
+                        : "Awaiting claim · not proof of delivery",
+                  `Created ${item.created_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
+                  `Expires ${item.expires_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
+                ].join(" · "),
+              }))}
+            />
             <StateList
               title={`Golden Keys · ${goldenKeys.length}`}
               empty="No Golden Keys have been granted yet."
@@ -160,6 +207,25 @@ export default async function AdminPage({
                     ? "Identity protected"
                     : "Legacy identity pending"
                 }`,
+              }))}
+            />
+            <StateList
+              title={`Silver invitations · ${silverInvites.length} recent`}
+              empty="No Creator Silver Key links have been generated yet."
+              rows={silverInvites.map((item) => ({
+                key: item.id,
+                primary: item.email_normalized,
+                secondary: [
+                  item.claimed_at
+                    ? "Claimed"
+                    : item.revoked_at
+                      ? "Replaced"
+                      : item.expires_at.getTime() <= now.getTime()
+                        ? "Expired · issue a fresh link"
+                        : "Awaiting claim · not proof of delivery",
+                  `Created ${item.created_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
+                  `Expires ${item.expires_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
+                ].join(" · "),
               }))}
             />
             <StateList
@@ -198,8 +264,8 @@ export default async function AdminPage({
             />
           </div>
 
-          <div className="mt-10 border-t border-red-500/15 pt-8">
-            <p className="text-xs uppercase tracking-[0.22em] text-red-300/60">
+          <div className="mt-10 border-t border-[var(--oremea-danger-border)] pt-8">
+            <p className="text-xs uppercase tracking-[0.22em] text-[var(--oremea-danger)]">
               Danger zone
             </p>
             <div className="mt-5 max-w-2xl">
@@ -215,11 +281,11 @@ export default async function AdminPage({
           <div className="mt-5 grid gap-5 md:grid-cols-3">
             <Link
               href="/admin/feedback"
-              className="group rounded-[2rem] border border-[#b79a63]/25 bg-black/45 p-7 transition hover:border-[#b79a63]/55"
+              className="group rounded-[2rem] border border-[var(--oremea-gold-border-soft)] bg-black/45 p-7 transition hover:border-[var(--oremea-gold-border-strong)]"
             >
               <div className="flex items-start justify-between gap-5">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.22em] text-[#b79a63]">
+                  <p className="text-xs uppercase tracking-[0.22em] text-[var(--oremea-gold)]">
                     Feedback
                   </p>
                   <h2 className="mt-3 text-2xl font-light text-zinc-100">
@@ -229,7 +295,7 @@ export default async function AdminPage({
                     Read quick feedback and completion surveys, add internal notes, and mark each item handled.
                   </p>
                 </div>
-                <span className="rounded-full border border-[#b79a63]/30 bg-[#b79a63]/10 px-3 py-1 text-sm text-[#e1c68e]">
+                <span className="rounded-full border border-[var(--oremea-gold-border-soft)] bg-[var(--oremea-gold-10)] px-3 py-1 text-sm text-[var(--oremea-gold)]">
                   {newFeedback} new
                 </span>
               </div>
@@ -241,9 +307,9 @@ export default async function AdminPage({
 
             <Link
               href="/admin/resonance-commerce"
-              className="group rounded-[2rem] border border-[#b79a63]/25 bg-black/45 p-7 transition hover:border-[#b79a63]/55"
+              className="group rounded-[2rem] border border-[var(--oremea-gold-border-soft)] bg-black/45 p-7 transition hover:border-[var(--oremea-gold-border-strong)]"
             >
-              <p className="text-xs uppercase tracking-[0.22em] text-[#b79a63]">
+              <p className="text-xs uppercase tracking-[0.22em] text-[var(--oremea-gold)]">
                 Resonance
               </p>
               <h2 className="mt-3 text-2xl font-light text-zinc-100">
@@ -291,7 +357,7 @@ function AdminForm({
   danger?: boolean;
 }) {
   return (
-    <form action={action} className="rounded-[2rem] border border-white/10 bg-black/40 p-6">
+    <form action={action} className="oremea-admin-surface rounded-[2rem] border p-6">
       <h2 className="text-xl font-light text-zinc-100">{title}</h2>
       <p className="mt-3 min-h-20 text-sm leading-6 text-zinc-500">{description}</p>
       <label className="mt-5 block text-[11px] uppercase tracking-[0.2em] text-zinc-500">
@@ -301,7 +367,7 @@ function AdminForm({
           type="email"
           required
           autoComplete="off"
-          className="mt-2 w-full rounded-xl border border-white/10 bg-zinc-950 px-4 py-3 text-sm normal-case tracking-normal text-zinc-100 outline-none transition focus:border-[#b79a63]/60"
+          className="oremea-admin-field mt-2 w-full rounded-xl px-4 py-3 text-sm normal-case tracking-normal"
         />
       </label>
       {reason ? (
@@ -311,7 +377,7 @@ function AdminForm({
             name="reason"
             type="text"
             maxLength={500}
-            className="mt-2 w-full rounded-xl border border-white/10 bg-zinc-950 px-4 py-3 text-sm normal-case tracking-normal text-zinc-100 outline-none transition focus:border-[#b79a63]/60"
+            className="oremea-admin-field mt-2 w-full rounded-xl px-4 py-3 text-sm normal-case tracking-normal"
           />
         </label>
       ) : null}
@@ -319,8 +385,8 @@ function AdminForm({
         type="submit"
         className={`mt-6 w-full rounded-full border px-5 py-3 text-xs uppercase tracking-[0.18em] transition ${
           danger
-            ? "border-red-500/35 bg-red-500/10 text-red-200 hover:border-red-400/70"
-            : "border-[#b79a63]/35 bg-[#b79a63]/10 text-[#e7c98b] hover:border-[#b79a63]/70"
+            ? "oremea-admin-action-danger"
+            : "oremea-admin-action"
         }`}
       >
         {submit}
