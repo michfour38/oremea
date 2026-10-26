@@ -168,6 +168,11 @@ assert.match(
 );
 assert.match(
   keyPage,
+  /redirect\("\/sign-in\?redirect_url=%2Fkey"\)/,
+  "Golden Key holders must return to their key page after signing in.",
+);
+assert.match(
+  keyPage,
   /https:\/\/recognition\.oremea\.com\/begin/,
   "Golden Key Recognition must link directly to the canonical live product entry.",
 );
@@ -392,6 +397,16 @@ assert.match(
   claimPage,
   /maskedEmail\(invite\.email\)/,
   "Golden Key claim UI must not unnecessarily expose the full invited email address.",
+);
+assert.match(
+  claimPage,
+  /href: "\/key", label: "Open your Golden Key"/,
+  "Previously claimed Golden invites must direct holders to their protected dashboard.",
+);
+assert.match(
+  claimPage,
+  /href: "\/contact", label: "Contact Oremea"/,
+  "Expired and replaced Golden invites must offer a reachable support route.",
 );
 
 assert.match(
