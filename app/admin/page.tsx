@@ -37,14 +37,18 @@ export default async function AdminPage({
   const done = typeof params.done === "string" ? params.done : null;
   const email = typeof params.email === "string" ? params.email : null;
 
+  const now = new Date();
+
   const [
     newFeedback,
     openFeedback,
     totalFeedback,
     goldenKeys,
     goldenInvites,
+    goldenInviteHistory,
     silverKeys,
     silverInvites,
+    silverInviteHistory,
     suspended,
   ] = await Promise.all([
     prisma.oremea_feedback_messages.count({ where: { status: "new" } }),
@@ -63,6 +67,30 @@ export default async function AdminPage({
       take: 25,
     }),
     prisma.oremea_eternal_key_invites.findMany({
+      where: {
+        claimed_at: null,
+        revoked_at: null,
+        expires_at: { gt: now },
+      },
+      orderBy: { created_at: "desc" },
+      take: 25,
+      select: {
+        id: true,
+        email_normalized: true,
+        created_at: true,
+        expires_at: true,
+        claimed_at: true,
+        revoked_at: true,
+      },
+    }),
+    prisma.oremea_eternal_key_invites.findMany({
+      where: {
+        OR: [
+          { claimed_at: { not: null } },
+          { revoked_at: { not: null } },
+          { expires_at: { lte: now } },
+        ],
+      },
       orderBy: { created_at: "desc" },
       take: 25,
       select: {
@@ -80,6 +108,30 @@ export default async function AdminPage({
       take: 25,
     }),
     prisma.oremea_creator_silver_key_invites.findMany({
+      where: {
+        claimed_at: null,
+        revoked_at: null,
+        expires_at: { gt: now },
+      },
+      orderBy: { created_at: "desc" },
+      take: 25,
+      select: {
+        id: true,
+        email_normalized: true,
+        created_at: true,
+        expires_at: true,
+        claimed_at: true,
+        revoked_at: true,
+      },
+    }),
+    prisma.oremea_creator_silver_key_invites.findMany({
+      where: {
+        OR: [
+          { claimed_at: { not: null } },
+          { revoked_at: { not: null } },
+          { expires_at: { lte: now } },
+        ],
+      },
       orderBy: { created_at: "desc" },
       take: 25,
       select: {
@@ -97,8 +149,6 @@ export default async function AdminPage({
       take: 25,
     }),
   ]);
-
-  const now = new Date();
 
   const userIds = Array.from(
     new Set([
@@ -178,9 +228,18 @@ export default async function AdminPage({
 
           <div className="mt-8 grid gap-6 xl:grid-cols-2">
             <StateList
-              title={`Golden invitations · ${goldenInvites.length} recent`}
-              empty="No Golden Key invitation links have been generated yet."
+              title={`Golden invitations · ${goldenInvites.length} awaiting claim`}
+              empty="No active Golden Key invitations are awaiting claim."
               rows={goldenInvites.map((item) => ({
+                key: item.id,
+                primary: item.email_normalized,
+                secondary: [
+                  "Awaiting claim · not proof of delivery",
+                  `Created ${item.created_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
+                  `Expires ${item.expires_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
+                ].join(" · "),
+              }))}
+              historyRows={goldenInviteHistory.map((item) => ({
                 key: item.id,
                 primary: item.email_normalized,
                 secondary: [
@@ -188,11 +247,13 @@ export default async function AdminPage({
                     ? "Claimed"
                     : item.revoked_at
                       ? "Replaced"
-                      : item.expires_at.getTime() <= now.getTime()
-                        ? "Expired · create a new link"
-                        : "Awaiting claim · not proof of delivery",
+                      : "Expired · create a new link",
                   `Created ${item.created_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
-                  `Expires ${item.expires_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
+                  item.claimed_at
+                    ? `Claimed ${item.claimed_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`
+                    : item.revoked_at
+                      ? `Replaced ${item.revoked_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`
+                      : `Expired ${item.expires_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
                 ].join(" · "),
               }))}
             />
@@ -210,9 +271,18 @@ export default async function AdminPage({
               }))}
             />
             <StateList
-              title={`Silver invitations · ${silverInvites.length} recent`}
-              empty="No Creator Silver Key links have been generated yet."
+              title={`Silver invitations · ${silverInvites.length} awaiting claim`}
+              empty="No active Creator Silver Key invitations are awaiting claim."
               rows={silverInvites.map((item) => ({
+                key: item.id,
+                primary: item.email_normalized,
+                secondary: [
+                  "Awaiting claim · not proof of delivery",
+                  `Created ${item.created_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
+                  `Expires ${item.expires_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
+                ].join(" · "),
+              }))}
+              historyRows={silverInviteHistory.map((item) => ({
                 key: item.id,
                 primary: item.email_normalized,
                 secondary: [
@@ -220,11 +290,13 @@ export default async function AdminPage({
                     ? "Claimed"
                     : item.revoked_at
                       ? "Replaced"
-                      : item.expires_at.getTime() <= now.getTime()
-                        ? "Expired · issue a fresh link"
-                        : "Awaiting claim · not proof of delivery",
+                      : "Expired · issue a fresh link",
                   `Created ${item.created_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
-                  `Expires ${item.expires_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
+                  item.claimed_at
+                    ? `Claimed ${item.claimed_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`
+                    : item.revoked_at
+                      ? `Replaced ${item.revoked_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`
+                      : `Expired ${item.expires_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
                 ].join(" · "),
               }))}
             />
@@ -399,29 +471,90 @@ function StateList({
   title,
   empty,
   rows,
+  historyRows,
 }: {
   title: string;
   empty: string;
   rows: Array<{ key: string; primary: string; secondary: string }>;
+  historyRows?: Array<{ key: string; primary: string; secondary: string }>;
 }) {
-  return (
-    <div className="rounded-[2rem] border border-white/10 bg-black/35 p-6">
-      <h2 className="text-lg font-light text-zinc-100">{title}</h2>
+  const listContent = (
+    <>
       <div className="mt-5 grid gap-3">
         {rows.length ? (
           rows.map((row) => (
             <div
               key={row.key}
-              className="rounded-xl border border-white/5 bg-zinc-950/80 px-4 py-3"
+              className="rounded-xl border border-[var(--oremea-border)] bg-[var(--oremea-panel-strong)] px-4 py-3"
             >
-              <p className="break-all text-xs text-zinc-300">{row.primary}</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-600">{row.secondary}</p>
+              <p className="break-all text-xs text-[var(--oremea-text-primary)]">{row.primary}</p>
+              <p className="mt-1 text-xs leading-5 text-[var(--oremea-zinc-500)]">{row.secondary}</p>
             </div>
           ))
         ) : (
-          <p className="text-sm text-zinc-600">{empty}</p>
+          <p className="text-sm text-[var(--oremea-text-secondary)]">{empty}</p>
         )}
       </div>
+      {historyRows ? (
+        <details className="group/history mt-5 border-t border-[var(--oremea-border)] pt-4">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg py-2 text-xs tracking-wide text-[var(--oremea-gold)] transition hover:text-[var(--oremea-text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--oremea-gold)] [&::-webkit-details-marker]:hidden">
+            <span>Invitation history · {historyRows.length} recent (claimed, replaced, expired)</span>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              className="h-4 w-4 shrink-0 transition-transform group-open/history:rotate-180"
+            >
+              <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </summary>
+          <div className="mt-3 grid gap-3">
+            {historyRows.length ? (
+              historyRows.map((row) => (
+                <div
+                  key={row.key}
+                  className="rounded-xl border border-[var(--oremea-border)] bg-[var(--oremea-panel-strong)] px-4 py-3"
+                >
+                  <p className="break-all text-xs text-[var(--oremea-text-primary)]">{row.primary}</p>
+                  <p className="mt-1 text-xs leading-5 text-[var(--oremea-zinc-500)]">{row.secondary}</p>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-[var(--oremea-text-secondary)]">No previous invitations yet.</p>
+            )}
+          </div>
+        </details>
+      ) : null}
+    </>
+  );
+
+  if (historyRows) {
+    return (
+      <details className="oremea-admin-surface group/invites rounded-[2rem] border p-6">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg text-[var(--oremea-text-primary)] transition hover:text-[var(--oremea-gold)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--oremea-gold)] [&::-webkit-details-marker]:hidden">
+          <span className="text-lg font-light">{title}</span>
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            className="h-5 w-5 shrink-0 text-[var(--oremea-gold)] transition-transform group-open/invites:rotate-180"
+          >
+            <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </summary>
+        {listContent}
+      </details>
+    );
+  }
+
+  return (
+    <div className="oremea-admin-surface rounded-[2rem] border p-6">
+      <h2 className="text-lg font-light text-[var(--oremea-text-primary)]">{title}</h2>
+      {listContent}
     </div>
   );
 }
