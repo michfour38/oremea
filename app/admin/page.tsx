@@ -478,46 +478,83 @@ function StateList({
   rows: Array<{ key: string; primary: string; secondary: string }>;
   historyRows?: Array<{ key: string; primary: string; secondary: string }>;
 }) {
-  return (
-    <div className="rounded-[2rem] border border-white/10 bg-black/35 p-6">
-      <h2 className="text-lg font-light text-zinc-100">{title}</h2>
+  const listContent = (
+    <>
       <div className="mt-5 grid gap-3">
         {rows.length ? (
           rows.map((row) => (
             <div
               key={row.key}
-              className="rounded-xl border border-white/5 bg-zinc-950/80 px-4 py-3"
+              className="rounded-xl border border-[var(--oremea-border)] bg-[var(--oremea-panel-strong)] px-4 py-3"
             >
-              <p className="break-all text-xs text-zinc-300">{row.primary}</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-600">{row.secondary}</p>
+              <p className="break-all text-xs text-[var(--oremea-text-primary)]">{row.primary}</p>
+              <p className="mt-1 text-xs leading-5 text-[var(--oremea-zinc-500)]">{row.secondary}</p>
             </div>
           ))
         ) : (
-          <p className="text-sm text-zinc-600">{empty}</p>
+          <p className="text-sm text-[var(--oremea-text-secondary)]">{empty}</p>
         )}
       </div>
       {historyRows ? (
-        <details className="group mt-5 border-t border-white/10 pt-4">
-          <summary className="cursor-pointer text-xs tracking-wide text-[var(--oremea-gold)] transition hover:text-zinc-100">
-            Invitation history · {historyRows.length} recent (claimed, replaced, expired)
+        <details className="group/history mt-5 border-t border-[var(--oremea-border)] pt-4">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg py-2 text-xs tracking-wide text-[var(--oremea-gold)] transition hover:text-[var(--oremea-text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--oremea-gold)] [&::-webkit-details-marker]:hidden">
+            <span>Invitation history · {historyRows.length} recent (claimed, replaced, expired)</span>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              className="h-4 w-4 shrink-0 transition-transform group-open/history:rotate-180"
+            >
+              <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </summary>
-          <div className="mt-4 grid gap-3">
+          <div className="mt-3 grid gap-3">
             {historyRows.length ? (
               historyRows.map((row) => (
                 <div
                   key={row.key}
-                  className="rounded-xl border border-white/5 bg-zinc-950/80 px-4 py-3"
+                  className="rounded-xl border border-[var(--oremea-border)] bg-[var(--oremea-panel-strong)] px-4 py-3"
                 >
-                  <p className="break-all text-xs text-zinc-300">{row.primary}</p>
-                  <p className="mt-1 text-xs leading-5 text-zinc-500">{row.secondary}</p>
+                  <p className="break-all text-xs text-[var(--oremea-text-primary)]">{row.primary}</p>
+                  <p className="mt-1 text-xs leading-5 text-[var(--oremea-zinc-500)]">{row.secondary}</p>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-zinc-500">No previous invitations yet.</p>
+              <p className="text-sm text-[var(--oremea-text-secondary)]">No previous invitations yet.</p>
             )}
           </div>
         </details>
       ) : null}
+    </>
+  );
+
+  if (historyRows) {
+    return (
+      <details className="oremea-admin-surface group/invites rounded-[2rem] border p-6">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg text-[var(--oremea-text-primary)] transition hover:text-[var(--oremea-gold)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--oremea-gold)] [&::-webkit-details-marker]:hidden">
+          <h2 className="text-lg font-light">{title}</h2>
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            className="h-5 w-5 shrink-0 text-[var(--oremea-gold)] transition-transform group-open/invites:rotate-180"
+          >
+            <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </summary>
+        {listContent}
+      </details>
+    );
+  }
+
+  return (
+    <div className="oremea-admin-surface rounded-[2rem] border p-6">
+      <h2 className="text-lg font-light text-[var(--oremea-text-primary)]">{title}</h2>
+      {listContent}
     </div>
   );
 }
