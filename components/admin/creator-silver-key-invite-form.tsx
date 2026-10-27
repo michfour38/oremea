@@ -23,8 +23,17 @@ export function CreatorSilverKeyInviteForm() {
   }
 
   return (
-    <div className="oremea-admin-surface rounded-[2rem] border p-6">
-      <h2 className="text-xl font-light text-zinc-100">Give Creator Silver Key</h2>
+    <details
+      open={state.status === "success" || state.status === "error" ? true : undefined}
+      className="oremea-admin-surface group/keyform rounded-[2rem] border p-6"
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg text-[var(--oremea-text-primary)] hover:text-[var(--oremea-gold)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--oremea-gold)] [&::-webkit-details-marker]:hidden">
+        <span className="text-xl font-light">Give Creator Silver Key</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5 shrink-0 text-[var(--oremea-gold)] transition-transform group-open/keyform:rotate-180">
+          <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </summary>
+      <div>
       <p className="mt-3 min-h-20 text-sm leading-6 text-zinc-500">
         Create a one-use link for one verified email. Claiming grants three
         Resonance room credits. Recognition and Compass each get their own
@@ -88,6 +97,7 @@ export function CreatorSilverKeyInviteForm() {
           </div>
         </div>
       ) : null}
-    </div>
+      </div>
+    </details>
   );
 }
