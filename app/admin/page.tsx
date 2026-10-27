@@ -259,6 +259,7 @@ export default async function AdminPage({
             />
             <StateList
               title={`Golden Keys · ${goldenKeys.length}`}
+              collapsible
               empty="No Golden Keys have been granted yet."
               rows={goldenKeys.map((item) => ({
                 key: item.id,
@@ -472,11 +473,13 @@ function StateList({
   empty,
   rows,
   historyRows,
+  collapsible = false,
 }: {
   title: string;
   empty: string;
   rows: Array<{ key: string; primary: string; secondary: string }>;
   historyRows?: Array<{ key: string; primary: string; secondary: string }>;
+  collapsible?: boolean;
 }) {
   const listContent = (
     <>
@@ -530,7 +533,7 @@ function StateList({
     </>
   );
 
-  if (historyRows) {
+  if (historyRows || collapsible) {
     return (
       <details className="oremea-admin-surface group/invites rounded-[2rem] border p-6">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg text-[var(--oremea-text-primary)] transition hover:text-[var(--oremea-gold)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--oremea-gold)] [&::-webkit-details-marker]:hidden">
