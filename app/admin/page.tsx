@@ -251,7 +251,9 @@ export default async function AdminPage({
                   `Created ${item.created_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
                   item.claimed_at
                     ? `Claimed ${item.claimed_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`
-                    : `Expired on ${item.expires_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
+                    : item.revoked_at
+                      ? `Replaced ${item.revoked_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`
+                      : `Expired ${item.expires_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
                 ].join(" · "),
               }))}
             />
@@ -292,7 +294,9 @@ export default async function AdminPage({
                   `Created ${item.created_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
                   item.claimed_at
                     ? `Claimed ${item.claimed_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`
-                    : `Expired on ${item.expires_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
+                    : item.revoked_at
+                      ? `Replaced ${item.revoked_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`
+                      : `Expired ${item.expires_at.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}`,
                 ].join(" · "),
               }))}
             />
