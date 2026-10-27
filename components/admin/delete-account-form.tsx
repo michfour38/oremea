@@ -70,11 +70,16 @@ export function DeleteAccountForm() {
   }
 
   return (
-    <div className="oremea-admin-surface rounded-[2rem] border p-6">
-      <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--oremea-danger)]">
-        Destructive
-      </p>
-      <h2 className="mt-2 text-xl font-light text-zinc-100">Delete account</h2>
+    <details
+      open={review.status === "review" || review.status === "error" || execution.status !== "idle" ? true : undefined}
+      className="oremea-admin-surface group/keyform rounded-[2rem] border p-6"
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg text-[var(--oremea-danger)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--oremea-danger)] [&::-webkit-details-marker]:hidden">
+        <span className="text-xl font-light">Delete account · Destructive</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5 shrink-0 transition-transform group-open/keyform:rotate-180">
+          <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </summary>
       <p className="mt-3 text-sm leading-6 text-zinc-500">
         Remove a test/old member from Oremea and Clerk so the same email can sign
         up as a new identity. Paid records and shared participant data block deletion.
@@ -185,6 +190,6 @@ export function DeleteAccountForm() {
           {execution.message}
         </p>
       ) : null}
-    </div>
+    </details>
   );
 }
