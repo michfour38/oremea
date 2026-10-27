@@ -534,7 +534,7 @@ function StateList({
     return (
       <details className="oremea-admin-surface group/invites rounded-[2rem] border p-6">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg text-[var(--oremea-text-primary)] transition hover:text-[var(--oremea-gold)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--oremea-gold)] [&::-webkit-details-marker]:hidden">
-          <h2 className="text-lg font-light">{title}</h2>
+          <span className="text-lg font-light">{title}</span>
           <svg
             aria-hidden="true"
             viewBox="0 0 24 24"
