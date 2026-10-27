@@ -124,9 +124,9 @@ test('inventory fails closed when designated config is absent', async t => {
 });
 
 
-test('pre-revenue model lifecycle watch runs daily without generation requests',()=>{
+test('pre-revenue model lifecycle watch runs hourly without generation requests',()=>{
  const workflow=readFileSync(new URL('../.github/workflows/anthropic-model-watch.yml',import.meta.url),'utf8');
- assert.match(workflow,/cron: '23 5 \* \* \*'/);
+ assert.match(workflow,/cron: '23 \* \* \* \*'/);
  assert.match(workflow,/workflow_dispatch:/);
  const source=readFileSync(new URL('./anthropic-model-watch.mjs',import.meta.url),'utf8');
  assert.doesNotMatch(source,/\/v1\/messages/);
