@@ -303,6 +303,7 @@ export default async function AdminPage({
             />
             <StateList
               title={`Creator Silver Keys · ${silverKeys.length}`}
+              collapsible
               empty="No Creator Silver Keys have been claimed yet."
               rows={silverKeys.map((item) => ({
                 key: item.id,
@@ -325,6 +326,7 @@ export default async function AdminPage({
             />
             <StateList
               title={`Suspended · ${suspended.length}`}
+              collapsible
               empty="No suspended accounts in the latest set."
               rows={suspended.map((item) => ({
                 key: item.user_id,
@@ -430,8 +432,14 @@ function AdminForm({
   danger?: boolean;
 }) {
   return (
-    <form action={action} className="oremea-admin-surface rounded-[2rem] border p-6">
-      <h2 className="text-xl font-light text-zinc-100">{title}</h2>
+    <details className="oremea-admin-surface group/keyform rounded-[2rem] border p-6">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg text-[var(--oremea-text-primary)] hover:text-[var(--oremea-gold)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--oremea-gold)] [&::-webkit-details-marker]:hidden">
+        <span className="text-xl font-light">{title}</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5 shrink-0 text-[var(--oremea-gold)] transition-transform group-open/keyform:rotate-180">
+          <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </summary>
+      <form action={action} className="mt-4">
       <p className="mt-3 min-h-20 text-sm leading-6 text-zinc-500">{description}</p>
       <label className="mt-5 block text-[11px] uppercase tracking-[0.2em] text-zinc-500">
         Member email
@@ -464,7 +472,8 @@ function AdminForm({
       >
         {submit}
       </button>
-    </form>
+      </form>
+    </details>
   );
 }
 
