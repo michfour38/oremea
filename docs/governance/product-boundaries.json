@@ -1,0 +1,154 @@
+{
+  "version": "1.0",
+  "effectiveDate": "2026-10-30",
+  "approvalStatus": "PROPOSED_NOT_APPROVED",
+  "releaseGate": "BLOCKED_PENDING_EVIDENCE",
+  "products": [
+    {
+      "id": "oremea",
+      "name": "OREMEA",
+      "purpose": "Document per-product purpose and data flows before release",
+      "automaticCrossProductSharing": false,
+      "studyMarketingInProduct": false,
+      "feedbackRepurposedAsResearch": false,
+      "privateByDefault": true,
+      "implementation": "REVIEW_REQUIRED"
+    },
+    {
+      "id": "sustain",
+      "name": "SUSTAIN by OREMEA",
+      "purpose": "Document per-product purpose and data flows before release",
+      "automaticCrossProductSharing": false,
+      "studyMarketingInProduct": false,
+      "feedbackRepurposedAsResearch": false,
+      "privateByDefault": true,
+      "implementation": "REVIEW_REQUIRED"
+    },
+    {
+      "id": "dawn",
+      "name": "DAWN",
+      "purpose": "Document per-product purpose and data flows before release",
+      "automaticCrossProductSharing": false,
+      "studyMarketingInProduct": false,
+      "feedbackRepurposedAsResearch": false,
+      "privateByDefault": true,
+      "implementation": "REVIEW_REQUIRED"
+    },
+    {
+      "id": "works",
+      "name": "WORKS",
+      "purpose": "Document per-product purpose and data flows before release",
+      "automaticCrossProductSharing": false,
+      "studyMarketingInProduct": false,
+      "feedbackRepurposedAsResearch": false,
+      "privateByDefault": true,
+      "implementation": "REVIEW_REQUIRED"
+    },
+    {
+      "id": "binflow",
+      "name": "BinFlow",
+      "purpose": "Document per-product purpose and data flows before release",
+      "automaticCrossProductSharing": false,
+      "studyMarketingInProduct": false,
+      "feedbackRepurposedAsResearch": false,
+      "privateByDefault": true,
+      "implementation": "REVIEW_REQUIRED"
+    },
+    {
+      "id": "countress",
+      "name": "Countress",
+      "purpose": "Document per-product purpose and data flows before release",
+      "automaticCrossProductSharing": false,
+      "studyMarketingInProduct": false,
+      "feedbackRepurposedAsResearch": false,
+      "privateByDefault": true,
+      "implementation": "REVIEW_REQUIRED"
+    },
+    {
+      "id": "the-raw-route",
+      "name": "The Raw Route",
+      "purpose": "Document per-product purpose and data flows before release",
+      "automaticCrossProductSharing": false,
+      "studyMarketingInProduct": false,
+      "feedbackRepurposedAsResearch": false,
+      "privateByDefault": true,
+      "implementation": "REVIEW_REQUIRED"
+    },
+    {
+      "id": "be-well-with-ang",
+      "name": "Be Well with Ang",
+      "purpose": "Document per-product purpose and data flows before release",
+      "automaticCrossProductSharing": false,
+      "studyMarketingInProduct": false,
+      "feedbackRepurposedAsResearch": false,
+      "privateByDefault": true,
+      "implementation": "CONCEPT_ONLY"
+    },
+    {
+      "id": "party",
+      "name": "Independent PARTY",
+      "purpose": "Document per-product purpose and data flows before release",
+      "automaticCrossProductSharing": false,
+      "studyMarketingInProduct": false,
+      "feedbackRepurposedAsResearch": false,
+      "privateByDefault": true,
+      "implementation": "CONCEPT_ONLY"
+    }
+  ],
+  "controls": [
+    {
+      "id": "G1",
+      "name": "Purpose and lawful basis",
+      "status": "NOT_TESTED",
+      "evidence": []
+    },
+    {
+      "id": "G2",
+      "name": "Data inventory and classification",
+      "status": "NOT_TESTED",
+      "evidence": []
+    },
+    {
+      "id": "G3",
+      "name": "Product and role access",
+      "status": "NOT_TESTED",
+      "evidence": []
+    },
+    {
+      "id": "G4",
+      "name": "Transparency, rights and consent",
+      "status": "NOT_TESTED",
+      "evidence": []
+    },
+    {
+      "id": "G5",
+      "name": "Technical safeguards",
+      "status": "NOT_TESTED",
+      "evidence": []
+    },
+    {
+      "id": "G6",
+      "name": "Retention and recovery",
+      "status": "NOT_TESTED",
+      "evidence": []
+    },
+    {
+      "id": "G7",
+      "name": "Vendors and transfers",
+      "status": "NOT_TESTED",
+      "evidence": []
+    },
+    {
+      "id": "G8",
+      "name": "Incident response",
+      "status": "NOT_TESTED",
+      "evidence": []
+    },
+    {
+      "id": "G9",
+      "name": "Independent verification",
+      "status": "NOT_TESTED",
+      "evidence": []
+    }
+  ]
+}
