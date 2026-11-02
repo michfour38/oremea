@@ -2,6 +2,7 @@ import {
   OREMEA_PARTNER_EXPERIENCES,
   resolvePublishedPartnerExperience,
   type PartnerProduct,
+  type PartnerExperience,
 } from "./partner-experiences";
 
 /**
@@ -26,10 +27,11 @@ export const partnerMembershipAccessEnabled = () =>
 export function matchPublishedPartnerWhopPlan(
   whopProductId: string,
   whopPlanId: string,
+  experiences: readonly PartnerExperience[] = Object.values(OREMEA_PARTNER_EXPERIENCES),
 ): MatchedPartnerOffer | null {
   if (!whopProductId.trim() || !whopPlanId.trim()) return null;
   const matches: MatchedPartnerOffer[] = [];
-  for (const experience of Object.values(OREMEA_PARTNER_EXPERIENCES)) {
+  for (const experience of experiences) {
     const published = resolvePublishedPartnerExperience(experience);
     if (!published) continue;
     for (const offer of published.offers) {
