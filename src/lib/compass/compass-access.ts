@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { hasActivePartnerProductAccess } from "@/src/lib/oremea/partner-memberships";
 import { hasEternalOremeaKey } from "@/lib/auth/account-access";
 import { getCreatorSilverProductAccess } from "@/lib/auth/creator-silver-key";
 import { hasOremeaOwnerAccess } from "@/src/lib/oremea/owner-recovery";
@@ -28,7 +29,7 @@ export type CompassAccessState = {
   active: boolean;
   expiresAt: Date | null;
   daysRemaining: number | null;
-  source: "owner" | "eternal_key" | "creator_silver_key" | "pass" | "membership" | null;
+  source: "owner" | "eternal_key" | "creator_silver_key" | "pass" | "membership" | "partner_subscription" | null;
 };
 
 function readMembershipReference(value: string | null): CompassMembershipReference | null {
@@ -148,6 +149,16 @@ export async function getCompassAccessState(
   );
 
   if (!passActive && !membershipActive) {
+    // Only when all stronger independent purchase/key sources are unavailable.
+    const partner = await hasActivePartnerProductAccess(userId, "compass", now);
+    if (partner.active) {
+      return {
+        active: true,
+        expiresAt: partner.expiresAt,
+        daysRemaining: partner.expiresAt ? getCompassDaysRemaining(partner.expiresAt, now) : null,
+        source: "partner_subscription",
+      };
+    }
     return {
       active: false,
       expiresAt: null,
