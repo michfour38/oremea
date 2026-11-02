@@ -1,4 +1,12 @@
 import { logPrivateError } from "@/src/lib/security/private-errors";
+import {
+  matchPublishedPartnerWhopPlan,
+  partnerMembershipAccessEnabled,
+} from "@/src/lib/oremea/partner-membership-contract";
+import {
+  findPartnerMembershipForDeactivation,
+  setPartnerMembershipAccess,
+} from "@/src/lib/oremea/partner-memberships";
 import { clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
@@ -297,6 +305,55 @@ export async function POST(request: Request) {
         active: entitlement?.status === "active",
         expiresAt: entitlement?.expires_at?.toISOString() ?? null,
       });
+    }
+
+    // Partner purchases are additive and disabled unless explicitly enabled.
+    // Only a verified Whop membership with a published product+plan match can
+    // activate access. A previously persisted membership may still deactivate
+    // after its partner offer is unpublished.
+    if (partnerMembershipAccessEnabled()) {
+      const matched = matchPublishedPartnerWhopPlan(
+        membership.productId, membership.planId,
+      );
+      const existingDeactivation = event.type === "membership.deactivated"
+        ? await findPartnerMembershipForDeactivation(
+            membership.membershipId, membership.productId, membership.planId,
+          )
+        : null;
+      if (matched || existingDeactivation) {
+        const user = await findExactlyOneOremeaUser(membership.email);
+        if (!user) {
+          logPrivateError("app/api/webhooks/whop/route.ts:partner-identity");
+          return NextResponse.json(
+            { error: "Partner member account could not be matched." },
+            { status: 422 },
+          );
+        }
+        try {
+          const record = await setPartnerMembershipAccess({
+            userId: user.id,
+            membershipId: membership.membershipId,
+            whopProductId: membership.productId,
+            whopPlanId: membership.planId,
+            active: event.type === "membership.activated",
+            eventAt: membership.eventAt,
+            renewalPeriodEnd: membership.renewalPeriodEnd,
+          });
+          return NextResponse.json({
+            received: true,
+            fulfilled: Boolean(record),
+            product: "oremea_partner",
+            active: record?.status === "active",
+            expiresAt: record?.period_end?.toISOString() ?? null,
+          });
+        } catch {
+          console.error("Partner membership requires reconciliation.");
+          return NextResponse.json(
+            { error: "Partner membership could not be reconciled." },
+            { status: 422 },
+          );
+        }
+      }
     }
 
     return NextResponse.json({ received: true, fulfilled: false });
