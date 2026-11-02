@@ -18,7 +18,6 @@ export async function hasActivePartnerProductAccess(
     where: {
       user_id: userId,
       status: "active",
-      revoked_at: undefined,
       product_keys: { has: product },
       period_end: { gt: now },
     },
