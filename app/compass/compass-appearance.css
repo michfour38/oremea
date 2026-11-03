@@ -43,7 +43,7 @@
   color: var(--oremea-text) !important;
 }
 /* Brighten existing photographic Compass backgrounds, never remove or replace. */
-.compass-appearance[data-compass-mode="light"] .compass-legibility .bg-black\\/70 {
+.compass-appearance[data-compass-mode="light"] .compass-legibility [class~="bg-black/70"] {
   background-color: rgb(246 243 235 / 0.84) !important;
 }
 /* Forms, cards and panels need legible light surfaces. */
