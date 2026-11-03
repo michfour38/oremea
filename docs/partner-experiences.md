@@ -117,6 +117,19 @@ The test has **not run** because no suitable isolated preview deployment or Cler
 
 Separately, the middleware matcher now includes `/partner-assets/` and `/partner-media/` image paths **with extensions**. Raw images still need valid editor auth; published media is independently gated by active approval, verified published partner and the default-off release flag. A regression contract checks the explicit matcher.
 
+## Phase 9: focused technical audit and repair (draft branch only)
+
+Review of partner appearance uploads and client permissions uncovered and repaired:
+- **Atomic image quotas**: concurrent uploads previously counted files outside a transaction and could exceed the 28-image allowance. Each partner upload now takes a PostgreSQL transaction-scoped advisory lock; it checks for duplicates *before* checking the count, then inserts atomically. The disposable database rehearsal creates a real uploaded PNG, confirms deduplication, fills the quota to two remaining slots, races three distinct uploads and proves only two succeed.
+- **Image decoder validation**: file-header signatures alone accepted truncated or malformed PNG/JPEG/WebP uploads. New uploads now must decode successfully through Sharp; MIME, frame count, image dimensions and decompression pixel limits are checked before storing private bytes. Approval still independently re-encodes and strips metadata.
+- **Request limits**: saves and image uploads now reject unknown-length or overly large bodies and require the expected JSON/multipart content type, rather than treating missing Content-Length as zero.
+- **Failed draft load**: UI previously used erasable feedback text as a save guard, allowing the user to clear the error and submit without a confirmed revision. A separate permanent load-failure flag disables edit/save until reloading.
+- **Browser bundle isolation**: the editor no longer imports the full registry of planned partners/offers merely to compute an initial draft; it receives its own brand props and public upload limits.
+
+All changes are additive, with no migrations, Whop product changes or deployed feature activation. The image quota is deliberately conservative for the pilot. A production maintenance/retention policy for old unused private images should be completed before expanding to large numbers of partner assets. Missing-header rejection should also be verified against the actual reverse proxy during the isolated browser rehearsal.
+
+**Execution boundary:** the disposable PostgreSQL, policy and image-processing tests provide strong evidence of storage correctness. They do not replace the planned real Clerk test-account browser rehearsal, which needs an isolated preview hostname and separate Clerk development instance.
+
 ## Required before activating any offer
 
 1. Confirm Angela's price per billing cycle and whether the 3-/4-month programmes are minimum terms or purely suggested durations.
