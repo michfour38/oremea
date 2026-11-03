@@ -69,7 +69,8 @@
     "test:partner-theme": "tsx scripts/verify-partner-theme-contract.ts",
     "test:partner-appearance-preview": "tsx scripts/verify-partner-appearance-preview-contract.ts",
     "test:partner-appearance-storage": "tsx scripts/verify-partner-appearance-storage-contract.ts",
-    "test:partner-appearance-publication": "tsx scripts/verify-partner-appearance-publication-contract.ts"
+    "test:partner-appearance-publication": "tsx scripts/verify-partner-appearance-publication-contract.ts",
+    "test:partner-appearance-db-rehearsal": "tsx scripts/verify-partner-appearance-db-rehearsal.ts"
   },
   "prisma": {
     "schema": "./prisma",
