@@ -6,6 +6,15 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { Prisma, PrismaClient } from "@prisma/client";
+import sharp from "sharp";
+import {
+  MAX_PARTNER_IMAGES,
+} from "../src/lib/oremea/partner-appearance-contract";
+import {
+  PartnerImageQuotaExceeded,
+  storePrivatePartnerImage,
+} from "../src/lib/oremea/partner-appearance-upload";
+import { validatePrivatePartnerImage } from "../src/lib/oremea/partner-appearance-image";
 
 import {
   initialAppearanceDraft,
@@ -130,6 +139,63 @@ async function main() {
     assert.equal((await db.oremea_partner_appearance_assets.findFirst({
       where: { partner_slug: "different-partner", filename },
     })), null);
+    // Upload the way the application does: verify actual decoded PNG pixels,
+    // deduplicate identical files, and serialize the quota across concurrent
+    // requests. This test runs only against the disposable PostgreSQL service.
+    async function pngFor(i: number): Promise<Uint8Array> {
+      const colour = "#" + i.toString(16).padStart(6, "0");
+      return new Uint8Array(await sharp({
+        create: { width: 4, height: 4, channels: 3, background: colour },
+      }).png().toBuffer());
+    }
+    const firstPixels = await pngFor(1);
+    await validatePrivatePartnerImage(firstPixels, "image/png");
+    await assert.rejects(validatePrivatePartnerImage(payload, "image/png"),
+      "A mere PNG header is not a valid uploaded image.");
+
+    const firstUpload = await storePrivatePartnerImage({
+      db, slug, uploadedBy: "user_rehearsal_editor",
+      bytes: firstPixels, declaredType: "image/png",
+    });
+    assert.ok("uploaded" in firstUpload);
+    const repeated = await storePrivatePartnerImage({
+      db, slug, uploadedBy: "user_rehearsal_editor",
+      bytes: firstPixels, declaredType: "image/png",
+    });
+    assert.deepEqual(repeated, {
+      path: firstUpload.path, deduplicated: true,
+    });
+
+    // There are now 2 unique files: 1 original smoke fixture + 1 decoded PNG.
+    for (let i = 2; i < MAX_PARTNER_IMAGES - 2 + 2; i++) {
+      const bytes = await pngFor(i);
+      await storePrivatePartnerImage({
+        db, slug, uploadedBy: "user_rehearsal_editor",
+        bytes, declaredType: "image/png",
+      });
+    }
+    const filled = await db.oremea_partner_appearance_assets.count({
+      where: { partner_slug: slug },
+    });
+    assert.equal(filled, MAX_PARTNER_IMAGES,
+      "One test fixture + one first upload + the unique additional uploads should fill the quota.");
+    const simultaneous = await Promise.allSettled(
+      [101, 102, 103].map(async i => {
+        const bytes = await pngFor(i);
+        return storePrivatePartnerImage({
+          db, slug, uploadedBy: "user_rehearsal_editor",
+          bytes, declaredType: "image/png",
+        });
+      }),
+    );
+    assert.equal(simultaneous.filter(x => x.status === "fulfilled").length, 0,
+      "Concurrent requests may not bypass a full image allowance.");
+    assert.ok(simultaneous.every(x =>
+      x.status === "rejected" && x.reason instanceof PartnerImageQuotaExceeded));
+    assert.equal(await db.oremea_partner_appearance_assets.count({
+      where: { partner_slug: slug },
+    }), MAX_PARTNER_IMAGES);
+
 
     const draftWithArtwork = parsePartnerAppearanceDraft({
       ...base,
