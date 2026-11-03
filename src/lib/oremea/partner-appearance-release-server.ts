@@ -1,7 +1,6 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
-import sharp from "sharp";
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
@@ -29,6 +28,7 @@ export class AppearanceApprovalConflict extends Error {
  * original upload, EXIF, GPS, XMP, ICC profiles, or arbitrary file contents.
  */
 export async function sanitizeApprovedPartnerImage(raw: Uint8Array) {
+  const { default: sharp } = await import("sharp");
   const buffer = await sharp(Buffer.from(raw), {
     failOn: "error",
     limitInputPixels: 20_000_000,
@@ -201,8 +201,7 @@ export async function withdrawApprovedPartnerAppearance({
         partner_slug: slug, action: "withdraw", actor_id: adminId,
         source_revision: existing.source_revision,
         approval_version: updated.approval_version,
-        snapshot: existing.snapshot === Prisma.JsonNull ? undefined
-          : (existing.snapshot as Prisma.InputJsonValue),
+        snapshot: existing.snapshot as Prisma.InputJsonValue,
       },
     });
     return { approvalVersion: updated.approval_version };
