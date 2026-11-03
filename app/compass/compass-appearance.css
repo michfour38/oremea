@@ -1,0 +1,65 @@
+/*
+ * Compass visual option. Preserve existing logo, scene assets, and their URLs.
+ * Dark mode is the unchanged baseline; light is a scoped presentation override.
+ */
+.compass-appearance { min-height: 100vh; }
+.compass-appearance-toggle {
+  position: fixed;
+  z-index: 70;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  left: max(1rem, env(safe-area-inset-left));
+  border: 1px solid var(--oremea-gold-border);
+  border-radius: 0.75rem;
+  background: #171717;
+  color: #f7f4ed;
+  padding: 0.65rem 0.9rem;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  box-shadow: 0 6px 26px rgb(0 0 0 / 0.24);
+}
+.compass-appearance-toggle:focus-visible {
+  outline: 2px solid var(--oremea-gold);
+  outline-offset: 3px;
+}
+.compass-appearance[data-compass-mode="light"] {
+  --oremea-bg: #f6f3eb;
+  --oremea-text: #232220;
+  --oremea-text-primary: #232220;
+  --oremea-text-secondary: #4b4943;
+  --oremea-text-disabled: #68655e;
+  color: var(--oremea-text);
+  background: var(--oremea-bg);
+}
+.compass-appearance[data-compass-mode="light"] .compass-legibility main {
+  background-color: var(--oremea-bg) !important;
+  color: var(--oremea-text) !important;
+}
+.compass-appearance[data-compass-mode="light"] .compass-legibility main h1,
+.compass-appearance[data-compass-mode="light"] .compass-legibility main h2,
+.compass-appearance[data-compass-mode="light"] .compass-legibility main h3,
+.compass-appearance[data-compass-mode="light"] .compass-legibility main p,
+.compass-appearance[data-compass-mode="light"] .compass-legibility main li {
+  color: var(--oremea-text) !important;
+}
+/* Brighten existing photographic Compass backgrounds, never remove or replace. */
+.compass-appearance[data-compass-mode="light"] .compass-legibility .bg-black\\/70 {
+  background-color: rgb(246 243 235 / 0.84) !important;
+}
+/* Forms, cards and panels need legible light surfaces. */
+.compass-appearance[data-compass-mode="light"] .compass-legibility article,
+.compass-appearance[data-compass-mode="light"] .compass-legibility details,
+.compass-appearance[data-compass-mode="light"] .compass-legibility .compass-process-layer section {
+  background-color: rgb(255 255 255 / 0.86) !important;
+  color: #232220 !important;
+}
+.compass-appearance[data-compass-mode="light"] .compass-legibility input,
+.compass-appearance[data-compass-mode="light"] .compass-legibility textarea,
+.compass-appearance[data-compass-mode="light"] .compass-legibility select {
+  background-color: #ffffff !important;
+  color: #232220 !important;
+}
+.compass-appearance[data-compass-mode="light"] .compass-appearance-toggle {
+  background: #ffffff;
+  color: #232220;
+}
