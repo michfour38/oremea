@@ -77,9 +77,9 @@ export default async function CompassAccessPage() {
       : null;
 
   return (
-    <main className="oremea-product-background relative min-h-screen overflow-x-hidden bg-zinc-950 text-white">
+    <main className="relative min-h-screen overflow-x-hidden bg-zinc-950 text-white">
       <div
-        className="partner-default-photo fixed inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-40 md:hidden"
+        className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-40 md:hidden"
         style={{ backgroundImage: "url(/images/mobile/bg-entry.webp)" }}
       />
       <div
