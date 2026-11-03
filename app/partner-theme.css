@@ -41,26 +41,14 @@
   color: var(--partner-foreground);
 }
 
-/* Product roots must not hide their partner background under opaque panels. */
-.partner-theme-scope > .recognition-theme,
-.partner-theme-scope > .compass-legibility,
-.partner-theme-scope > .compass-legibility > .oremea-product-background,
-.partner-theme-scope .oremea-product-background {
+/* Recognition and Resonance may use partner visual assets. Compass does not. */
+.partner-theme-scope[data-partner-product="recognition"] > .recognition-theme,
+.partner-theme-scope[data-partner-product="resonance"] .resonance-theme {
   background-color: transparent !important;
 }
 
-.partner-theme-scope .partner-default-photo {
-  display: none !important;
-}
-
-/* Local colour inheritance; default pages remain unchanged. */
-.partner-theme-scope .compass-legibility .text-\[\#d8b15f\] {
-  color: var(--partner-accent) !important;
-}
-
-.partner-theme-scope .compass-legibility .text-\[\#E7C98B\] {
-  color: var(--partner-accent) !important;
-}
+/* Partner-specific Resonance paintings come from the verified scene resolver.
+   The original OREMEA room paintings are never used as fallback. */
 
 /* Keep background images calm on small devices and in reduced-motion contexts. */
 @media (max-width: 640px) {
