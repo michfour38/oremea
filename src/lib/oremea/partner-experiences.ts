@@ -58,6 +58,16 @@ export type PartnerExperience = Readonly<{
     backgroundAssetPath: string | null;
     /** Optional mobile-specific local background (falls back to desktop image). */
     mobileBackgroundAssetPath: string | null;
+    /**
+     * Resonance's ten original room paintings remain exclusive to OREMEA.
+     * Partners supply their own optional imagery for each room. If absent,
+     * their version uses a neutral background, NEVER OREMEA's room artwork.
+     */
+    resonanceScenes: Readonly<{
+      entry: Readonly<{ desktop: string | null; mobile: string | null }>;
+      archive: Readonly<{ desktop: string | null; mobile: string | null }>;
+      rooms: Readonly<Partial<Record<number, Readonly<{ desktop: string | null; mobile: string | null }>>>>;
+    }>;
   }>;
   /** Planning only. Whop remains responsible for actual payouts and approval. */
   proposedCreatorRate: number;
@@ -82,6 +92,11 @@ export const OREMEA_PARTNER_EXPERIENCES = {
       accent: "#D4AF37",
       backgroundAssetPath: null,
       mobileBackgroundAssetPath: null,
+      resonanceScenes: {
+        entry: { desktop: null, mobile: null },
+        archive: { desktop: null, mobile: null },
+        rooms: {},
+      },
     },
     proposedCreatorRate: OREMEA_AFFILIATE_POLICY.approvedCreatorRate,
     offers: [
