@@ -1,6 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getActivePartnerBrand } from "@/src/lib/oremea/partner-brand-context";
+import { getResonanceSceneBackgrounds } from "@/src/lib/resonance/resonance-backgrounds";
 
 import { prisma } from "@/lib/prisma";
 import { backfillLegacyResonanceGuidance } from "@/src/lib/resonance/backfill-legacy-guidance";
@@ -97,9 +99,6 @@ type SearchHit = {
   title: string;
   body: string;
 };
-
-const archiveBackgroundDesktop = "/images/desktop/bg-archive.webp";
-const archiveBackgroundMobile = "/images/mobile/bg-archive.webp";
 
 function cleanMirrorOutput(text: string) {
   return text
@@ -274,6 +273,8 @@ export default async function ArchivePage(props: Props) {
   if (!userId) redirect("/sign-in?redirect_url=%2Fresonance%2Farchive");
 
   await backfillLegacyResonanceGuidance(userId);
+  const activePartner = await getActivePartnerBrand(userId, "resonance");
+  const sceneBackgrounds = getResonanceSceneBackgrounds("archive", activePartner?.brand ?? null);
 
   const [weeks, runs] = await Promise.all([
     prisma.resonance_weeks.findMany({
@@ -509,11 +510,11 @@ export default async function ArchivePage(props: Props) {
     <main className="resonance-theme relative min-h-screen overflow-x-hidden">
       <div
         className="fixed inset-0 z-0 hidden bg-cover bg-center bg-no-repeat md:block"
-        style={{ backgroundImage: `url(${archiveBackgroundDesktop})` }}
+        style={{ backgroundImage: sceneBackgrounds.desktop ? `url(${sceneBackgrounds.desktop})` : "none" }}
       />
       <div
         className="fixed inset-0 z-0 block bg-cover bg-center bg-no-repeat md:hidden"
-        style={{ backgroundImage: `url(${archiveBackgroundMobile})` }}
+        style={{ backgroundImage: sceneBackgrounds.mobile ? `url(${sceneBackgrounds.mobile})` : "none" }}
       />
       <div className="res-archive-overlay pointer-events-none fixed inset-0 z-10" />
 
