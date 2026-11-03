@@ -14,7 +14,7 @@ export default async function CompassMapPage() {
   }
 
   return (
-    <main className="oremea-product-background min-h-screen bg-[#090909] text-white">
+    <main className="min-h-screen bg-[#090909] text-white">
       <MemberNav />
 
       <section className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
