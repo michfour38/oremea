@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import type { ReactNode } from "react";
 
 import { getActivePartnerBrand } from "@/src/lib/oremea/partner-brand-context";
-import type { PartnerGateProduct } from "@/src/lib/oremea/partner-membership-contract";
+import type { PartnerLinkedProduct } from "@/src/lib/oremea/partner-membership-contract";
 import { partnerThemeStyle } from "@/src/lib/oremea/partner-theme";
 
 /**
@@ -13,7 +13,7 @@ export async function PartnerProductThemeScope({
   product,
   children,
 }: {
-  product: PartnerGateProduct;
+  product: PartnerLinkedProduct;
   children: ReactNode;
 }) {
   const { userId } = await auth();
@@ -24,6 +24,7 @@ export async function PartnerProductThemeScope({
     <div
       className="partner-theme-scope"
       data-partner-theme={partner.slug}
+      data-partner-product={product}
       style={partnerThemeStyle(partner.brand)}
     >
       {children}
