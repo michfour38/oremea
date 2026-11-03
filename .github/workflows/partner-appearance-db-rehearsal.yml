@@ -1,0 +1,63 @@
+name: "OREMEA | disposable partner appearance DB rehearsal"
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/partner-appearance-db-rehearsal.yml"
+      - "prisma/schema/partner-appearance*.prisma"
+      - "prisma/migrations/20261103*_partner_appearance_*/migration.sql"
+      - "scripts/verify-partner-appearance-db-rehearsal.ts"
+      - "scripts/verify-partner-appearance-publication-contract.ts"
+      - "src/lib/oremea/partner-appearance*.ts"
+      - "package.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  disposable-postgres:
+    name: "Rehearse appearance migrations and permissions (isolated)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: disposable-only-password
+          POSTGRES_DB: oremea_partner_rehearsal
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d oremea_partner_rehearsal"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      # No Railway, customer, production or shared database credentials.
+      DATABASE_URL: "postgresql://postgres:disposable-only-password@127.0.0.1:5432/oremea_partner_rehearsal?schema=public"
+      DIRECT_URL: "postgresql://postgres:disposable-only-password@127.0.0.1:5432/oremea_partner_rehearsal?schema=public"
+      OREMEA_ISOLATED_DB_REHEARSAL: "true"
+      OREMEA_PARTNER_ACCESS_ENABLED: "false"
+      OREMEA_PARTNER_APPEARANCE_RELEASE_ENABLED: "false"
+    steps:
+      - name: "Check out PR"
+        uses: actions/checkout@v4
+      - name: "Set up Node.js"
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: "Install dependencies and generate Prisma client"
+        run: npm ci
+      - name: "Validate Prisma schema"
+        run: npx prisma validate
+      - name: "Apply only the two additive appearance migrations to disposable PostgreSQL"
+        run: |
+          npx prisma db execute --file prisma/migrations/20261103120000_partner_appearance_drafts/migration.sql --url "$DIRECT_URL"
+          npx prisma db execute --file prisma/migrations/20261103160000_partner_appearance_publication/migration.sql --url "$DIRECT_URL"
+      - name: "Rehearse versions, editor grants, isolation, approval and withdrawal"
+        run: npm run test:partner-appearance-db-rehearsal
+      - name: "Confirm public artwork approval and metadata stripping contracts"
+        run: npm run test:partner-appearance-publication
