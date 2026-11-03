@@ -101,6 +101,14 @@ New isolated PostgreSQL tables: `oremea_partner_appearance_publications`, `oreme
 - Review approval preview and wording with the owner. Do not activate Angela billing from a visual-theme decision.
 - After a deliberate OREMEA deploy and migrations, approval snapshots remain inert until the feature flag and independently verified partner commerce/publication are explicitly enabled.
 
+## Phase 7: isolated access policy and transport checks
+
+An additional pure editor policy (`src/lib/oremea/partner-appearance-authorization.ts`) now documents exactly what is needed to edit a partner's draft: a real authenticated Clerk user ID, the admin check or an active grant belonging to the exact partner and exact user, and no revoked timestamp. Database-backed rehearsal tests exercise active grants, revocation, cross-partner access and an admin identity. These tests do **not** impersonate a real Clerk session or claim to prove the browser login experience.
+
+The approved `/partner-media/` route is now allowed through Clerk middleware so the handler can itself check the active publication, source-approved filenames, published partner and release switch. Raw `/partner-assets/` uploads remain private and continue to demand an editor/admin identity.
+
+**Still required before a production release:** actual end-to-end sign-in tests with a separate Clerk test tenant and isolated app URL; browser upload preview, authenticated API request/CSRF tests, expired session and revoked editor tests; manual verification that images cannot be read after approval withdrawal. Do not use OREMEA production or the old pending Railway staging patch to simulate these identities.
+
 ## Required before activating any offer
 
 1. Confirm Angela's price per billing cycle and whether the 3-/4-month programmes are minimum terms or purely suggested durations.
