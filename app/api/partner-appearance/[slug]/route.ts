@@ -33,9 +33,17 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   }
 
 
-  const length = Number(request.headers.get("content-length") ?? 0);
-  if (length > 12_000) {
-    return NextResponse.json({ error: "Appearance request too large" }, { status: 413 });
+  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
+    return NextResponse.json({ error: "JSON request required" }, { status: 415, headers: noStore });
+  }
+  // A missing Content-Length must not bypass the size limit.
+  const declaredLength = request.headers.get("content-length");
+  if (!declaredLength || !/^[1-9][0-9]*$/.test(declaredLength)) {
+    return NextResponse.json({ error: "Request length required" }, { status: 411, headers: noStore });
+  }
+  const length = Number(declaredLength);
+  if (!Number.isSafeInteger(length) || length > 12_000) {
+    return NextResponse.json({ error: "Appearance request too large" }, { status: 413, headers: noStore });
   }
   let payload: unknown;
   try {
