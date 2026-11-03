@@ -56,6 +56,8 @@ export type PartnerExperience = Readonly<{
     accent: string;
     /** Optional local public asset path. Nothing is uploaded automatically. */
     backgroundAssetPath: string | null;
+    /** Optional mobile-specific local background (falls back to desktop image). */
+    mobileBackgroundAssetPath: string | null;
   }>;
   /** Planning only. Whop remains responsible for actual payouts and approval. */
   proposedCreatorRate: number;
@@ -79,6 +81,7 @@ export const OREMEA_PARTNER_EXPERIENCES = {
       foreground: "#F4F0E8",
       accent: "#D4AF37",
       backgroundAssetPath: null,
+      mobileBackgroundAssetPath: null,
     },
     proposedCreatorRate: OREMEA_AFFILIATE_POLICY.approvedCreatorRate,
     offers: [
