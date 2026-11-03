@@ -7,6 +7,7 @@ on:
       - "prisma/schema/partner-appearance*.prisma"
       - "prisma/migrations/20261103*_partner_appearance_*/migration.sql"
       - "scripts/verify-partner-appearance-db-rehearsal.ts"
+      - "scripts/verify-partner-appearance-auth-contract.ts"
       - "scripts/verify-partner-appearance-publication-contract.ts"
       - "src/lib/oremea/partner-appearance*.ts"
       - "package.json"
@@ -59,5 +60,7 @@ jobs:
           npx prisma db execute --file prisma/migrations/20261103160000_partner_appearance_publication/migration.sql --url "$DIRECT_URL"
       - name: "Rehearse versions, editor grants, isolation, approval and withdrawal"
         run: npm run test:partner-appearance-db-rehearsal
+      - name: "Verify authorization and public/private media route policy"
+        run: npm run test:partner-appearance-auth
       - name: "Confirm public artwork approval and metadata stripping contracts"
         run: npm run test:partner-appearance-publication
