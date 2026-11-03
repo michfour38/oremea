@@ -59,11 +59,13 @@ export type PartnerExperience = Readonly<{
     /** Optional mobile-specific local background (falls back to desktop image). */
     mobileBackgroundAssetPath: string | null;
     /**
-     * Resonance's ten original room paintings remain exclusive to OREMEA.
-     * Partners supply their own optional imagery for each room. If absent,
-     * their version uses a neutral background, NEVER OREMEA's room artwork.
+     * Resonance scenery is a partner CHOICE, not a white-label obligation:
+     * original = reuse OREMEA paintings (default)
+     * custom = use optional partner images, falling back to original per scene
+     * plain = no scene artwork (solid/theme background).
      */
     resonanceScenes: Readonly<{
+      mode: "original" | "custom" | "plain";
       entry: Readonly<{ desktop: string | null; mobile: string | null }>;
       archive: Readonly<{ desktop: string | null; mobile: string | null }>;
       rooms: Readonly<Partial<Record<number, Readonly<{ desktop: string | null; mobile: string | null }>>>>;
@@ -93,6 +95,7 @@ export const OREMEA_PARTNER_EXPERIENCES = {
       backgroundAssetPath: null,
       mobileBackgroundAssetPath: null,
       resonanceScenes: {
+        mode: "original",
         entry: { desktop: null, mobile: null },
         archive: { desktop: null, mobile: null },
         rooms: {},
