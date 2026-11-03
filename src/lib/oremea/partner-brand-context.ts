@@ -28,8 +28,6 @@ export async function getActivePartnerBrand(
       product_keys: { has: product },
       period_end: { gt: now },
     },
-    orderBy: [{ period_end: "desc" }, { created_at: "desc" }],
-    take: 10,
     select: { partner_slug: true },
   });
 
