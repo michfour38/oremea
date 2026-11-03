@@ -1,4 +1,5 @@
 import "server-only";
+import { getReleasedPartnerBrand } from "./partner-appearance-release-server";
 
 import { prisma } from "@/lib/prisma";
 import {
@@ -41,5 +42,5 @@ export async function getActivePartnerBrand(
   if (validPartners.size !== 1) return null;
   const slug = [...validPartners][0];
   const experience = getPublishedPartnerExperience(slug);
-  return experience ? { slug, brand: experience.brand } : null;
+  return experience ? { slug, brand: await getReleasedPartnerBrand(experience) } : null;
 }
