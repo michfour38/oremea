@@ -3,7 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import {
   partnerMembershipAccessEnabled,
-  type PartnerGateProduct,
+  type PartnerLinkedProduct,
 } from "./partner-membership-contract";
 import {
   getPublishedPartnerExperience,
@@ -16,7 +16,7 @@ import {
  */
 export async function getActivePartnerBrand(
   userId: string,
-  product: PartnerGateProduct,
+  product: PartnerLinkedProduct,
   now = new Date(),
 ): Promise<{ slug: string; brand: PartnerExperience["brand"] } | null> {
   if (!partnerMembershipAccessEnabled() || !userId.trim()) return null;
