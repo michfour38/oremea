@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * Admin-only visual rehearsal. Does not save anything or change a customer's
+ * Admin-only private draft editor. Does not publish or change a customer's
  * partner theme, payments or product access. No SUSTAIN integration.
  */
 export default async function PartnerAppearancePage() {
@@ -32,12 +32,12 @@ export default async function PartnerAppearancePage() {
           </p>
           <h1 className="text-3xl font-light md:text-5xl">Resonance backgrounds</h1>
           <p className="max-w-3xl text-sm leading-7 text-zinc-300">
-            Compare the original OREMEA scenes with optional partner artwork or
-            a plain background. Nothing here changes live pages. The artwork
-            you created remains intact.
+            Compare original OREMEA scenes with optional partner artwork or
+            a plain background. Save and upload privately; nothing publishes
+            to live pages without an explicit release review.
           </p>
         </div>
-        <PartnerAppearancePreview partnerName={partner.brand.name} initialBrand={partner.brand} />
+        <PartnerAppearancePreview partnerSlug={partner.slug} partnerName={partner.brand.name} initialBrand={partner.brand} />
       </section>
     </SiteShell>
   );
