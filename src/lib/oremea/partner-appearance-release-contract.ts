@@ -62,17 +62,17 @@ export function validateApprovedAppearance(
   )) return null;
   if (!["original", "custom", "plain"].includes(String(s.mode))) return null;
 
-  function validatePath(p: unknown): p is string | null {
+  const validatePath = (p: unknown): p is string | null => {
     if (p === null) return true;
     if (typeof p !== "string") return false;
     const prefix = `/partner-media/${slug}/`;
     return p.startsWith(prefix) && validReleasedMediaFilename(p.slice(prefix.length));
-  }
-  function validScene(value: unknown) {
+  };
+  const validScene = (value: unknown): boolean => {
     if (!value || typeof value !== "object" || Array.isArray(value)) return false;
     const record = value as Record<string, unknown>;
     return validatePath(record.desktop) && validatePath(record.mobile);
-  }
+  };
   const rooms = s.rooms;
   if (!rooms || typeof rooms !== "object" || Array.isArray(rooms)) return null;
   const entries = Object.entries(rooms);
