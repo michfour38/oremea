@@ -1,0 +1,183 @@
+/**
+ * Destructive/mutating smoke tests MUST run only on the disposable PostgreSQL
+ * service provisioned by .github/workflows/partner-appearance-db-rehearsal.yml.
+ * Never point this at Railway or any real customer database.
+ */
+import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { Prisma, PrismaClient } from "@prisma/client";
+
+import {
+  initialAppearanceDraft,
+  parsePartnerAppearanceDraft,
+} from "../src/lib/oremea/partner-appearance-contract";
+import {
+  createApprovedAppearance,
+  validateApprovedAppearance,
+} from "../src/lib/oremea/partner-appearance-release-contract";
+
+function insistDisposableDatabase() {
+  const url = new URL(process.env.DATABASE_URL ?? "");
+  assert.equal(process.env.OREMEA_ISOLATED_DB_REHEARSAL, "true");
+  assert.ok(["localhost", "127.0.0.1"].includes(url.hostname),
+    "Refusing non-local DB to preserve real OREMEA data.");
+  assert.equal(url.pathname, "/oremea_partner_rehearsal",
+    "Refusing to mutate anything except the dedicated disposable rehearsal DB.");
+  assert.equal(url.port, "5432");
+}
+
+async function main() {
+  insistDisposableDatabase();
+  const db = new PrismaClient();
+  const slug = "angela";
+  try {
+    // Migration is already applied by psql in the same isolated runner.
+    const tables = await db.$queryRaw<Array<{ table_name: string }>>`
+      SELECT table_name FROM information_schema.tables
+      WHERE table_schema = 'public'
+        AND table_name LIKE 'oremea_partner_appearance%'
+      ORDER BY table_name
+    `;
+    const names = tables.map(t => t.table_name);
+    for (const name of [
+      "oremea_partner_appearances",
+      "oremea_partner_appearance_editors",
+      "oremea_partner_appearance_assets",
+      "oremea_partner_appearance_publications",
+      "oremea_partner_appearance_public_assets",
+      "oremea_partner_appearance_approval_history",
+    ]) assert.ok(names.includes(name), `Required migrated table missing: ${name}`);
+
+    const base = parsePartnerAppearanceDraft(initialAppearanceDraft(slug), slug);
+    const draft = await db.oremea_partner_appearances.create({
+      data: { partner_slug: slug, draft: JSON.parse(JSON.stringify(base)), updated_by: "user_rehearsal_admin" },
+    });
+    assert.equal(draft.revision, 1);
+    assert.equal((await db.oremea_partner_appearances.findUnique({
+      where: { partner_slug: slug },
+    }))?.revision, 1);
+
+    // Optimistic revision guard stops concurrent edits overwriting each other.
+    const changed = await db.oremea_partner_appearances.updateMany({
+      where: { partner_slug: slug, revision: 1 },
+      data: { revision: { increment: 1 }, updated_by: "user_rehearsal_editor" },
+    });
+    assert.equal(changed.count, 1);
+    const stale = await db.oremea_partner_appearances.updateMany({
+      where: { partner_slug: slug, revision: 1 },
+      data: { revision: { increment: 1 } },
+    });
+    assert.equal(stale.count, 0);
+    assert.equal((await db.oremea_partner_appearances.findUnique({
+      where: { partner_slug: slug },
+    }))?.revision, 2);
+
+    // Grant, unique-index protection and revocation are scoped by partner.
+    await db.oremea_partner_appearance_editors.create({
+      data: { partner_slug: slug, user_id: "user_rehearsal_editor", granted_by: "user_rehearsal_admin" },
+    });
+    await assert.rejects(
+      db.oremea_partner_appearance_editors.create({
+        data: { partner_slug: slug, user_id: "user_rehearsal_editor", granted_by: "user_rehearsal_admin" },
+      }),
+      (error: unknown) =>
+        error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002",
+    );
+    await db.oremea_partner_appearance_editors.update({
+      where: { partner_slug_user_id: { partner_slug: slug, user_id: "user_rehearsal_editor" } },
+      data: { revoked_at: new Date() },
+    });
+    const grant = await db.oremea_partner_appearance_editors.findUnique({
+      where: { partner_slug_user_id: { partner_slug: slug, user_id: "user_rehearsal_editor" } },
+    });
+    assert.ok(grant?.revoked_at);
+
+    // Draft assets do not leak across tenant-scoped lookups.
+    const filename = "img-11111111-2222-4333-8444-555555555555.png";
+    const payload = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3, 4]);
+    const rawAsset = await db.oremea_partner_appearance_assets.create({
+      data: {
+        partner_slug: slug,
+        filename,
+        content_type: "image/png",
+        file_size: payload.length,
+        sha256: createHash("sha256").update(payload).digest("hex"),
+        file_bytes: payload,
+        uploaded_by: "user_rehearsal_editor",
+      },
+    });
+    assert.equal((await db.oremea_partner_appearance_assets.findFirst({
+      where: { partner_slug: "different-partner", filename },
+    })), null);
+
+    const draftWithArtwork = parsePartnerAppearanceDraft({
+      ...base,
+      resonanceScenes: {
+        ...base.resonanceScenes,
+        mode: "custom",
+        rooms: { 1: { desktop: `/partner-assets/${slug}/${filename}`, mobile: null } },
+      },
+    }, slug);
+    const approved = createApprovedAppearance(slug, draftWithArtwork);
+    assert.ok(validateApprovedAppearance(approved, slug));
+    assert.equal(validateApprovedAppearance(approved, "different-partner"), null);
+
+    // Approved media contains a separate copy and has an independent URL.
+    const approvedFilename = filename.replace(".png", ".webp");
+    await db.oremea_partner_appearance_public_assets.create({
+      data: {
+        partner_slug: slug,
+        filename: approvedFilename,
+        file_bytes: Buffer.from([82, 73, 70, 70]),
+        file_size: 4,
+        sha256: "rehearsal-only",
+        source_id: rawAsset.id,
+      },
+    });
+    assert.equal((await db.oremea_partner_appearance_public_assets.findUnique({
+      where: { partner_slug_filename: { partner_slug: "different-partner", filename: approvedFilename } },
+    })), null);
+
+    const json = JSON.parse(JSON.stringify(approved)) as Prisma.InputJsonValue;
+    await db.oremea_partner_appearance_publications.create({
+      data: {
+        partner_slug: slug, snapshot: json, source_revision: 2,
+        approval_version: 1, is_active: true, approved_by: "user_rehearsal_admin",
+      },
+    });
+    await db.oremea_partner_appearance_approval_history.create({
+      data: {
+        partner_slug: slug, action: "approve", actor_id: "user_rehearsal_admin",
+        source_revision: 2, approval_version: 1, snapshot: json,
+      },
+    });
+    const withdrawn = await db.oremea_partner_appearance_publications.update({
+      where: { partner_slug: slug },
+      data: { is_active: false, approval_version: { increment: 1 } },
+    });
+    assert.equal(withdrawn.approval_version, 2);
+    assert.equal(withdrawn.is_active, false);
+    await db.oremea_partner_appearance_approval_history.create({
+      data: {
+        partner_slug: slug, action: "withdraw", actor_id: "user_rehearsal_admin",
+        source_revision: 2, approval_version: 2, snapshot: json,
+      },
+    });
+    const audit = await db.oremea_partner_appearance_approval_history.findMany({
+      where: { partner_slug: slug }, orderBy: { created_at: "asc" },
+    });
+    assert.equal(audit.length, 2);
+    assert.deepEqual(new Set(audit.map(a => a.action)), new Set(["approve", "withdraw"]));
+    assert.equal((await db.oremea_partner_appearances.findUnique({
+      where: { partner_slug: slug },
+    }))?.revision, 2, "Withdrawing approved artwork must not alter the draft.");
+    console.log("Disposable PostgreSQL migration, revision, grants, tenant isolation, approval and withdrawal rehearsal passed.");
+  } finally {
+    await db.$disconnect();
+  }
+}
+
+void main().catch(error => {
+  console.error(error);
+  process.exitCode = 1;
+});
