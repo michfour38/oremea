@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { partnerThemeStyle } from "@/src/lib/oremea/partner-theme";
 import { notFound } from "next/navigation";
 import {
   getPublishedPartnerExperience,
@@ -28,20 +29,10 @@ export default async function PartnerLandingPage({ params }: PageProps) {
   if (!partner) notFound();
 
   const { brand, offers } = partner;
-  const backgroundImage = brand.backgroundAssetPath?.startsWith("/")
-    ? `url("${brand.backgroundAssetPath}")`
-    : undefined;
-
   return (
     <main
-      style={{
-        minHeight: "100vh",
-        padding: "clamp(24px, 6vw, 80px)",
-        backgroundColor: brand.background,
-        backgroundImage,
-        backgroundSize: "cover",
-        color: brand.foreground,
-      }}
+      className="partner-theme-scope"
+      style={{ ...partnerThemeStyle(brand), padding: "clamp(24px, 6vw, 80px)" }}
     >
       <div style={{ maxWidth: 920, margin: "0 auto" }}>
         <p style={{ letterSpacing: "0.15em", color: brand.accent }}>
