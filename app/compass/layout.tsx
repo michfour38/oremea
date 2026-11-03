@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { CompassMapOrderEnhancer } from "@/components/compass/CompassMapOrderEnhancer";
+import { PartnerProductThemeScope } from "@/components/oremea/PartnerProductThemeScope";
 
 import "./compass-legibility.css";
 
@@ -17,9 +18,11 @@ export const metadata: Metadata = {
 
 export default function CompassLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="compass-legibility">
-      <CompassMapOrderEnhancer />
-      {children}
-    </div>
+    <PartnerProductThemeScope product="compass">
+      <div className="compass-legibility">
+        <CompassMapOrderEnhancer />
+        {children}
+      </div>
+    </PartnerProductThemeScope>
   );
 }
