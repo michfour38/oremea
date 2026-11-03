@@ -6,7 +6,9 @@ const url = new URL(rawUrl);
 const host = url.hostname.toLowerCase();
 const localhost = host === "localhost" || host === "127.0.0.1";
 const namedPreview = /(?:^|[-.])(preview|pr-293|partner-e2e)(?:[-.]|$)/.test(host);
-if ((!localhost && (!namedPreview || url.protocol !== "https:")) ||
+const trustedHosting = host.endsWith(".up.railway.app") ||
+  host.endsWith(".vercel.app") || host.endsWith(".railway.app");
+if ((!localhost && (!trustedHosting || !namedPreview || url.protocol !== "https:")) ||
   /(^|\.)oremea\.com$/.test(host) ||
   Boolean(url.username || url.password || url.search || url.hash) ||
   url.pathname !== "/") {
