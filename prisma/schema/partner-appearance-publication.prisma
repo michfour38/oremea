@@ -1,0 +1,40 @@
+// Independent, explicitly admin-approved appearance snapshots.
+// A saved partner draft is never itself a public appearance.
+model oremea_partner_appearance_publications {
+  partner_slug     String   @id
+  snapshot         Json
+  source_revision  Int
+  approval_version Int      @default(1)
+  is_active        Boolean  @default(false)
+  approved_by      String
+  approved_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime @updatedAt @db.Timestamptz(6)
+}
+
+model oremea_partner_appearance_public_assets {
+  id           String   @id @default(cuid())
+  partner_slug String
+  filename     String
+  content_type String   @default("image/webp")
+  file_bytes   Bytes
+  file_size    Int
+  sha256       String
+  source_id    String
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([partner_slug, filename])
+  @@index([partner_slug, created_at])
+}
+
+model oremea_partner_appearance_approval_history {
+  id               String   @id @default(cuid())
+  partner_slug     String
+  action           String
+  source_revision  Int
+  approval_version Int
+  actor_id         String
+  snapshot         Json?
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([partner_slug, created_at])
+}
