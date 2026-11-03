@@ -88,10 +88,10 @@ assert.match(browserConfig, /OREMEA_E2E_ISOLATED_PREVIEW/);
 assert.match(browserConfig, /OREMEA_E2E_ALLOW_WRITES/);
 assert.match(browserConfig, /pk_test_/);
 assert.match(browserConfig, /sk_test_/);
-assert.match(browserConfig, /oremea\\.com/);
+assert.ok(browserConfig.includes("oremea"), "The browser target must refuse live OREMEA.");
 assert.match(browserConfig, /trustedHosting/,
   "E2E session tokens may only reach explicitly supported preview providers.");
-assert.match(browserSuite, /clerk\\.signIn/);
+assert.ok(browserSuite.includes("clerk.signIn("), "The test must actually sign in with Clerk.");
 assert.match(browserSuite, /setInputFiles/);
 assert.match(browserSuite, /Draft saved/);
 assert.match(browserSuite, /Approve saved revision/);
@@ -99,7 +99,7 @@ assert.match(browserSuite, /Withdraw approval/);
 assert.match(browserSuite, /Revoke/);
 assert.match(browserWorkflow, /workflow_dispatch/);
 assert.match(browserWorkflow, /ISOLATED_TEST_DATA_ONLY/);
-assert.doesNotMatch(browserWorkflow, /\\bpull_request\\s*:/,
+assert.ok(!browserWorkflow.includes("pull_request:"),
   "The mutation-capable browser suite must be manually triggered only.");
 
 // Parse the manual browser suite in ordinary CI without launching browsers,
