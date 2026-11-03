@@ -96,7 +96,7 @@ const uploader = readFileSync("src/lib/oremea/partner-appearance-upload.ts", "ut
 assert.match(uploader, /pg_advisory_xact_lock/);
 assert.match(uploader, /count >= MAX_PARTNER_IMAGES/);
 assert.match(uploader, /findFirst/);
-assert.match(uploader, /file_bytes: Buffer\\.from\\(bytes\\)/);
+assert.ok(uploader.includes("file_bytes: Buffer.from(bytes)"), "Uploads must store the validated image bytes.");
 
 assert.match(imageRoute, /getPartnerAppearanceEditor\(slug\)/);
 assert.match(imageRoute, /"Cache-Control": "private, no-store, max-age=0"/);
