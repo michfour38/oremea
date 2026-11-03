@@ -11,13 +11,15 @@ import {
  * not be bypassed by generic partner subscription access.
  */
 export type PartnerGateProduct = Extract<PartnerProduct, "recognition" | "compass">;
+/** Resonance is a branding association only: no room/visit access is granted. */
+export type PartnerLinkedProduct = PartnerGateProduct | "resonance";
 
 export type MatchedPartnerOffer = Readonly<{
   partnerSlug: string;
   offerKey: string;
   whopProductId: string;
   whopPlanId: string;
-  productKeys: readonly PartnerGateProduct[];
+  productKeys: readonly PartnerLinkedProduct[];
 }>;
 
 export const partnerMembershipAccessEnabled = () =>
@@ -41,8 +43,9 @@ export function matchPublishedPartnerWhopPlan(
         offer.checkout.whopPlanId !== whopPlanId
       ) continue;
       const productKeys = offer.includedProducts.filter(
-        (product): product is PartnerGateProduct =>
-          product === "recognition" || product === "compass",
+        (product): product is PartnerLinkedProduct =>
+          product === "recognition" || product === "compass" ||
+          product === "resonance",
       );
       if (!productKeys.length) continue;
       matches.push({
