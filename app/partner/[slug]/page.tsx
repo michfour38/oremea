@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { partnerThemeStyle } from "@/src/lib/oremea/partner-theme";
+import { getReleasedPartnerBrand } from "@/src/lib/oremea/partner-appearance-release-server";
 import { notFound } from "next/navigation";
 import {
   getPublishedPartnerExperience,
@@ -28,7 +29,8 @@ export default async function PartnerLandingPage({ params }: PageProps) {
   const partner = getPublishedPartnerExperience(slug);
   if (!partner) notFound();
 
-  const { brand, offers } = partner;
+  const brand = await getReleasedPartnerBrand(partner);
+  const { offers } = partner;
   return (
     <main
       className="partner-theme-scope"
