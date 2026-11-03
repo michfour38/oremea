@@ -23,3 +23,34 @@ export async function sanitizeApprovedPartnerImage(raw: Uint8Array) {
   }
   return buffer;
 }
+
+export const MAX_PARTNER_IMAGE_PIXELS = 20_000_000;
+
+/**
+ * Fail early on corrupt/truncated image data, mismatched MIME declarations,
+ * animated files, and decompression bombs. A matching file signature alone
+ * is not proof that the image is valid or safe to process.
+ */
+export async function validatePrivatePartnerImage(
+  raw: Uint8Array,
+  expectedMime: "image/png" | "image/jpeg" | "image/webp",
+): Promise<void> {
+  const image = sharp(Buffer.from(raw), {
+    failOn: "error",
+    limitInputPixels: MAX_PARTNER_IMAGE_PIXELS,
+    animated: false,
+  });
+  const metadata = await image.metadata();
+  const expectedFormat = expectedMime === "image/jpeg" ? "jpeg"
+    : expectedMime === "image/png" ? "png" : "webp";
+  if (metadata.format !== expectedFormat ||
+    !metadata.width || !metadata.height ||
+    metadata.width * metadata.height > MAX_PARTNER_IMAGE_PIXELS ||
+    (metadata.pages ?? 1) !== 1) {
+    throw new Error("Invalid image format, dimensions or animation");
+  }
+  // Decode the image, rather than accepting headers of a truncated file.
+  await sharp(Buffer.from(raw), {
+    failOn: "error", limitInputPixels: MAX_PARTNER_IMAGE_PIXELS,
+  }).resize(1, 1).toBuffer();
+}
