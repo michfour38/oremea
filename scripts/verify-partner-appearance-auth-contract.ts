@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import ts from "typescript";
 import { resolvePartnerAppearanceAccess } from "../src/lib/oremea/partner-appearance-authorization";
 
 const editor = {
@@ -90,6 +91,8 @@ assert.match(browserConfig, /OREMEA_E2E_ALLOW_WRITES/);
 assert.match(browserConfig, /pk_test_/);
 assert.match(browserConfig, /sk_test_/);
 assert.match(browserConfig, /oremea\\.com/);
+assert.match(browserConfig, /trustedHosting/,
+  "E2E session tokens may only reach explicitly supported preview providers.");
 assert.match(browserSuite, /clerk\\.signIn/);
 assert.match(browserSuite, /setInputFiles/);
 assert.match(browserSuite, /Draft saved/);
@@ -100,5 +103,26 @@ assert.match(browserWorkflow, /workflow_dispatch/);
 assert.match(browserWorkflow, /ISOLATED_TEST_DATA_ONLY/);
 assert.doesNotMatch(browserWorkflow, /\\bpull_request\\s*:/,
   "The mutation-capable browser suite must be manually triggered only.");
+
+// Parse the manual browser suite in ordinary CI without launching browsers,
+// contacting Clerk, consuming preview credentials, or changing a database.
+for (const path of [
+  "e2e/partner-preview/playwright.config.ts",
+  "e2e/partner-preview/specs/global.setup.ts",
+  "e2e/partner-preview/specs/partner-appearance.spec.ts",
+]) {
+  const compiled = ts.transpileModule(readFileSync(path, "utf8"), {
+    fileName: path, reportDiagnostics: true,
+    compilerOptions: {
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.ESNext,
+      jsx: ts.JsxEmit.ReactJSX,
+    },
+  });
+  const errors = (compiled.diagnostics ?? [])
+    .filter(diagnostic => diagnostic.category === ts.DiagnosticCategory.Error);
+  assert.equal(errors.length, 0,
+    `Invalid TypeScript in manual-only preview suite: ${path}`);
+}
 
 console.log("Clerk authorization boundary, tenant isolation, revoked access, private media and admin-only approval contracts passed.");
