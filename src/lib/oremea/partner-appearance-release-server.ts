@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { sanitizeApprovedPartnerImage } from "./partner-appearance-image";
 import {
   isKnownPartner,
   parsePartnerAppearanceDraft,
@@ -20,31 +21,6 @@ import {
 
 export class AppearanceApprovalConflict extends Error {
   constructor() { super("Draft or approval changed. Reload before reviewing again."); }
-}
-
-/**
- * Admin-controlled image transformation: decode pixels, orient image, resize,
- * and re-encode to new WebP bytes WITHOUT .withMetadata(). Never expose the
- * original upload, EXIF, GPS, XMP, ICC profiles, or arbitrary file contents.
- */
-export async function sanitizeApprovedPartnerImage(raw: Uint8Array) {
-  const { default: sharp } = await import("sharp");
-  const buffer = await sharp(Buffer.from(raw), {
-    failOn: "error",
-    limitInputPixels: 20_000_000,
-  })
-    .rotate()
-    .resize({ width: 1920, height: 1920, fit: "inside", withoutEnlargement: true })
-    .webp({ quality: 78, effort: 4 })
-    .toBuffer();
-  if (buffer.length === 0 || buffer.length > 2_000_000) {
-    throw new Error("Approved partner image exceeds 2 MB after re-encoding");
-  }
-  const metadata = await sharp(buffer).metadata();
-  if (metadata.exif || metadata.xmp || metadata.icc) {
-    throw new Error("Approved image still includes metadata");
-  }
-  return buffer;
 }
 
 export async function getCurrentApprovedPartnerAppearance(slug: string) {
