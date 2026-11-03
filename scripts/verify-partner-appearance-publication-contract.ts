@@ -59,6 +59,7 @@ assert.equal(validateApprovedAppearance({
   },
 }, "angela"), null);
 
+async function verifyImageSanitizationAndPublication(): Promise<void> {
 const source = await sharp({
   create: { width: 16, height: 16, channels: 3, background: "#bd9c45" },
 })
@@ -112,3 +113,8 @@ assert.doesNotMatch(migration, /DROP TABLE|ALTER TABLE "oremea_entitlements"|DEL
 assert.doesNotMatch(server + actions, /activateCreatorSilverProduct|grantCompassAccess|setRecognitionMembershipAccess|WHOP_API_KEY|SUSTAIN_DAWN/);
 
 console.log("Appearance approval, private-to-public media conversion, metadata removal and withdrawal contracts passed.");
+}
+void verifyImageSanitizationAndPublication().catch(error => {
+  console.error(error);
+  process.exitCode = 1;
+});
