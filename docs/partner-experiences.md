@@ -80,6 +80,27 @@ Only canonical hexadecimal colours, the three accepted Resonance modes, bounded 
 
 This design deliberately avoids new storage vendor credentials by retaining small files in Railway PostgreSQL. Storage caps, retention/deletion, processing and costs should be reviewed before expanding beyond the pilot.
 
+## Phase 6: owner-controlled approval, sanitized imagery and withdrawal
+
+A saved partner draft is **not** a customer-facing change. The separate admin-only `/admin/partner-appearance/review/[slug]` screen now supports:
+
+1. Inspect the saved revision, selected colours and referenced images, alongside the last approved version and audit history.
+2. **Approve saved revision** — only `requireAdminAction()` can run it. The exact draft and prior approval versions must still match. The original private files are decoded, resized and re-encoded through Sharp into new WebP copies, stripping EXIF/GPS/XMP/ICC. Approved colours, scene settings and new `/partner-media/<partner>/...` references are saved in a separate immutable-at-approval snapshot.
+3. **Withdraw approval** — sets the approved appearance inactive, increments its version, and records the withdrawal. The underlying saved draft and original OREMEA artwork remain intact.
+4. The public media endpoint returns only metadata-stripped, currently approved and actively referenced WebP bytes. Raw draft files continue to require the original editor/admin permissions. Public image responses use `no-store` so withdrawal is not hidden by long-lived caches.
+
+**Two additional runtime release gates remain mandatory:** `OREMEA_PARTNER_APPEARANCE_RELEASE_ENABLED=true` must be set deliberately (defaults off), *and* that partner must already have a verified **published** offer. Angela's offers still are drafts, so approved appearance cannot reach customers at present. Recognised Resonance sessions remain subject to their original room/visit access rules.
+
+New isolated PostgreSQL tables: `oremea_partner_appearance_publications`, `oremea_partner_appearance_public_assets`, and append-only `oremea_partner_appearance_approval_history`. The corresponding migration must be reviewed and applied as part of an approved OREMEA release. The existing direct pricing, Whop and membership ledger are unchanged.
+
+### Production release checklist
+
+- Keep the PR in draft until CI and manual tests pass; do not merge/deploy through the editor.
+- Validate `npm run test:partner-appearance-publication`, all other contracts and the full production build.
+- On a non-production database, test a legitimate partner editor, a revoked editor, unauthenticated access, a cross-partner request, upload limits, out-of-order revisions, a metadata-bearing JPEG, approval, withdrawal and the public route.
+- Review approval preview and wording with the owner. Do not activate Angela billing from a visual-theme decision.
+- After a deliberate OREMEA deploy and migrations, approval snapshots remain inert until the feature flag and independently verified partner commerce/publication are explicitly enabled.
+
 ## Required before activating any offer
 
 1. Confirm Angela's price per billing cycle and whether the 3-/4-month programmes are minimum terms or purely suggested durations.
@@ -98,7 +119,7 @@ This design deliberately avoids new storage vendor credentials by retaining smal
 - Draft and expansion-pending offers are filtered out, and unapproved partners return 404.
 - No customer data, live prices, secrets, production configuration or Whop state are modified.
 
-Run `npm run test:partner-experiences`, `npm run test:partner-memberships`, `npm run test:partner-theme`, `npm run test:partner-appearance-preview`, `npm run test:partner-appearance-storage`, `npm run test:central-pricing`, `npm run test:affiliates`, `npm run test:public-pricing`, `npm run test:participant-security`, `npm run typecheck`, and the normal launch suite before merging.
+Run `npm run test:partner-experiences`, `npm run test:partner-memberships`, `npm run test:partner-theme`, `npm run test:partner-appearance-preview`, `npm run test:partner-appearance-storage`, `npm run test:partner-appearance-publication`, `npm run test:central-pricing`, `npm run test:affiliates`, `npm run test:public-pricing`, `npm run test:participant-security`, `npm run typecheck`, and the normal launch suite before merging.
 
 ## Scaling pattern
 
