@@ -110,7 +110,7 @@ export function referencedPartnerImageFiles(draft: PartnerAppearanceDraft): stri
     draft.resonanceScenes.archive.desktop,
     draft.resonanceScenes.archive.mobile,
     ...Object.values(draft.resonanceScenes.rooms)
-      .flatMap(image => [image.desktop, image.mobile]),
+      .flatMap(image => [image?.desktop ?? null, image?.mobile ?? null]),
   ];
   return [...new Set(paths.filter((path): path is string => Boolean(path)))]
     .map(path => path.slice(path.lastIndexOf("/") + 1));
