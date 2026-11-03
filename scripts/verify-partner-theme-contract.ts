@@ -13,6 +13,7 @@ assert.equal(style["--partner-bg"], angela.brand.background);
 assert.equal(style["--partner-foreground"], angela.brand.foreground);
 assert.equal(style["--partner-accent"], angela.brand.accent);
 assert.equal(style["--partner-bg-image"], "none");
+assert.equal(style["--partner-bg-image-mobile"], "none");
 assert.equal(safePartnerBackgroundAsset(null), null);
 assert.equal(safePartnerBackgroundAsset("/partner-assets/angela/forest.webp"), "/partner-assets/angela/forest.webp");
 assert.equal(safePartnerBackgroundAsset("https://example.com/forest.webp"), null);
@@ -22,6 +23,21 @@ assert.equal(safePartnerBackgroundAsset("/partner-assets/angela/test.png\");red"
 assert.equal(
   (partnerThemeStyle({ ...angela.brand, backgroundAssetPath: "/partner-assets/angela/forest.webp" }) as Record<string,string>)["--partner-bg-image"],
   'url("/partner-assets/angela/forest.webp")',
+);
+assert.equal(
+  (partnerThemeStyle({
+    ...angela.brand,
+    backgroundAssetPath: "/partner-assets/angela/desktop.webp",
+    mobileBackgroundAssetPath: "/partner-assets/angela/mobile.webp",
+  }) as Record<string,string>)["--partner-bg-image-mobile"],
+  'url("/partner-assets/angela/mobile.webp")',
+);
+assert.equal(
+  (partnerThemeStyle({
+    ...angela.brand,
+    backgroundAssetPath: "/partner-assets/angela/desktop.webp",
+  }) as Record<string,string>)["--partner-bg-image-mobile"],
+  'url("/partner-assets/angela/desktop.webp")',
 );
 
 const themeCss = readFileSync("app/partner-theme.css", "utf8");
