@@ -35,7 +35,7 @@ export default async function CompassArchivePage() {
   });
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#090909] text-white">
+    <main className="oremea-product-background relative min-h-screen overflow-hidden bg-[#090909] text-white">
       <MemberNav />
 
       <section className="relative mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl flex-col items-center justify-center px-5 py-10">
