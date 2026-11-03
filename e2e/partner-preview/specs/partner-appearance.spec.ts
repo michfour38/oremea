@@ -48,7 +48,7 @@ test("real isolated Clerk sessions: grant, upload, save, approve, withdraw, revo
   // Minimal PNG uploaded through the actual signed-in browser, never via an
   // admin bypass. This asset is permanently test-only in the disposable DB.
   const imageBytes = Buffer.from(
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9mHRsAAAAASUVORK5CYII=",
+    "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAFElEQVR4nGNsyjFlgAEmBiSAmwMAOicBKyCueZwAAAAASUVORK5CYII=",
     "base64",
   );
   const responsePromise = editor.waitForResponse(r =>
@@ -100,9 +100,8 @@ test("real isolated Clerk sessions: grant, upload, save, approve, withdraw, revo
   expect((await request.get(publicPath, { maxRedirects: 0 })).status()).toBe(404);
 
   await admin.goto("/admin/partner-appearance/editors");
-  const editorPermission = admin.locator("div").filter({ hasText: editorUserId })
-    .filter({ has: admin.getByRole("button", { name: "Revoke" }) }).last();
-  await editorPermission.getByRole("button", { name: "Revoke" }).click();
+  await admin.getByText(editorUserId, { exact: true }).locator("..").locator("..")
+    .getByRole("button", { name: "Revoke" }).click();
   expect((await editor.request.get(api, { maxRedirects: 0 })).status()).not.toBe(200);
   expect((await editor.request.get(asset.path, { maxRedirects: 0 })).status()).not.toBe(200);
 
