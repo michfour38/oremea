@@ -109,6 +109,14 @@ The approved `/partner-media/` route is now allowed through Clerk middleware so 
 
 **Still required before a production release:** actual end-to-end sign-in tests with a separate Clerk test tenant and isolated app URL; browser upload preview, authenticated API request/CSRF tests, expired session and revoked editor tests; manual verification that images cannot be read after approval withdrawal. Do not use OREMEA production or the old pending Railway staging patch to simulate these identities.
 
+## Phase 8: guarded Clerk/Playwright browser rehearsal (prepared, not run)
+
+A manual-only browser test suite lives at `e2e/partner-preview/` and its GitHub Action is `partner-appearance-browser-e2e.yml`. It follows Clerk's development-instance Playwright testing integration with two separate non-production test accounts. When a new disposable preview with its **own** database and Clerk tenant is configured, the suite will: sign in as OREMEA admin, grant Angela editing rights to the test editor, upload a real PNG and verify private access, save draft changes, reject stale revisions, prove the editor cannot approve, approve then withdraw as admin, and revoke editor permissions while the existing browser session is still present.
+
+The test has **not run** because no suitable isolated preview deployment or Clerk test tenant has been connected. It is not silently skipped or passed. The test runner refuses live `oremea.com` hosts, any URL without an explicit preview marker, untrusted external hosting, non-test Clerk keys, and missing disposable-database/write acknowledgements. See `e2e/partner-preview/README.md` for prerequisites, GitHub secrets and execution instructions. The test workflow never automatically runs on a PR, and nothing is deployed by it.
+
+Separately, the middleware matcher now includes `/partner-assets/` and `/partner-media/` image paths **with extensions**. Raw images still need valid editor auth; published media is independently gated by active approval, verified published partner and the default-off release flag. A regression contract checks the explicit matcher.
+
 ## Required before activating any offer
 
 1. Confirm Angela's price per billing cycle and whether the 3-/4-month programmes are minimum terms or purely suggested durations.
