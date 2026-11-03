@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { CompassMapOrderEnhancer } from "@/components/compass/CompassMapOrderEnhancer";
-import { PartnerProductThemeScope } from "@/components/oremea/PartnerProductThemeScope";
+import { CompassAppearance } from "@/components/compass/CompassAppearance";
 
 import "./compass-legibility.css";
+import "./compass-appearance.css";
 
 export const metadata: Metadata = {
   title: "Compass | Oremea",
@@ -18,11 +19,11 @@ export const metadata: Metadata = {
 
 export default function CompassLayout({ children }: { children: ReactNode }) {
   return (
-    <PartnerProductThemeScope product="compass">
+    <CompassAppearance>
       <div className="compass-legibility">
         <CompassMapOrderEnhancer />
         {children}
       </div>
-    </PartnerProductThemeScope>
+    </CompassAppearance>
   );
 }
