@@ -1,0 +1,36 @@
+// Admin-approved partner appearance editing. Visual settings never grant access.
+model oremea_partner_appearances {
+  partner_slug String   @id
+  draft        Json
+  revision     Int      @default(1)
+  updated_by   String
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime @updatedAt @db.Timestamptz(6)
+}
+
+model oremea_partner_appearance_editors {
+  id           String    @id @default(cuid())
+  partner_slug String
+  user_id      String
+  granted_by   String
+  revoked_at   DateTime? @db.Timestamptz(6)
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@unique([partner_slug, user_id])
+  @@index([user_id, revoked_at])
+}
+
+model oremea_partner_appearance_assets {
+  id           String   @id @default(cuid())
+  partner_slug String
+  filename     String   @unique
+  content_type String
+  file_size    Int
+  sha256       String
+  file_bytes   Bytes
+  uploaded_by  String
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([partner_slug, created_at])
+}
