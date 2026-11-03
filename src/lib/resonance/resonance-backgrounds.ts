@@ -23,20 +23,31 @@ function originalResonanceBackgrounds(scene: Scene): Backgrounds {
 }
 
 /**
- * For a verified partner, NEVER fall back to OREMEA's one-of-a-kind paintings.
- * Missing partner imagery intentionally yields a neutral background.
+ * OREMEA's paintings are the default. Partners can keep them, customise any
+ * subset of scenes, or use a plain background. None of these choices require
+ * changing the product pages or the original assets.
  */
 export function getResonanceSceneBackgrounds(
   scene: Scene,
   partnerBrand: PartnerBrand | null = null,
 ): Backgrounds {
-  if (!partnerBrand) return originalResonanceBackgrounds(scene);
+  const originals = originalResonanceBackgrounds(scene);
+  if (!partnerBrand || partnerBrand.resonanceScenes.mode === "original") {
+    return originals;
+  }
+  if (partnerBrand.resonanceScenes.mode === "plain") {
+    return { desktop: null, mobile: null };
+  }
+
   const chosen = scene === "entry"
     ? partnerBrand.resonanceScenes.entry
     : scene === "archive"
       ? partnerBrand.resonanceScenes.archive
       : partnerBrand.resonanceScenes.rooms[scene];
-  const desktop = safePartnerBackgroundAsset(chosen?.desktop ?? null);
-  const mobile = safePartnerBackgroundAsset(chosen?.mobile ?? null) ?? desktop;
-  return { desktop, mobile };
+  const customDesktop = safePartnerBackgroundAsset(chosen?.desktop ?? null);
+  const customMobile = safePartnerBackgroundAsset(chosen?.mobile ?? null);
+  return {
+    desktop: customDesktop ?? originals.desktop,
+    mobile: customMobile ?? customDesktop ?? originals.mobile,
+  };
 }
