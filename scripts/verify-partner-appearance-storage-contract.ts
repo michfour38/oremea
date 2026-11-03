@@ -89,7 +89,15 @@ assert.match(upload, /getPartnerAppearanceEditor\(slug\)/);
 assert.match(upload, /request\.headers\.get\("origin"\) !== request\.nextUrl\.origin/);
 assert.match(upload, /MAX_PARTNER_IMAGE_BYTES/);
 assert.match(upload, /sniffPartnerImage/);
-assert.match(upload, /file_bytes: Buffer\.from\(bytes\)/);
+assert.match(upload, /validatePrivatePartnerImage/);
+assert.match(upload, /storePrivatePartnerImage/);
+assert.match(upload, /Image upload length is required/);
+const uploader = readFileSync("src/lib/oremea/partner-appearance-upload.ts", "utf8");
+assert.match(uploader, /pg_advisory_xact_lock/);
+assert.match(uploader, /count >= MAX_PARTNER_IMAGES/);
+assert.match(uploader, /findFirst/);
+assert.match(uploader, /file_bytes: Buffer\\.from\\(bytes\\)/);
+
 assert.match(imageRoute, /getPartnerAppearanceEditor\(slug\)/);
 assert.match(imageRoute, /"Cache-Control": "private, no-store, max-age=0"/);
 assert.match(imageRoute, /"X-Content-Type-Options": "nosniff"/);
