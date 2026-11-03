@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { PartnerProductThemeScope } from "@/components/oremea/PartnerProductThemeScope";
 
 export const metadata: Metadata = {
   title: "Resonance | Oremea",
@@ -10,5 +11,5 @@ export const metadata: Metadata = {
 };
 
 export default function ResonanceLayout({ children }: { children: ReactNode }) {
-  return <>{children}</>;
+  return <PartnerProductThemeScope product="resonance">{children}</PartnerProductThemeScope>;
 }
