@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { isOremeaAdmin } from "@/lib/auth/admin-access";
+import { resolvePartnerAppearanceAccess, type PartnerAppearanceAccess } from "./partner-appearance-authorization";
 import {
   initialAppearanceDraft,
   isKnownPartner,
@@ -12,8 +13,8 @@ import {
   type PartnerAppearanceDraft,
 } from "./partner-appearance-contract";
 
-export type PartnerEditorRole = "admin" | "editor";
-export type PartnerEditorAccess = { userId: string; role: PartnerEditorRole };
+export type PartnerEditorRole = PartnerAppearanceAccess["role"];
+export type PartnerEditorAccess = PartnerAppearanceAccess;
 
 export async function getPartnerAppearanceEditor(
   slug: string,
@@ -21,12 +22,21 @@ export async function getPartnerAppearanceEditor(
   if (!isKnownPartner(slug)) return null;
   const { userId } = await auth();
   if (!userId) return null;
-  if (await isOremeaAdmin(userId)) return { userId, role: "admin" };
+  const admin = await isOremeaAdmin(userId);
+  if (admin) {
+    return resolvePartnerAppearanceAccess({
+      requestedPartner: slug, authenticatedUserId: userId,
+      isAdmin: true, exactPartnerGrant: null,
+    });
+  }
   const grant = await prisma.oremea_partner_appearance_editors.findUnique({
     where: { partner_slug_user_id: { partner_slug: slug, user_id: userId } },
-    select: { revoked_at: true },
+    select: { partner_slug: true, user_id: true, revoked_at: true },
   });
-  return grant && grant.revoked_at === null ? { userId, role: "editor" } : null;
+  return resolvePartnerAppearanceAccess({
+    requestedPartner: slug, authenticatedUserId: userId,
+    isAdmin: false, exactPartnerGrant: grant,
+  });
 }
 
 export async function readPartnerAppearanceDraft(slug: string) {
