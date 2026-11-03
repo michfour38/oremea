@@ -52,15 +52,33 @@ The existing `app/oremea-colors.css` remains the original OREMEA root palette (i
 
 Angela's `backgroundAssetPath` is still null until an actual approved image is supplied. Her colours are placeholders. The draft launch remains blocked. Users without a verified matching membership see OREMEA's original design. A user subscribed to two different approved partners receives neutral OREMEA styling to avoid confusing branding.
 
-Background options are currently configured in the partner registry, not in a self-service partner upload dashboard. Asset uploads and editable partner settings can be added later, after authorisation and image validation.
+The version-controlled partner registry remains the public source of truth. A private draft editor now exists for permitted partner accounts; no draft appearance is automatically published.
 
 This completes shared **theme plumbing**, not full unbranded white-labelling. The domain, product copy, emails, icons, metadata, individual Compass component decorations, and several legacy page-specific styles still refer to OREMEA or fixed values. They need an accessibility and product-by-product audit before any partner experience can be called completely white-label. SUSTAIN remains untouched by this workstream.
 
-## Phase 4: private appearance preview
+## Phase 4: initial private appearance preview (superseded by saveable draft editor)
 
-A new, admin-only preview is available at `/admin/partner-appearance`. The existing `requireAdminPage()` guard applies before displaying any partner settings. This is currently an **unsaved local visual rehearsal**: owners can select a Resonance scene, compare original/custom/plain modes, enter optional validated local image paths, and switch between mobile and desktop sizes. Changes in this screen do not persist, upload files, publish artwork or alter live customer themes.
+The first preview at `/admin/partner-appearance` was a local visual rehearsal. It now supports private, versioned Save and Upload operations as described in Phase 5. It still does not publish or alter live customer themes.
 
-The admin home now links to the preview. A contract check ensures it remains gated and read-only. Real partner-editable persistence would require a secure admin-only write action, authorisation and asset upload flow, audit trail, and a decided override precedence between the database and version-controlled partner configuration.
+The admin home links to the private editor; contract checks verify authorised access and the separation from public product access. Real partner-editable persistence would require a secure admin-only write action, authorisation and asset upload flow, audit trail, and a decided override precedence between the database and version-controlled partner configuration.
+
+## Phase 5: saved appearance drafts, approved editor access, and private uploads
+
+The appearance editor is now **saveable**, while remaining isolated from live branding, product access and commerce:
+
+- `/admin/partner-appearance`: owner/admin appearance editor with Save and Upload controls.
+- `/admin/partner-appearance/editors`: grant/revoke an appearance editor by an existing verified Clerk user ID. Admin permission is required; grants are scoped to one partner slug.
+- `/partner/studio/[slug]`: private partner editor page. A signed-in account must have an active, unrevoked grant for that exact partner (or be an OREMEA admin); otherwise the route is concealed.
+- `GET/PUT /api/partner-appearance/[slug]`: permission-checked draft retrieval and optimistic-lock updates. Revision conflicts return HTTP 409; new saves do not silently overwrite another editor's changes.
+- `POST /api/partner-appearance/[slug]/assets`: same-origin authenticated uploads. Only genuine PNG, JPEG, WebP files up to 1.5 MB are accepted; at most 28 images may be retained per partner. Duplicates are identified by SHA-256.
+- `/partner-assets/[slug]/[filename]`: private image serving only to a permitted editor or admin. Unpublished images are never served publicly.
+- New additive PostgreSQL tables: `oremea_partner_appearances` (draft JSON, version and editor), `oremea_partner_appearance_editors` (revocable grants) and `oremea_partner_appearance_assets` (private image bytes). A database migration is required before this editor can be used on a deployed branch.
+
+Only canonical hexadecimal colours, the three accepted Resonance modes, bounded scene numbers and uploaded images belonging to the same partner may be saved. Unknown or cross-partner image paths are rejected. The original OREMEA background images are preserved; setting `original`, `custom` or `plain` remains optional. Custom means only selected scenes use supplied imagery; missing scenes retain the original.
+
+**Saving is not publishing.** Runtime partner product pages still use the reviewed version-controlled configuration and independently verified subscriptions. No draft is automatically pushed to customers, including if a partner editor saves custom artwork. Before publication, an explicit admin approval/release step must be built, together with appropriate public image-serving rules and image metadata stripping. Current uploads are private drafts, so embedded photographic metadata is not shared publicly.
+
+This design deliberately avoids new storage vendor credentials by retaining small files in Railway PostgreSQL. Storage caps, retention/deletion, processing and costs should be reviewed before expanding beyond the pilot.
 
 ## Required before activating any offer
 
@@ -80,7 +98,7 @@ The admin home now links to the preview. A contract check ensures it remains gat
 - Draft and expansion-pending offers are filtered out, and unapproved partners return 404.
 - No customer data, live prices, secrets, production configuration or Whop state are modified.
 
-Run `npm run test:partner-experiences`, `npm run test:partner-memberships`, `npm run test:partner-theme`, `npm run test:partner-appearance-preview`, `npm run test:central-pricing`, `npm run test:affiliates`, `npm run test:public-pricing`, `npm run test:participant-security`, `npm run typecheck`, and the normal launch suite before merging.
+Run `npm run test:partner-experiences`, `npm run test:partner-memberships`, `npm run test:partner-theme`, `npm run test:partner-appearance-preview`, `npm run test:partner-appearance-storage`, `npm run test:central-pricing`, `npm run test:affiliates`, `npm run test:public-pricing`, `npm run test:participant-security`, `npm run typecheck`, and the normal launch suite before merging.
 
 ## Scaling pattern
 
