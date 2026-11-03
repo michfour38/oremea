@@ -38,6 +38,20 @@ This PR also adds the **OREMEA-only** partner membership ledger, its additive SQ
 
 Do not turn the flag on merely because the migration has deployed. Provider plan configuration, account linking, checkout timing, refund and plan-change behaviour, and end-to-end permission tests are still prerequisites. In particular, a provider membership without a finite `renewal_period_end` is rejected for reconciliation instead of granting indefinite access.
 
+## Phase 3: scoped colours and backgrounds
+
+The existing `app/oremea-colors.css` remains the original OREMEA root palette (including `#cda434`). Partner visual overrides are **scoped**, not global:
+
+- `src/lib/oremea/partner-theme.ts` converts partner brand settings to a small, safe group of CSS custom properties and limits images to approved local `/partner-assets/<partner>/...` paths.
+- `app/partner-theme.css` derives product accents, text colours, panel colours and background images from those properties without modifying `:root`.
+- `components/oremea/PartnerProductThemeScope.tsx` checks the signed-in customer's active, unexpired partner membership before choosing an appearance. It does not confer access.
+- `app/recognition/layout.tsx` and `app/compass/layout.tsx` now use the same wrapper. Compass's main surfaces can reveal a partner background, and its default entry photographs are suppressed only when a partner theme is active.
+- `app/partner/[slug]/page.tsx` uses the exact same background styling helper as the product layouts.
+
+Angela's `backgroundAssetPath` is still null until an actual approved image is supplied. Her colours are placeholders. The draft launch remains blocked. Users without a verified matching membership see OREMEA's original design. A user subscribed to two different approved partners receives neutral OREMEA styling to avoid confusing branding.
+
+This completes shared **theme plumbing**, not full unbranded white-labelling. The domain, product copy, emails, icons, metadata, individual Compass component decorations, and several legacy page-specific styles still refer to OREMEA or fixed values. They need an accessibility and product-by-product audit before any partner experience can be called completely white-label. SUSTAIN remains untouched by this workstream.
+
 ## Required before activating any offer
 
 1. Confirm Angela's price per billing cycle and whether the 3-/4-month programmes are minimum terms or purely suggested durations.
@@ -56,7 +70,7 @@ Do not turn the flag on merely because the migration has deployed. Provider plan
 - Draft and expansion-pending offers are filtered out, and unapproved partners return 404.
 - No customer data, live prices, secrets, production configuration or Whop state are modified.
 
-Run `npm run test:partner-experiences`, `npm run test:partner-memberships`, `npm run test:central-pricing`, `npm run test:affiliates`, `npm run test:public-pricing`, `npm run test:participant-security`, `npm run typecheck`, and the normal launch suite before merging.
+Run `npm run test:partner-experiences`, `npm run test:partner-memberships`, `npm run test:partner-theme`, `npm run test:central-pricing`, `npm run test:affiliates`, `npm run test:public-pricing`, `npm run test:participant-security`, `npm run typecheck`, and the normal launch suite before merging.
 
 ## Scaling pattern
 
