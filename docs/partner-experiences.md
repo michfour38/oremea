@@ -56,6 +56,12 @@ Background options are currently configured in the partner registry, not in a se
 
 This completes shared **theme plumbing**, not full unbranded white-labelling. The domain, product copy, emails, icons, metadata, individual Compass component decorations, and several legacy page-specific styles still refer to OREMEA or fixed values. They need an accessibility and product-by-product audit before any partner experience can be called completely white-label. SUSTAIN remains untouched by this workstream.
 
+## Phase 4: private appearance preview
+
+A new, admin-only preview is available at `/admin/partner-appearance`. The existing `requireAdminPage()` guard applies before displaying any partner settings. This is currently an **unsaved local visual rehearsal**: owners can select a Resonance scene, compare original/custom/plain modes, enter optional validated local image paths, and switch between mobile and desktop sizes. Changes in this screen do not persist, upload files, publish artwork or alter live customer themes.
+
+The admin home now links to the preview. A contract check ensures it remains gated and read-only. Real partner-editable persistence would require a secure admin-only write action, authorisation and asset upload flow, audit trail, and a decided override precedence between the database and version-controlled partner configuration.
+
 ## Required before activating any offer
 
 1. Confirm Angela's price per billing cycle and whether the 3-/4-month programmes are minimum terms or purely suggested durations.
@@ -74,7 +80,7 @@ This completes shared **theme plumbing**, not full unbranded white-labelling. Th
 - Draft and expansion-pending offers are filtered out, and unapproved partners return 404.
 - No customer data, live prices, secrets, production configuration or Whop state are modified.
 
-Run `npm run test:partner-experiences`, `npm run test:partner-memberships`, `npm run test:partner-theme`, `npm run test:central-pricing`, `npm run test:affiliates`, `npm run test:public-pricing`, `npm run test:participant-security`, `npm run typecheck`, and the normal launch suite before merging.
+Run `npm run test:partner-experiences`, `npm run test:partner-memberships`, `npm run test:partner-theme`, `npm run test:partner-appearance-preview`, `npm run test:central-pricing`, `npm run test:affiliates`, `npm run test:public-pricing`, `npm run test:participant-security`, `npm run typecheck`, and the normal launch suite before merging.
 
 ## Scaling pattern
 
