@@ -22,7 +22,7 @@ These are **programme durations**, not verified monthly charges. The previously 
 
 Partner commission preference is the existing 70% approved-creator rate. Whop remains the execution and payout authority; no commission can be promised as configured until the provider plan and payment tests confirm it. No cap is proposed.
 
-The initial colours and copy are placeholders until Angela approves assets and wording. The `backgroundAssetPath` is a local public asset path, not an external URL.
+The initial colours and copy are placeholders until Angela approves assets and wording. The optional `backgroundAssetPath` and room images must use validated local public assets; external URLs and raw CSS are not accepted. Angela defaults to the existing OREMEA Resonance artwork unless she chooses otherwise.
 
 ## Phase 2: feature-gated OREMEA membership ledger
 
@@ -45,10 +45,14 @@ The existing `app/oremea-colors.css` remains the original OREMEA root palette (i
 - `src/lib/oremea/partner-theme.ts` converts partner brand settings to a small, safe group of CSS custom properties and limits images to approved local `/partner-assets/<partner>/...` paths.
 - `app/partner-theme.css` derives product accents, text colours, panel colours and background images from those properties without modifying `:root`.
 - `components/oremea/PartnerProductThemeScope.tsx` checks the signed-in customer's active, unexpired partner membership before choosing an appearance. It does not confer access.
-- `app/recognition/layout.tsx` and `app/compass/layout.tsx` now use the same wrapper. Compass's main surfaces can reveal a partner background, and its default entry photographs are suppressed only when a partner theme is active.
+- `app/recognition/layout.tsx`, Resonance member layouts and the room chooser use an authenticated partner theme wrapper. Partner-specific styling cannot change payment or access.
+- Compass deliberately retains its existing logo and photographic backgrounds. `components/compass/CompassAppearance.tsx` adds an independent visitor-controlled light/dark option. Partner backgrounds do not replace Compass artwork.
+- Resonance's `resonanceScenes.mode` controls backgrounds via `src/lib/resonance/resonance-backgrounds.ts`: `original` (default — OREMEA room paintings), `custom` (optional partner uploads for any individual rooms; missing scenes fall back to the originals), or `plain` (no room artwork). A partner does not have to produce replacement artwork to offer the journey.
 - `app/partner/[slug]/page.tsx` uses the exact same background styling helper as the product layouts.
 
 Angela's `backgroundAssetPath` is still null until an actual approved image is supplied. Her colours are placeholders. The draft launch remains blocked. Users without a verified matching membership see OREMEA's original design. A user subscribed to two different approved partners receives neutral OREMEA styling to avoid confusing branding.
+
+Background options are currently configured in the partner registry, not in a self-service partner upload dashboard. Asset uploads and editable partner settings can be added later, after authorisation and image validation.
 
 This completes shared **theme plumbing**, not full unbranded white-labelling. The domain, product copy, emails, icons, metadata, individual Compass component decorations, and several legacy page-specific styles still refer to OREMEA or fixed values. They need an accessibility and product-by-product audit before any partner experience can be called completely white-label. SUSTAIN remains untouched by this workstream.
 
