@@ -37,6 +37,7 @@ export default async function PartnerAppearancePage() {
             to live pages without an explicit release review.
           </p>
         </div>
+        <Link href="/admin/partner-appearance/editors" className="inline-flex rounded-xl border border-[var(--oremea-gold-border)] px-4 py-2 text-sm">Manage partner editor permissions</Link>
         <PartnerAppearancePreview partnerSlug={partner.slug} partnerName={partner.brand.name} initialBrand={partner.brand} />
       </section>
     </SiteShell>
