@@ -9,7 +9,7 @@ export type PartnerBrand = PartnerExperience["brand"];
  */
 export function safePartnerBackgroundAsset(value: string | null): string | null {
   if (!value) return null;
-  return /^\/partner-assets\/[a-z0-9-]+\/[a-z0-9/_-]+\.(?:png|jpe?g|webp|avif)$/i.test(value)
+  return /^\/partner-(?:assets|media)\/[a-z0-9-]+\/[a-z0-9/_-]+\.(?:png|jpe?g|webp|avif)$/i.test(value)
     ? value
     : null;
 }
