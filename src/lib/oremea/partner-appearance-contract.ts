@@ -7,8 +7,8 @@ export type PartnerAppearanceDraft = Pick<
   "background" | "foreground" | "accent" |
   "backgroundAssetPath" | "mobileBackgroundAssetPath" | "resonanceScenes"
 >;
-export const MAX_PARTNER_IMAGE_BYTES = 1_500_000;
-export const MAX_PARTNER_IMAGES = 28;
+import { MAX_PARTNER_IMAGE_BYTES } from "./partner-appearance-limits";
+export { MAX_PARTNER_IMAGE_BYTES, MAX_PARTNER_IMAGES } from "./partner-appearance-limits";
 
 export function isKnownPartner(slug: string): boolean {
   return /^[a-z0-9-]{1,64}$/.test(slug) &&
