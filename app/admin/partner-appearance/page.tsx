@@ -38,6 +38,7 @@ export default async function PartnerAppearancePage() {
           </p>
         </div>
         <Link href="/admin/partner-appearance/editors" className="inline-flex rounded-xl border border-[var(--oremea-gold-border)] px-4 py-2 text-sm">Manage partner editor permissions</Link>
+        <Link href="/admin/partner-appearance/review/angela" className="ml-3 inline-flex rounded-xl border border-[var(--oremea-gold-border)] px-4 py-2 text-sm">Review and approve Angela appearance</Link>
         <PartnerAppearancePreview partnerSlug={partner.slug} partnerName={partner.brand.name} initialBrand={partner.brand} />
       </section>
     </SiteShell>
