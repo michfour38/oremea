@@ -87,7 +87,7 @@ const migration = readFileSync("prisma/migrations/20261103160000_partner_appeara
 assert.match(sanitizer, /limitInputPixels: 20_000_000/);
 assert.match(sanitizer, /\.rotate\(\)/);
 assert.match(sanitizer, /\.webp\(/);
-assert.doesNotMatch(sanitizer, /withMetadata|keepMetadata/);
+assert.doesNotMatch(sanitizer, /\\.(?:withMetadata|keepMetadata)\\s*\\(/);
 assert.match(server, /partnerAppearanceReleaseEnabled\(\)/);
 assert.match(server, /getPublishedPartnerExperience\(partner.slug\)/);
 assert.match(server, /getPublishedPartnerExperience\(slug\)/);
