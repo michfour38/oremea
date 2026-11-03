@@ -67,6 +67,7 @@ export function PartnerAppearancePreview({
   const [selected, setSelected] = useState("1");
   const [screen, setScreen] = useState<Screen>("desktop");
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState("");
 
@@ -80,8 +81,12 @@ export function PartnerAppearancePreview({
         if (cancelled) return;
         setDraft(data.appearance);
         setRevision(data.revision);
+        setLoadFailed(false);
       } catch {
-        if (!cancelled) setFeedback("Saved settings could not be loaded. Saving is unavailable.");
+        if (!cancelled) {
+          setLoadFailed(true);
+          setFeedback("Saved settings could not be loaded. Reload the page to retry.");
+        }
         return;
       } finally {
         if (!cancelled) setLoading(false);
@@ -98,7 +103,7 @@ export function PartnerAppearancePreview({
   const backgrounds = getResonanceSceneBackgrounds(scene, brand);
   const chosen = screen === "desktop" ? backgrounds.desktop : backgrounds.mobile;
   const mode: Mode = draft.resonanceScenes.mode;
-  const saveDisabled = loading || busy || feedback.includes("Saving is unavailable");
+  const saveDisabled = loading || busy || loadFailed;
 
   function chooseMode(next: Mode) {
     setDraft(current => ({
@@ -176,7 +181,7 @@ export function PartnerAppearancePreview({
             {scenes.map(value => <option key={value.key} value={value.key}>{value.label}</option>)}
           </select>
         </div>
-        <fieldset className="space-y-2" disabled={loading || busy}>
+        <fieldset className="space-y-2" disabled={loading || busy || loadFailed}>
           <legend className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-300">
             Background choice
           </legend>
