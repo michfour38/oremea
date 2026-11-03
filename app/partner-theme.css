@@ -21,6 +21,10 @@
   --oremea-accent-panel: color-mix(in srgb, var(--partner-accent) 6%, transparent);
 
   --recognition-bg: var(--partner-bg);
+  --recognition-gold: var(--partner-accent);
+  --recognition-button: var(--partner-accent);
+  --recognition-button-hover: var(--partner-accent);
+  --recognition-composer-border: color-mix(in srgb, var(--partner-accent) 30%, transparent);
   --recognition-surface: color-mix(in srgb, var(--partner-bg) 92%, var(--partner-foreground));
   --recognition-zinc: var(--partner-foreground);
   --recognition-rail: color-mix(in srgb, var(--partner-accent) 45%, transparent);
