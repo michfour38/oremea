@@ -82,4 +82,23 @@ assert.match(raw, /getPartnerAppearanceEditor\\(slug\\)/,
 assert.doesNotMatch(approvals, /getPartnerAppearanceEditor/,
   "Editor privileges must not be allowed to approve or publish appearance");
 
+const browserConfig = readFileSync("e2e/partner-preview/playwright.config.ts", "utf8");
+const browserSuite = readFileSync("e2e/partner-preview/specs/partner-appearance.spec.ts", "utf8");
+const browserWorkflow = readFileSync(".github/workflows/partner-appearance-browser-e2e.yml", "utf8");
+assert.match(browserConfig, /OREMEA_E2E_ISOLATED_PREVIEW/);
+assert.match(browserConfig, /OREMEA_E2E_ALLOW_WRITES/);
+assert.match(browserConfig, /pk_test_/);
+assert.match(browserConfig, /sk_test_/);
+assert.match(browserConfig, /oremea\\.com/);
+assert.match(browserSuite, /clerk\\.signIn/);
+assert.match(browserSuite, /setInputFiles/);
+assert.match(browserSuite, /Draft saved/);
+assert.match(browserSuite, /Approve saved revision/);
+assert.match(browserSuite, /Withdraw approval/);
+assert.match(browserSuite, /Revoke/);
+assert.match(browserWorkflow, /workflow_dispatch/);
+assert.match(browserWorkflow, /ISOLATED_TEST_DATA_ONLY/);
+assert.doesNotMatch(browserWorkflow, /\\bpull_request\\s*:/,
+  "The mutation-capable browser suite must be manually triggered only.");
+
 console.log("Clerk authorization boundary, tenant isolation, revoked access, private media and admin-only approval contracts passed.");
