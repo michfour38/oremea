@@ -376,6 +376,9 @@ const isPublicRoute = createRouteMatcher([
   // Bearer-authenticated ARGUS export verifies its own machine credential.
   "/api/internal/argus/recognition-status",
   "/api/webhooks/whop",
+  // Handler checks active approval + published partner + feature flag per image.
+  // No auth cookie is required to display an explicitly released image.
+  "/partner-media/(.*)",
   "/compass/access(.*)",
 ]);
 
