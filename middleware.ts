@@ -345,6 +345,8 @@ const isPublicRoute = createRouteMatcher([
   "/about(.*)",
   "/compare(.*)",
   "/party(.*)",
+  // Partner landing pages are public only when their configuration is published.
+  "/partner/(.*)",
   "/resonance-rooms(.*)",
   "/resonance/enter(.*)",
   "/resonance/creator(.*)",
@@ -374,6 +376,9 @@ const isPublicRoute = createRouteMatcher([
   // Bearer-authenticated ARGUS export verifies its own machine credential.
   "/api/internal/argus/recognition-status",
   "/api/webhooks/whop",
+  // Handler checks active approval + published partner + feature flag per image.
+  // No auth cookie is required to display an explicitly released image.
+  "/partner-media/(.*)",
   "/compass/access(.*)",
 ]);
 
@@ -416,5 +421,12 @@ export default async function middleware(req: NextRequest, event: NextFetchEvent
 }
 
 export const config = {
-  matcher: ["/((?!_next|.*\\..*).*)", "/(api|trpc)(.*)"],
+  // Explicitly run Clerk on media URL paths with file extensions.
+  // Raw draft assets require authenticated editor rights; approved media
+  // independently checks published partner, active approval, and release flag.
+  matcher: [
+    "/((?!_next|.*\\..*).*)",
+    "/(api|trpc)(.*)",
+    "/(partner-assets|partner-media)/(.*)",
+  ],
 };

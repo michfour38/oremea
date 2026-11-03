@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { ReturnToTop } from "@/components/site/return-to-top";
+import { PartnerProductThemeScope } from "@/components/oremea/PartnerProductThemeScope";
 
 import "./recognition-theme.css";
 import "./recognition-reading.css";
@@ -39,9 +40,11 @@ export default function RecognitionLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div id="top" className="recognition-theme" data-recognition-root="true">
-      <ReturnToTop />
-      {children}
-    </div>
+    <PartnerProductThemeScope product="recognition">
+      <div id="top" className="recognition-theme" data-recognition-root="true">
+        <ReturnToTop />
+        {children}
+      </div>
+    </PartnerProductThemeScope>
   );
 }

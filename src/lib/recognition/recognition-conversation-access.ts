@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { hasActivePartnerProductAccess } from "@/src/lib/oremea/partner-memberships";
 import { hasEternalOremeaKey } from "@/lib/auth/account-access";
 import { getCreatorSilverProductAccess } from "@/lib/auth/creator-silver-key";
 import { hasOremeaOwnerAccess } from "@/src/lib/oremea/owner-recovery";
@@ -13,6 +14,7 @@ type RecognitionCoreAccessSource = "owner" | "eternal_key" | "membership" | null
 type RecognitionAccessSource =
   | Exclude<RecognitionCoreAccessSource, null>
   | "creator_silver_key"
+  | "partner_subscription"
   | null;
 
 export type RecognitionConversationAccess = {
@@ -267,6 +269,19 @@ export async function getRecognitionConversationAccess({
       matchedEmail,
       purchasedAt: entitlement.granted_at,
       expiresAt: entitlement.expires_at,
+    };
+  }
+
+  // Additive fallback: independent membership and lifetime/key access above
+  // retain precedence. Partner cancellation never revokes those purchases.
+  const partner = await hasActivePartnerProductAccess(userId, "recognition", now);
+  if (partner.active) {
+    return {
+      active: true,
+      source: "partner_subscription",
+      matchedEmail: null,
+      purchasedAt: null,
+      expiresAt: partner.expiresAt,
     };
   }
 

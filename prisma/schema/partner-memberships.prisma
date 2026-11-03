@@ -1,0 +1,23 @@
+// Partner memberships are separate from direct product purchases and lifetime keys.
+// One partner cancellation must never revoke a separately purchased entitlement.
+model oremea_partner_memberships {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  whop_membership_id String    @unique
+  whop_product_id    String
+  whop_plan_id       String
+  user_id            String
+  partner_slug       String
+  offer_key          String
+  // Only OREMEA product gates explicitly supported by this integration.
+  // SUSTAIN lives in its separate system and is never unlocked by this row.
+  product_keys       String[]  @default([])
+  status             String    @default("inactive")
+  last_event_at      DateTime  @db.Timestamptz(6)
+  period_end         DateTime? @db.Timestamptz(6)
+  created_at         DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([user_id, status, period_end])
+  @@index([partner_slug, offer_key])
+  @@index([whop_product_id, whop_plan_id])
+}

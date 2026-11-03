@@ -1,4 +1,5 @@
 @import "./oremea-colors.css";
+@import "./partner-theme.css";
 
 @tailwind base;
 @tailwind components;

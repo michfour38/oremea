@@ -5,6 +5,8 @@ import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { getActivePartnerBrand } from "@/src/lib/oremea/partner-brand-context";
+import { getResonanceSceneBackgrounds } from "@/src/lib/resonance/resonance-backgrounds";
 
 import { prisma } from "@/lib/prisma";
 import { getResonanceCheckoutUrl } from "@/src/lib/resonance/resonance-commerce";
@@ -170,16 +172,18 @@ export default async function ResonancePurchasePage(props: Props) {
     previousRuns.reduce((highest, run) => Math.max(highest, run.runNumber), 0) + 1;
   const checkoutHref = affiliateCheckoutUrl(getResonanceCheckoutUrl(weekNumber), await requestAffiliateCode());
   const isTester = userId === RESONANCE_TESTER_USER_ID;
+  const activePartner = await getActivePartnerBrand(userId, "resonance");
+  const sceneBackgrounds = getResonanceSceneBackgrounds("entry", activePartner?.brand ?? null);
 
   return (
     <main className="resonance-theme res-bg relative min-h-screen overflow-x-hidden">
       <div
         className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-40 md:hidden"
-        style={{ backgroundImage: "url(/images/mobile/bg-entry.webp)" }}
+        style={{ backgroundImage: sceneBackgrounds.mobile ? `url(${sceneBackgrounds.mobile})` : "none" }}
       />
       <div
         className="fixed inset-0 z-0 hidden bg-cover bg-center bg-no-repeat opacity-40 md:block"
-        style={{ backgroundImage: "url(/images/desktop/bg-entry.webp)" }}
+        style={{ backgroundImage: sceneBackgrounds.desktop ? `url(${sceneBackgrounds.desktop})` : "none" }}
       />
       <div className="res-photo-overlay fixed inset-0 z-10" />
 

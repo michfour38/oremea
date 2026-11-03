@@ -1,0 +1,62 @@
+name: "OREMEA | isolated partner browser rehearsal"
+
+on:
+  # Never runs on a PR or against existing OREMEA staging.
+  # Run only after a separate, disposable preview and Clerk dev tenant exist.
+  workflow_dispatch:
+    inputs:
+      isolated_preview_confirmation:
+        description: "Type ISOLATED_TEST_DATA_ONLY (this suite uploads and changes test drafts)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      OREMEA_PARTNER_PREVIEW_URL: ${{ secrets.OREMEA_PARTNER_PREVIEW_URL }}
+      CLERK_PUBLISHABLE_KEY: ${{ secrets.OREMEA_E2E_CLERK_PUBLISHABLE_KEY }}
+      CLERK_SECRET_KEY: ${{ secrets.OREMEA_E2E_CLERK_SECRET_KEY }}
+      OREMEA_E2E_ADMIN_EMAIL: ${{ secrets.OREMEA_E2E_ADMIN_EMAIL }}
+      OREMEA_E2E_EDITOR_EMAIL: ${{ secrets.OREMEA_E2E_EDITOR_EMAIL }}
+      OREMEA_E2E_EDITOR_USER_ID: ${{ secrets.OREMEA_E2E_EDITOR_USER_ID }}
+      OREMEA_E2E_ISOLATED_PREVIEW: "true"
+      OREMEA_E2E_ALLOW_WRITES: "true"
+    steps:
+      - name: "Require explicit disposable-only acknowledgement"
+        env:
+          CONFIRMATION: ${{ inputs.isolated_preview_confirmation }}
+        run: |
+          test "$CONFIRMATION" = "ISOLATED_TEST_DATA_ONLY" ||
+            { echo "No isolated environment acknowledgement; stopping."; exit 1; }
+      - name: "Check out the test branch"
+        uses: actions/checkout@v4
+      - name: "Node.js 20"
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: "Validate separated test credentials and URL"
+        shell: bash
+        run: |
+          test -n "$OREMEA_PARTNER_PREVIEW_URL"
+          test -n "$OREMEA_E2E_ADMIN_EMAIL"
+          test -n "$OREMEA_E2E_EDITOR_EMAIL"
+          test -n "$OREMEA_E2E_EDITOR_USER_ID"
+          case "$CLERK_PUBLISHABLE_KEY" in pk_test_*) ;; *) echo "A Clerk test key is required."; exit 1;; esac
+          case "$CLERK_SECRET_KEY" in sk_test_*) ;; *) echo "A Clerk test secret is required."; exit 1;; esac
+      - name: "Install browser-test dependencies separately"
+        working-directory: e2e/partner-preview
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: "Typecheck manual-only browser suite"
+        working-directory: e2e/partner-preview
+        run: npm run typecheck
+      - name: "Install isolated Chromium test browser"
+        working-directory: e2e/partner-preview
+        run: npx playwright install --with-deps chromium
+      - name: "Run real signed-in partner editor and admin workflow"
+        working-directory: e2e/partner-preview
+        run: npx playwright test --project=chromium

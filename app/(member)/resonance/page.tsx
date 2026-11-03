@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 
 import { getCurrentDayContent } from "@/src/lib/resonance/getCurrentDayContent";
 import { getActiveResonanceRun } from "@/src/lib/resonance/resonance-week-run";
+import { getActivePartnerBrand } from "@/src/lib/oremea/partner-brand-context";
+import { getResonanceSceneBackgrounds } from "@/src/lib/resonance/resonance-backgrounds";
 import {
   getRunActiveDay,
   getRunMirror,
@@ -16,41 +18,6 @@ import AutoScrollToMirror from "./auto-scroll-to-mirror";
 import ResonanceInputFocus from "./resonance-input-focus";
 
 export const dynamic = "force-dynamic";
-
-function getResonanceBackgrounds(weekNumber?: number) {
-  const desktopMap: Record<number, string> = {
-    1: "/images/desktop/bg-hearth.webp",
-    2: "/images/desktop/bg-mirror.webp",
-    3: "/images/desktop/bg-garden.webp",
-    4: "/images/desktop/bg-compass.webp",
-    5: "/images/desktop/bg-pulse.webp",
-    6: "/images/desktop/bg-shadow.webp",
-    7: "/images/desktop/bg-forge.webp",
-    8: "/images/desktop/bg-vision.webp",
-    9: "/images/desktop/bg-the-gathering.webp",
-    10: "/images/desktop/bg-the-becoming.webp",
-  };
-
-  const mobileMap: Record<number, string> = {
-    1: "/images/mobile/bg-hearth.webp",
-    2: "/images/mobile/bg-mirror.webp",
-    3: "/images/mobile/bg-garden.webp",
-    4: "/images/mobile/bg-compass.webp",
-    5: "/images/mobile/bg-pulse.webp",
-    6: "/images/mobile/bg-shadow.webp",
-    7: "/images/mobile/bg-forge.webp",
-    8: "/images/mobile/bg-vision.webp",
-    9: "/images/mobile/bg-the-gathering.webp",
-    10: "/images/mobile/bg-the-becoming.webp",
-  };
-
-  const key = weekNumber ?? 1;
-
-  return {
-    desktop: desktopMap[key] ?? desktopMap[1],
-    mobile: mobileMap[key] ?? mobileMap[1],
-  };
-}
 
 async function getActiveResonancePosition(runId: string, activeWeek: number) {
   const dayNumber = await getRunActiveDay(runId, activeWeek);
@@ -105,8 +72,10 @@ export default async function ResonancePage() {
     logPrivateError("Resonance content failed to load:", error);
   }
 
-  const backgrounds = getResonanceBackgrounds(
+  const activePartner = await getActivePartnerBrand(userId, "resonance");
+  const backgrounds = getResonanceSceneBackgrounds(
     content?.weekNumber ?? progression.weekNumber,
+    activePartner?.brand ?? null,
   );
 
   const reflectionsCompleted = Boolean(
@@ -141,12 +110,12 @@ export default async function ResonancePage() {
 
       <div
         className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat md:hidden"
-        style={{ backgroundImage: `url(${backgrounds.mobile})` }}
+        style={{ backgroundImage: backgrounds.mobile ? `url(${backgrounds.mobile})` : "none" }}
       />
 
       <div
         className="fixed inset-0 z-0 hidden bg-cover bg-center bg-no-repeat md:block"
-        style={{ backgroundImage: `url(${backgrounds.desktop})` }}
+        style={{ backgroundImage: backgrounds.desktop ? `url(${backgrounds.desktop})` : "none" }}
       />
 
       <div className="res-photo-overlay fixed inset-0 z-10" />

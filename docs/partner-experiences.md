@@ -1,0 +1,155 @@
+# OREMEA partner experiences — additive design
+
+This is the initial configuration-first foundation. It does **not** provision Whop listings, charge customers, create entitlements, or connect accounts to SUSTAIN.
+
+## One source of truth, existing contracts retained
+
+- All indicative partner package quotes and standalone product pricing: `src/lib/oremea/pricing.ts`. The original `OREMEA_PRICING` entries are unchanged; temporary amounts are in the separate `OREMEA_PARTNER_PRICING` export.
+- Existing affiliate policy and settlement: `src/lib/oremea/affiliate-policy.ts` and Whop (unchanged).
+- Additional partner **presentation, draft offers, branding and intended product composition**: `src/lib/oremea/partner-experiences.ts`.
+- Shared future partner route: `app/partner/[slug]/page.tsx`. It returns 404 until an authorised, provider-verified offer and partner are published. No checkout is available for Angela today.
+- Actual subscriptions, transaction history and entitlements must remain in the existing provider/database records. Never trust the marketing configuration as a payment/access grant.
+
+`pricing.ts` remains authoritative for independent OREMEA products; partner config references it rather than copying its prices. No existing Whop IDs, checkout links, product routes, or purchases have been changed.
+
+## Angela — draft only
+
+1. One month: SUSTAIN + Recognition.
+2. Three months: SUSTAIN + Recognition + Compass.
+3. Four months: currently the same confirmed product keys with expansion pending. Further products are not offered until functional, reviewed and explicitly enabled.
+
+These are **programme durations**, not verified monthly charges. The previously discussed figures are now stored **only** as indicative whole-programme amounts in `src/lib/oremea/pricing.ts` under `OREMEA_PARTNER_PRICING`. Do not repeat numerical quotes in other configuration files, pages or documentation. The three draft records deliberately set `approvedMonthlyChargeCents: null` and `approvedOneOffChargeCents: null`. Angela still needs to confirm the per-month charge, full-term price, renewal schedule, fees and refund policy **before** adding a checkout. Monthly recurring subscriptions are the preference for new packages; standalone one-off options remain separately marketable without changing existing plans.
+
+Partner commission preference is the existing 70% approved-creator rate. Whop remains the execution and payout authority; no commission can be promised as configured until the provider plan and payment tests confirm it. No cap is proposed.
+
+The initial colours and copy are placeholders until Angela approves assets and wording. The optional `backgroundAssetPath` and room images must use validated local public assets; external URLs and raw CSS are not accepted. Angela defaults to the existing OREMEA Resonance artwork unless she chooses otherwise.
+
+## Phase 2: feature-gated OREMEA membership ledger
+
+This PR also adds the **OREMEA-only** partner membership ledger, its additive SQL migration and contract tests. All runtime lookups and webhook handling are disabled unless `OREMEA_PARTNER_ACCESS_ENABLED=true` is deliberately configured. The default is **off**, and Angela still has no published product+plan IDs.
+
+- `prisma/schema/partner-memberships.prisma` and the corresponding migration store each Whop partner membership separately from independent OREMEA purchases.
+- `src/lib/oremea/partner-membership-contract.ts` rejects unknown, ambiguous, one-off, draft or unfinished plans.
+- `src/lib/oremea/partner-memberships.ts` handles dated subscription membership events, preserves event order and refuses open-ended active periods. Product access expires at the provider renewal-period end.
+- The existing signed Whop webhook contains an additional, feature-gated branch. Unknown plans keep the current unfulfilled behaviour; known direct product paths retain precedence.
+- Recognition and Compass get **fallback** partner access only when stronger independent entitlements are unavailable. Ending a partner membership cannot revoke an independent purchase.
+- SUSTAIN is not in the OREMEA access gate, even when it is displayed as a bundle inclusion. Its product entitlement and consent integration must be developed through a separately agreed contract with the SUSTAIN workstream.
+- Resonance is deliberately not opened via a generic membership flag: its visit/room-credit accounting needs a separately tested integration.
+
+Do not turn the flag on merely because the migration has deployed. Provider plan configuration, account linking, checkout timing, refund and plan-change behaviour, and end-to-end permission tests are still prerequisites. In particular, a provider membership without a finite `renewal_period_end` is rejected for reconciliation instead of granting indefinite access.
+
+## Phase 3: scoped colours and backgrounds
+
+The existing `app/oremea-colors.css` remains the original OREMEA root palette (including `#cda434`). Partner visual overrides are **scoped**, not global:
+
+- `src/lib/oremea/partner-theme.ts` converts partner brand settings to a small, safe group of CSS custom properties and limits images to approved local `/partner-assets/<partner>/...` paths.
+- `app/partner-theme.css` derives product accents, text colours, panel colours and background images from those properties without modifying `:root`.
+- `components/oremea/PartnerProductThemeScope.tsx` checks the signed-in customer's active, unexpired partner membership before choosing an appearance. It does not confer access.
+- `app/recognition/layout.tsx`, Resonance member layouts and the room chooser use an authenticated partner theme wrapper. Partner-specific styling cannot change payment or access.
+- Compass deliberately retains its existing logo and photographic backgrounds. `components/compass/CompassAppearance.tsx` adds an independent visitor-controlled light/dark option. Partner backgrounds do not replace Compass artwork.
+- Resonance's `resonanceScenes.mode` controls backgrounds via `src/lib/resonance/resonance-backgrounds.ts`: `original` (default — OREMEA room paintings), `custom` (optional partner uploads for any individual rooms; missing scenes fall back to the originals), or `plain` (no room artwork). A partner does not have to produce replacement artwork to offer the journey.
+- `app/partner/[slug]/page.tsx` uses the exact same background styling helper as the product layouts.
+
+Angela's `backgroundAssetPath` is still null until an actual approved image is supplied. Her colours are placeholders. The draft launch remains blocked. Users without a verified matching membership see OREMEA's original design. A user subscribed to two different approved partners receives neutral OREMEA styling to avoid confusing branding.
+
+The version-controlled partner registry remains the public source of truth. A private draft editor now exists for permitted partner accounts; no draft appearance is automatically published.
+
+This completes shared **theme plumbing**, not full unbranded white-labelling. The domain, product copy, emails, icons, metadata, individual Compass component decorations, and several legacy page-specific styles still refer to OREMEA or fixed values. They need an accessibility and product-by-product audit before any partner experience can be called completely white-label. SUSTAIN remains untouched by this workstream.
+
+## Phase 4: initial private appearance preview (superseded by saveable draft editor)
+
+The first preview at `/admin/partner-appearance` was a local visual rehearsal. It now supports private, versioned Save and Upload operations as described in Phase 5. It still does not publish or alter live customer themes.
+
+The admin home links to the private editor; contract checks verify authorised access and the separation from public product access. Real partner-editable persistence would require a secure admin-only write action, authorisation and asset upload flow, audit trail, and a decided override precedence between the database and version-controlled partner configuration.
+
+## Phase 5: saved appearance drafts, approved editor access, and private uploads
+
+The appearance editor is now **saveable**, while remaining isolated from live branding, product access and commerce:
+
+- `/admin/partner-appearance`: owner/admin appearance editor with Save and Upload controls.
+- `/admin/partner-appearance/editors`: grant/revoke an appearance editor by an existing verified Clerk user ID. Admin permission is required; grants are scoped to one partner slug.
+- `/partner/studio/[slug]`: private partner editor page. A signed-in account must have an active, unrevoked grant for that exact partner (or be an OREMEA admin); otherwise the route is concealed.
+- `GET/PUT /api/partner-appearance/[slug]`: permission-checked draft retrieval and optimistic-lock updates. Revision conflicts return HTTP 409; new saves do not silently overwrite another editor's changes.
+- `POST /api/partner-appearance/[slug]/assets`: same-origin authenticated uploads. Only genuine PNG, JPEG, WebP files up to 1.5 MB are accepted; at most 28 images may be retained per partner. Duplicates are identified by SHA-256.
+- `/partner-assets/[slug]/[filename]`: private image serving only to a permitted editor or admin. Unpublished images are never served publicly.
+- New additive PostgreSQL tables: `oremea_partner_appearances` (draft JSON, version and editor), `oremea_partner_appearance_editors` (revocable grants) and `oremea_partner_appearance_assets` (private image bytes). A database migration is required before this editor can be used on a deployed branch.
+
+Only canonical hexadecimal colours, the three accepted Resonance modes, bounded scene numbers and uploaded images belonging to the same partner may be saved. Unknown or cross-partner image paths are rejected. The original OREMEA background images are preserved; setting `original`, `custom` or `plain` remains optional. Custom means only selected scenes use supplied imagery; missing scenes retain the original.
+
+**Saving is not publishing.** Runtime partner product pages still use the reviewed version-controlled configuration and independently verified subscriptions. No draft is automatically pushed to customers, including if a partner editor saves custom artwork. Before publication, an explicit admin approval/release step must be built, together with appropriate public image-serving rules and image metadata stripping. Current uploads are private drafts, so embedded photographic metadata is not shared publicly.
+
+This design deliberately avoids new storage vendor credentials by retaining small files in Railway PostgreSQL. Storage caps, retention/deletion, processing and costs should be reviewed before expanding beyond the pilot.
+
+## Phase 6: owner-controlled approval, sanitized imagery and withdrawal
+
+A saved partner draft is **not** a customer-facing change. The separate admin-only `/admin/partner-appearance/review/[slug]` screen now supports:
+
+1. Inspect the saved revision, selected colours and referenced images, alongside the last approved version and audit history.
+2. **Approve saved revision** — only `requireAdminAction()` can run it. The exact draft and prior approval versions must still match. The original private files are decoded, resized and re-encoded through Sharp into new WebP copies, stripping EXIF/GPS/XMP/ICC. Approved colours, scene settings and new `/partner-media/<partner>/...` references are saved in a separate immutable-at-approval snapshot.
+3. **Withdraw approval** — sets the approved appearance inactive, increments its version, and records the withdrawal. The underlying saved draft and original OREMEA artwork remain intact.
+4. The public media endpoint returns only metadata-stripped, currently approved and actively referenced WebP bytes. Raw draft files continue to require the original editor/admin permissions. Public image responses use `no-store` so withdrawal is not hidden by long-lived caches.
+
+**Two additional runtime release gates remain mandatory:** `OREMEA_PARTNER_APPEARANCE_RELEASE_ENABLED=true` must be set deliberately (defaults off), *and* that partner must already have a verified **published** offer. Angela's offers still are drafts, so approved appearance cannot reach customers at present. Recognised Resonance sessions remain subject to their original room/visit access rules.
+
+New isolated PostgreSQL tables: `oremea_partner_appearance_publications`, `oremea_partner_appearance_public_assets`, and append-only `oremea_partner_appearance_approval_history`. The corresponding migration must be reviewed and applied as part of an approved OREMEA release. The existing direct pricing, Whop and membership ledger are unchanged.
+
+### Production release checklist
+
+- Keep the PR in draft until CI and manual tests pass; do not merge/deploy through the editor.
+- Validate `npm run test:partner-appearance-publication`, all other contracts and the full production build.
+- On a non-production database, test a legitimate partner editor, a revoked editor, unauthenticated access, a cross-partner request, upload limits, out-of-order revisions, a metadata-bearing JPEG, approval, withdrawal and the public route.
+- Review approval preview and wording with the owner. Do not activate Angela billing from a visual-theme decision.
+- After a deliberate OREMEA deploy and migrations, approval snapshots remain inert until the feature flag and independently verified partner commerce/publication are explicitly enabled.
+
+## Phase 7: isolated access policy and transport checks
+
+An additional pure editor policy (`src/lib/oremea/partner-appearance-authorization.ts`) now documents exactly what is needed to edit a partner's draft: a real authenticated Clerk user ID, the admin check or an active grant belonging to the exact partner and exact user, and no revoked timestamp. Database-backed rehearsal tests exercise active grants, revocation, cross-partner access and an admin identity. These tests do **not** impersonate a real Clerk session or claim to prove the browser login experience.
+
+The approved `/partner-media/` route is now allowed through Clerk middleware so the handler can itself check the active publication, source-approved filenames, published partner and release switch. Raw `/partner-assets/` uploads remain private and continue to demand an editor/admin identity.
+
+**Still required before a production release:** actual end-to-end sign-in tests with a separate Clerk test tenant and isolated app URL; browser upload preview, authenticated API request/CSRF tests, expired session and revoked editor tests; manual verification that images cannot be read after approval withdrawal. Do not use OREMEA production or the old pending Railway staging patch to simulate these identities.
+
+## Phase 8: guarded Clerk/Playwright browser rehearsal (prepared, not run)
+
+A manual-only browser test suite lives at `e2e/partner-preview/` and its GitHub Action is `partner-appearance-browser-e2e.yml`. It follows Clerk's development-instance Playwright testing integration with two separate non-production test accounts. When a new disposable preview with its **own** database and Clerk tenant is configured, the suite will: sign in as OREMEA admin, grant Angela editing rights to the test editor, upload a real PNG and verify private access, save draft changes, reject stale revisions, prove the editor cannot approve, approve then withdraw as admin, and revoke editor permissions while the existing browser session is still present.
+
+The test has **not run** because no suitable isolated preview deployment or Clerk test tenant has been connected. It is not silently skipped or passed. The test runner refuses live `oremea.com` hosts, any URL without an explicit preview marker, untrusted external hosting, non-test Clerk keys, and missing disposable-database/write acknowledgements. See `e2e/partner-preview/README.md` for prerequisites, GitHub secrets and execution instructions. The test workflow never automatically runs on a PR, and nothing is deployed by it.
+
+Separately, the middleware matcher now includes `/partner-assets/` and `/partner-media/` image paths **with extensions**. Raw images still need valid editor auth; published media is independently gated by active approval, verified published partner and the default-off release flag. A regression contract checks the explicit matcher.
+
+## Phase 9: focused technical audit and repair (draft branch only)
+
+Review of partner appearance uploads and client permissions uncovered and repaired:
+- **Atomic image quotas**: concurrent uploads previously counted files outside a transaction and could exceed the 28-image allowance. Each partner upload now takes a PostgreSQL transaction-scoped advisory lock; it checks for duplicates *before* checking the count, then inserts atomically. The disposable database rehearsal creates a real uploaded PNG, confirms deduplication, fills the quota to two remaining slots, races three distinct uploads and proves only two succeed.
+- **Image decoder validation**: file-header signatures alone accepted truncated or malformed PNG/JPEG/WebP uploads. New uploads now must decode successfully through Sharp; MIME, frame count, image dimensions and decompression pixel limits are checked before storing private bytes. Approval still independently re-encodes and strips metadata.
+- **Request limits**: saves and image uploads now reject unknown-length or overly large bodies and require the expected JSON/multipart content type, rather than treating missing Content-Length as zero.
+- **Failed draft load**: UI previously used erasable feedback text as a save guard, allowing the user to clear the error and submit without a confirmed revision. A separate permanent load-failure flag disables edit/save until reloading.
+- **Browser bundle isolation**: the editor no longer imports the full registry of planned partners/offers merely to compute an initial draft; it receives its own brand props and public upload limits.
+
+All changes are additive, with no migrations, Whop product changes or deployed feature activation. The image quota is deliberately conservative for the pilot. A production maintenance/retention policy for old unused private images should be completed before expanding to large numbers of partner assets. Missing-header rejection should also be verified against the actual reverse proxy during the isolated browser rehearsal.
+
+**Execution boundary:** the disposable PostgreSQL, policy and image-processing tests provide strong evidence of storage correctness. They do not replace the planned real Clerk test-account browser rehearsal, which needs an isolated preview hostname and separate Clerk development instance.
+
+## Required before activating any offer
+
+1. Confirm Angela's price per billing cycle and whether the 3-/4-month programmes are minimum terms or purely suggested durations.
+2. Create **additional** Whop products/plans. Keep existing independent listings and affiliate flows intact. Verify the IDs, checkout URLs, recurrence, cancellation rules, commission and real provider webhook receipts.
+3. Review the feature-gated paid-entitlement foundation and complete any remaining provider lifecycle work: refunds, retries, subscription plan changes, account creation before checkout, event delivery monitoring, and independent entitlement overlap. Never grant access on the basis of a URL or partner slug.
+4. Add a consent-controlled SUSTAIN↔OREMEA identity bridge only after agreeing the API contract with the other workstream. Do not modify SUSTAIN here. SUSTAIN and OREMEA accounts are currently separate; purchase/access does not itself permit private data sharing.
+5. Verify private reflections, household and child data cannot leak to facilitators or analytics.
+6. Confirm product readiness (Harmonize is explicitly excluded). Do not claim ten further products are available before their real product keys, access rules and tests exist.
+7. Review and approve the partner theme, texts, accessibility and publication state. Publish only after end-to-end payment and authorisation checks.
+
+## Safety boundaries
+
+- Never edit the SUSTAIN repository from this workstream; it is under concurrent development.
+- Never bypass Recognition, Compass, Resonance or other existing access guards.
+- The new page is display-only, with independently verified Whop links once published.
+- Draft and expansion-pending offers are filtered out, and unapproved partners return 404.
+- No customer data, live prices, secrets, production configuration or Whop state are modified.
+
+Run `npm run test:partner-experiences`, `npm run test:partner-memberships`, `npm run test:partner-theme`, `npm run test:partner-appearance-preview`, `npm run test:partner-appearance-storage`, `npm run test:partner-appearance-publication`, `npm run test:central-pricing`, `npm run test:affiliates`, `npm run test:public-pricing`, `npm run test:participant-security`, `npm run typecheck`, and the normal launch suite before merging.
+
+## Scaling pattern
+
+One shared UI route consumes an entry in the central partner registry. To introduce a new partner: add a reviewed brand configuration and draft offers, map intended products to the existing engines, verify new checkout/entitlement routes, then publish. Do not fork a product or copy standalone pricing logic.

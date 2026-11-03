@@ -1,15 +1,19 @@
 import { auth } from "@clerk/nextjs/server";
 import { isOremeaAdmin } from "@/lib/auth/admin-access";
+import { getActivePartnerBrand } from "@/src/lib/oremea/partner-brand-context";
+import { getResonanceSceneBackgrounds } from "@/src/lib/resonance/resonance-backgrounds";
 
 export async function FunnelFrame({ children }: { children: React.ReactNode }) {
   const { userId } = await auth();
   const adminMode = Boolean(userId && (await isOremeaAdmin(userId)));
+  const partner = userId ? await getActivePartnerBrand(userId, "resonance") : null;
+  const backgrounds = getResonanceSceneBackgrounds("entry", partner?.brand ?? null);
 
   return (
     <main className="resonance-theme res-bg relative min-h-screen">
       <div
         className="fixed inset-0 bg-cover bg-center opacity-40"
-        style={{ backgroundImage: "url(/images/desktop/bg-entry.webp)" }}
+        style={{ backgroundImage: backgrounds.desktop ? `url(${backgrounds.desktop})` : "none" }}
       />
       <div className="res-photo-overlay relative min-h-screen">
         <header className="relative z-20 mx-auto flex max-w-4xl items-center justify-between gap-4 px-6 pt-6">

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { randomUUID } from "node:crypto";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { getActivePartnerBrand } from "@/src/lib/oremea/partner-brand-context";
+import { getResonanceSceneBackgrounds } from "@/src/lib/resonance/resonance-backgrounds";
 
 import { hasEternalOremeaKey } from "@/lib/auth/account-access";
 import { prisma } from "@/lib/prisma";
@@ -137,6 +139,8 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
   const roomTarget = getResonanceRoomTarget(query.room);
   const { userId } = await auth();
   if (!userId) redirect(`/sign-in?redirect_url=${encodeURIComponent(roomTarget?.entryPath ?? "/entry")}`);
+  const activePartner = await getActivePartnerBrand(userId, "resonance");
+  const sceneBackgrounds = getResonanceSceneBackgrounds("entry", activePartner?.brand ?? null);
   const [creditFlow, newCheckout, eternalKey] = await Promise.all([
     visitCreditsAvailableFor(userId),
     visitCheckoutAvailableFor(userId),
@@ -175,11 +179,11 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
       <RoomTarget weekNumber={roomTarget?.weekNumber} />
       <div
         className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-40 md:hidden"
-        style={{ backgroundImage: "url(/images/mobile/bg-entry.webp)" }}
+        style={{ backgroundImage: sceneBackgrounds.mobile ? `url(${sceneBackgrounds.mobile})` : "none" }}
       />
       <div
         className="fixed inset-0 z-0 hidden bg-cover bg-center bg-no-repeat opacity-40 md:block"
-        style={{ backgroundImage: "url(/images/desktop/bg-entry.webp)" }}
+        style={{ backgroundImage: sceneBackgrounds.desktop ? `url(${sceneBackgrounds.desktop})` : "none" }}
       />
       <div className="res-photo-overlay fixed inset-0 z-10" />
 

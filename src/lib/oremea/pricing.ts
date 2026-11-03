@@ -48,6 +48,57 @@ export const OREMEA_PRICING = {
   },
 } as const;
 
+/**
+ * Additional partner offer quotes. These are INDICATIVE PROGRAMME TOTALS only,
+ * not approved monthly instalments, one-off checkout prices or active Whop plans.
+ *
+ * Update amounts here when each partner approves their pricing. Keep the
+ * established OREMEA_PRICING registry untouched for direct product sales.
+ */
+export const OREMEA_PARTNER_PRICING = {
+  angela: {
+    starter: {
+      currency: "ZAR",
+      status: "provisional",
+      indicativeProgrammeTotalCents: 39_900,
+      approvedMonthlyChargeCents: null,
+      approvedOneOffChargeCents: null,
+    },
+    guided: {
+      currency: "ZAR",
+      status: "provisional",
+      indicativeProgrammeTotalCents: 145_000,
+      approvedMonthlyChargeCents: null,
+      approvedOneOffChargeCents: null,
+    },
+    expanded: {
+      currency: "ZAR",
+      status: "provisional",
+      indicativeProgrammeTotalCents: 199_900,
+      approvedMonthlyChargeCents: null,
+      approvedOneOffChargeCents: null,
+    },
+  },
+} as const;
+
+export type PartnerOfferPricing = {
+  readonly currency: "ZAR" | "USD";
+  readonly status: "provisional" | "approved";
+  readonly indicativeProgrammeTotalCents: number | null;
+  readonly approvedMonthlyChargeCents: number | null;
+  readonly approvedOneOffChargeCents: number | null;
+};
+
+/** Central lookup for partner pages and checkout setup; never an access grant. */
+export function getPartnerOfferPricing(
+  partnerSlug: string,
+  offerKey: string,
+): PartnerOfferPricing | null {
+  const registry: Readonly<Record<string, Readonly<Record<string, PartnerOfferPricing>>>> =
+    OREMEA_PARTNER_PRICING;
+  return registry[partnerSlug]?.[offerKey] ?? null;
+}
+
 export type OremeaPricedProduct = keyof typeof OREMEA_PRICING;
 
 export function formatOremeaPrice(
