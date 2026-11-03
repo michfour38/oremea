@@ -1,0 +1,64 @@
+/*
+ * Partner visuals override OREMEA's original semantic tokens only within
+ * verified partner scopes. Never mutate :root or direct customer branding.
+ * The root registry (app/oremea-colors.css) stays OREMEA's canonical theme.
+ */
+.partner-theme-scope {
+  --oremea-bg: var(--partner-bg);
+  --oremea-text: var(--partner-foreground);
+  --oremea-text-primary: var(--partner-foreground);
+  --oremea-text-secondary: color-mix(in srgb, var(--partner-foreground) 86%, transparent);
+  --oremea-text-disabled: color-mix(in srgb, var(--partner-foreground) 70%, transparent);
+  --oremea-gold: var(--partner-accent);
+  --oremea-gold-hover: var(--partner-accent);
+  --oremea-gold-border: var(--partner-accent);
+  --oremea-gold-border-soft: color-mix(in srgb, var(--partner-accent) 55%, transparent);
+  --oremea-gold-border-strong: color-mix(in srgb, var(--partner-accent) 75%, transparent);
+  --oremea-gold-10: color-mix(in srgb, var(--partner-accent) 10%, transparent);
+  --oremea-gold-15: color-mix(in srgb, var(--partner-accent) 15%, transparent);
+  --oremea-gold-20: color-mix(in srgb, var(--partner-accent) 20%, transparent);
+  --oremea-gold-ring: color-mix(in srgb, var(--partner-accent) 35%, transparent);
+  --oremea-accent-panel: color-mix(in srgb, var(--partner-accent) 6%, transparent);
+
+  --recognition-bg: var(--partner-bg);
+  --recognition-surface: color-mix(in srgb, var(--partner-bg) 92%, var(--partner-foreground));
+  --recognition-zinc: var(--partner-foreground);
+  --recognition-rail: color-mix(in srgb, var(--partner-accent) 45%, transparent);
+  --recognition-composer-focus: var(--partner-accent);
+
+  min-height: 100vh;
+  background-color: var(--partner-bg);
+  background-image:
+    linear-gradient(rgb(0 0 0 / 0.48), rgb(0 0 0 / 0.64)),
+    var(--partner-bg-image);
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  color: var(--partner-foreground);
+}
+
+/* Product roots must not hide their partner background under opaque panels. */
+.partner-theme-scope > .recognition-theme,
+.partner-theme-scope > .compass-legibility,
+.partner-theme-scope > .compass-legibility > .oremea-product-background,
+.partner-theme-scope .oremea-product-background {
+  background-color: transparent !important;
+}
+
+.partner-theme-scope .partner-default-photo {
+  display: none !important;
+}
+
+/* Local colour inheritance; default pages remain unchanged. */
+.partner-theme-scope .compass-legibility .text-\[\#d8b15f\] {
+  color: var(--partner-accent) !important;
+}
+
+.partner-theme-scope .compass-legibility .text-\[\#E7C98B\] {
+  color: var(--partner-accent) !important;
+}
+
+/* Keep background images calm on small devices and in reduced-motion contexts. */
+@media (max-width: 640px) {
+  .partner-theme-scope { background-position: center top; }
+}
