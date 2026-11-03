@@ -15,6 +15,7 @@ import {
   createApprovedAppearance,
   validateApprovedAppearance,
 } from "../src/lib/oremea/partner-appearance-release-contract";
+import { resolvePartnerAppearanceAccess } from "../src/lib/oremea/partner-appearance-authorization";
 
 function insistDisposableDatabase() {
   const url = new URL(process.env.DATABASE_URL ?? "");
@@ -83,6 +84,18 @@ async function main() {
       (error: unknown) =>
         error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002",
     );
+    const activeGrant = await db.oremea_partner_appearance_editors.findUnique({
+      where: { partner_slug_user_id: { partner_slug: slug, user_id: "user_rehearsal_editor" } },
+      select: { partner_slug: true, user_id: true, revoked_at: true },
+    });
+    assert.deepEqual(resolvePartnerAppearanceAccess({
+      requestedPartner: slug, authenticatedUserId: "user_rehearsal_editor",
+      isAdmin: false, exactPartnerGrant: activeGrant,
+    }), { userId: "user_rehearsal_editor", role: "editor" });
+    assert.equal(resolvePartnerAppearanceAccess({
+      requestedPartner: "someone-else", authenticatedUserId: "user_rehearsal_editor",
+      isAdmin: false, exactPartnerGrant: activeGrant,
+    }), null, "Partner grant must be scoped to its original tenant.");
     await db.oremea_partner_appearance_editors.update({
       where: { partner_slug_user_id: { partner_slug: slug, user_id: "user_rehearsal_editor" } },
       data: { revoked_at: new Date() },
@@ -91,6 +104,14 @@ async function main() {
       where: { partner_slug_user_id: { partner_slug: slug, user_id: "user_rehearsal_editor" } },
     });
     assert.ok(grant?.revoked_at);
+    assert.equal(resolvePartnerAppearanceAccess({
+      requestedPartner: slug, authenticatedUserId: "user_rehearsal_editor",
+      isAdmin: false, exactPartnerGrant: grant,
+    }), null, "Revoked account must be denied despite the row still existing.");
+    assert.deepEqual(resolvePartnerAppearanceAccess({
+      requestedPartner: slug, authenticatedUserId: "user_rehearsal_admin",
+      isAdmin: true, exactPartnerGrant: null,
+    }), { userId: "user_rehearsal_admin", role: "admin" });
 
     // Draft assets do not leak across tenant-scoped lookups.
     const filename = "img-11111111-2222-4333-8444-555555555555.png";
