@@ -4,12 +4,13 @@ import {
   OREMEA_PARTNER_EXPERIENCES,
   getPublishedPartnerExperience,
   getStandalonePricing,
+  getPartnerDraftPricing,
   resolvePublishedPartnerExperience,
   type PartnerExperience,
   type PartnerCheckout,
 } from "../src/lib/oremea/partner-experiences";
 import { OREMEA_AFFILIATE_POLICY } from "../src/lib/oremea/affiliate-policy";
-import { OREMEA_PRICING } from "../src/lib/oremea/pricing";
+import { OREMEA_PRICING, OREMEA_PARTNER_PRICING, getPartnerOfferPricing } from "../src/lib/oremea/pricing";
 
 const angela = OREMEA_PARTNER_EXPERIENCES.angela;
 assert.equal(angela.status, "draft", "Unapproved partner must remain hidden.");
@@ -29,6 +30,31 @@ assert.equal(getPublishedPartnerExperience("../angela"), null);
 assert.equal(getPublishedPartnerExperience("unknown"), null);
 assert.strictEqual(getStandalonePricing("recognition"), OREMEA_PRICING.recognition);
 assert.strictEqual(getStandalonePricing("compass"), OREMEA_PRICING.compass);
+
+// Indicative prices are centralised and never mistaken for live monthly charges.
+assert.deepEqual(
+  Object.keys(OREMEA_PARTNER_PRICING.angela).sort(),
+  angela.offers.map(offer => offer.key).sort(),
+  "Every Angela draft offer must resolve from the central pricing authority.",
+);
+for (const offer of angela.offers) {
+  const price = getPartnerDraftPricing("angela", offer.key);
+  assert.ok(price, "An Angela draft offer cannot silently lose its quote.");
+  assert.strictEqual(price, getPartnerOfferPricing("angela", offer.key));
+  assert.equal(price.status, "provisional");
+  assert.equal(price.currency, "ZAR");
+  assert.ok(Number.isSafeInteger(price.indicativeProgrammeTotalCents));
+  assert.ok((price.indicativeProgrammeTotalCents ?? 0) > 0);
+  assert.equal(price.approvedMonthlyChargeCents, null);
+  assert.equal(price.approvedOneOffChargeCents, null);
+}
+assert.equal(getPartnerDraftPricing("unknown", "starter"), null);
+assert.equal(getPartnerDraftPricing("angela", "unknown"), null);
+
+const partnerSource = readFileSync("src/lib/oremea/partner-experiences.ts", "utf8");
+assert.doesNotMatch(partnerSource, /indicativeProgrammeTotalCents:\\s*\\d/,
+  "Partner experience config must not duplicate price authority.");
+
 
 const validCheckout: PartnerCheckout = {
   whopProductId: "prod_test",
