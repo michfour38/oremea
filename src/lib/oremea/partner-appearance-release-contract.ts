@@ -79,7 +79,7 @@ export function validateApprovedAppearance(
   if (entries.length > 10 || entries.some(([key, value]) =>
     !/^(10|[1-9])$/.test(key) || !validScene(value)
   )) return null;
-  if (!validPath(d.backgroundAssetPath) || !validPath(d.mobileBackgroundAssetPath) ||
+  if (!validatePath(d.backgroundAssetPath) || !validatePath(d.mobileBackgroundAssetPath) ||
     !validScene(s.entry) || !validScene(s.archive)) return null;
   return incoming as PartnerAppearanceDraft;
 }
