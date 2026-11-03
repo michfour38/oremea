@@ -16,10 +16,13 @@ export function safePartnerBackgroundAsset(value: string | null): string | null 
 
 export function partnerThemeStyle(brand: PartnerBrand): CSSProperties {
   const asset = safePartnerBackgroundAsset(brand.backgroundAssetPath);
+  const mobileAsset =
+    safePartnerBackgroundAsset(brand.mobileBackgroundAssetPath) ?? asset;
   return {
     "--partner-bg": brand.background,
     "--partner-foreground": brand.foreground,
     "--partner-accent": brand.accent,
     "--partner-bg-image": asset ? `url("${asset}")` : "none",
+    "--partner-bg-image-mobile": mobileAsset ? `url("${mobileAsset}")` : "none",
   } as CSSProperties;
 }
