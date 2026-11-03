@@ -20,6 +20,14 @@ assert.match(preview, /Keep original OREMEA artwork/);
 assert.match(preview, /Optional partner artwork/);
 assert.match(preview, /Plain background/);
 assert.match(preview, /Save changes/);
+assert.ok(preview.includes("const [loadFailed, setLoadFailed] = useState(false)"),
+  "Load failures must have durable state independent of feedback text.");
+assert.ok(preview.includes("saveDisabled = loading || busy || loadFailed"),
+  "A failed draft read must keep Save disabled after subsequent clicks.");
+assert.ok(!preview.includes("initialAppearanceDraft("),
+  "Client component must not import the full partner offer registry.");
+assert.ok(preview.includes("partner-appearance-limits"),
+  "Client should consume only public upload constants.");
 assert.match(preview, /type="file"/);
 assert.match(preview, /method: "PUT"/);
 assert.match(preview, /method: "POST"/);
