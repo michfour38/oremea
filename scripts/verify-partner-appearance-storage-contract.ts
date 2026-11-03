@@ -85,6 +85,12 @@ assert.match(server, /referencedPartnerImageFiles/);
 assert.match(put, /getPartnerAppearanceEditor\(slug\)/);
 assert.match(put, /request\.headers\.get\("origin"\) !== request\.nextUrl\.origin/);
 assert.match(put, /savePartnerAppearanceDraft/);
+assert.ok(put.includes("Request length required"),
+  "A missing Content-Length must never bypass the JSON body cap.");
+assert.ok(put.includes("JSON request required"),
+  "The edit endpoint must restrict request media types.");
+assert.ok(upload.includes("Image upload length is required"),
+  "The multipart upload must reject unknown request length.");
 assert.match(upload, /getPartnerAppearanceEditor\(slug\)/);
 assert.match(upload, /request\.headers\.get\("origin"\) !== request\.nextUrl\.origin/);
 assert.match(upload, /MAX_PARTNER_IMAGE_BYTES/);
