@@ -1,5 +1,5 @@
 import { OREMEA_AFFILIATE_POLICY } from "./affiliate-policy";
-import { OREMEA_PRICING } from "./pricing";
+import { OREMEA_PRICING, getPartnerOfferPricing } from "./pricing";
 
 /**
  * Additive, configuration-first partner experiences.
@@ -118,6 +118,11 @@ export const OREMEA_PARTNER_EXPERIENCES = {
     ],
   },
 } as const satisfies Readonly<Record<string, PartnerExperience>>;
+
+/** Partner offer amounts live only in the central OREMEA pricing registry. */
+export function getPartnerDraftPricing(partnerSlug: string, offerKey: string) {
+  return getPartnerOfferPricing(partnerSlug, offerKey);
+}
 
 export function getStandalonePricing(product: keyof typeof OREMEA_PRICING) {
   return OREMEA_PRICING[product];
