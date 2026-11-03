@@ -345,6 +345,8 @@ const isPublicRoute = createRouteMatcher([
   "/about(.*)",
   "/compare(.*)",
   "/party(.*)",
+  // Partner landing pages are public only when their configuration is published.
+  "/partner/(.*)",
   "/resonance-rooms(.*)",
   "/resonance/enter(.*)",
   "/resonance/creator(.*)",
