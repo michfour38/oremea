@@ -41,18 +41,24 @@ for (const offer of angela.offers) {
   const price = getPartnerDraftPricing("angela", offer.key);
   assert.ok(price, "An Angela draft offer cannot silently lose its quote.");
   assert.strictEqual(price, getPartnerOfferPricing("angela", offer.key));
-  assert.equal(price.status, "provisional");
+  assert.ok(price.status === "provisional" || price.status === "approved");
   assert.equal(price.currency, "ZAR");
   assert.ok(Number.isSafeInteger(price.indicativeProgrammeTotalCents));
   assert.ok((price.indicativeProgrammeTotalCents ?? 0) > 0);
-  assert.equal(price.approvedMonthlyChargeCents, null);
-  assert.equal(price.approvedOneOffChargeCents, null);
+  if (price.status === "provisional") {
+    assert.equal(price.approvedMonthlyChargeCents, null);
+    assert.equal(price.approvedOneOffChargeCents, null);
+  } else {
+    assert.ok((price.approvedMonthlyChargeCents ?? 0) > 0 ||
+      (price.approvedOneOffChargeCents ?? 0) > 0,
+      "An approved price must specify an actual charge.");
+  }
 }
 assert.equal(getPartnerDraftPricing("unknown", "starter"), null);
 assert.equal(getPartnerDraftPricing("angela", "unknown"), null);
 
 const partnerSource = readFileSync("src/lib/oremea/partner-experiences.ts", "utf8");
-assert.doesNotMatch(partnerSource, /indicativeProgrammeTotalCents:\\s*\\d/,
+assert.doesNotMatch(partnerSource, /indicativeProgrammeTotalCents:\s*\d/,
   "Partner experience config must not duplicate price authority.");
 
 
