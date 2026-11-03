@@ -167,7 +167,7 @@ async function main() {
     });
 
     // There are now 2 unique files: 1 original smoke fixture + 1 decoded PNG.
-    for (let i = 2; i < MAX_PARTNER_IMAGES - 2 + 2; i++) {
+    for (let i = 2; i < MAX_PARTNER_IMAGES - 2; i++) {
       const bytes = await pngFor(i);
       await storePrivatePartnerImage({
         db, slug, uploadedBy: "user_rehearsal_editor",
@@ -177,8 +177,8 @@ async function main() {
     const filled = await db.oremea_partner_appearance_assets.count({
       where: { partner_slug: slug },
     });
-    assert.equal(filled, MAX_PARTNER_IMAGES,
-      "One test fixture + one first upload + the unique additional uploads should fill the quota.");
+    assert.equal(filled, MAX_PARTNER_IMAGES - 2,
+      "The test should leave two slots available for concurrent requests.");
     const simultaneous = await Promise.allSettled(
       [101, 102, 103].map(async i => {
         const bytes = await pngFor(i);
@@ -188,10 +188,11 @@ async function main() {
         });
       }),
     );
-    assert.equal(simultaneous.filter(x => x.status === "fulfilled").length, 0,
-      "Concurrent requests may not bypass a full image allowance.");
-    assert.ok(simultaneous.every(x =>
-      x.status === "rejected" && x.reason instanceof PartnerImageQuotaExceeded));
+    assert.equal(simultaneous.filter(x => x.status === "fulfilled").length, 2,
+      "Exactly two concurrent uploads may take the last two slots.");
+    assert.equal(simultaneous.filter(x =>
+      x.status === "rejected" && x.reason instanceof PartnerImageQuotaExceeded).length, 1,
+      "The remaining concurrent request must receive the quota error.");
     assert.equal(await db.oremea_partner_appearance_assets.count({
       where: { partner_slug: slug },
     }), MAX_PARTNER_IMAGES);
