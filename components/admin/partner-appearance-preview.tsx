@@ -3,11 +3,8 @@
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 
 import type { PartnerExperience } from "@/src/lib/oremea/partner-experiences";
-import {
-  initialAppearanceDraft,
-  MAX_PARTNER_IMAGE_BYTES,
-  type PartnerAppearanceDraft,
-} from "@/src/lib/oremea/partner-appearance-contract";
+import type { PartnerAppearanceDraft } from "@/src/lib/oremea/partner-appearance-contract";
+import { MAX_PARTNER_IMAGE_BYTES } from "@/src/lib/oremea/partner-appearance-limits";
 import { safePartnerBackgroundAsset } from "@/src/lib/oremea/partner-theme";
 import { getResonanceSceneBackgrounds } from "@/src/lib/resonance/resonance-backgrounds";
 
@@ -61,7 +58,16 @@ export function PartnerAppearancePreview({
   partnerName: string;
   initialBrand: Brand;
 }) {
-  const fallback = useMemo(() => initialAppearanceDraft(partnerSlug), [partnerSlug]);
+  // Client previews need only the one brand sent by the server, never the
+  // complete partner offer registry (which includes non-public pricing plans).
+  const fallback = useMemo<PartnerAppearanceDraft>(() => ({
+    background: initialBrand.background,
+    foreground: initialBrand.foreground,
+    accent: initialBrand.accent,
+    backgroundAssetPath: initialBrand.backgroundAssetPath,
+    mobileBackgroundAssetPath: initialBrand.mobileBackgroundAssetPath,
+    resonanceScenes: initialBrand.resonanceScenes,
+  }), [initialBrand]);
   const [draft, setDraft] = useState<PartnerAppearanceDraft>(fallback);
   const [revision, setRevision] = useState(0);
   const [selected, setSelected] = useState("1");
