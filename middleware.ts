@@ -421,5 +421,12 @@ export default async function middleware(req: NextRequest, event: NextFetchEvent
 }
 
 export const config = {
-  matcher: ["/((?!_next|.*\\..*).*)", "/(api|trpc)(.*)"],
+  // Explicitly run Clerk on media URL paths with file extensions.
+  // Raw draft assets require authenticated editor rights; approved media
+  // independently checks published partner, active approval, and release flag.
+  matcher: [
+    "/((?!_next|.*\\..*).*)",
+    "/(api|trpc)(.*)",
+    "/(partner-assets|partner-media)/(.*)",
+  ],
 };
