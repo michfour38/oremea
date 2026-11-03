@@ -73,6 +73,12 @@ assert.match(middleware, /"\/partner-media\/\(\.\*\)"/,
   "Browser requests for approved images reach the strict release handler");
 assert.doesNotMatch(middleware, /"\/partner-assets\/\(\.\*\)"/,
   "Private images are never middleware-public");
+const matcherSection = middleware.slice(middleware.lastIndexOf("export const config = {"));
+assert.ok(matcherSection.includes('"/(partner-assets|partner-media)/(.*)"'),
+  "Clerk middleware must execute on image URLs even when they end in .png or .webp.");
+assert.match(raw, /getPartnerAppearanceEditor\\(slug\\)/,
+  "The private-image handler must verify the editor after Clerk middleware runs.");
+
 assert.doesNotMatch(approvals, /getPartnerAppearanceEditor/,
   "Editor privileges must not be allowed to approve or publish appearance");
 
