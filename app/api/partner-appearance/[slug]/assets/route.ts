@@ -19,6 +19,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
   if (!isKnownPartner(slug)) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const editor = await getPartnerAppearanceEditor(slug);
   if (!editor) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  // Mutation endpoints are same-origin only; a valid login alone is not CSRF protection.
+  if (request.headers.get("origin") !== request.nextUrl.origin) {
+    return NextResponse.json({ error: "Invalid request origin" }, { status: 403 });
+  }
+
 
   const bodyLength = Number(request.headers.get("content-length") ?? 0);
   if (bodyLength > MAX_PARTNER_IMAGE_BYTES + 150_000) {
