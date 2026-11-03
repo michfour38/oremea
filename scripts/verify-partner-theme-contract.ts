@@ -38,6 +38,7 @@ assert.match(globals, /@import "\.\/partner-theme\.css";/);
 assert.match(themeCss, /\.partner-theme-scope\s*\{/);
 assert.match(themeCss, /--oremea-gold:\s*var\(--partner-accent\)/);
 assert.match(themeCss, /--recognition-bg:\s*var\(--partner-bg\)/);
+assert.match(themeCss, /--recognition-gold:\s*var\(--partner-accent\)/);
 assert.match(themeCss, /--partner-bg-image/);
 assert.doesNotMatch(themeCss, /:root\s*\{/);
 assert.match(member, /partnerMembershipAccessEnabled\(\)/);
