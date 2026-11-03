@@ -64,5 +64,10 @@
 
 /* Keep background images calm on small devices and in reduced-motion contexts. */
 @media (max-width: 640px) {
-  .partner-theme-scope { background-position: center top; }
+  .partner-theme-scope {
+    background-image:
+      linear-gradient(rgb(0 0 0 / 0.48), rgb(0 0 0 / 0.64)),
+      var(--partner-bg-image-mobile);
+    background-position: center top;
+  }
 }
