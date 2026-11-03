@@ -662,7 +662,7 @@ function beginDiscussion(savedMirror: string) {
 
   if (isRestoring) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#090909] text-stone-100">
+      <main className="oremea-product-background flex min-h-screen items-center justify-center bg-[#090909] text-stone-100">
         Loading Compass...
       </main>
     );
@@ -677,7 +677,7 @@ function beginDiscussion(savedMirror: string) {
   ].includes(phase);
 
   return (
-    <main className="min-h-screen bg-[#090909] text-stone-100">
+    <main className="oremea-product-background min-h-screen bg-[#090909] text-stone-100">
       <MemberNav />
       <section className="relative isolate min-h-screen px-3 pb-12 sm:px-5 lg:px-8">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_rgba(184,134,64,0.08),_transparent_28%),linear-gradient(180deg,_rgba(16,16,16,0.96),_rgba(9,9,9,1))]" />
