@@ -72,7 +72,10 @@ export async function generateAIWithUsage({
     ? `${OREMEA_EVIDENCE_BOUNDARY}\n\n${prompt}`
     : prompt
 
-  const models = [...new Set([AI_MODELS.primary, AI_MODELS.fallback].filter(
+  // A verified same-family standby keeps participant requests working if a model ID is retired.
+  // The explicit environment fallback, when present, always takes precedence.
+  const standby = AI_MODELS.primary === "claude-sonnet-5-5" ? "claude-sonnet-5" : "claude-sonnet-5-5"
+  const models = [...new Set([AI_MODELS.primary, AI_MODELS.fallback || standby].filter(
     (model): model is string => Boolean(model?.trim()),
   ))]
 
@@ -154,7 +157,9 @@ async function callAnthropicModel({
           // Sonnet 5 enables thinking by default; other models keep their settings.
           ...(model === "claude-sonnet-5"
             ? { thinking: { type: "disabled" } }
-            : {}),
+            : model === "claude-sonnet-5-5"
+              ? { thinking: { type: "between_tools" } }
+              : {}),
           ...(systemBlocks ? { system: systemBlocks } : {}),
           ...(outputSchema
             ? {
