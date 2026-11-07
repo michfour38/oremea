@@ -87,7 +87,7 @@ export async function inspect({ root, env = {}, previous = {}, fetchImpl = fetch
         if (cursor) url.searchParams.set('after_id', cursor);
         const page = await request(url.toString(), { fetchImpl, key: env.ANTHROPIC_API_KEY, json: true });
         if (!Array.isArray(page.data) || page.data.some(m => typeof m.id !== 'string')) throw new Error('Malformed model catalog');
-        catalog.push(...page.data.map(m => ({ id: m.id, lifecycle: m.lifecycle, line: m.line, capabilities: m.capabilities })));
+        catalog.push(...page.data.map(m => ({ id: m.id, lifecycle: m.lifecycle, line: m.line, created_at: m.created_at, capabilities: m.capabilities })));
         cursor = page.has_more ? page.last_id : null;
         if (page.has_more && (!cursor || cursors.has(cursor))) throw new Error('Invalid pagination');
         if (cursor) cursors.add(cursor);
@@ -100,6 +100,8 @@ export async function inspect({ root, env = {}, previous = {}, fetchImpl = fetch
         for (const id of previous.models.filter(id => !catalogIds.includes(id))) report.findings.push({ kind: 'catalog_model_removed', id });
       }
       state.models = catalogIds;
+      // Candidate metadata comes from the authenticated provider catalog, not inferred IDs.
+      report.catalog = catalog;
       // Catalogue IDs alone never qualify a model for promotion.
       // Detailed lifecycle, price, quality and application compatibility remain unverified.
       report.candidateAssessment = assessCatalog({
@@ -117,6 +119,7 @@ export async function inspect({ root, env = {}, previous = {}, fetchImpl = fetch
         if (typeof data.id !== 'string' || !['active', 'deprecated', 'retired'].includes(data.lifecycle)) throw new Error('Missing lifecycle data');
         model.resolvedId = data.id;
         model.lifecycle = data.lifecycle;
+        model.line = data.line || null;
         model.retiresAt = data.retires_at || null;
         const prior = previous.resolutions?.[model.id];
         if (prior && prior !== data.id) report.findings.push({ kind: 'alias_changed', id: model.id, from: prior, to: data.id });
