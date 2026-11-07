@@ -47,6 +47,33 @@ export function proposeRepair({ report, configSource, env = {} } = {}) {
     from: current, to: candidate.id, content: nextSource };
 }
 
+export async function probeStructuredCompatibility({ apiKey, model, fetchImpl = fetch } = {}) {
+  if (!apiKey || !ID.test(model || '')) throw new Error('ARGUS_STRUCTURED_PROBE_INVALID_INPUT');
+  const thinking = model === 'claude-sonnet-5' ? { type: 'disabled' } :
+    model === 'claude-sonnet-5-5' ? { type: 'between_tools' } : undefined;
+  const response = await fetchImpl('https://api.anthropic.com/v1/messages', {
+    method: 'POST', redirect: 'error', signal: AbortSignal.timeout(15000),
+    headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({
+      model, max_tokens: 192, ...(thinking ? { thinking } : {}),
+      output_config: { format: { type: 'json_schema',
+        schema: { type: 'object', properties: { ok: { type: 'boolean' } },
+          required: ['ok'], additionalProperties: false } } },
+      messages: [{ role: 'user', content: 'ARGUS synthetic structured compatibility test. Respond with ok=true.' }],
+    }),
+  });
+  if (!response.ok) throw new Error('ARGUS_STRUCTURED_PROBE_HTTP_' + response.status);
+  const data = await response.json();
+  const text = Array.isArray(data?.content)
+    ? data.content.filter(block => block?.type === 'text').map(block => block.text).join('').trim()
+    : '';
+  let parsed;
+  try { parsed = JSON.parse(text); } catch { throw new Error('ARGUS_STRUCTURED_PROBE_INVALID_JSON'); }
+  if (data.model !== model || data.stop_reason !== 'end_turn' || parsed.ok !== true)
+    throw new Error('ARGUS_STRUCTURED_PROBE_RESPONSE_INVALID');
+  return { status: 'pass', model, customerDataUsed: false };
+}
+
 async function main() {
   const root = process.cwd();
   const configPath = resolve(root, CONFIG_PATH);
@@ -64,6 +91,7 @@ async function main() {
   }
   // A no-customer-data provider call establishes actual availability before editing code.
   await probe({ apiKey: process.env.ANTHROPIC_API_KEY, configSource: proposal.content });
+  await probeStructuredCompatibility({ apiKey: process.env.ANTHROPIC_API_KEY, model: proposal.to });
   await writeFile(configPath, proposal.content);
   console.log('ARGUS_VERIFIED_SAME_LINE_REPAIR:', proposal.from, '->', proposal.to);
 }
