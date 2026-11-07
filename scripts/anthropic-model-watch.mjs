@@ -87,22 +87,23 @@ export async function inspect({ root, env = {}, previous = {}, fetchImpl = fetch
         if (cursor) url.searchParams.set('after_id', cursor);
         const page = await request(url.toString(), { fetchImpl, key: env.ANTHROPIC_API_KEY, json: true });
         if (!Array.isArray(page.data) || page.data.some(m => typeof m.id !== 'string')) throw new Error('Malformed model catalog');
-        catalog.push(...page.data.map(m => m.id));
+        catalog.push(...page.data.map(m => ({ id: m.id, lifecycle: m.lifecycle, line: m.line, capabilities: m.capabilities })));
         cursor = page.has_more ? page.last_id : null;
         if (page.has_more && (!cursor || cursors.has(cursor))) throw new Error('Invalid pagination');
         if (cursor) cursors.add(cursor);
         if (cursors.size > 100) throw new Error('Pagination limit');
       } while (cursor);
       if (!catalog.length) throw new Error('Empty model catalog');
+      const catalogIds = [...new Set(catalog.map(model => model.id))].sort();
       if (previous.models?.length) {
-        for (const id of catalog.filter(id => !previous.models.includes(id))) report.findings.push({ kind: 'new_model', id });
-        for (const id of previous.models.filter(id => !catalog.includes(id))) report.findings.push({ kind: 'catalog_model_removed', id });
+        for (const id of catalogIds.filter(id => !previous.models.includes(id))) report.findings.push({ kind: 'new_model', id });
+        for (const id of previous.models.filter(id => !catalogIds.includes(id))) report.findings.push({ kind: 'catalog_model_removed', id });
       }
-      state.models = [...new Set(catalog)].sort();
+      state.models = catalogIds;
       // Catalogue IDs alone never qualify a model for promotion.
       // Detailed lifecycle, price, quality and application compatibility remain unverified.
       report.candidateAssessment = assessCatalog({
-        catalog: state.models.map(id => ({ id })),
+        catalog,
         configuredModels: report.models,
         providerHealthy: report.inferenceStatus === 'operational',
         documentationChanged: report.findings.some(f => f.kind === 'documentation_changed'),
@@ -129,14 +130,17 @@ export async function inspect({ root, env = {}, previous = {}, fetchImpl = fetch
       }
     }
   }
-  report.attentionRequired = Boolean(report.findings.length || report.failures.length);
+  // Documentation edits and newly published models are observations, not failures.
+  // Fail only when a check is incomplete or availability requires intervention.
+  const urgentFindings = new Set(['provider_incident', 'model_deprecated', 'model_retired', 'configured_model_unavailable', 'alias_changed']);
+  report.attentionRequired = Boolean(report.failures.length || report.findings.some(f => urgentFindings.has(f.kind)));
   // Never advance a baseline after an incomplete check.
   return { report, state: report.failures.length ? previous : { ...state, checkedAt } };
 }
 
 export function summary(report) {
   return ['# Anthropic model watch', '', `Checked: ${report.checkedAt}`, '',
-    `Result: ${report.attentionRequired ? 'attention required' : 'no changes detected'}`, '',
+    `Result: ${report.attentionRequired ? 'attention required' : 'model availability verified (notices do not fail the job)'}`, '',
     '| Configured model | API result | Retirement | Source locations |', '| --- | --- | --- | --- |',
     ...report.models.map(m => `| ${m.id} | ${m.lifecycle || 'unverified'} | ${m.retiresAt || '—'} | ${m.locations.join(', ')} |`), '',
     '## Findings', '', ...report.findings.map(f => `- ${JSON.stringify(f)}`), '',
