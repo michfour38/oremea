@@ -9,7 +9,8 @@ export async function probe({apiKey,configSource,fetchImpl=fetch}={}) {
   method:'POST',redirect:'error',signal:AbortSignal.timeout(15000),
   headers:{'content-type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},
   body:JSON.stringify({model,max_tokens:48,
-   ...(model==='claude-sonnet-5'?{thinking:{type:'disabled'}}:{}),
+   ...(model==='claude-sonnet-5'?{thinking:{type:'disabled'}}:
+      model==='claude-sonnet-5-5'?{thinking:{type:'between_tools'}}:{}),
    messages:[{role:'user',content:'Synthetic availability check. Reply exactly: ARGUS_OK'}]})
  });
  if(!response.ok) throw new Error('ARGUS_PROBE_HTTP_'+response.status);
