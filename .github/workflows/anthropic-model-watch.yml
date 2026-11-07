@@ -9,6 +9,9 @@ on:
     paths:
       - 'scripts/anthropic-model-watch.mjs'
       - 'scripts/argus-model-assessment.mjs'
+      - 'scripts/argus-auto-repair.mjs'
+      - 'scripts/argus-auto-repair.test.mjs'
+      - 'src/lib/ai/ai-gateway.ts'
       - '.github/workflows/anthropic-model-watch.yml'
   pull_request:
     paths:
@@ -16,6 +19,10 @@ on:
       - 'scripts/anthropic-model-watch.test.mjs'
       - 'scripts/argus-model-assessment.mjs'
       - 'scripts/argus-model-assessment.test.mjs'
+      - 'scripts/argus-auto-repair.mjs'
+      - 'scripts/argus-auto-repair.test.mjs'
+      - 'scripts/argus-synthetic-probe.mjs'
+      - 'src/lib/ai/ai-gateway.ts'
       - '.github/workflows/anthropic-model-watch.yml'
 
 permissions:
@@ -101,6 +108,7 @@ jobs:
           npm run typecheck
           npm run build
       - name: Publish tested model-only repair to source (never force-push)
+        id: model_publish
         if: steps.model_delta.outputs.changed == 'true'
         run: |
           test "$(git diff --name-only)" = "src/lib/ai/ai-config.ts"
@@ -127,7 +135,7 @@ jobs:
       - name: Surface unresolved availability issues without false documentation alarms
         if: always()
         env:
-          ARGUS_REPAIRED: ${{ steps.model_delta.outputs.changed }}
+          ARGUS_REPAIRED: ${{ steps.model_publish.outcome == 'success' && steps.model_delta.outputs.changed == 'true' }}
         run: |
           node --input-type=module - <<'NODE'
           import { readFileSync } from 'node:fs';
