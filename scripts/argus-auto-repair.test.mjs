@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { proposeRepair } from './argus-auto-repair.mjs';
+import { proposeRepair, probeStructuredCompatibility } from './argus-auto-repair.mjs';
 const source = model => `export const AI_MODELS = {\n  primary:\n    process.env.AI_PRIMARY_MODEL ||\n    "${model}",\n\n  fallback:\n    process.env.AI_FALLBACK_MODEL || null,\n} as const\n`;
 const catalog = [
  { id: 'claude-sonnet-5-5', lifecycle: 'active', line: 'sonnet', created_at: '2026-09-28T00:00:00Z' },
@@ -30,4 +30,27 @@ test('a same-line candidate must be declared active and carry provider release m
  const x=report('retired');
  x.catalog=x.catalog.map(m=>({...m,lifecycle:'deprecated'}));
  assert.equal(proposeRepair({report:x,configSource:source('claude-sonnet-5')}).reason,'NO_VERIFIED_SAME_LINE_REPLACEMENT');
+});
+
+test('structured compatibility probe checks the same API shape as production without participant data', async () => {
+  let seen;
+  const fetchImpl = async (url, options) => {
+    seen = { url, request: JSON.parse(options.body) };
+    return Response.json({ model: 'claude-sonnet-5-5', stop_reason: 'end_turn',
+      content: [{type:'text',text:'{"ok":true}'}] });
+  };
+  const result = await probeStructuredCompatibility({
+    apiKey: 'dummy', model: 'claude-sonnet-5-5', fetchImpl,
+  });
+  assert.equal(result.status, 'pass');
+  assert.deepEqual(seen.request.thinking, {type:'between_tools'});
+  assert.equal(seen.request.output_config.format.type, 'json_schema');
+  assert.equal(seen.request.messages[0].content.includes('participant'), false);
+});
+test('structured probe fails closed on unreadable replies', async () => {
+  await assert.rejects(probeStructuredCompatibility({
+    apiKey:'dummy',model:'claude-sonnet-5-5',
+    fetchImpl: async () => Response.json({ model:'claude-sonnet-5-5', stop_reason:'end_turn',
+      content:[{type:'text',text:'not json'}] }),
+  }), /INVALID_JSON/);
 });
