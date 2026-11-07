@@ -64,6 +64,14 @@ test('deprecated and retired configured models are flagged on first run', async 
   }
 });
 
+test('documentation-only changes do not fail an otherwise healthy watch', async t => {
+  const root = await fixture(t);
+  const baseline = await inspect({ root, env, fetchImpl: mock() });
+  const result = await inspect({ root, env, previous: baseline.state, fetchImpl: mock({ changedDocs: true }) });
+  assert.equal(result.report.findings.filter(f => f.kind === 'documentation_changed').length, 4);
+  assert.equal(result.report.attentionRequired, false);
+});
+
 test('missing credential and auth failure are incomplete checks, never healthy; baseline is retained', async t => {
   const root = await fixture(t);
   const previous = { sources: { releases: 'old' }, models: ['claude-old'] };
