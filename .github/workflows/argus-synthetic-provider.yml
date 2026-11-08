@@ -22,7 +22,7 @@ permissions:
 jobs:
   synthetic-probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,6 +30,8 @@ jobs:
           sparse-checkout: |
             scripts/argus-synthetic-probe.mjs
             scripts/argus-synthetic-probe.test.mjs
+            scripts/argus-direct-recovery.test.mjs
+            src/lib/ai/legacy-model-recovery.ts
             scripts/argus-auto-repair.mjs
             scripts/argus-change-gate.mjs
             .github/workflows/argus-synthetic-provider.yml
@@ -39,6 +41,7 @@ jobs:
         with:
           node-version: '22'
       - run: node --test scripts/argus-synthetic-probe.test.mjs
+      - run: node --experimental-strip-types --test scripts/argus-direct-recovery.test.mjs
       - name: Run synthetic live probe (never on PRs)
         if: github.event_name != 'pull_request'
         env:
@@ -46,11 +49,12 @@ jobs:
           AI_PRIMARY_MODEL: ${{ vars.AI_PRIMARY_MODEL }}
           AI_FALLBACK_MODEL: ${{ vars.AI_FALLBACK_MODEL }}
         run: |
-          node --input-type=module - <<'NODE'
+          node --experimental-strip-types --input-type=module - <<'NODE'
           import { readFileSync } from 'node:fs';
           import { validateConfig } from './scripts/argus-change-gate.mjs';
           import { probe } from './scripts/argus-synthetic-probe.mjs';
           import { probeStructuredCompatibility } from './scripts/argus-auto-repair.mjs';
+          import { sendDirectText } from './src/lib/ai/legacy-model-recovery.ts';
           const source = readFileSync('src/lib/ai/ai-config.ts', 'utf8');
           const configured = validateConfig(source);
           const primary = process.env.AI_PRIMARY_MODEL || configured;
@@ -62,4 +66,21 @@ jobs:
             await probeStructuredCompatibility({apiKey, model});
             console.log('ARGUS_TEXT_AND_SCHEMA_VERIFIED', model);
           }
+          // Intercept only the invented primary. All standby calls use real synthetic inference.
+          const simulated = 'claude-argus-retired-fixture';
+          for (const temperature of [undefined, 0, 0.15]) {
+            const init = {method:'POST', headers:{'content-type':'application/json',
+              'x-api-key':process.env.ANTHROPIC_API_KEY, 'anthropic-version':'2023-06-01'},
+              body:JSON.stringify({model:simulated, max_tokens:700, temperature,
+                messages:[{role:'user',content:'Synthetic recovery rehearsal. Reply exactly: ARGUS_OK'}]})};
+            const result = await sendDirectText(init, primary, (url, options) =>
+              JSON.parse(options.body).model === simulated
+                ? Promise.resolve(Response.json({error:{type:'not_found_error',message:'model: ' + simulated}}, {status:404}))
+                : fetch(url, options));
+            const reply = await result.json();
+            if (!result.ok || reply.model !== primary || reply.stop_reason !== 'end_turn' ||
+                !reply.content?.some(b => b.type === 'text' && b.text.trim() === 'ARGUS_OK'))
+              throw Error('ARGUS_DIRECT_RECOVERY_REHEARSAL_FAILED temperature=' + temperature);
+          }
+          console.log('ARGUS_DIRECT_RECOVERY_REHEARSAL_PASS');
           NODE
