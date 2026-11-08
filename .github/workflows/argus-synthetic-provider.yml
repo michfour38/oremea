@@ -55,14 +55,13 @@ jobs:
         run: |
           node --experimental-strip-types --input-type=module - <<'NODE'
           import { readFileSync } from 'node:fs';
-          import { validateConfig } from './scripts/argus-change-gate.mjs';
+          import { configuredPair } from './scripts/argus-change-gate.mjs';
           import { probe } from './scripts/argus-synthetic-probe.mjs';
           import { probeRecognition } from './scripts/argus-recognition-probe.mjs';
           import { rehearseDirectRecovery } from './scripts/argus-direct-rehearsal.mjs';
           const source = readFileSync('src/lib/ai/ai-config.ts', 'utf8');
-          const configured = validateConfig(source);
-          const primary = process.env.AI_PRIMARY_MODEL || configured;
-          const standby = process.env.AI_FALLBACK_MODEL || (primary === 'claude-sonnet-5-5' ? 'claude-sonnet-5' : 'claude-sonnet-5-5');
+          const configured = configuredPair(source).primary;
+          const {primary, fallback:standby} = configuredPair(source, process.env);
           if (standby === primary) throw Error('ARGUS_DISTINCT_STANDBY_REQUIRED');
           for (const model of [primary, standby]) {
             const apiKey = process.env.ANTHROPIC_API_KEY;

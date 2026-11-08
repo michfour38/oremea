@@ -20,12 +20,38 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test scripts/argus-deployment-check.test.mjs
-      - name: Check exact Railway commit statuses and all four product health endpoints
+      - run: node --test scripts/argus-deployment-check.test.mjs scripts/argus-rollback.test.mjs
+      - id: rollout
+        name: Check exact Railway commit statuses and all four product health endpoints
         env:
           TARGET_COMMIT: ${{ inputs.commit || github.sha }}
           GH_TOKEN: ${{ github.token }}
-        run: node scripts/argus-deployment-check.mjs "$TARGET_COMMIT"
+        run: |
+          set -o pipefail
+          node scripts/argus-deployment-check.mjs "$TARGET_COMMIT" 2>&1 | tee "$RUNNER_TEMP/argus-rollout.log" || {
+            if grep -Eq 'Error: ARGUS_DEPLOY_(FAILED|HEALTH_FAILED)' "$RUNNER_TEMP/argus-rollout.log"; then
+              echo "deployment_failed=true" >> "$GITHUB_OUTPUT"
+            fi
+            exit 1
+          }
+      - name: Qualify last working model configuration after a confirmed rollout failure
+        id: rollback
+        if: failure() && github.event_name == 'push' && steps.rollout.outputs.deployment_failed == 'true'
+        env:
+          TARGET_COMMIT: ${{ github.sha }}
+          GH_TOKEN: ${{ github.token }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AI_PRIMARY_MODEL: ${{ vars.AI_PRIMARY_MODEL }}
+          AI_FALLBACK_MODEL: ${{ vars.AI_FALLBACK_MODEL }}
+        run: node --experimental-strip-types scripts/argus-rollback.mjs
+      - uses: actions/upload-artifact@v4
+        if: failure() && steps.rollback.outcome == 'success'
+        with:
+          name: verified-model-rollback
+          path: .argus-rollback/proposal.json
+          include-hidden-files: true
+          if-no-files-found: error

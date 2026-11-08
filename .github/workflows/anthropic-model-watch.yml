@@ -106,6 +106,7 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           AI_PRIMARY_MODEL: ${{ vars.AI_PRIMARY_MODEL }}
+          AI_FALLBACK_MODEL: ${{ vars.AI_FALLBACK_MODEL }}
       - name: Detect eligible model-only change
         id: model_delta
         run: |
@@ -132,12 +133,14 @@ jobs:
         run: |
           node --experimental-strip-types --input-type=module - <<'NODE'
           import { readFileSync } from 'node:fs';
-          import { validateConfig } from './scripts/argus-change-gate.mjs';
+          import { configuredPair } from './scripts/argus-change-gate.mjs';
           import { rehearseDirectRecovery } from './scripts/argus-direct-rehearsal.mjs';
           import { probeRecognition } from './scripts/argus-recognition-probe.mjs';
-          const model = validateConfig(readFileSync('src/lib/ai/ai-config.ts','utf8'));
-          await probeRecognition(model, process.env.ANTHROPIC_API_KEY);
-          await rehearseDirectRecovery(model, process.env.ANTHROPIC_API_KEY);
+          const pair = configuredPair(readFileSync('src/lib/ai/ai-config.ts','utf8'));
+          for (const model of [pair.primary, pair.fallback]) {
+            await probeRecognition(model, process.env.ANTHROPIC_API_KEY);
+            await rehearseDirectRecovery(model, process.env.ANTHROPIC_API_KEY);
+          }
           NODE
           test "$(git diff --name-only)" = "src/lib/ai/ai-config.ts"
           git diff -- src/lib/ai/ai-config.ts > .anthropic-watch/model-only.patch
@@ -181,15 +184,18 @@ jobs:
       - name: Surface unresolved availability issues without false documentation alarms
         if: always()
         env:
+          AI_PRIMARY_MODEL: ${{ vars.AI_PRIMARY_MODEL }}
+          AI_FALLBACK_MODEL: ${{ vars.AI_FALLBACK_MODEL }}
           ARGUS_QUEUED: ${{ steps.proposal.outcome == 'success' && steps.model_delta.outputs.changed == 'true' }}
         run: |
           node --input-type=module - <<'NODE'
           import { readFileSync } from 'node:fs';
           const report = JSON.parse(readFileSync('.anthropic-watch/report.json', 'utf8'));
           const queued = process.env.ARGUS_QUEUED === 'true';
-          const recoveredModel = report.models.find(m => m.locations.some(loc => loc.startsWith('src/lib/ai/ai-config.ts:')))?.id;
+          const { inventory } = await import('./scripts/anthropic-model-watch.mjs');
+          const after = queued ? await inventory(process.cwd(), process.env) : report.models;
           const unresolved = report.findings.some(f => ['provider_incident','alias_changed','model_retired','configured_model_unavailable'].includes(f.kind) &&
-            !(queued && f.id === recoveredModel && ['model_retired','configured_model_unavailable'].includes(f.kind)));
+            !(queued && !after.some(m => m.id === f.id) && ['model_retired','configured_model_unavailable'].includes(f.kind)));
           if (report.failures.length || unresolved || (report.attentionRequired && !queued)) {
             console.error('ARGUS_UNRESOLVED_AVAILABILITY_ALERT');
             process.exitCode = 1;
