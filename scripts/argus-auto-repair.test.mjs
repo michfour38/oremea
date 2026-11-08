@@ -12,8 +12,11 @@ const report = lifecycle => ({ models:[{id:'claude-sonnet-5',lifecycle,line:'son
 test('active model is never replaced for a documentation edit or new release', () => {
  assert.equal(proposeRepair({report:report('active'),configSource:source('claude-sonnet-5')}).status,'no_action');
 });
-test('deprecated and unavailable model propose newest verified same-line active replacement', () => {
- for(const lifecycle of ['deprecated','retired','unavailable']) {
+test('deprecated model remains configured while still available', () => {
+ assert.equal(proposeRepair({report:report('deprecated'),configSource:source('claude-sonnet-5')}).reason,'CURRENT_MODEL_DEPRECATED');
+});
+test('retired and unavailable model propose newest verified same-line active replacement', () => {
+ for(const lifecycle of ['retired','unavailable']) {
   const r=proposeRepair({report:report(lifecycle),configSource:source('claude-sonnet-5')});
   assert.equal(r.status,'proposed');
   assert.equal(r.to,'claude-sonnet-5-5');

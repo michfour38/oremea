@@ -20,7 +20,8 @@ export function proposeRepair({ report, configSource, env = {} } = {}) {
   const live = report.models.find(model => model.id === current);
   if (!live) return { status: 'blocked', reason: 'CURRENT_MODEL_NOT_VERIFIED', from: current };
   if (live.lifecycle === 'active') return { status: 'no_action', reason: 'CURRENT_MODEL_ACTIVE', from: current };
-  if (!['deprecated', 'retired', 'unavailable'].includes(live.lifecycle))
+  if (live.lifecycle === 'deprecated') return { status: 'no_action', reason: 'CURRENT_MODEL_DEPRECATED', from: current };
+  if (!['retired', 'unavailable'].includes(live.lifecycle))
     return { status: 'blocked', reason: 'CURRENT_MODEL_LIFECYCLE_UNKNOWN', from: current };
   if (!Array.isArray(report.catalog) || report.failures?.some(f => f.source === 'models_catalog'))
     return { status: 'blocked', reason: 'PROVIDER_CATALOG_UNVERIFIED', from: current };
@@ -81,7 +82,7 @@ async function main() {
   const configSource = await readFile(configPath, 'utf8');
   const proposal = proposeRepair({ report, configSource, env: process.env });
   if (proposal.status === 'no_action') {
-    console.log('ARGUS_MODEL_CURRENTLY_ACTIVE: no source changes');
+    console.log('ARGUS_MODEL_RETAINED:', proposal.reason);
     return;
   }
   if (proposal.status === 'blocked') {
