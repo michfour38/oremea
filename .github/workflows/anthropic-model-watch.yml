@@ -134,7 +134,10 @@ jobs:
           import { readFileSync } from 'node:fs';
           import { validateConfig } from './scripts/argus-change-gate.mjs';
           import { rehearseDirectRecovery } from './scripts/argus-direct-rehearsal.mjs';
-          await rehearseDirectRecovery(validateConfig(readFileSync('src/lib/ai/ai-config.ts','utf8')),process.env.ANTHROPIC_API_KEY);
+          import { probeRecognition } from './scripts/argus-recognition-probe.mjs';
+          const model = validateConfig(readFileSync('src/lib/ai/ai-config.ts','utf8'));
+          await probeRecognition(model, process.env.ANTHROPIC_API_KEY);
+          await rehearseDirectRecovery(model, process.env.ANTHROPIC_API_KEY);
           NODE
           test "$(git diff --name-only)" = "src/lib/ai/ai-config.ts"
           git diff -- src/lib/ai/ai-config.ts > .anthropic-watch/model-only.patch
