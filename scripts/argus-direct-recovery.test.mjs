@@ -24,7 +24,8 @@ test('retired direct model verifies standby before resending the original reques
   assert.deepEqual(mock.requests[0], body);
   assert.deepEqual(mock.requests[2].messages, body.messages);
   assert.deepEqual(mock.requests[2], {...mock.requests[1], messages:body.messages});
-  assert.equal(mock.requests[2].temperature, body.temperature);
+  assert.equal(mock.requests[0].temperature, body.temperature);
+  assert.equal(Object.hasOwn(mock.requests[2], "temperature"), false);
   assert.equal(mock.requests[2].model, standby);
   assert.ok(!JSON.stringify(mock.requests[1]).includes('application fixture'));
 });

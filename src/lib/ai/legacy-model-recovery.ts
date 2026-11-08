@@ -28,7 +28,9 @@ export async function sendDirectText(
     ...(standby === "claude-sonnet-5" ? { thinking: { type: "disabled" } } :
       standby === "claude-sonnet-5-5" ? { thinking: { type: "between_tools" } } : {}),
   }
-  // Keep the application's sampling settings in the compatibility probe.
+  // Sonnet 5 rejects non-default sampling. Leave all active 4.6 requests intact.
+  if (standby === "claude-sonnet-5") delete request.temperature
+  // Verify exactly the request settings that the replacement will receive.
   const probe = await post({ ...init, body: JSON.stringify({ ...request,
     messages: [{ role: "user", content: "Synthetic availability check. Reply exactly: ARGUS_OK" }],
   }) })
