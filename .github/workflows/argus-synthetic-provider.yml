@@ -1,6 +1,12 @@
 name: ARGUS | Synthetic provider availability
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/argus-synthetic-provider.yml'
+      - 'src/lib/ai/ai-config.ts'
+      - 'src/lib/ai/ai-gateway.ts'
   workflow_dispatch:
   schedule:
     - cron: '37 5 * * 1'
@@ -24,6 +30,7 @@ jobs:
           sparse-checkout: |
             scripts/argus-synthetic-probe.mjs
             scripts/argus-synthetic-probe.test.mjs
+            scripts/argus-auto-repair.mjs
             scripts/argus-change-gate.mjs
             .github/workflows/argus-synthetic-provider.yml
             src/lib/ai/ai-config.ts
@@ -36,4 +43,23 @@ jobs:
         if: github.event_name != 'pull_request'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: node scripts/argus-synthetic-probe.mjs
+          AI_PRIMARY_MODEL: ${{ vars.AI_PRIMARY_MODEL }}
+          AI_FALLBACK_MODEL: ${{ vars.AI_FALLBACK_MODEL }}
+        run: |
+          node --input-type=module - <<'NODE'
+          import { readFileSync } from 'node:fs';
+          import { validateConfig } from './scripts/argus-change-gate.mjs';
+          import { probe } from './scripts/argus-synthetic-probe.mjs';
+          import { probeStructuredCompatibility } from './scripts/argus-auto-repair.mjs';
+          const source = readFileSync('src/lib/ai/ai-config.ts', 'utf8');
+          const configured = validateConfig(source);
+          const primary = process.env.AI_PRIMARY_MODEL || configured;
+          const standby = process.env.AI_FALLBACK_MODEL || (primary === 'claude-sonnet-5-5' ? 'claude-sonnet-5' : 'claude-sonnet-5-5');
+          if (standby === primary) throw Error('ARGUS_DISTINCT_STANDBY_REQUIRED');
+          for (const model of [primary, standby]) {
+            const apiKey = process.env.ANTHROPIC_API_KEY;
+            await probe({apiKey, configSource:source.replace('"' + configured + '"', '"' + model + '"')});
+            await probeStructuredCompatibility({apiKey, model});
+            console.log('ARGUS_TEXT_AND_SCHEMA_VERIFIED', model);
+          }
+          NODE
