@@ -7,6 +7,7 @@ on:
       - '.github/workflows/argus-synthetic-provider.yml'
       - 'src/lib/ai/ai-config.ts'
       - 'src/lib/ai/ai-gateway.ts'
+      - 'src/lib/ai/legacy-model-recovery.ts'
   workflow_dispatch:
   schedule:
     - cron: '37 5 * * 1'
