@@ -14,17 +14,28 @@ export const SOURCES = {
 const sha = value => createHash('sha256').update(value).digest('hex');
 const MODEL_CONFIG = 'src/lib/ai/ai-config.ts';
 
+export const MODEL_SOURCES = [
+  MODEL_CONFIG,
+  'src/lib/ai/ai-gateway.ts',
+  'app/api/mirror/questions/route.ts',
+  'src/lib/resonance/resonance-run-weekly-mirror.ts',
+  'src/lib/compass/ending/ending-engine.ts',
+  'src/lib/el/conversation-engine.ts',
+  'src/lib/compass/session/compass-mirror.service.ts',
+  'src/lib/compass/session/compass-descent.service.ts',
+];
+
 export async function inventory(root, env = {}) {
-  // ARGUS has one permitted source file. No recursive repository enumeration.
-  const file = resolve(root, MODEL_CONFIG);
-  const text = await readFile(file, 'utf8');
   const models = new Map();
   const add = (id, location) => {
     if (!/^claude-[a-z0-9.-]+$/.test(id)) throw new Error('Invalid configured model ID');
     models.set(id, [...new Set([...(models.get(id) || []), location])]);
   };
-  for (const match of text.matchAll(/["'`](claude-[a-z0-9.-]+)["'`]/g)) {
-    add(match[1], `${MODEL_CONFIG}:${text.slice(0, match.index).split('\n').length}`);
+  for (const path of MODEL_SOURCES) {
+    const text = await readFile(resolve(root, path), 'utf8');
+    for (const match of text.matchAll(/["'`](claude-[a-z0-9.-]+)["'`]/g)) {
+      add(match[1], `${path}:${text.slice(0, match.index).split('\n').length}`);
+    }
   }
   for (const name of ['AI_PRIMARY_MODEL', 'AI_FALLBACK_MODEL']) {
     if (env[name]) add(env[name].trim(), `environment:${name}`);
@@ -135,7 +146,7 @@ export async function inspect({ root, env = {}, previous = {}, fetchImpl = fetch
   }
   // Documentation edits and newly published models are observations, not failures.
   // Fail only when a check is incomplete or availability requires intervention.
-  const urgentFindings = new Set(['provider_incident', 'model_deprecated', 'model_retired', 'configured_model_unavailable', 'alias_changed']);
+  const urgentFindings = new Set(['provider_incident', 'model_retired', 'configured_model_unavailable', 'alias_changed']);
   report.attentionRequired = Boolean(report.failures.length || report.findings.some(f => urgentFindings.has(f.kind)));
   // Never advance a baseline after an incomplete check.
   return { report, state: report.failures.length ? previous : { ...state, checkedAt } };

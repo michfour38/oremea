@@ -3,13 +3,16 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { inventory, inspect, SOURCES, summary } from './anthropic-model-watch.mjs';
+import { dirname, join } from 'node:path';
+import { inventory, inspect, MODEL_SOURCES, SOURCES, summary } from './anthropic-model-watch.mjs';
 
 async function fixture(t) {
   const root = await mkdtemp(join(tmpdir(), 'anthropic-watch-'));
   t.after(() => rm(root, { recursive: true, force: true }));
-  await mkdir(join(root, 'src/lib/ai'), { recursive: true });
+  for (const path of MODEL_SOURCES) {
+    await mkdir(dirname(join(root, path)), { recursive: true });
+    await writeFile(join(root, path), '');
+  }
   await writeFile(join(root, 'src/lib/ai/ai-config.ts'), 'const primary = "claude-test-primary";\nconst secondary = "claude-test-secondary";');
   return root;
 }
@@ -60,7 +63,7 @@ test('deprecated and retired configured models are flagged on first run', async 
   for (const lifecycle of ['deprecated', 'retired']) {
     const result = await inspect({ root, env, fetchImpl: mock({ lifecycle }) });
     assert.equal(result.report.findings.filter(f => f.kind === `model_${lifecycle}`).length, 2);
-    assert.equal(result.report.attentionRequired, true);
+    assert.equal(result.report.attentionRequired, lifecycle === 'retired');
   }
 });
 
