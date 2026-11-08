@@ -1,0 +1,31 @@
+name: ARGUS | Verify production model rollout
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/lib/ai/**'
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Existing rollout commit SHA for read-only verification
+        required: true
+permissions:
+  contents: read
+  statuses: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test scripts/argus-deployment-check.test.mjs
+      - name: Check exact Railway commit statuses and all four product health endpoints
+        env:
+          TARGET_COMMIT: ${{ inputs.commit || github.sha }}
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/argus-deployment-check.mjs "$TARGET_COMMIT"
