@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { configuredPair } from './argus-change-gate.mjs';
 import { assessCatalog } from './argus-model-assessment.mjs';
 import { readFile, mkdir, writeFile, rename } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
@@ -33,6 +34,13 @@ export async function inventory(root, env = {}) {
   };
   for (const path of MODEL_SOURCES) {
     const text = await readFile(resolve(root, path), 'utf8');
+    if (path === 'src/lib/ai/ai-gateway.ts') {
+      if (text.trim()) {
+        const config = await readFile(resolve(root, MODEL_CONFIG), 'utf8');
+        add(configuredPair(config, env).fallback, path + ':effective-standby');
+      }
+      continue;
+    }
     for (const match of text.matchAll(/["'`](claude-[a-z0-9.-]+)["'`]/g)) {
       add(match[1], `${path}:${text.slice(0, match.index).split('\n').length}`);
     }

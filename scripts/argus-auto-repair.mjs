@@ -4,7 +4,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { validateConfig } from './argus-change-gate.mjs';
+import { validateConfig, configuredPair } from './argus-change-gate.mjs';
 import { probe } from './argus-synthetic-probe.mjs';
 
 export const CONFIG_PATH = 'src/lib/ai/ai-config.ts';
@@ -19,12 +19,20 @@ export function proposeRepair({ report, configSource, env = {} } = {}) {
     return { status: 'blocked', reason: 'WATCH_REPORT_MISSING', from: current };
   const live = report.models.find(model => model.id === current);
   if (!live) return { status: 'blocked', reason: 'CURRENT_MODEL_NOT_VERIFIED', from: current };
-  if (live.lifecycle === 'active') return { status: 'no_action', reason: 'CURRENT_MODEL_ACTIVE', from: current };
-  if (live.lifecycle === 'deprecated') return { status: 'no_action', reason: 'CURRENT_MODEL_DEPRECATED', from: current };
-  if (!['retired', 'unavailable'].includes(live.lifecycle))
-    return { status: 'blocked', reason: 'CURRENT_MODEL_LIFECYCLE_UNKNOWN', from: current };
-  if (!Array.isArray(report.catalog) || report.failures?.some(f => f.source === 'models_catalog'))
-    return { status: 'blocked', reason: 'PROVIDER_CATALOG_UNVERIFIED', from: current };
+  const dead = model => ['retired','unavailable'].includes(model?.lifecycle);
+  const configured = configuredPair(configSource);
+  const standby = env.AI_FALLBACK_MODEL?.trim() || configured.fallback;
+  const standbyStatus = report.models.find(model => model.id === standby);
+  const primaryWorking = ['active','deprecated'].includes(live.lifecycle);
+  if (primaryWorking && !dead(standbyStatus))
+    return {status:'no_action', reason:'CURRENT_MODEL_' + live.lifecycle.toUpperCase(), from:current};
+  if (!primaryWorking && !dead(live))
+    return {status:'blocked', reason:'CURRENT_MODEL_LIFECYCLE_UNKNOWN', from:current};
+  if (env.AI_FALLBACK_MODEL && dead(standbyStatus))
+    return {status:'blocked', reason:'FALLBACK_MODEL_ENV_OVERRIDE', from:current};
+  if (!Array.isArray(report.catalog) || report.failures?.length ||
+      (report.inferenceStatus && report.inferenceStatus !== 'operational'))
+    return {status:'blocked', reason:'PROVIDER_CATALOG_UNVERIFIED', from:current};
 
   // The provider supplies the actual model line; names alone cannot certify a new line.
   const expectedLine = live.line || /^claude-(sonnet|haiku|opus)-/.exec(current)?.[1];
@@ -33,19 +41,25 @@ export function proposeRepair({ report, configSource, env = {} } = {}) {
   // Catalog lists newest first; choose the most recently released ACTIVE same-line model.
   // Other model lines (including experimental ones) must never be automatically selected.
   const candidates = report.catalog
-    .filter(m => m && ID.test(m.id || '') && m.id !== current &&
+    .filter(m => m && ID.test(m.id || '') && m.id !== current && !dead(report.models.find(model => model.id === m.id)) &&
       m.lifecycle === 'active' && m.line === expectedLine &&
       typeof m.created_at === 'string' && !Number.isNaN(Date.parse(m.created_at)))
     .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
   if (!candidates.length)
     return { status: 'blocked', reason: 'NO_VERIFIED_SAME_LINE_REPLACEMENT', from: current };
 
-  const candidate = candidates[0];
-  const nextSource = configSource.replace('"' + current + '"', '"' + candidate.id + '"');
-  if (nextSource === configSource || validateConfig(nextSource) !== candidate.id)
-    return { status: 'blocked', reason: 'CONFIG_REPLACEMENT_UNSAFE', from: current };
-  return { status: 'proposed', reason: 'CURRENT_MODEL_' + live.lifecycle.toUpperCase(),
-    from: current, to: candidate.id, content: nextSource };
+  const nextPrimary = primaryWorking ? current : candidates[0].id;
+  const eligible = candidates.filter(candidate => candidate.id !== nextPrimary);
+  const nextStandby = eligible.find(candidate => candidate.id === standby)?.id || eligible[0]?.id;
+  if (!nextStandby || (env.AI_FALLBACK_MODEL && nextStandby !== standby))
+    return {status:'blocked', reason:'NO_DISTINCT_VERIFIED_STANDBY', from:current};
+  const nextSource = configSource.replace('"' + current + '"', '"' + nextPrimary + '"')
+    .replace(/(process\.env\.AI_FALLBACK_MODEL \|\| )(?:null|"claude-[a-z0-9.-]+")/, '$1"' + nextStandby + '"');
+  const checked = configuredPair(nextSource);
+  if (checked.primary !== nextPrimary || checked.fallback !== nextStandby)
+    return {status:'blocked', reason:'CONFIG_REPLACEMENT_UNSAFE', from:current};
+  return {status:'proposed', reason:primaryWorking ? 'STANDBY_UNAVAILABLE' : 'CURRENT_MODEL_' + live.lifecycle.toUpperCase(),
+    from:current, to:nextPrimary, fallback:nextStandby, content:nextSource};
 }
 
 export async function probeStructuredCompatibility({

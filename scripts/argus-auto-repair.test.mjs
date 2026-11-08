@@ -57,3 +57,24 @@ test('structured probe fails closed on unreadable replies', async () => {
       content:[{type:'text',text:'not json'}] }),
   }), /INVALID_JSON/);
 });
+
+test('retirement never puts the retired primary back into the standby slot', () => {
+  const r = proposeRepair({report:report('retired'),configSource:source('claude-sonnet-5')});
+  assert.equal(r.to, 'claude-sonnet-5-5');
+  assert.equal(r.fallback, 'claude-sonnet-4-6');
+  assert.match(r.content, /AI_FALLBACK_MODEL \|\| "claude-sonnet-4-6"/);
+});
+test('only the standby changes when the primary remains active', () => {
+  const observed = report('active');
+  observed.models.push({id:'claude-sonnet-5-5',lifecycle:'unavailable'});
+  const r = proposeRepair({report:observed,configSource:source('claude-sonnet-5')});
+  assert.equal(r.to, 'claude-sonnet-5');
+  assert.equal(r.fallback, 'claude-sonnet-4-6');
+});
+test('one candidate cannot fill both roles and provider incidents block promotion', () => {
+  const observed = report('retired');
+  observed.catalog = observed.catalog.slice(0,1);
+  assert.equal(proposeRepair({report:observed,configSource:source('claude-sonnet-5')}).reason, 'NO_DISTINCT_VERIFIED_STANDBY');
+  observed.inferenceStatus = 'degraded_performance';
+  assert.equal(proposeRepair({report:observed,configSource:source('claude-sonnet-5')}).reason, 'PROVIDER_CATALOG_UNVERIFIED');
+});

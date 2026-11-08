@@ -5,11 +5,17 @@ const ALLOWED = 'src/lib/ai/ai-config.ts';
 export function validateChangePaths(paths) {
   if (paths.length !== 1 || paths[0] !== ALLOWED) throw new Error('ARGUS_CHANGE_SCOPE_VIOLATION');
 }
-export function validateConfig(content) {
-  const expected = /^export const AI_MODELS = \{\n  primary:\n    process\.env\.AI_PRIMARY_MODEL \|\|\n    "(claude-[a-z0-9.-]+)",\n\n  fallback:\n    process\.env\.AI_FALLBACK_MODEL \|\| null,\n\} as const\s*$/;
+export function configuredPair(content, env = {}) {
+  const expected = /^export const AI_MODELS = \{\n  primary:\n    process\.env\.AI_PRIMARY_MODEL \|\|\n    "(claude-[a-z0-9.-]+)",\n\n  fallback:\n    process\.env\.AI_FALLBACK_MODEL \|\| (?:null|"(claude-[a-z0-9.-]+)"),\n\} as const\s*$/;
   const match = content.match(expected);
   if (!match) throw new Error('ARGUS_CONFIG_SHAPE_VIOLATION');
-  return match[1];
+  const primary = env.AI_PRIMARY_MODEL?.trim() || match[1];
+  const fallback = env.AI_FALLBACK_MODEL?.trim() || match[2] ||
+    (primary === 'claude-sonnet-5-5' ? 'claude-sonnet-5' : 'claude-sonnet-5-5');
+  return { primary, fallback };
+}
+export function validateConfig(content) {
+  return configuredPair(content).primary;
 }
 export function validateModelCatalog(model, models) {
   if (!Array.isArray(models) || !models.some(m => m?.id === model && m?.lifecycle === 'active')) throw new Error('ARGUS_MODEL_NOT_VERIFIED_ACTIVE');
