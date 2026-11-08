@@ -1,3 +1,5 @@
+import { sendDirectText } from "@/src/lib/ai/legacy-model-recovery"
+import { AI_MODELS } from "@/src/lib/ai/ai-config"
 import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
@@ -170,7 +172,7 @@ Return exactly the three requested XML blocks and nothing else.
 Do not use markdown fences. Do not add commentary before or after the blocks.
 Preserve the participant evidence and write both questions as actual questions ending in question marks.`;
 
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await sendDirectText({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -182,7 +184,7 @@ Preserve the participant evidence and write both questions as actual questions e
           max_tokens: 1500,
           messages: [{ role: "user", content: attemptPrompt }],
         }),
-      });
+      }, AI_MODELS.primary);
 
       const data = await res.json();
 

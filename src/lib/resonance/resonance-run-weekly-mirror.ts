@@ -1,3 +1,5 @@
+import { sendDirectText } from "@/src/lib/ai/legacy-model-recovery"
+import { AI_MODELS } from "@/src/lib/ai/ai-config"
 import { logPrivateError } from "@/src/lib/security/private-errors";
 import { prisma } from "@/lib/prisma";
 
@@ -467,7 +469,7 @@ RETRY REQUIREMENT
 The previous generation did not complete successfully.
 Return only the finished Closing Mirror text. Do not add headings, metadata, JSON, XML, or markdown fences. Preserve the participant evidence and the Closing Mirror instructions above.`;
 
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await sendDirectText({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -479,7 +481,7 @@ Return only the finished Closing Mirror text. Do not add headings, metadata, JSO
           max_tokens: 1600,
           messages: [{ role: "user", content: attemptPrompt }],
         }),
-      });
+      }, AI_MODELS.primary);
 
       const data = await res.json();
 

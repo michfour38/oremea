@@ -1,3 +1,5 @@
+import { sendDirectText } from "@/src/lib/ai/legacy-model-recovery"
+import { AI_MODELS } from "@/src/lib/ai/ai-config"
 import { logPrivateError } from "@/src/lib/security/private-errors";
 import { OREMEA_EVIDENCE_BOUNDARY } from "@/src/lib/oremea/evidence-boundary"
 
@@ -53,7 +55,7 @@ The previous generation did not complete successfully.
 Return only the finished Compass Mirror reflection requested above.
 Do not add JSON, XML, markdown fences, metadata, or commentary about the retry.`
 
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await sendDirectText({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -65,7 +67,7 @@ Do not add JSON, XML, markdown fences, metadata, or commentary about the retry.`
           max_tokens: 900,
           messages: [{ role: "user", content: attemptPrompt }],
         }),
-      })
+      }, AI_MODELS.primary)
 
       const data = await res.json()
 

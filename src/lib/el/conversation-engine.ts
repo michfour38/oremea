@@ -1,3 +1,5 @@
+import { sendDirectText } from "@/src/lib/ai/legacy-model-recovery"
+import { AI_MODELS } from "@/src/lib/ai/ai-config"
 import { logPrivateError } from "@/src/lib/security/private-errors";
 import {
   getCompassBoundaryMessage,
@@ -95,7 +97,7 @@ export async function runELConversation({
 
 async function callConversationModel(prompt: string): Promise<string | null> {
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await sendDirectText({
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -107,7 +109,7 @@ async function callConversationModel(prompt: string): Promise<string | null> {
         max_tokens: 700,
         messages: [{ role: "user", content: prompt }],
       }),
-    })
+    }, AI_MODELS.primary)
 
     const data = await res.json()
 
