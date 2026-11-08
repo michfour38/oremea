@@ -64,8 +64,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
-      contents: write
-      statuses: read
+      contents: read
+      actions: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -78,6 +78,21 @@ jobs:
           path: .anthropic-watch/state.json
           key: anthropic-model-watch-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: anthropic-model-watch-
+      - name: Restore retained baseline if the Actions cache was evicted
+        if: hashFiles('.anthropic-watch/state.json') == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ids=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/anthropic-model-watch.yml/runs?branch=main&per_page=50" --jq '.workflow_runs[] | select(.event == "schedule" or .event == "push" or .event == "workflow_dispatch") | select(.status == "completed") | .id')
+          for id in $ids; do
+            saved=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/artifacts" --jq '.artifacts[] | select(.name == "argus-last-complete-baseline" and .expired == false) | .id')
+            if [ -n "$saved" ]; then
+              gh run download "$id" --name argus-last-complete-baseline --dir .anthropic-watch
+              test -s .anthropic-watch/state.json
+              break
+            fi
+          done
       - name: Check official sources and configured models
         id: provider_watch
         continue-on-error: true
@@ -110,30 +125,50 @@ jobs:
           npm run test:launch
           npm run typecheck
           npm run build
-      - name: Publish tested model-only repair to source (never force-push)
-        id: model_publish
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Rehearse candidate against all direct caller profiles
         if: steps.model_delta.outputs.changed == 'true'
-        run: |
-          test "$(git diff --name-only)" = "src/lib/ai/ai-config.ts"
-          git config user.name "argus-model-recovery[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/lib/ai/ai-config.ts
-          git commit -m "ARGUS: repair unavailable Anthropic model after verified checks"
-          git -c 'credential.helper=!f() { echo username=x-access-token; echo password=$GH_TOKEN; }; f' push origin HEAD:main
-      - name: Verify Railway rollout on every affected service
-        id: rollout
-        if: steps.model_publish.outcome == 'success' && steps.model_delta.outputs.changed == 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: node scripts/argus-deployment-check.mjs "$(git rev-parse HEAD)"
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          node --experimental-strip-types --input-type=module - <<'NODE'
+          import { readFileSync } from 'node:fs';
+          import { validateConfig } from './scripts/argus-change-gate.mjs';
+          import { rehearseDirectRecovery } from './scripts/argus-direct-rehearsal.mjs';
+          import { probeRecognition } from './scripts/argus-recognition-probe.mjs';
+          const model = validateConfig(readFileSync('src/lib/ai/ai-config.ts','utf8'));
+          await probeRecognition(model, process.env.ANTHROPIC_API_KEY);
+          await rehearseDirectRecovery(model, process.env.ANTHROPIC_API_KEY);
+          NODE
+          test "$(git diff --name-only)" = "src/lib/ai/ai-config.ts"
+          git diff -- src/lib/ai/ai-config.ts > .anthropic-watch/model-only.patch
+          git rev-parse HEAD > .anthropic-watch/base-sha
+      - name: Queue verified replacement for the protected PR publisher
+        id: proposal
+        if: steps.model_delta.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tested-model-repair
+          path: |
+            .anthropic-watch/base-sha
+            .anthropic-watch/model-only.patch
+            .anthropic-watch/report.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
       - name: Save successful source baseline
         if: ${{ always() && hashFiles('.anthropic-watch/state.json') != '' }}
         uses: actions/cache/save@v4
         with:
           path: .anthropic-watch/state.json
           key: anthropic-model-watch-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Retain the last complete baseline independently of the cache
+        if: always() && hashFiles('.anthropic-watch/state.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: argus-last-complete-baseline
+          path: .anthropic-watch/state.json
+          include-hidden-files: true
+          retention-days: 90
       - name: Save monitoring report
         if: always()
         uses: actions/upload-artifact@v4
@@ -146,19 +181,19 @@ jobs:
       - name: Surface unresolved availability issues without false documentation alarms
         if: always()
         env:
-          ARGUS_REPAIRED: ${{ steps.rollout.outcome == 'success' && steps.model_delta.outputs.changed == 'true' }}
+          ARGUS_QUEUED: ${{ steps.proposal.outcome == 'success' && steps.model_delta.outputs.changed == 'true' }}
         run: |
           node --input-type=module - <<'NODE'
           import { readFileSync } from 'node:fs';
           const report = JSON.parse(readFileSync('.anthropic-watch/report.json', 'utf8'));
-          const repaired = process.env.ARGUS_REPAIRED === 'true';
+          const queued = process.env.ARGUS_QUEUED === 'true';
           const recoveredModel = report.models.find(m => m.locations.some(loc => loc.startsWith('src/lib/ai/ai-config.ts:')))?.id;
           const unresolved = report.findings.some(f => ['provider_incident','alias_changed','model_retired','configured_model_unavailable'].includes(f.kind) &&
-            !(repaired && f.id === recoveredModel && ['model_retired','configured_model_unavailable'].includes(f.kind)));
-          if (report.failures.length || unresolved || (report.attentionRequired && !repaired)) {
+            !(queued && f.id === recoveredModel && ['model_retired','configured_model_unavailable'].includes(f.kind)));
+          if (report.failures.length || unresolved || (report.attentionRequired && !queued)) {
             console.error('ARGUS_UNRESOLVED_AVAILABILITY_ALERT');
             process.exitCode = 1;
           } else {
-            console.log(repaired ? 'ARGUS_MODEL_REPAIR_DEPLOYED' : 'ARGUS_MONITORING_HEALTHY');
+            console.log(queued ? 'ARGUS_MODEL_REPAIR_QUEUED_FOR_PROTECTED_PR' : 'ARGUS_MONITORING_HEALTHY');
           }
           NODE

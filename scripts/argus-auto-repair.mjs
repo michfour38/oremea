@@ -48,7 +48,12 @@ export function proposeRepair({ report, configSource, env = {} } = {}) {
     from: current, to: candidate.id, content: nextSource };
 }
 
-export async function probeStructuredCompatibility({ apiKey, model, fetchImpl = fetch } = {}) {
+export async function probeStructuredCompatibility({
+  apiKey, model, fetchImpl = fetch, system,
+  schema = { type: 'object', properties: { ok: { type: 'boolean' } }, required: ['ok'], additionalProperties: false },
+  prompt = 'ARGUS synthetic structured compatibility test. Respond with ok=true.',
+  validate = value => value?.ok === true,
+} = {}) {
   if (!apiKey || !ID.test(model || '')) throw new Error('ARGUS_STRUCTURED_PROBE_INVALID_INPUT');
   const thinking = model === 'claude-sonnet-5' ? { type: 'disabled' } :
     model === 'claude-sonnet-5-5' ? { type: 'between_tools' } : undefined;
@@ -58,9 +63,9 @@ export async function probeStructuredCompatibility({ apiKey, model, fetchImpl = 
     body: JSON.stringify({
       model, max_tokens: 192, ...(thinking ? { thinking } : {}),
       output_config: { format: { type: 'json_schema',
-        schema: { type: 'object', properties: { ok: { type: 'boolean' } },
-          required: ['ok'], additionalProperties: false } } },
-      messages: [{ role: 'user', content: 'ARGUS synthetic structured compatibility test. Respond with ok=true.' }],
+        schema } },
+      ...(system ? { system } : {}),
+      messages: [{ role: 'user', content: prompt }],
     }),
   });
   if (!response.ok) throw new Error('ARGUS_STRUCTURED_PROBE_HTTP_' + response.status);
@@ -70,7 +75,7 @@ export async function probeStructuredCompatibility({ apiKey, model, fetchImpl = 
     : '';
   let parsed;
   try { parsed = JSON.parse(text); } catch { throw new Error('ARGUS_STRUCTURED_PROBE_INVALID_JSON'); }
-  if (data.model !== model || data.stop_reason !== 'end_turn' || parsed.ok !== true)
+  if (data.model !== model || data.stop_reason !== 'end_turn' || !validate(parsed))
     throw new Error('ARGUS_STRUCTURED_PROBE_RESPONSE_INVALID');
   return { status: 'pass', model, customerDataUsed: false };
 }
