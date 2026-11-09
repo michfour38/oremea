@@ -1,6 +1,7 @@
 import { OREMEA_EVIDENCE_BOUNDARY } from "@/src/lib/oremea/evidence-boundary"
 
 import { AI_MODELS } from "./ai-config"
+import { dispatchArgusRecovery, isAnthropicModelNotFound } from "./argus-runtime-recovery"
 
 export type GenerateAIParams = {
   task: string
@@ -183,6 +184,13 @@ async function callAnthropicModel({
 
     // Provider error payloads may contain private request data; never log them.
     if (!res.ok) {
+      if (res.status === 404) {
+        const errorBody: unknown = await res.clone().json().catch(() => null)
+        if (isAnthropicModelNotFound(res.status, errorBody, model)) {
+          // Confirmed model rejection only; keep the existing user request and fallback intact.
+          await dispatchArgusRecovery()
+        }
+      }
       console.error(`AI provider request failed for task "${task}" using "${model}" (HTTP ${res.status}).`)
       return null
     }
