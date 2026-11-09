@@ -449,10 +449,12 @@ async function generateRecognitionFallbackReply({
   firstName,
   recentMessages,
   memory,
+  sustainReferences = [],
 }: {
   firstName?: string | null;
   recentMessages: RecognitionConversationMessage[];
   memory: RecognitionConversationMemory;
+  sustainReferences?: Array<{ title: string; content: string }>;
 }) {
   const result = await generateAIWithUsage({
     task: "recognition_conversation_fallback",
@@ -512,6 +514,7 @@ export async function generateRecognitionConversationReply({
       firstName,
       recentMessages,
       memory,
+      sustainReferences,
     }),
     maxTokens: 550,
   });
@@ -552,6 +555,7 @@ export async function generateRecognitionConversationReply({
     firstName,
     recentMessages,
     memory,
+    sustainReferences,
   });
 
   if (fallback) {
