@@ -1,3 +1,5 @@
+import { reportArgusModelFailure } from "./argus-runtime-recovery"
+
 // Direct text integrations keep their original request until the provider rejects its model.
 type DirectTextRequest = {
   model: string
@@ -10,6 +12,7 @@ export async function sendDirectText(
   init: RequestInit & { body: string },
   standby: string,
   send: typeof fetch = fetch,
+  reportFailure = reportArgusModelFailure,
 ): Promise<Response> {
   const endpoint = "https://api.anthropic.com/v1/messages"
   const post = (options: RequestInit) => send(endpoint, {
@@ -18,11 +21,14 @@ export async function sendDirectText(
   const primary = await post(init)
   if (primary.status !== 404) return primary
 
-  const original: DirectTextRequest = JSON.parse(init.body)
+  let original: DirectTextRequest
+  try { original = JSON.parse(init.body) as DirectTextRequest }
+  catch { return primary }
+  const error: unknown = await primary.clone().json().catch(() => null)
+  // Signal only a model-specific Anthropic 404. The shared reporter never
+  // sends participant text or provider error bodies to GitHub/logs.
+  if (!await reportFailure(primary.status, error, original.model)) return primary
   if (standby === original.model) return primary
-  const error = await primary.clone().json().catch(() => null)
-  if (error?.error?.type !== "not_found_error" ||
-      !String(error.error.message).includes(original.model)) return primary
 
   const request = { ...original, model: standby,
     ...(standby === "claude-sonnet-5" ? { thinking: { type: "disabled" } } :
