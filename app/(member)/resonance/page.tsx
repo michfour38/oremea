@@ -1,5 +1,6 @@
 import { logPrivateError } from "@/src/lib/security/private-errors";
 import { auth } from "@clerk/nextjs/server";
+import { getSharedSustainReferences } from "@/src/lib/integrations/sustain-bridge";
 import { redirect } from "next/navigation";
 
 import { getCurrentDayContent } from "@/src/lib/resonance/getCurrentDayContent";
@@ -80,6 +81,10 @@ export default async function ResonancePage() {
   if (!activeRun) {
     redirect("/entry");
   }
+
+  // Only after an existing paid/approved active journey has been established
+  // References are shown privately and are never injected into shared rooms
+  const sustainReferences = await getSharedSustainReferences(userId, "resonance");
 
   const progression = await getActiveResonancePosition(
     activeRun.id,
@@ -178,6 +183,21 @@ export default async function ResonancePage() {
                 </div>
               )}
             </header>
+
+            {sustainReferences.length > 0 ? (
+              <details className="mt-6 rounded-xl border border-current/20 p-4">
+                <summary className="cursor-pointer res-text font-semibold">My SUSTAIN references</summary>
+                <p className="res-text-secondary mt-2 text-sm">These stay private — they are not added to group reflections or Mirrors automatically</p>
+                <div className="mt-4 space-y-3">
+                  {sustainReferences.map((reference, index) => (
+                    <div key={index}>
+                      <h2 className="res-text font-semibold">{reference.title}</h2>
+                      <p className="res-text-secondary whitespace-pre-wrap text-sm">{reference.content}</p>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            ) : null}
 
             {content ? (
               <>

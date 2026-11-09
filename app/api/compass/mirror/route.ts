@@ -5,6 +5,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getCompassAccessState } from "@/src/lib/compass/compass-access"
 import { runCompassMirror } from "@/src/lib/compass/session/compass-mirror.service"
+import { getSharedSustainReferences } from "@/src/lib/integrations/sustain-bridge"
 
 type MirrorStage = "area" | "core"
 
@@ -78,11 +79,14 @@ export async function POST(request: Request) {
     const body = await request.json()
     const mirrorStage = readStage(body.mirrorStage)
 
+    // Existing Compass entitlement was checked above — never bypass paid access
+    const sustainReferences = await getSharedSustainReferences(userId, "compass")
     const output = await runCompassMirror({
       areaResponses: body.areaResponses ?? [],
       selectedArea: body.selectedArea ?? null,
       recursiveLayers: body.recursiveLayers ?? [],
       mirrorStage,
+      sustainReferences,
     })
 
     if (!output) {

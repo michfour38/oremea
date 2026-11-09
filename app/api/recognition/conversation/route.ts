@@ -10,6 +10,7 @@ import {
   type RecognitionConversationMessage,
 } from "@/src/lib/recognition/recognition-conversation";
 import { getRecognitionConversationAccess } from "@/src/lib/recognition/recognition-conversation-access";
+import { getSharedSustainReferences } from "@/src/lib/integrations/sustain-bridge";
 import { trimRecognitionRecentContext } from "@/src/lib/recognition/recognition-context";
 import { getOrCreateActiveRecognitionThread } from "@/src/lib/recognition/recognition-thread";
 
@@ -389,10 +390,14 @@ export async function POST(request: Request) {
       }));
 
     const promptMessages = trimRecognitionRecentContext(recentMessages);
+    // Entitlement was already verified above — never fetch across a denied product
+    // Each request rereads the live revocable grant and approved references
+    const sustainReferences = await getSharedSustainReferences(user.id, "recognition");
     const generated = await generateRecognitionConversationReply({
       firstName: user.firstName,
       recentMessages: promptMessages,
       memory: readRecognitionMemory(prepared.memorySnapshot),
+      sustainReferences,
     });
 
     // ARGUS signal: emit only the response-path category, never participant text.
