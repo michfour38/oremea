@@ -1,4 +1,4 @@
-import { reportArgusModelFailure } from "./argus-runtime-recovery"
+import { reportArgusModelFailure } from "./argus-runtime-recovery.ts"
 
 // Direct text integrations keep their original request until the provider rejects its model.
 type DirectTextRequest = {
