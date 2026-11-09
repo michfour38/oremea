@@ -34,6 +34,7 @@ jobs:
             scripts/argus-direct-rehearsal.mjs
             scripts/argus-direct-recovery.test.mjs
             src/lib/ai/legacy-model-recovery.ts
+            src/lib/ai/argus-runtime-recovery.ts
             scripts/argus-auto-repair.mjs
             scripts/argus-change-gate.mjs
             .github/workflows/argus-synthetic-provider.yml
