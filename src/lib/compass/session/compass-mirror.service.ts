@@ -61,8 +61,8 @@ export async function runCompassMirror({
     try {
       const attemptPrompt =
         attempt === 0
-          ? prompt
-          : `${prompt}
+          ? approvedPrompt
+          : `${approvedPrompt}
 
 RETRY REQUIREMENT
 The previous generation did not complete successfully.
