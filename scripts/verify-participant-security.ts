@@ -182,6 +182,15 @@ async function main() {
     "@/src/lib/recognition/recognition-thread": { getOrCreateActiveRecognitionThread: async () => ({ id: "thread-A" }) },
     "@/src/lib/recognition/recognition-conversation-access": { getRecognitionConversationAccess: async () => ({ active: true }) },
     "@/src/lib/recognition/recognition-context": { trimRecognitionRecentContext: (v: any) => v },
+    // Approved SUSTAIN references remain optional and cannot override the
+    // participant's actual Recognition turn or the memory-clear race
+    "@/src/lib/integrations/sustain-bridge": {
+      getSharedSustainReferences: async (linkedUserId: string, product: string) => {
+        assert.equal(linkedUserId, "A");
+        assert.equal(product, "recognition");
+        return [{ title: "Synthetic reference", content: "Optional context" }];
+      },
+    },
     "@/src/lib/recognition/recognition-conversation": {
       readRecognitionMemory: (v: any) => v,
       generateRecognitionConversationReply: async () => {
