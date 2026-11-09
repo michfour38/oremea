@@ -13,6 +13,8 @@ on:
       - 'scripts/argus-auto-repair.test.mjs'
       - 'src/lib/ai/ai-gateway.ts'
       - 'src/lib/ai/argus-runtime-recovery.ts'
+      - 'src/lib/ai/legacy-model-recovery.ts'
+      - 'scripts/argus-direct-recovery.test.mjs'
       - 'scripts/argus-runtime-recovery.test.mjs'
       - '.github/workflows/anthropic-model-watch.yml'
   pull_request:
@@ -26,6 +28,8 @@ on:
       - 'scripts/argus-synthetic-probe.mjs'
       - 'src/lib/ai/ai-gateway.ts'
       - 'src/lib/ai/argus-runtime-recovery.ts'
+      - 'src/lib/ai/legacy-model-recovery.ts'
+      - 'scripts/argus-direct-recovery.test.mjs'
       - 'scripts/argus-runtime-recovery.test.mjs'
       - '.github/workflows/anthropic-model-watch.yml'
 
@@ -56,6 +60,8 @@ jobs:
             scripts/argus-synthetic-probe.mjs
             scripts/argus-runtime-recovery.test.mjs
             src/lib/ai/argus-runtime-recovery.ts
+            src/lib/ai/legacy-model-recovery.ts
+            scripts/argus-direct-recovery.test.mjs
             .github/workflows/anthropic-model-watch.yml
             src/lib/ai/ai-config.ts
           sparse-checkout-cone-mode: false
@@ -63,7 +69,7 @@ jobs:
         with:
           node-version: 22
       - run: node --test scripts/argus-deployment-check.test.mjs scripts/anthropic-model-watch.test.mjs scripts/argus-model-assessment.test.mjs scripts/argus-auto-repair.test.mjs
-      - run: node --experimental-strip-types --test scripts/argus-runtime-recovery.test.mjs
+      - run: node --experimental-strip-types --test scripts/argus-runtime-recovery.test.mjs scripts/argus-direct-recovery.test.mjs
 
   watch:
     if: github.event_name != 'pull_request'

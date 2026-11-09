@@ -2,6 +2,7 @@ import test from "node:test"
 import assert from "node:assert/strict"
 import {
   createArgusRecoveryDispatcher,
+  createArgusFailureReporter,
   isAnthropicModelNotFound,
 } from "../src/lib/ai/argus-runtime-recovery.ts"
 
@@ -65,4 +66,29 @@ test("failed GitHub dispatch is throttled rather than hammering the API", async 
   clock += 10*60*1000+1
   assert.equal(await dispatch(env),false)
   assert.equal(sends,2)
+})
+
+test("runtime failure reporter logs one scrubbed marker per model per cooldown with no credential", async () => {
+  let timestamp = 1000
+  const warnings = []
+  let dispatches = 0
+  const reporter = createArgusFailureReporter({
+    now: () => timestamp,
+    warn: message => warnings.push(message),
+    dispatch: async () => { dispatches++; return false },
+  })
+  const model = "claude-sonnet-4-6"
+  const body = missing(model)
+  assert.equal(await reporter(503, body, model), false)
+  assert.equal(await reporter(404, missing("claude-sonnet-5"), model), false)
+  assert.equal(warnings.length, 0)
+  assert.equal(dispatches, 0)
+  assert.equal(await reporter(404, body, model), true)
+  assert.equal(await reporter(404, body, model), true)
+  assert.deepEqual(warnings, ["ARGUS_MODEL_UNAVAILABLE_OBSERVED model=claude-sonnet-4-6"])
+  assert.equal(dispatches, 2)
+  timestamp += 6 * 60 * 60 * 1000
+  assert.equal(await reporter(404, body, model), true)
+  assert.equal(warnings.length, 2)
+  assert.doesNotMatch(warnings.join(""), /user|prompt|secret|token/)
 })

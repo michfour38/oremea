@@ -85,3 +85,41 @@ export function createArgusRecoveryDispatcher({
 }
 
 export const dispatchArgusRecovery = createArgusRecoveryDispatcher()
+
+/**
+ * Emit one privacy-safe recovery signal per model and instance per six hours.
+ * The daily compatibility maintainer can inspect this marker in Railway logs
+ * even when no GitHub dispatch credential has been installed.
+ */
+export function createArgusFailureReporter({
+  dispatch = dispatchArgusRecovery,
+  now = Date.now,
+  warn = console.warn,
+}: {
+  dispatch?: () => Promise<boolean>
+  now?: () => number
+  warn?: (message: string) => void
+} = {}) {
+  const lastNotifiedAt = new Map<string, number>()
+
+  return async function report(
+    status: number,
+    body: unknown,
+    model: string,
+  ): Promise<boolean> {
+    if (!isAnthropicModelNotFound(status, body, model)) return false
+
+    const time = now()
+    const last = lastNotifiedAt.get(model)
+    if (last === undefined || time - last >= SUCCESS_COOLDOWN_MS) {
+      lastNotifiedAt.set(model, time)
+      // Only the vetted model ID is logged. Never include participant content.
+      warn(`ARGUS_MODEL_UNAVAILABLE_OBSERVED model=${model}`)
+    }
+
+    await dispatch()
+    return true
+  }
+}
+
+export const reportArgusModelFailure = createArgusFailureReporter()

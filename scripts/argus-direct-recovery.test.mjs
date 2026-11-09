@@ -44,3 +44,26 @@ test('failed compatibility check blocks application data from standby', async ()
     assert.equal(mock.requests.length, 2);
   }
 });
+
+test('model-not-found signals recovery even when the primary is already the standby', async () => {
+  const response = missing()
+  const mock = simulate([response])
+  const signals = []
+  const report = async (status, error, model) => {
+    signals.push({status, model, kind:error?.error?.type})
+    return true
+  }
+  assert.equal(await sendDirectText(init, body.model, mock.send, report), response)
+  assert.deepEqual(signals,[{status:404,model:body.model,kind:'not_found_error'}])
+  assert.equal(mock.requests.length, 1)
+})
+
+test('generic 404 never signals recovery or probes another model', async () => {
+  const generic = Response.json({error:{type:'not_found_error',message:'Unknown API route'}},{status:404})
+  const mock = simulate([generic])
+  let calls = 0
+  const report = async () => { calls++; return false }
+  assert.equal(await sendDirectText(init, standby, mock.send, report), generic)
+  assert.equal(calls, 1)
+  assert.equal(mock.requests.length, 1)
+})

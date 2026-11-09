@@ -9,8 +9,6 @@ on:
       - 'src/lib/ai/ai-gateway.ts'
       - 'src/lib/ai/legacy-model-recovery.ts'
   workflow_dispatch:
-  schedule:
-    - cron: '37 5 * * 1'
   pull_request:
     paths:
       - 'scripts/argus-synthetic-probe.mjs'
@@ -36,6 +34,7 @@ jobs:
             scripts/argus-direct-rehearsal.mjs
             scripts/argus-direct-recovery.test.mjs
             src/lib/ai/legacy-model-recovery.ts
+            src/lib/ai/argus-runtime-recovery.ts
             scripts/argus-auto-repair.mjs
             scripts/argus-change-gate.mjs
             .github/workflows/argus-synthetic-provider.yml
