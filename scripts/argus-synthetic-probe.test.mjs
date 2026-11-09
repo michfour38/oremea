@@ -20,9 +20,9 @@ test('bad status, incorrect model, text or missing key are failures',async()=>{
 });
 
 
-test('pre-revenue live paid probe runs weekly, with manual override and never on pull requests',()=>{
+test('paid synthetic probe is manual or triggered by model-code updates, never scheduled',()=>{
  const workflow=readFileSync(new URL('../.github/workflows/argus-synthetic-provider.yml',import.meta.url),'utf8');
- assert.match(workflow,/cron: '37 5 \* \* 1'/);
+ assert.doesNotMatch(workflow,/  schedule:/);
  assert.match(workflow,/workflow_dispatch:/);
  assert.match(workflow,/github\.event_name != 'pull_request'/);
  assert.match(workflow,/ANTHROPIC_API_KEY: \$\{\{ secrets\.ANTHROPIC_API_KEY \}\}/);
