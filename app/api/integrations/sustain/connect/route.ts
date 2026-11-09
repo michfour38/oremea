@@ -14,7 +14,14 @@ export async function POST(request: Request) {
   if (!userId) return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401, headers });
   const origin = request.headers.get("origin");
   const host = request.headers.get("host");
-  if (!origin || !host || new URL(origin).host !== host || !origin.startsWith("https://"))
+  let validOrigin = false;
+  try {
+    const parsed = new URL(origin ?? "");
+    validOrigin = parsed.protocol === "https:" && Boolean(host) && parsed.host === host;
+  } catch {
+    validOrigin = false;
+  }
+  if (!validOrigin)
     return NextResponse.json({ ok: false, error: "invalid_origin" }, { status: 403, headers });
 
   const body = await request.json().catch(() => null);
