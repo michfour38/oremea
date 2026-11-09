@@ -28,8 +28,8 @@ export function isAnthropicModelNotFound(
 
   // A generic 404, unknown API route or inaccessible account is not sufficient.
   // Match the complete model ID, not a prefix of another model's ID.
-  return /\bmodel\b/i.test(error.message)
-    && (error.message.match(/claude-[a-z0-9-]+/gi) || []).includes(model)
+  const mentionedModels: string[] = error.message.match(/claude-[a-z0-9-]+/gi) ?? []
+  return /\bmodel\b/i.test(error.message) && mentionedModels.includes(model)
 }
 
 export function createArgusRecoveryDispatcher({
@@ -44,7 +44,7 @@ export function createArgusRecoveryDispatcher({
   let nextEligibleAt = 0
 
   return async function dispatch(
-    env: { ARGUS_GITHUB_DISPATCH_TOKEN?: string } = process.env,
+    env: Record<string, string | undefined> = process.env,
   ): Promise<boolean> {
     const token = env.ARGUS_GITHUB_DISPATCH_TOKEN?.trim()
     if (!token) return false
